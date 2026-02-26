@@ -790,3 +790,75 @@ export const productAttributesApi = {
   delete: async (id: number): Promise<{ success: boolean; message: string }> =>
     apiRequest(`admin/product-attributes/${id}`, { method: 'DELETE' }),
 };
+
+// Sales Module Types
+export interface SalesDashboardStats {
+  total_orders: number;
+  paid_orders: number;
+  pending_orders: number;
+  total_revenue: number;
+  avg_order_value: number;
+  low_stock_count: number;
+  out_of_stock_count: number;
+  total_stock_value: number;
+}
+
+export interface StockProduct {
+  id: number;
+  name: string;
+  icon_url?: string;
+  price: number;
+  category?: string;
+  brand?: string;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
+  total_variant_stock: number;
+  variants: {
+    id: number;
+    combination: Record<string, string>;
+    sku?: string;
+    stock_quantity: number;
+    price_adjustment: number;
+    is_active: boolean;
+  }[];
+}
+
+// Sales API
+export const salesApi = {
+  getDashboard: async (days?: number, from?: string, to?: string): Promise<{
+    stats: SalesDashboardStats;
+    revenue_by_date: { date: string; revenue: number; orders: number }[];
+    top_products: { product_id: number; product_name: string; revenue: number; sales: number }[];
+    recent_sales: AdminOrder[];
+  }> => {
+    const params = new URLSearchParams();
+    if (from && to) {
+      params.set('from', from);
+      params.set('to', to);
+    } else if (days) {
+      params.set('days', days.toString());
+    }
+    return apiRequest(`admin/sales/dashboard?${params.toString()}`);
+  },
+
+  getStockOverview: async (params?: { stock_status?: string; search?: string; page?: number; limit?: number }): Promise<{
+    products: StockProduct[];
+    pagination: { current_page: number; total_pages: number; total: number; per_page: number };
+  }> => {
+    const query = new URLSearchParams();
+    if (params?.stock_status) query.set('stock_status', params.stock_status);
+    if (params?.search) query.set('search', params.search);
+    if (params?.page) query.set('page', params.page.toString());
+    if (params?.limit) query.set('limit', params.limit.toString());
+    return apiRequest(`admin/sales/stock?${query.toString()}`);
+  },
+
+  updateStock: async (productId: number, data: { variant_id?: number; stock_quantity: number; reason?: string }): Promise<{ success: boolean; message: string }> => {
+    return apiRequest(`admin/sales/stock/${productId}`, { method: 'PUT', body: data });
+  },
+
+  bulkUpdateStock: async (updates: { product_id: number; variant_id?: number; stock_quantity: number }[]): Promise<{ success: boolean; message: string; updated_count: number }> => {
+    return apiRequest('admin/sales/stock/bulk', { method: 'POST', body: { updates } });
+  },
+};
