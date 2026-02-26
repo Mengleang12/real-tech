@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class AppSubmission extends Model
+class ProductSubmission extends Model
 {
+    protected $table = 'product_submissions';
+
     protected $fillable = [
         'app_id',
         'version',
@@ -25,9 +27,9 @@ class AppSubmission extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function app()
+    public function product()
     {
-        return $this->belongsTo(App::class);
+        return $this->belongsTo(Product::class, 'app_id');
     }
 
     public function submittedBy()

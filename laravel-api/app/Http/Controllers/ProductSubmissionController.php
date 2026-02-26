@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AppSubmission;
+use App\Models\ProductSubmission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class AppSubmissionController extends Controller
+class ProductSubmissionController extends Controller
 {
     public function index(Request $request)
     {
         $status = $request->input('status');
 
-        $query = AppSubmission::with(['app:id,name,icon_url', 'submittedBy:id,email,full_name'])
+        $query = ProductSubmission::with(['product:id,name,icon_url', 'submittedBy:id,email,full_name'])
             ->orderBy('submitted_at', 'desc');
 
         if ($status && $status !== 'all') {
@@ -23,10 +23,10 @@ class AppSubmissionController extends Controller
 
         // Get counts
         $stats = [
-            'pending' => AppSubmission::where('status', 'pending_review')->count(),
-            'approved' => AppSubmission::where('status', 'approved')->count(),
-            'rejected' => AppSubmission::where('status', 'rejected')->count(),
-            'suspended' => AppSubmission::where('status', 'suspended')->count(),
+            'pending' => ProductSubmission::where('status', 'pending_review')->count(),
+            'approved' => ProductSubmission::where('status', 'approved')->count(),
+            'rejected' => ProductSubmission::where('status', 'rejected')->count(),
+            'suspended' => ProductSubmission::where('status', 'suspended')->count(),
         ];
 
         return response()->json([
@@ -38,7 +38,7 @@ class AppSubmissionController extends Controller
 
     public function update(Request $request, $id)
     {
-        $submission = AppSubmission::find($id);
+        $submission = ProductSubmission::find($id);
 
         if (!$submission) {
             return response()->json(['error' => 'Submission not found'], 404);
@@ -71,11 +71,11 @@ class AppSubmissionController extends Controller
         ]);
     }
 
-    // For users to submit their apps
+    // For users to submit their products
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'app_id' => 'required|exists:apps,id',
+            'app_id' => 'required|exists:products,id',
             'version' => 'required|string',
         ]);
 
@@ -85,7 +85,7 @@ class AppSubmissionController extends Controller
 
         $userId = $request->attributes->get('user_id');
 
-        $submission = AppSubmission::create([
+        $submission = ProductSubmission::create([
             'app_id' => $request->app_id,
             'version' => $request->version,
             'status' => 'pending_review',
@@ -95,7 +95,7 @@ class AppSubmissionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'App submitted for review',
+            'message' => 'Product submitted for review',
             'submission' => $submission,
         ]);
     }

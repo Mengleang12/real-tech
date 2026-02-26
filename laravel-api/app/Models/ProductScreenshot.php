@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AppScreenshot extends Model
+class ProductScreenshot extends Model
 {
+    protected $table = 'product_screenshots';
+
     protected $fillable = [
         'app_id',
         'image_url',
@@ -19,8 +21,8 @@ class AppScreenshot extends Model
 
     public $timestamps = false;
 
-    public function app(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(App::class);
+        return $this->belongsTo(Product::class, 'app_id');
     }
 }

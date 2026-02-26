@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class App extends Model
+class Product extends Model
 {
+    protected $table = 'products';
+
     protected $fillable = [
         'name',
         'name_km',
@@ -38,19 +40,14 @@ class App extends Model
         'low_stock_threshold' => 'integer',
     ];
 
-    public function versions(): HasMany
-    {
-        return $this->hasMany(AppVersion::class);
-    }
-
     public function screenshots(): HasMany
     {
-        return $this->hasMany(AppScreenshot::class);
+        return $this->hasMany(ProductScreenshot::class, 'app_id');
     }
 
     public function videos(): HasMany
     {
-        return $this->hasMany(AppVideo::class)->orderBy('sort_order');
+        return $this->hasMany(ProductVideo::class, 'app_id')->orderBy('sort_order');
     }
 
     public function categoryRelation(): BelongsTo
@@ -71,11 +68,6 @@ class App extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class, 'app_id');
-    }
-
-    public function latestVersion()
-    {
-        return $this->versions()->where('is_latest', true)->first();
     }
 
     /**
