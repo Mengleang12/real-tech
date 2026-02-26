@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AppVideo extends Model
+class ProductVideo extends Model
 {
+    protected $table = 'product_videos';
+
     protected $fillable = [
         'app_id',
         'title',
@@ -14,8 +16,8 @@ class AppVideo extends Model
         'sort_order',
     ];
 
-    public function app(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(App::class);
+        return $this->belongsTo(Product::class, 'app_id');
     }
 }
