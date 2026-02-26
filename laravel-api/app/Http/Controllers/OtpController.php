@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Mail\OtpMail;
 use App\Models\OtpCode;
 use App\Models\User;
-use App\Services\ReCaptchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -13,13 +12,6 @@ use Firebase\JWT\JWT;
 
 class OtpController extends Controller
 {
-    protected ReCaptchaService $recaptcha;
-
-    public function __construct(ReCaptchaService $recaptcha)
-    {
-        $this->recaptcha = $recaptcha;
-    }
-
     /**
      * Send OTP for registration
      */
@@ -27,13 +19,7 @@ class OtpController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'recaptcha_token' => 'nullable|string',
         ]);
-
-        // Verify reCAPTCHA
-        if (!$this->recaptcha->verify($request->recaptcha_token, $request->ip())) {
-            return response()->json(['error' => 'CAPTCHA verification failed. Please try again.'], 400);
-        }
 
         // Check if email already registered and verified
         $existingUser = User::where('email', $request->email)

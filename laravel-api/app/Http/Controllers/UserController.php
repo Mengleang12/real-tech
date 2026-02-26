@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserActivityLog;
-use App\Services\ReCaptchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Firebase\JWT\JWT;
@@ -12,26 +11,13 @@ use Firebase\JWT\Key;
 
 class UserController extends Controller
 {
-    protected ReCaptchaService $recaptcha;
-
-    public function __construct(ReCaptchaService $recaptcha)
-    {
-        $this->recaptcha = $recaptcha;
-    }
-
     public function register(Request $request)
     {
         $request->validate([
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'full_name' => 'nullable|string|max:100',
-            'recaptcha_token' => 'nullable|string',
         ]);
-
-        // Verify reCAPTCHA
-        if (!$this->recaptcha->verify($request->recaptcha_token, $request->ip())) {
-            return response()->json(['error' => 'CAPTCHA verification failed. Please try again.'], 400);
-        }
 
         $user = User::create([
             'email' => $request->email,
@@ -61,13 +47,7 @@ class UserController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
-            'recaptcha_token' => 'nullable|string',
         ]);
-
-        // Verify reCAPTCHA
-        if (!$this->recaptcha->verify($request->recaptcha_token, $request->ip())) {
-            return response()->json(['error' => 'CAPTCHA verification failed. Please try again.'], 400);
-        }
 
         $user = User::where('email', $request->email)->with('status')->first();
 
