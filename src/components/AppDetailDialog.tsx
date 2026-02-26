@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, Calendar, HardDrive, ExternalLink, Package, ChevronLeft, ChevronRight, X, Shield, Cpu, Globe, User, History } from "lucide-react";
+import { ExternalLink, Package, ChevronLeft, ChevronRight, X, Shield } from "lucide-react";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { appsApi, versionsApi, type App, type AppVersion } from "@/lib/api";
+import { appsApi, type App } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 
 const getGradientFromName = (name: string): string => {
@@ -24,89 +24,6 @@ const getGradientFromName = (name: string): string => {
   ];
   const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return gradients[hash % gradients.length];
-};
-
-// Previous Versions Dialog
-const PreviousVersionsDialog = ({ 
-  versions, 
-  open, 
-  onOpenChange,
-  appName 
-}: { 
-  versions: AppVersion[]; 
-  open: boolean; 
-  onOpenChange: (open: boolean) => void;
-  appName: string;
-}) => {
-  const { t } = useLanguage();
-  
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <div className="flex items-center gap-3 mb-4">
-          <History className="w-5 h-5 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">{appName} - Previous Versions</h2>
-        </div>
-        
-        <ScrollArea className="max-h-[60vh]">
-          <div className="space-y-3 pr-4">
-            {versions.map((version) => {
-              const isHidden = version.is_visible === false;
-              return (
-                <div 
-                  key={version.id}
-                  className={`flex items-center justify-between p-4 rounded-xl transition-colors ${
-                    isHidden 
-                      ? 'bg-muted/30 opacity-50 cursor-not-allowed' 
-                      : 'bg-muted/50 hover:bg-muted'
-                  }`}
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-medium ${isHidden ? 'text-muted-foreground line-through' : ''}`}>v{version.version}</span>
-                      {version.is_latest && !isHidden && (
-                        <Badge variant="default" className="text-xs">Latest</Badge>
-                      )}
-                      {isHidden && (
-                        <Badge variant="secondary" className="text-xs text-muted-foreground">Unavailable</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      {version.release_date && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(version.release_date).toLocaleDateString()}
-                        </span>
-                      )}
-                      {version.file_size && (
-                        <span className="flex items-center gap-1">
-                          <HardDrive className="w-3 h-3" />
-                          {version.file_size}
-                        </span>
-                      )}
-                    </div>
-                    {(version.changelog || version.changelog_km) && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t(version.changelog_km, version.changelog)}
-                      </p>
-                    )}
-                  </div>
-                  
-                  {!isHidden && version.download_url && (
-                    <a href={version.download_url} target="_blank" rel="noopener noreferrer">
-                      <Button size="sm" variant="outline" className="gap-1.5">
-                        <Download className="w-3.5 h-3.5" />
-                      </Button>
-                    </a>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
-  );
 };
 
 // Screenshot Gallery Component with Lightbox
@@ -291,7 +208,7 @@ export const AppDetailDialog = ({ app, open, onOpenChange }: AppDetailDialogProp
   const { t } = useLanguage();
   const translations = useTranslations();
   const [selectedScreenshot, setSelectedScreenshot] = useState(0);
-  const [showVersions, setShowVersions] = useState(false);
+  
   
   // Fetch full app details including screenshots
   const { data: fullAppData, isLoading: appLoading } = useQuery({
@@ -300,11 +217,6 @@ export const AppDetailDialog = ({ app, open, onOpenChange }: AppDetailDialogProp
     enabled: !!app?.id && open,
   });
 
-  const { data: versions, isLoading: versionsLoading } = useQuery({
-    queryKey: ["versions", app?.id],
-    queryFn: () => versionsApi.getByAppId(app!.id),
-    enabled: !!app?.id && open,
-  });
 
   if (!app) return null;
 
@@ -313,8 +225,6 @@ export const AppDetailDialog = ({ app, open, onOpenChange }: AppDetailDialogProp
   const displayName = t(appData.name_km, appData.name);
   const displayDescription = t(appData.description_km, appData.description);
   
-  // Get latest version for download
-  const latestVersion = versions?.find(v => v.is_latest) || versions?.[0];
   const categoryLabels: Record<string, string> = {
     programs: translations.programs,
     games: translations.games,
@@ -385,27 +295,13 @@ export const AppDetailDialog = ({ app, open, onOpenChange }: AppDetailDialogProp
                   <div className="space-y-4 p-4 bg-muted/30 rounded-xl">
                     <MetadataItem 
                       label="Version" 
-                      value={appData.latest_version || latestVersion?.version}
+                      value={appData.latest_version}
                     />
                     
                     <MetadataItem 
                       label="Developer" 
                       value={appData.developer}
                     />
-                    
-                    {latestVersion?.min_os_version && (
-                      <MetadataItem 
-                        label="Compatibility" 
-                        value={latestVersion.min_os_version}
-                      />
-                    )}
-                    
-                    {latestVersion?.file_size && (
-                      <MetadataItem 
-                        label="Size" 
-                        value={latestVersion.file_size}
-                      />
-                    )}
                     
                     {appData.website && (
                       <div className="space-y-1">
@@ -422,46 +318,6 @@ export const AppDetailDialog = ({ app, open, onOpenChange }: AppDetailDialogProp
                       </div>
                     )}
                   </div>
-
-                  {/* Download Button */}
-                  {latestVersion?.download_url ? (
-                    <a 
-                      href={latestVersion.download_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="block"
-                    >
-                      <Button 
-                        className="w-full h-12 text-base font-medium gap-2 bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        <Download className="w-5 h-5" />
-                        Download for free
-                        {latestVersion.file_size && (
-                          <span className="text-white/80">({latestVersion.file_size})</span>
-                        )}
-                      </Button>
-                    </a>
-                  ) : (
-                    <Button 
-                      className="w-full h-12 text-base font-medium gap-2"
-                      disabled
-                    >
-                      <Download className="w-5 h-5" />
-                      {translations.noVersions}
-                    </Button>
-                  )}
-
-                  {/* Previous Versions Button */}
-                  {versions && versions.length > 1 && (
-                    <Button 
-                      variant="outline"
-                      className="w-full h-10 gap-2"
-                      onClick={() => setShowVersions(true)}
-                    >
-                      <History className="w-4 h-4" />
-                      Previous versions
-                    </Button>
-                  )}
 
                   {/* Security Badge */}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -489,13 +345,6 @@ export const AppDetailDialog = ({ app, open, onOpenChange }: AppDetailDialogProp
         </DialogContent>
       </Dialog>
 
-      {/* Previous Versions Dialog */}
-      <PreviousVersionsDialog
-        versions={versions || []}
-        open={showVersions}
-        onOpenChange={setShowVersions}
-        appName={displayName}
-      />
     </>
   );
 };

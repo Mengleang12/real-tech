@@ -7,7 +7,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UploadController;
-use App\Http\Controllers\VersionController;
+
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\AnalyticsController;
@@ -21,8 +21,6 @@ use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\MailTestController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\SystemSettingController;
-use App\Http\Controllers\BunnyStorageController;
-use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ProductAttributeController;
@@ -49,7 +47,7 @@ Route::post('/otp/resend', [OtpController::class, 'resendOtp']);
 // Products (public read) - keep /apps routes for frontend compatibility
 Route::get('/apps', [ProductController::class, 'index']);
 Route::get('/apps/{id}', [ProductController::class, 'show']);
-Route::get('/versions', [VersionController::class, 'index']);
+
 
 // Public: categories & brands for filtering
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -68,9 +66,6 @@ Route::middleware('auth.admin')->group(function () {
     Route::post('/apps', [ProductController::class, 'store']);
     Route::put('/apps/{id}', [ProductController::class, 'update']);
     
-    Route::post('/versions', [VersionController::class, 'store']);
-    Route::put('/versions/{id}', [VersionController::class, 'update']);
-    Route::patch('/versions/{id}/toggle-visibility', [VersionController::class, 'toggleVisibility']);
     
     Route::post('/upload', [UploadController::class, 'store']);
 
@@ -102,22 +97,13 @@ Route::middleware('auth.admin')->group(function () {
     // Activity logs (moderators can view)
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index']);
 
-    // Bunny Storage
-    Route::get('/bunny/config', [BunnyStorageController::class, 'config']);
-    Route::put('/bunny/config', [BunnyStorageController::class, 'updateConfig']);
-    Route::get('/bunny/test', [BunnyStorageController::class, 'test']);
-    Route::get('/bunny/credentials', [BunnyStorageController::class, 'credentials']);
-    Route::get('/bunny/files', [BunnyStorageController::class, 'listFiles']);
-    Route::post('/bunny/files/upload', [BunnyStorageController::class, 'uploadFile']);
-    Route::post('/bunny/files/folder', [BunnyStorageController::class, 'createFolder']);
-    Route::delete('/bunny/files', [BunnyStorageController::class, 'deleteFile']);
 });
 
 // Admin-only routes (no moderator access)
 Route::middleware('auth.admin:admin_only')->group(function () {
     // Product deletion (admin only)
     Route::delete('/apps/{id}', [ProductController::class, 'destroy']);
-    Route::delete('/versions/{id}', [VersionController::class, 'destroy']);
+    
     
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     
@@ -199,7 +185,7 @@ Route::middleware('auth.user')->group(function () {
     Route::post('/track-download', [ActivityLogController::class, 'trackDownload']);
     
     // Secure download with signed URLs
-    Route::post('/download/signed-url', [DownloadController::class, 'generateSignedUrl']);
+    
     
     // User coupons
     Route::get('/coupons/my', [CouponController::class, 'myAvailableCoupons']);

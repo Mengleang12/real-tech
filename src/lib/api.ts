@@ -125,7 +125,7 @@ export interface App {
   is_popular: boolean;
   download_count: number;
   latest_version?: string;
-  versions?: AppVersion[];
+  versions?: never[];
   screenshots?: AppScreenshot[];
   videos?: AppVideo[];
   price?: number;
@@ -199,41 +199,6 @@ export interface ProductVariant {
   updated_at?: string;
 }
 
-export interface AppDownloadLink {
-  id: number;
-  app_version_id: number;
-  title: string;
-  url: string;
-  link_type: 'direct' | 'page';
-  sort_order: number;
-}
-
-export interface AppDownloadLinkInput {
-  id?: number;
-  title: string;
-  url: string;
-  link_type: 'direct' | 'page';
-  sort_order: number;
-}
-
-export interface AppVersion {
-  id: number;
-  app_id: number;
-  version: string;
-  release_date: string;
-  changelog?: string;
-  changelog_km?: string;
-  file_size?: string;
-  download_url?: string;
-  is_latest: boolean;
-  is_visible: boolean;
-  min_os_version?: string;
-  architecture?: string;
-  compatibility?: string;
-  download_links?: AppDownloadLink[];
-  created_at: string;
-}
-
 export interface AppScreenshot {
   id: number;
   app_id: number;
@@ -291,11 +256,9 @@ export const appsApi = {
   
   getById: async (id: number, asAdmin?: boolean): Promise<App> => {
     if (asAdmin) {
-      // Admin fetch - includes admin auth to bypass access restrictions
       const response = await apiRequest<{ app: App }>(`apps/${id}`);
       return response.app;
     }
-    // Include user ID for download access verification on paid apps
     const response = await apiRequest<{ app: App }>(`apps/${id}`, { requiresAuth: false, includeUserId: true });
     return response.app;
   },
@@ -310,33 +273,7 @@ export const appsApi = {
     apiRequest<{ success: boolean; message: string }>(`apps/${id}`, { method: 'DELETE' }),
 };
 
-// Version input type for create/update (without full download_links)
-export type VersionInput = Omit<Partial<AppVersion>, 'download_links'> & {
-  download_links?: AppDownloadLinkInput[];
-};
 
-// Versions API - Laravel endpoints
-export const versionsApi = {
-  getByAppId: async (appId: number) => {
-    // Include user ID for download access verification on paid apps
-    const response = await apiRequest<{ versions: AppVersion[] }>(`versions?app_id=${appId}`, { requiresAuth: false, includeUserId: true });
-    return response.versions;
-  },
-  
-  create: (data: VersionInput) => 
-    apiRequest<{ success: boolean; id: number; message: string }>('versions', { method: 'POST', body: data }),
-  
-  update: (id: number, data: VersionInput) => 
-    apiRequest<{ success: boolean; message: string }>(`versions/${id}`, { method: 'PUT', body: data }),
-  
-  delete: (id: number) => 
-    apiRequest<{ success: boolean; message: string }>(`versions/${id}`, { method: 'DELETE' }),
-  
-  toggleVisibility: (id: number) =>
-    apiRequest<{ success: boolean; is_visible: boolean; message: string }>(`versions/${id}/toggle-visibility`, { method: 'PATCH' }),
-};
-
-// Auth API - Laravel endpoints (admin)
 export const authApi = {
   login: async (username: string, password: string) => {
     const response = await apiRequest<{ success: boolean; token: string; user: { id: number; username: string } }>(
@@ -805,111 +742,6 @@ export const couponsApi = {
   },
 };
 
-// Bunny Storage Types
-export interface BunnyConfig {
-  zone_name: string;
-  storage_host: string;
-  cdn_host: string;
-  configured: boolean;
-  api_key_masked?: string | null;
-  token_auth_key_masked?: string | null;
-}
-
-export interface BunnyTestResult {
-  success: boolean;
-  message?: string;
-  error?: string;
-  zone_name?: string;
-  storage_host?: string;
-  cdn_host?: string;
-  file_count?: number;
-}
-
-export interface BunnyFile {
-  name: string;
-  path: string;
-  is_directory: boolean;
-  size: number;
-  last_changed: string | null;
-  cdn_url: string | null;
-}
-
-// Bunny Storage API
-export const bunnyApi = {
-  getConfig: () => apiRequest<BunnyConfig>('bunny/config'),
-  updateConfig: (data: { zone_name?: string; storage_host?: string; cdn_host?: string; api_key?: string; token_auth_key?: string; token_expiry?: string }) =>
-    apiRequest<{ message: string }>('bunny/config', { method: 'PUT', body: data }),
-  testConnection: () => apiRequest<BunnyTestResult>('bunny/test'),
-
-  getCredentials: () => apiRequest<{ api_key: string; zone_name: string; storage_host: string; cdn_host: string }>('bunny/credentials'),
-
-  listFiles: (path: string = '') =>
-    apiRequest<{ files: BunnyFile[]; current_path: string }>(`bunny/files?path=${encodeURIComponent(path)}`),
-
-  /**
-   * Upload file directly to Bunny Storage (bypasses Laravel server).
-   * Uses XMLHttpRequest for progress tracking.
-   */
-  uploadFile: async (
-    file: File,
-    path: string = '',
-    onProgress?: (percent: number) => void
-  ): Promise<{ success: boolean; message: string; path: string; cdn_url: string | null }> => {
-    // Fetch Bunny credentials from backend
-    const creds = await bunnyApi.getCredentials();
-    const fileName = file.name;
-    const fullPath = path ? `${path.replace(/\/$/, '')}/${fileName}` : fileName;
-    const uploadUrl = `https://${creds.storage_host}/${creds.zone_name}/${fullPath}`;
-
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('PUT', uploadUrl, true);
-      xhr.setRequestHeader('AccessKey', creds.api_key);
-      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable && onProgress) {
-          onProgress(Math.round((e.loaded / e.total) * 100));
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const cdnUrl = creds.cdn_host ? `https://${creds.cdn_host}/${fullPath}` : null;
-          resolve({ success: true, message: 'File uploaded successfully', path: fullPath, cdn_url: cdnUrl });
-        } else {
-          reject(new Error(`Upload failed (${xhr.status}): ${xhr.responseText}`));
-        }
-      };
-
-      xhr.onerror = () => reject(new Error('Upload failed: network error'));
-      xhr.ontimeout = () => reject(new Error('Upload failed: timeout'));
-
-      xhr.send(file);
-    });
-  },
-
-  createFolder: (path: string) =>
-    apiRequest<{ success: boolean; message: string; path: string }>('bunny/files/folder', {
-      method: 'POST',
-      body: { path },
-    }),
-
-  deleteFile: (path: string, isDirectory: boolean) =>
-    apiRequest<{ success: boolean; message: string }>('bunny/files', {
-      method: 'DELETE',
-      body: { path, is_directory: isDirectory },
-    }),
-};
-
-// Secure Download API
-export const downloadApi = {
-  getSignedUrl: (versionId: number, linkId?: number) =>
-    apiRequest<{ success: boolean; url: string; expires_in: number | null }>('download/signed-url', {
-      method: 'POST',
-      body: { version_id: versionId, link_id: linkId },
-    }),
-};
 
 // Categories API
 export const categoriesApi = {

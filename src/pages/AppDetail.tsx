@@ -4,9 +4,9 @@ import macsofyLogo from "@/assets/macsofy-logo.png";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import {
   Download, Calendar, HardDrive, ExternalLink, Package, ChevronLeft, 
-  ChevronRight, X, Shield, History, ArrowLeft, Home, Search,
+  ChevronRight, X, Shield, ArrowLeft, Home, Search,
   Box, Gamepad2, Puzzle, LayoutGrid, ChevronDown, ShoppingCart, Lock,
-  ShoppingBag, Monitor, Cpu, FileDown, Play, Tag, Boxes
+  ShoppingBag, Tag, Boxes, Play
 } from "lucide-react";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
@@ -18,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { appsApi, versionsApi, activityLogsApi, downloadApi, type AppVersion, type ApplicableCoupon } from "@/lib/api";
+import { appsApi, activityLogsApi, type ApplicableCoupon } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PaymentDialog } from "@/components/PaymentDialog";
@@ -53,301 +53,6 @@ const getYouTubeVideoId = (url: string): string | null => {
     if (match) return match[1];
   }
   return null;
-};
-
-// Collapsible Version Item
-const VersionItem = ({ 
-  version, 
-  canDownload,
-  isLatest,
-  appId,
-  appName
-}: { 
-  version: AppVersion; 
-  canDownload: boolean;
-  isLatest?: boolean;
-  appId: number;
-  appName: string;
-}) => {
-  const [isOpen, setIsOpen] = useState(isLatest || false);
-  const { t, language } = useLanguage();
-  const translations = useTranslations();
-  
-  // Filter out links with null URLs (paid apps where user hasn't purchased)
-  const downloadLinks = (version.download_links || []).filter(link => link.url !== null);
-  const hasDownloadLinks = downloadLinks.length > 0;
-  
-  const handleDownloadClick = async (e: React.MouseEvent, linkId?: number) => {
-    if (canDownload) {
-      e.preventDefault();
-      try {
-        // Track download
-        activityLogsApi.trackDownload(appId, appName, version.version).catch(() => {});
-        // Get signed URL
-        const result = await downloadApi.getSignedUrl(version.id, linkId);
-        if (result.url) {
-          window.open(result.url, '_blank');
-        }
-      } catch (error) {
-        console.error('Failed to get download URL:', error);
-        toast.error(language === 'km' ? 'មិនអាចទាញយកបានទេ។ សូមព្យាយាមម្ដងទៀត។' : 'Download failed. Please try again.');
-      }
-    }
-  };
-  
-  const isHidden = version.is_visible === false;
-
-  return (
-    <Collapsible open={isHidden ? false : isOpen} onOpenChange={isHidden ? undefined : setIsOpen}>
-      <CollapsibleTrigger asChild disabled={isHidden}>
-        <button className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors text-left ${
-          isHidden 
-            ? 'bg-muted/30 opacity-50 cursor-not-allowed' 
-            : 'bg-muted/50 hover:bg-muted'
-        }`}>
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isHidden ? 'bg-muted' : 'bg-primary/10'}`}>
-              <Package className={`w-5 h-5 ${isHidden ? 'text-muted-foreground' : 'text-primary'}`} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className={`font-semibold ${isHidden ? 'text-muted-foreground line-through' : 'text-foreground'}`}>v{version.version}</span>
-                {isLatest && !isHidden && (
-                  <Badge variant="default" className="text-xs">{translations.latest}</Badge>
-                )}
-                {isHidden && (
-                  <Badge variant="secondary" className="text-xs text-muted-foreground">{language === 'km' ? 'មិនមាន' : 'Unavailable'}</Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                {version.release_date && (
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(version.release_date).toLocaleDateString()}
-                  </span>
-                )}
-                {version.file_size && (
-                  <span className="flex items-center gap-1">
-                    <HardDrive className="w-3 h-3" />
-                    {version.file_size}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          {!isHidden && <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />}
-        </button>
-      </CollapsibleTrigger>
-      
-      <CollapsibleContent className="mt-2 space-y-3 pl-4">
-        {/* Version Details */}
-        <div className="grid grid-cols-2 gap-3 p-4 bg-muted/30 rounded-xl border border-border/50">
-          {version.min_os_version && (
-            <div className="flex items-center gap-2">
-              <Monitor className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <div className="text-xs text-muted-foreground">{translations.compatibility || 'Compatibility'}</div>
-                <div className="text-sm font-medium">{version.min_os_version}</div>
-              </div>
-            </div>
-          )}
-          
-          {version.file_size && (
-            <div className="flex items-center gap-2">
-              <HardDrive className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <div className="text-xs text-muted-foreground">{translations.size}</div>
-                <div className="text-sm font-medium">{version.file_size}</div>
-              </div>
-            </div>
-          )}
-          
-          {version.architecture && (
-            <div className="flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <div className="text-xs text-muted-foreground">{language === 'km' ? 'ស្ថាបត្យកម្ម' : 'Architecture'}</div>
-                <div className="text-sm font-medium">{version.architecture}</div>
-              </div>
-            </div>
-          )}
-          
-          {version.release_date && (
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <div className="text-xs text-muted-foreground">{translations.releaseDate}</div>
-                <div className="text-sm font-medium">{new Date(version.release_date).toLocaleDateString()}</div>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Changelog */}
-        {(version.changelog || version.changelog_km) && (
-          <div className="p-3 bg-muted/20 rounded-lg border border-border/30">
-            <RichContent html={t(version.changelog_km, version.changelog) || ''} className="text-sm text-muted-foreground" />
-          </div>
-        )}
-        
-        {/* Download Links */}
-        <div className="space-y-2">
-          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-            <FileDown className="w-3.5 h-3.5" />
-            {language === 'km' ? 'តំណទាញយក' : 'Download Links'}
-          </div>
-          
-          {hasDownloadLinks ? (
-            <div className="space-y-2">
-              {downloadLinks.map((link) => (
-                <a
-                  key={link.id}
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (canDownload) {
-                      handleDownloadClick(e, link.id);
-                    }
-                  }}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                    canDownload 
-                      ? 'bg-primary/5 border-primary/20 hover:bg-primary/10 cursor-pointer' 
-                      : 'bg-muted/50 border-border/50 cursor-not-allowed opacity-60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{link.title}</span>
-                    {link.link_type === 'page' && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        {language === 'km' ? 'ទំព័រ' : 'Page'}
-                      </Badge>
-                    )}
-                  </div>
-                  {canDownload ? (
-                    link.link_type === 'page' ? (
-                      <ExternalLink className="w-4 h-4 text-primary" />
-                    ) : (
-                      <Download className="w-4 h-4 text-primary" />
-                    )
-                  ) : (
-                    <Lock className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </a>
-              ))}
-            </div>
-          ) : version.download_url ? (
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                if (canDownload) {
-                  handleDownloadClick(e);
-                }
-              }}
-              className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                canDownload 
-                  ? 'bg-primary/5 border-primary/20 hover:bg-primary/10 cursor-pointer' 
-                  : 'bg-muted/50 border-border/50 cursor-not-allowed opacity-60'
-              }`}
-            >
-              <span className="text-sm font-medium">
-                {language === 'km' ? 'ទាញយក' : 'Download'} v{version.version}
-              </span>
-              {canDownload ? (
-                <Download className="w-4 h-4 text-primary" />
-              ) : (
-                <Lock className="w-4 h-4 text-muted-foreground" />
-              )}
-            </a>
-          ) : (
-            <div className="text-sm text-muted-foreground italic p-3">
-              {language === 'km' ? 'គ្មានតំណទាញយក' : 'No download links available'}
-            </div>
-          )}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-};
-
-// Sort versions by version number (descending) - handles semantic versioning
-const sortVersions = (versions: AppVersion[]): AppVersion[] => {
-  return [...versions].sort((a, b) => {
-    // First, prioritize is_latest
-    if (a.is_latest && !b.is_latest) return -1;
-    if (!a.is_latest && b.is_latest) return 1;
-    
-    // Then sort by version number (descending)
-    const parseVersion = (v: string) => {
-      const parts = v.replace(/^v/i, '').split(/[.-]/).map(p => {
-        const num = parseInt(p, 10);
-        return isNaN(num) ? 0 : num;
-      });
-      return parts;
-    };
-    
-    const aParts = parseVersion(a.version);
-    const bParts = parseVersion(b.version);
-    
-    const maxLen = Math.max(aParts.length, bParts.length);
-    for (let i = 0; i < maxLen; i++) {
-      const aVal = aParts[i] || 0;
-      const bVal = bParts[i] || 0;
-      if (bVal !== aVal) return bVal - aVal; // Descending order
-    }
-    
-    // Finally, sort by release date if versions are equal
-    const aDate = a.release_date ? new Date(a.release_date).getTime() : 0;
-    const bDate = b.release_date ? new Date(b.release_date).getTime() : 0;
-    return bDate - aDate;
-  });
-};
-
-// Versions List Component
-const VersionsList = ({ 
-  versions, 
-  canDownload,
-  appId,
-  appName
-}: { 
-  versions: AppVersion[]; 
-  canDownload: boolean;
-  appId: number;
-  appName: string;
-}) => {
-  const { language } = useLanguage();
-  const translations = useTranslations();
-  
-  if (!versions || versions.length === 0) {
-    return null;
-  }
-  
-  const sortedVersions = sortVersions(versions);
-  
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <History className="w-5 h-5 text-muted-foreground" />
-        <h3 className="text-lg font-semibold">
-          {language === 'km' ? 'កំណែទាំងអស់' : 'All Versions'}
-        </h3>
-        <Badge variant="secondary" className="text-xs">{sortedVersions.length}</Badge>
-      </div>
-      
-      <div className="space-y-3">
-        {sortedVersions.map((version, index) => (
-          <VersionItem 
-            key={version.id} 
-            version={version} 
-            canDownload={canDownload}
-            isLatest={index === 0}
-            appId={appId}
-            appName={appName}
-          />
-        ))}
-      </div>
-    </div>
-  );
 };
 
 // Screenshot Gallery Component with Lightbox
@@ -591,11 +296,6 @@ const AppDetail = () => {
     enabled: !!appId,
   });
 
-  const { data: versions } = useQuery({
-    queryKey: ["versions", appId],
-    queryFn: () => versionsApi.getByAppId(appId!),
-    enabled: !!appId,
-  });
 
   if (!appId) {
     return (
@@ -611,7 +311,6 @@ const AppDetail = () => {
   const displayName = appData ? t(appData.name_km, appData.name) : '';
   const displayDescription = appData ? t(appData.description_km, appData.description) : '';
   
-  const latestVersion = versions?.find(v => v.is_latest) || versions?.[0];
   const categoryLabels: Record<string, string> = {
     programs: translations.programs,
     games: translations.games,
@@ -810,19 +509,9 @@ const AppDetail = () => {
 
                     {/* Quick stats row */}
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      {latestVersion?.version && (
+                      {appData.latest_version && (
                         <span className="flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-full">
-                          <Package className="w-3 h-3" /> v{latestVersion.version}
-                        </span>
-                      )}
-                      {latestVersion?.file_size && (
-                        <span className="flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-full">
-                          <HardDrive className="w-3 h-3" /> {latestVersion.file_size}
-                        </span>
-                      )}
-                      {latestVersion?.release_date && (
-                        <span className="flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-full">
-                          <Calendar className="w-3 h-3" /> {new Date(latestVersion.release_date).toLocaleDateString()}
+                          <Package className="w-3 h-3" /> v{appData.latest_version}
                         </span>
                       )}
                       {appData.download_count > 0 && (
@@ -925,17 +614,6 @@ const AppDetail = () => {
                     );
                   })()}
 
-                  {/* All Versions */}
-                  {versions && versions.length > 0 && (
-                    <div className="bg-card rounded-2xl border border-border/50 p-6 sm:p-8">
-                      <VersionsList
-                        versions={versions}
-                        canDownload={!appData?.price || appData.price === 0 || !!hasPurchased}
-                        appId={appData?.id || 0}
-                        appName={displayName}
-                      />
-                    </div>
-                  )}
                 </div>
 
                 {/* Right Sidebar — Download + Metadata */}
@@ -1109,7 +787,7 @@ const AppDetail = () => {
           appId={appData.id}
           appName={displayName}
           price={appData.price}
-          downloadUrl={latestVersion?.download_url}
+          downloadUrl={undefined}
           coupon={selectedCoupon}
           onPaymentSuccess={() => {
             // Refresh purchase status - dialog stays open to show success
