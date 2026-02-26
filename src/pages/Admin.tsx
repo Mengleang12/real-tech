@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Plus, Edit, Trash2, LogOut, Package, Search, X, Save, ArrowLeft, 
@@ -89,6 +89,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
   const [variants, setVariants] = useState<{ combination: Record<string, string>; sku: string; stock_quantity: number; price_adjustment: number; is_active: boolean }[]>(
     app?.variants?.map(v => ({ combination: v.combination, sku: v.sku || '', stock_quantity: v.stock_quantity, price_adjustment: v.price_adjustment, is_active: v.is_active })) || []
   );
+  const isInitialVariantLoad = useRef(!!app?.variants?.length);
 
   useEffect(() => {
     categoriesApi.getAll().then(r => setCategories(r.categories)).catch(() => {});
@@ -111,6 +112,11 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
 
   // Auto-generate variants when attribute values change
   useEffect(() => {
+    // Skip first run when editing to preserve existing variant data
+    if (isInitialVariantLoad.current) {
+      isInitialVariantLoad.current = false;
+      return;
+    }
     const attrEntries = Array.from(selectedAttrs)
       .map(id => ({ id, values: attrValues[id] || [] }))
       .filter(e => e.values.length > 0);
