@@ -376,6 +376,7 @@ export interface AdminOrder {
   created_at: string;
   paid_at?: string;
   expires_at?: string;
+  notes?: string;
   user?: {
     id: number;
     email: string;
