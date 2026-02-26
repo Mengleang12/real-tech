@@ -222,6 +222,7 @@ export interface PaginatedResponse<T> {
 
 export interface ProductsQueryParams {
   category?: string;
+  category_id?: number;
   search?: string;
   featured?: boolean;
   popular?: boolean;
@@ -240,6 +241,7 @@ export const productsApi = {
   getAll: async (params?: ProductsQueryParams): Promise<{ data: Product[]; pagination: { page: number; limit: number; total: number; total_pages: number } }> => {
     const query = new URLSearchParams();
     if (params?.category) query.set('category', params.category);
+    if (params?.category_id) query.set('category_id', params.category_id.toString());
     if (params?.search) query.set('search', params.search);
     if (params?.featured) query.set('featured', 'true');
     if (params?.popular) query.set('popular', 'true');

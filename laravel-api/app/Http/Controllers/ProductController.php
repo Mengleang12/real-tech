@@ -19,7 +19,9 @@ class ProductController extends Controller
     {
         $query = Product::with(['screenshots', 'categoryRelation', 'brand', 'attributeValues.attribute', 'variants']);
 
-        if ($request->has('category') && $request->category !== 'all') {
+        if ($request->has('category_id') && is_numeric($request->category_id)) {
+            $query->where('category_id', (int) $request->category_id);
+        } elseif ($request->has('category') && $request->category !== 'all') {
             $query->where('category', $request->category);
         }
 

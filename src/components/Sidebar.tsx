@@ -1,9 +1,11 @@
-import { Headphones, Cpu, Monitor, Package, LayoutGrid, X, ShoppingCart, CreditCard, Settings, LogIn } from "lucide-react";
+import { LayoutGrid, X, ShoppingCart, CreditCard, Settings, LogIn, Package } from "lucide-react";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useCategories } from "@/hooks/useCategories";
 import realtechLogo from "@/assets/realtech-logo.png";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SidebarProps {
   activeCategory: string;
@@ -17,14 +19,11 @@ export const Sidebar = ({ activeCategory, onCategoryChange, isOpen = false, onTo
   const t = useTranslations();
   const { user } = useAuth();
   const location = useLocation();
+  const { data: categories, isLoading } = useCategories();
 
-  const navItems = [
-    { id: "all", label: language === "km" ? "ទាំងអស់" : "All Products", icon: LayoutGrid },
-    { id: "accessories", label: language === "km" ? "គ្រឿងបន្ថែម" : "Accessories", icon: Headphones },
-    { id: "electronics", label: language === "km" ? "អេឡិចត្រូនិច" : "Electronics", icon: Monitor },
-    { id: "pc-components", label: language === "km" ? "គ្រឿងកុំព្យូទ័រ" : "PC Components", icon: Cpu },
-    { id: "other", label: language === "km" ? "ផលិតផលផ្សេងៗ" : "Other Products", icon: Package },
-  ];
+  const activeCategories = (categories || [])
+    .filter(c => c.is_active)
+    .sort((a, b) => a.sort_order - b.sort_order);
 
   const userMenuItems = [
     { path: "/my-purchases", label: language === "km" ? "កម្មវិធីដែលបានទិញ" : "My Purchases", icon: ShoppingCart },
@@ -42,7 +41,7 @@ export const Sidebar = ({ activeCategory, onCategoryChange, isOpen = false, onTo
         "lg:translate-x-0 lg:static lg:flex"
       )}
     >
-      {/* macOS Window Controls area + Logo */}
+      {/* Logo */}
       <div className="h-[70px] flex items-center justify-center px-4 border-b border-sidebar-border/60 relative">
         <div className="w-20 h-20 rounded-md overflow-hidden shrink-0">
           <img src={realtechLogo} alt="Realtech" className="w-full h-full object-contain" />
@@ -60,25 +59,54 @@ export const Sidebar = ({ activeCategory, onCategoryChange, isOpen = false, onTo
           <p className="px-2.5 py-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider select-none">
             {language === "km" ? "ប្រភេទ" : "Categories"}
           </p>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = isOnIndex && activeCategory === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onCategoryChange(item.id)}
-                className={cn(
-                  "w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-left",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
-                )}
-              >
-                <Icon className="w-[16px] h-[16px] shrink-0 opacity-80" />
-                <span className="flex-1 truncate">{item.label}</span>
-              </button>
-            );
-          })}
+          
+          {/* All Products */}
+          <button
+            onClick={() => onCategoryChange("all")}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-left",
+              isOnIndex && activeCategory === "all"
+                ? "bg-primary text-primary-foreground"
+                : "text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
+            )}
+          >
+            <LayoutGrid className="w-[16px] h-[16px] shrink-0 opacity-80" />
+            <span className="flex-1 truncate">{language === "km" ? "ទាំងអស់" : "All Products"}</span>
+          </button>
+
+          {/* Dynamic categories */}
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2.5 px-2.5 py-[7px]">
+                <Skeleton className="w-4 h-4 rounded" />
+                <Skeleton className="h-4 flex-1" />
+              </div>
+            ))
+          ) : (
+            activeCategories.map((cat) => {
+              const isActive = isOnIndex && activeCategory === cat.slug;
+              const displayName = language === "km" && cat.name_km ? cat.name_km : cat.name;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => onCategoryChange(cat.slug)}
+                  className={cn(
+                    "w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-left",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
+                  )}
+                >
+                  {cat.icon_url ? (
+                    <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain shrink-0 opacity-80" />
+                  ) : (
+                    <Package className="w-[16px] h-[16px] shrink-0 opacity-80" />
+                  )}
+                  <span className="flex-1 truncate">{displayName}</span>
+                </button>
+              );
+            })
+          )}
         </div>
 
         {/* User Menu */}

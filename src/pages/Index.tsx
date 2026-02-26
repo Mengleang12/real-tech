@@ -4,11 +4,12 @@ import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { HeroSlider } from "@/components/HeroSlider";
 import { PopularApps } from "@/components/PopularApps";
-import { AppGrid } from "@/components/AppGrid";
-import { GamesGrid } from "@/components/GamesGrid";
+import { CategoryProductSection } from "@/components/CategoryProductSection";
 import { PageTransition } from "@/components/PageTransition";
 import { FloatingCartButton } from "@/components/FloatingCartButton";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
+import { useCategories } from "@/hooks/useCategories";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -16,58 +17,62 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { language } = useLanguage();
   const t = useTranslations();
+  const { data: categories, isLoading: categoriesLoading } = useCategories();
 
-  // Render content based on active category
+  // Filter only active categories, sorted by sort_order
+  const activeCategories = (categories || [])
+    .filter(c => c.is_active)
+    .sort((a, b) => a.sort_order - b.sort_order);
+
   const renderContent = () => {
     // When searching, show all categories
     if (searchQuery) {
       return (
         <>
-          <AppGrid searchQuery={searchQuery} />
-          <GamesGrid searchQuery={searchQuery} />
+          {activeCategories.map(cat => (
+            <CategoryProductSection key={cat.id} category={cat} searchQuery={searchQuery} />
+          ))}
         </>
       );
     }
 
-    switch (activeCategory) {
-      case "programs":
-        return <AppGrid searchQuery={searchQuery} showViewAll={false} />;
-      case "games":
-        return <GamesGrid searchQuery={searchQuery} />;
-      case "extensions":
-        return (
-          <div className="text-center py-20 text-muted-foreground">
-            <p className="text-lg">{language === 'km' ? 'មិនមានផ្នែកបន្ថែមនៅឡើយ' : 'No extensions available yet'}</p>
-          </div>
-        );
-      case "os":
-        return (
-          <div className="text-center py-20 text-muted-foreground">
-            <p className="text-lg">{language === 'km' ? 'មិនមានប្រព័ន្ធប្រតិបត្តិការនៅឡើយ' : 'No operating systems available yet'}</p>
-          </div>
-        );
-      case "articles":
-        return (
-          <div className="text-center py-20 text-muted-foreground">
-            <p className="text-lg">{language === 'km' ? 'មិនមានអត្ថបទនៅឡើយ' : 'No articles available yet'}</p>
-          </div>
-        );
-      case "goods":
-        return (
-          <div className="text-center py-20 text-muted-foreground">
-            <p className="text-lg">{language === 'km' ? 'មិនមានទំនិញនៅឡើយ' : 'No goods available yet'}</p>
-          </div>
-        );
-      default:
-        // "all" or any other - show popular apps, then programs and games
-        return (
-          <>
-            <PopularApps />
-            <AppGrid searchQuery={searchQuery} />
-            <GamesGrid searchQuery={searchQuery} />
-          </>
-        );
+    // Specific category selected
+    if (activeCategory !== "all") {
+      const selectedCat = activeCategories.find(c => c.slug === activeCategory);
+      if (selectedCat) {
+        return <CategoryProductSection category={selectedCat} searchQuery={searchQuery} limit={20} />;
+      }
+      return (
+        <div className="text-center py-20 text-muted-foreground">
+          <p className="text-lg">{language === 'km' ? 'មិនមានផលិតផលនៅឡើយ' : 'No products available yet'}</p>
+        </div>
+      );
     }
+
+    // "all" — show popular + each category section
+    return (
+      <>
+        <PopularApps />
+        {categoriesLoading ? (
+          <div className="space-y-10">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i}>
+                <Skeleton className="h-6 w-40 mb-6" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                  {Array.from({ length: 5 }).map((_, j) => (
+                    <Skeleton key={j} className="aspect-[4/3] rounded-2xl" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          activeCategories.map(cat => (
+            <CategoryProductSection key={cat.id} category={cat} />
+          ))
+        )}
+      </>
+    );
   };
 
   return (
@@ -107,7 +112,6 @@ const Index = () => {
 
       {/* Floating Cart Button */}
       <FloatingCartButton />
-
     </div>
   );
 };
