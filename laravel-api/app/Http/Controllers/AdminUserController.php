@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Order;
 use App\Traits\LogsAdminActivity;
+use App\Http\Controllers\SaleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -166,6 +167,9 @@ class AdminUserController extends Controller
             'paid_at' => now(),
             'bakong_transaction_id' => 'ADMIN_APPROVED_' . time(),
         ]);
+
+        // Deduct stock on approval
+        SaleController::deductStock($order);
 
         $this->logActivity($request, 'admin_approve_order', [
             'order_id' => $orderId,

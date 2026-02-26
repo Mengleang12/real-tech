@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\PaymentLog;
 use App\Models\UserActivityLog;
 use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\SaleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -154,6 +155,9 @@ class PaymentController extends Controller
             // Send Telegram notification
             $this->sendTelegramNotification($order);
 
+            // Deduct stock
+            SaleController::deductStock($order);
+
             // Create and send receipt email
             try {
                 ReceiptController::createFromOrder($order);
@@ -206,6 +210,9 @@ class PaymentController extends Controller
 
         // Send Telegram notification
         $this->sendTelegramNotification($order);
+
+        // Deduct stock
+        SaleController::deductStock($order);
 
         // Create and send receipt email
         try {

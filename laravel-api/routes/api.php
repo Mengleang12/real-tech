@@ -24,6 +24,7 @@ use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ProductAttributeController;
+use App\Http\Controllers\SaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -138,6 +139,12 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     
     // Admin receipts
     Route::get('/admin/receipts', [ReceiptController::class, 'adminIndex']);
+
+    // Sales module
+    Route::get('/admin/sales/dashboard', [SaleController::class, 'dashboard']);
+    Route::get('/admin/sales/stock', [SaleController::class, 'stockOverview']);
+    Route::put('/admin/sales/stock/{productId}', [SaleController::class, 'updateStock']);
+    Route::post('/admin/sales/stock/bulk', [SaleController::class, 'bulkUpdateStock']);
     
     // Coupon management
     Route::get('/admin/coupons', [CouponController::class, 'index']);
