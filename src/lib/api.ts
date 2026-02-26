@@ -824,6 +824,39 @@ export interface StockProduct {
   }[];
 }
 
+export interface SaleCustomer {
+  id: number;
+  full_name: string;
+  email: string;
+  phone?: string;
+}
+
+export interface SaleProduct {
+  id: number;
+  name: string;
+  icon_url?: string;
+  price: number;
+  stock_quantity: number;
+  variants: {
+    id: number;
+    combination: Record<string, string>;
+    sku?: string;
+    stock_quantity: number;
+    price_adjustment: number;
+  }[];
+}
+
+export interface CreateSalePayload {
+  customer_type: 'existing' | 'new';
+  customer_id?: number;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string;
+  items: { product_id: number; variant_id?: number; quantity: number; price: number }[];
+  payment_status: 'paid' | 'pending' | 'partial' | 'unpaid';
+  notes?: string;
+}
+
 // Sales API
 export const salesApi = {
   getDashboard: async (days?: number, from?: string, to?: string): Promise<{
@@ -860,5 +893,17 @@ export const salesApi = {
 
   bulkUpdateStock: async (updates: { product_id: number; variant_id?: number; stock_quantity: number }[]): Promise<{ success: boolean; message: string; updated_count: number }> => {
     return apiRequest('admin/sales/stock/bulk', { method: 'POST', body: { updates } });
+  },
+
+  searchCustomers: async (q: string): Promise<{ customers: SaleCustomer[] }> => {
+    return apiRequest(`admin/sales/customers?q=${encodeURIComponent(q)}`);
+  },
+
+  searchProducts: async (q: string): Promise<{ products: SaleProduct[] }> => {
+    return apiRequest(`admin/sales/products?q=${encodeURIComponent(q)}`);
+  },
+
+  createSale: async (data: CreateSalePayload): Promise<{ success: boolean; message: string; total_amount: number }> => {
+    return apiRequest('admin/sales/create', { method: 'POST', body: data });
   },
 };

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AddSaleDialog } from "./AddSaleDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminUsersApi, salesApi, type AdminOrder, type StockProduct } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ import { toast } from "sonner";
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, ShoppingCart,
   FileText, Eye, Package, CheckCircle, Clock, Printer,
-  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp
+  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus
 } from "lucide-react";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
@@ -586,12 +587,21 @@ const InvoicesTab = () => {
 
 // ─── Main Sales & Invoices Component ──────────────────────────────────────────
 export const SalesInvoices = () => {
+  const [addSaleOpen, setAddSaleOpen] = useState(false);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Sales & Invoices</h2>
-        <p className="text-sm text-muted-foreground mt-1">Track sales, manage stock, and view invoices</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Sales & Invoices</h2>
+          <p className="text-sm text-muted-foreground mt-1">Track sales, manage stock, and view invoices</p>
+        </div>
+        <Button onClick={() => setAddSaleOpen(true)} className="gap-2">
+          <Plus className="w-4 h-4" /> New Sale
+        </Button>
       </div>
+
+      <AddSaleDialog open={addSaleOpen} onOpenChange={setAddSaleOpen} />
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
