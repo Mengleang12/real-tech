@@ -1,0 +1,310 @@
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* macOS Sonoma Light — warm gray palette with blue accent */
+    --background: 0 0% 96%;
+    --foreground: 0 0% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 13%;
+
+    /* macOS Blue accent */
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 94%;
+    --secondary-foreground: 220 9% 36%;
+
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 220 14% 92%;
+    --accent-foreground: 220 9% 20%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 88%;
+    --input: 220 13% 88%;
+    --ring: 211 100% 50%;
+
+    --radius: 0.625rem;
+
+    /* Sidebar — translucent Finder style */
+    --sidebar-background: 220 20% 97%;
+    --sidebar-foreground: 220 9% 40%;
+    --sidebar-primary: 211 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 211 100% 94%;
+    --sidebar-accent-foreground: 211 100% 35%;
+    --sidebar-border: 220 13% 90%;
+    --sidebar-ring: 211 100% 50%;
+
+    --brand-purple: 262 83% 58%;
+    --brand-blue: 217 91% 60%;
+    --brand-teal: 174 72% 45%;
+    --brand-orange: 25 95% 58%;
+    --brand-pink: 330 85% 60%;
+
+    --shadow-subtle: 0 0.5px 1px hsl(0 0% 0% / 0.04), 0 1px 2px hsl(0 0% 0% / 0.06);
+    --shadow-card: 0 0.5px 1px hsl(0 0% 0% / 0.04), 0 1px 3px hsl(0 0% 0% / 0.08);
+    --shadow-card-hover: 0 2px 8px hsl(0 0% 0% / 0.10), 0 1px 3px hsl(0 0% 0% / 0.06);
+    --shadow-window: 0 8px 32px hsl(0 0% 0% / 0.12), 0 2px 8px hsl(0 0% 0% / 0.06);
+
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    --font-khmer: "Kantumruy Pro", sans-serif;
+  }
+
+  .dark {
+    /* macOS Sonoma Dark */
+    --background: 220 14% 11%;
+    --foreground: 220 9% 90%;
+
+    --card: 220 14% 15%;
+    --card-foreground: 220 9% 90%;
+
+    --popover: 220 14% 16%;
+    --popover-foreground: 220 9% 90%;
+
+    --primary: 211 100% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 18%;
+    --secondary-foreground: 220 9% 66%;
+
+    --muted: 220 14% 17%;
+    --muted-foreground: 220 9% 50%;
+
+    --accent: 220 14% 20%;
+    --accent-foreground: 220 9% 80%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 14% 20%;
+    --input: 220 14% 20%;
+    --ring: 211 100% 55%;
+
+    --sidebar-background: 220 16% 9%;
+    --sidebar-foreground: 220 9% 50%;
+    --sidebar-primary: 211 100% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 211 80% 22%;
+    --sidebar-accent-foreground: 211 100% 80%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 211 100% 55%;
+
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.4), 0 1px 2px hsl(0 0% 0% / 0.3);
+    --shadow-card-hover: 0 4px 16px hsl(0 0% 0% / 0.5), 0 2px 8px hsl(0 0% 0% / 0.3);
+    --shadow-window: 0 8px 40px hsl(0 0% 0% / 0.6), 0 2px 12px hsl(0 0% 0% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html[lang="km"],
+  html[lang="km"] body,
+  .font-khmer {
+    font-family: var(--font-khmer);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased transition-colors duration-200;
+    letter-spacing: -0.006em;
+  }
+}
+
+@layer components {
+  /* ── macOS Finder Sidebar ── */
+  .sidebar-nav-item {
+    @apply flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] text-sidebar-foreground transition-colors duration-100 hover:bg-accent hover:text-accent-foreground cursor-pointer w-full;
+  }
+
+  .sidebar-nav-item.active {
+    @apply bg-sidebar-accent text-sidebar-accent-foreground font-medium;
+  }
+
+  /* ── Product Card — e-commerce style ── */
+  .product-card {
+    @apply relative bg-card transition-all duration-300 cursor-pointer border border-border/40 overflow-hidden;
+    border-radius: 1rem;
+  }
+
+  .product-card:hover {
+    @apply border-primary/20;
+    box-shadow: 0 20px 40px -12px hsl(var(--primary) / 0.08);
+    transform: translateY(-4px);
+  }
+
+  /* Legacy support */
+  .app-card {
+    @apply relative bg-card p-4 transition-all duration-200 cursor-pointer border border-border/60;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  .app-card:hover {
+    @apply border-border;
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+  }
+
+  /* Update badge */
+  .app-card-update-badge {
+    @apply absolute top-2 left-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center;
+  }
+
+  /* ── Search — macOS Spotlight style ── */
+  .search-input {
+    @apply w-full bg-muted/60 border border-border/50 rounded-lg px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 focus:bg-card transition-all duration-150;
+  }
+
+  /* ── Primary button — macOS style ── */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-all duration-100;
+    box-shadow: 0 0.5px 1px hsl(0 0% 0% / 0.1), inset 0 0.5px 0 hsl(0 0% 100% / 0.15);
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.05);
+  }
+
+  .btn-primary:active {
+    filter: brightness(0.95);
+  }
+
+  /* Section links */
+  .section-link {
+    @apply text-muted-foreground hover:text-primary transition-colors duration-100 text-sm font-medium;
+  }
+
+  /* ── Header toolbar — macOS vibrancy ── */
+  .glass {
+    @apply bg-background/80 backdrop-blur-xl border-b border-border/50;
+  }
+
+  @supports (backdrop-filter: blur(20px)) {
+    .glass {
+      background: hsl(var(--background) / 0.72);
+    }
+  }
+
+  /* Theme toggle */
+  .theme-toggle {
+    @apply relative w-12 h-6 rounded-full p-0.5 transition-all duration-300 cursor-pointer;
+    background: hsl(var(--muted));
+  }
+
+  .theme-toggle::before {
+    content: '';
+    @apply absolute w-5 h-5 rounded-full transition-all duration-300;
+    background: white;
+    box-shadow: 0 1px 3px hsl(0 0% 0% / 0.2);
+    left: 2px;
+    top: 2px;
+  }
+
+  .dark .theme-toggle {
+    background: hsl(var(--primary));
+  }
+
+  .dark .theme-toggle::before {
+    transform: translateX(24px);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--brand-purple, 262 80% 60%)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Divider */
+  .notion-divider {
+    @apply border-t border-border/60 my-1;
+  }
+
+  /* Section heading */
+  .section-heading {
+    @apply flex items-center gap-2 mb-4;
+  }
+
+  .section-heading-icon {
+    @apply w-7 h-7 rounded-lg flex items-center justify-center;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* macOS-style thin scrollbar */
+  .scrollbar-macos {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scrollbar-macos::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-macos::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-macos::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.25);
+    border-radius: 3px;
+  }
+  .scrollbar-macos::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.4);
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out forwards;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+
+  .hover-lift {
+    @apply transition-all duration-150 hover:-translate-y-0.5;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(50%); }
+    100% { transform: translateX(-100%); }
+  }
+}
