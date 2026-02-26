@@ -358,6 +358,27 @@ export interface AdminUser {
   paid_orders_count?: number;
 }
 
+export interface OrderAttachment {
+  id: number;
+  order_id: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  file_size?: number;
+  created_at: string;
+}
+
+export interface OrderPayment {
+  id: number;
+  order_id: string;
+  amount: number;
+  method: string;
+  reference?: string;
+  note?: string;
+  paid_at: string;
+  created_at: string;
+}
+
 export interface AdminOrder {
   id: string;
   user_id: number;
@@ -377,6 +398,8 @@ export interface AdminOrder {
   paid_at?: string;
   expires_at?: string;
   notes?: string;
+  attachments?: OrderAttachment[];
+  payments?: OrderPayment[];
   user?: {
     id: number;
     email: string;
@@ -439,6 +462,40 @@ export const adminUsersApi = {
 
   bulkDeleteOrders: async (orderIds: string[]): Promise<{ success: boolean; message: string; deleted_count: number }> => {
     return apiRequest('admin/orders/bulk-delete', { method: 'POST', body: { order_ids: orderIds } });
+  },
+
+  getOrderDetail: async (orderId: string): Promise<{ order: AdminOrder }> => {
+    return apiRequest(`admin/orders/${orderId}`);
+  },
+
+  updateOrder: async (orderId: string, data: Partial<AdminOrder>): Promise<{ success: boolean; message: string; order: AdminOrder }> => {
+    return apiRequest(`admin/orders/${orderId}`, { method: 'PUT', body: data });
+  },
+
+  uploadAttachment: async (orderId: string, file: File): Promise<{ success: boolean; attachment: OrderAttachment }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/attachments`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${getApiKey()}` },
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Upload failed');
+    return data;
+  },
+
+  deleteAttachment: async (orderId: string, attachmentId: number): Promise<{ success: boolean }> => {
+    return apiRequest(`admin/orders/${orderId}/attachments/${attachmentId}`, { method: 'DELETE' });
+  },
+
+  addPayment: async (orderId: string, data: { amount: number; method: string; reference?: string; note?: string; paid_at?: string }): Promise<{ success: boolean; payment: OrderPayment }> => {
+    return apiRequest(`admin/orders/${orderId}/payments`, { method: 'POST', body: data });
+  },
+
+  deletePayment: async (orderId: string, paymentId: number): Promise<{ success: boolean }> => {
+    return apiRequest(`admin/orders/${orderId}/payments/${paymentId}`, { method: 'DELETE' });
   },
 };
 

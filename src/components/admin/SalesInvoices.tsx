@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AddSaleDialog } from "./AddSaleDialog";
+import { InvoiceEditDialog } from "./InvoiceEditDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminUsersApi, salesApi, type AdminOrder, type StockProduct } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, ShoppingCart,
-  FileText, Eye, Package, CheckCircle, Clock, Printer,
+  FileText, Eye, Package, CheckCircle, Clock, Printer, Pencil,
   AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus
 } from "lucide-react";
 
@@ -362,6 +363,7 @@ const InvoicesTab = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
+  const [editOrder, setEditOrder] = useState<AdminOrder | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-invoices", statusFilter, currentPage],
@@ -593,6 +595,7 @@ const InvoicesTab = () => {
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedOrder(order)} title="View"><Eye className="w-3.5 h-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditOrder(order)} title="Edit"><Pencil className="w-3.5 h-3.5 text-primary" /></Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handlePrint(order)} title="Print"><Printer className="w-3.5 h-3.5" /></Button>
                         </div>
                       </td>
@@ -701,6 +704,13 @@ const InvoicesTab = () => {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Invoice Dialog */}
+      <InvoiceEditDialog
+        order={editOrder}
+        open={!!editOrder}
+        onOpenChange={(open) => { if (!open) setEditOrder(null); }}
+      />
     </div>
   );
 };
