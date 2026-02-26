@@ -103,9 +103,9 @@ export const UserManagement = () => {
     if (!app) return;
     setGranting(true);
     try {
-      await adminUsersApi.grantApp(selectedUser.id, {
-        app_id: app.id,
-        app_name: app.name,
+      await adminUsersApi.grantProduct(selectedUser.id, {
+        product_id: app.id,
+        product_name: app.name,
         amount: parseFloat(grantAmount) || 0,
       });
       toast.success(`Granted "${app.name}" to ${selectedUser.email}`);
@@ -124,8 +124,8 @@ export const UserManagement = () => {
     if (!selectedUser) return;
     setRevokingOrderId(order.id);
     try {
-      await adminUsersApi.revokeApp(selectedUser.id, order.app_id);
-      toast.success(`Revoked "${order.app_name}"`);
+      await adminUsersApi.revokeProduct(selectedUser.id, order.product_id);
+      toast.success(`Revoked "${order.product_name}"`);
       handleSelectUser(selectedUser);
     } catch (error: any) {
       toast.error(error.message || "Failed to revoke app");
@@ -377,7 +377,7 @@ export const UserManagement = () => {
                         <tbody className="divide-y divide-border">
                           {paidOrders.map((order) => (
                             <tr key={order.id} className="hover:bg-muted/30">
-                              <td className="px-4 py-2 font-medium">{order.app_name}</td>
+                              <td className="px-4 py-2 font-medium">{order.product_name}</td>
                               <td className="px-4 py-2 tabular-nums">${(typeof order.amount === 'string' ? parseFloat(order.amount) : order.amount).toFixed(2)}</td>
                               <td className="px-4 py-2 text-xs text-muted-foreground">{new Date(order.paid_at || order.created_at).toLocaleDateString()}</td>
                               <td className="px-4 py-2">

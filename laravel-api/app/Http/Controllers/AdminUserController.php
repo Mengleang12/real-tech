@@ -12,9 +12,6 @@ class AdminUserController extends Controller
 {
     use LogsAdminActivity;
 
-    /**
-     * List all users with pagination
-     */
     public function index(Request $request)
     {
         $query = User::query();
@@ -46,9 +43,6 @@ class AdminUserController extends Controller
         ]);
     }
 
-    /**
-     * Get a single user with their orders
-     */
     public function show($id)
     {
         $user = User::with(['orders' => function($q) {
@@ -61,9 +55,6 @@ class AdminUserController extends Controller
         ]);
     }
 
-    /**
-     * Get user's orders/purchase history
-     */
     public function orders($id)
     {
         $user = User::findOrFail($id);
@@ -82,35 +73,32 @@ class AdminUserController extends Controller
         ]);
     }
 
-    /**
-     * Grant app access to a user (create a paid order)
-     */
-    public function grantApp(Request $request, $userId)
+    public function grantProduct(Request $request, $userId)
     {
         $request->validate([
-            'app_id' => 'required|integer',
-            'app_name' => 'required|string',
+            'product_id' => 'required|integer',
+            'product_name' => 'required|string',
             'amount' => 'nullable|numeric|min:0',
         ]);
         
         $user = User::findOrFail($userId);
         
         $existingPaid = Order::where('user_id', $userId)
-            ->where('app_id', $request->app_id)
+            ->where('product_id', $request->product_id)
             ->where('status', 'paid')
             ->first();
         
         if ($existingPaid) {
             return response()->json([
-                'error' => 'User already has access to this app',
+                'error' => 'User already has access to this product',
             ], 400);
         }
         
         $order = Order::create([
             'id' => (string) Str::uuid(),
             'user_id' => $userId,
-            'app_id' => $request->app_id,
-            'app_name' => $request->app_name,
+            'product_id' => $request->product_id,
+            'product_name' => $request->product_name,
             'amount' => $request->amount ?? 0,
             'currency' => 'USD',
             'status' => 'paid',
@@ -118,57 +106,51 @@ class AdminUserController extends Controller
             'bakong_transaction_id' => 'ADMIN_GRANTED_' . time(),
         ]);
 
-        $this->logActivity($request, 'admin_grant_app', [
+        $this->logActivity($request, 'admin_grant_product', [
             'target_user_id' => $userId,
             'target_email' => $user->email,
-            'app_id' => $request->app_id,
-            'app_name' => $request->app_name,
+            'product_id' => $request->product_id,
+            'product_name' => $request->product_name,
         ]);
         
         return response()->json([
             'success' => true,
-            'message' => 'App access granted successfully',
+            'message' => 'Product access granted successfully',
             'order' => $order,
         ]);
     }
 
-    /**
-     * Revoke app access from a user
-     */
-    public function revokeApp(Request $request, $userId, $appId)
+    public function revokeProduct(Request $request, $userId, $productId)
     {
         $user = User::findOrFail($userId);
         
         $order = Order::where('user_id', $userId)
-            ->where('app_id', $appId)
+            ->where('product_id', $productId)
             ->where('status', 'paid')
             ->first();
         
         if (!$order) {
             return response()->json([
-                'error' => 'User does not have access to this app',
+                'error' => 'User does not have access to this product',
             ], 404);
         }
         
-        $appName = $order->app_name;
+        $productName = $order->product_name;
         $order->delete();
 
-        $this->logActivity($request, 'admin_revoke_app', [
+        $this->logActivity($request, 'admin_revoke_product', [
             'target_user_id' => $userId,
             'target_email' => $user->email,
-            'app_id' => $appId,
-            'app_name' => $appName,
+            'product_id' => $productId,
+            'product_name' => $productName,
         ]);
         
         return response()->json([
             'success' => true,
-            'message' => 'App access revoked successfully',
+            'message' => 'Product access revoked successfully',
         ]);
     }
 
-    /**
-     * Manually approve a pending or expired order
-     */
     public function approveOrder(Request $request, $orderId)
     {
         $order = Order::findOrFail($orderId);
@@ -188,7 +170,7 @@ class AdminUserController extends Controller
         $this->logActivity($request, 'admin_approve_order', [
             'order_id' => $orderId,
             'user_id' => $order->user_id,
-            'app_name' => $order->app_name,
+            'product_name' => $order->product_name,
             'amount' => $order->amount,
         ]);
         
@@ -199,9 +181,6 @@ class AdminUserController extends Controller
         ]);
     }
 
-    /**
-     * Delete an order
-     */
     public function deleteOrder(Request $request, $orderId)
     {
         $order = Order::findOrFail($orderId);
@@ -209,7 +188,7 @@ class AdminUserController extends Controller
         $orderData = [
             'order_id' => $orderId,
             'user_id' => $order->user_id,
-            'app_name' => $order->app_name,
+            'product_name' => $order->product_name,
             'amount' => $order->amount,
             'status' => $order->status,
         ];
@@ -224,9 +203,6 @@ class AdminUserController extends Controller
         ]);
     }
 
-    /**
-     * Bulk delete orders
-     */
     public function bulkDeleteOrders(Request $request)
     {
         $request->validate([
@@ -249,9 +225,6 @@ class AdminUserController extends Controller
         ]);
     }
 
-    /**
-     * Get all orders (payment history) across all users
-     */
     public function allOrders(Request $request)
     {
         $query = Order::with(['user:id,email,full_name']);

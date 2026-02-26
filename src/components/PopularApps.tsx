@@ -39,7 +39,7 @@ export const PopularApps = () => {
     return new Set(
       orders
         .filter(order => order.status === 'paid')
-        .map(order => order.app_id)
+        .map(order => order.product_id)
     );
   }, [orders]);
 

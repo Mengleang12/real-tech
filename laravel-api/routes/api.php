@@ -44,9 +44,9 @@ Route::post('/otp/verify-password-reset', [OtpController::class, 'verifyPassword
 Route::post('/otp/verify-reset-code', [OtpController::class, 'verifyResetCode']);
 Route::post('/otp/resend', [OtpController::class, 'resendOtp']);
 
-// Products (public read) - keep /apps routes for frontend compatibility
-Route::get('/apps', [ProductController::class, 'index']);
-Route::get('/apps/{id}', [ProductController::class, 'show']);
+// Products (public read)
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
 
 
 // Public: categories & brands for filtering
@@ -62,9 +62,9 @@ Route::post('/ai/chat/stream', [AIChatController::class, 'streamChat']);
 
 // Protected admin routes (admin + moderator)
 Route::middleware('auth.admin')->group(function () {
-    // Product management (moderators can create/edit but NOT delete)
-    Route::post('/apps', [ProductController::class, 'store']);
-    Route::put('/apps/{id}', [ProductController::class, 'update']);
+    // Product management
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::put('/products/{id}', [ProductController::class, 'update']);
     
     
     Route::post('/upload', [UploadController::class, 'store']);
@@ -84,17 +84,17 @@ Route::middleware('auth.admin')->group(function () {
     Route::put('/admin/product-attributes/{id}', [ProductAttributeController::class, 'update']);
     Route::delete('/admin/product-attributes/{id}', [ProductAttributeController::class, 'destroy']);
     
-    // Notifications (moderators can manage)
+    // Notifications
     Route::get('/admin/notifications', [NotificationController::class, 'index']);
     Route::post('/admin/notifications', [NotificationController::class, 'store']);
     Route::put('/admin/notifications/{id}', [NotificationController::class, 'update']);
     Route::delete('/admin/notifications/{id}', [NotificationController::class, 'destroy']);
     
-    // Product submissions/review (moderators can review)
+    // Product submissions/review
     Route::get('/admin/submissions', [ProductSubmissionController::class, 'index']);
     Route::put('/admin/submissions/{id}', [ProductSubmissionController::class, 'update']);
     
-    // Activity logs (moderators can view)
+    // Activity logs
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index']);
 
 });
@@ -102,7 +102,7 @@ Route::middleware('auth.admin')->group(function () {
 // Admin-only routes (no moderator access)
 Route::middleware('auth.admin:admin_only')->group(function () {
     // Product deletion (admin only)
-    Route::delete('/apps/{id}', [ProductController::class, 'destroy']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     
     
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
@@ -111,8 +111,8 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::get('/admin/users', [AdminUserController::class, 'index']);
     Route::get('/admin/users/{id}', [AdminUserController::class, 'show']);
     Route::get('/admin/users/{id}/orders', [AdminUserController::class, 'orders']);
-    Route::post('/admin/users/{id}/grant-app', [AdminUserController::class, 'grantApp']);
-    Route::delete('/admin/users/{userId}/revoke-app/{appId}', [AdminUserController::class, 'revokeApp']);
+    Route::post('/admin/users/{id}/grant-product', [AdminUserController::class, 'grantProduct']);
+    Route::delete('/admin/users/{userId}/revoke-product/{productId}', [AdminUserController::class, 'revokeProduct']);
     Route::get('/admin/orders', [AdminUserController::class, 'allOrders']);
     Route::post('/admin/orders/{orderId}/approve', [AdminUserController::class, 'approveOrder']);
     Route::delete('/admin/orders/{orderId}', [AdminUserController::class, 'deleteOrder']);
@@ -184,8 +184,6 @@ Route::middleware('auth.user')->group(function () {
     // Activity tracking (download)
     Route::post('/track-download', [ActivityLogController::class, 'trackDownload']);
     
-    // Secure download with signed URLs
-    
     
     // User coupons
     Route::get('/coupons/my', [CouponController::class, 'myAvailableCoupons']);
@@ -193,7 +191,7 @@ Route::middleware('auth.user')->group(function () {
     Route::post('/coupons/apply', [CouponController::class, 'applyCoupon']);
 });
 
-// Payment routes (need user auth for some, public for webhooks)
+// Payment routes
 Route::post('/payment/generate-qr', [PaymentController::class, 'generateQr'])->middleware('auth.user');
 Route::post('/payment/verify', [PaymentController::class, 'verify'])->middleware('auth.user');
 Route::post('/payment/confirm-manual', [PaymentController::class, 'confirmManual'])->middleware('auth.user');

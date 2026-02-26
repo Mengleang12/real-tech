@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductAttributeValue extends Model
 {
-    protected $fillable = ['app_id', 'attribute_id', 'value', 'stock_quantity'];
+    protected $fillable = ['product_id', 'attribute_id', 'value', 'stock_quantity'];
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'app_id');
+        return $this->belongsTo(Product::class);
     }
 
     public function attribute(): BelongsTo

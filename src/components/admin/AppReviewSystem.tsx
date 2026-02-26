@@ -95,7 +95,7 @@ export const AppReviewSystem = () => {
 
   const filteredSubmissions = submissions.filter(sub => 
     sub.version.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    sub.app_id.toString().includes(searchQuery)
+    sub.product_id.toString().includes(searchQuery)
   );
 
   return (
@@ -164,12 +164,12 @@ export const AppReviewSystem = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-                        <span className="text-lg font-bold">{submission.app_id}</span>
+                        <span className="text-lg font-bold">{submission.product_id}</span>
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium">
-                            {submission.app?.name || `Product #${submission.app_id}`}
+                            {submission.product?.name || `Product #${submission.product_id}`}
                           </span>
                           <Badge variant="outline">v{submission.version}</Badge>
                         </div>
@@ -219,7 +219,7 @@ export const AppReviewSystem = () => {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Product</span>
                   <span className="font-medium">
-                    {selectedSubmission.app?.name || `#${selectedSubmission.app_id}`}
+                    {selectedSubmission.product?.name || `#${selectedSubmission.product_id}`}
                   </span>
                 </div>
                 <div className="flex justify-between">

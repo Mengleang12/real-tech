@@ -77,7 +77,7 @@ export const PaymentHistoryAdmin = () => {
 
   const filtered = searchQuery
     ? orders.filter(o =>
-        o.app_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        o.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         o.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         o.user?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         o.user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -305,7 +305,7 @@ export const PaymentHistoryAdmin = () => {
                         <div className="font-medium text-xs">{order.user?.full_name || "—"}</div>
                         <div className="text-xs text-muted-foreground">{order.user?.email}</div>
                       </td>
-                      <td className="px-4 py-3 font-medium">{order.app_name}</td>
+                      <td className="px-4 py-3 font-medium">{order.product_name}</td>
                       <td className="px-4 py-3 font-semibold tabular-nums">${amount.toFixed(2)}</td>
                       <td className="px-4 py-3">
                         <Badge variant={status.variant} className="text-xs">{status.label}</Badge>

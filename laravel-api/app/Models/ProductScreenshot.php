@@ -10,7 +10,7 @@ class ProductScreenshot extends Model
     protected $table = 'product_screenshots';
 
     protected $fillable = [
-        'app_id',
+        'product_id',
         'image_url',
         'sort_order',
     ];
@@ -23,6 +23,6 @@ class ProductScreenshot extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'app_id');
+        return $this->belongsTo(Product::class);
     }
 }

@@ -39,7 +39,7 @@ const PaymentCard = ({ order, language, onVerify, isVerifying }: PaymentCardProp
       <div className="px-4 py-3 flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-2">
           <span className={`w-1.5 h-1.5 rounded-full ${status.dotClass} flex-shrink-0`} />
-          <span className="text-sm font-medium">{order.app_name}</span>
+          <span className="text-sm font-medium">{order.product_name}</span>
           <span className="text-xs text-muted-foreground">
             · {language === 'km' ? status.labelKm : status.label}
           </span>
@@ -107,7 +107,7 @@ const PaymentCard = ({ order, language, onVerify, isVerifying }: PaymentCardProp
       {/* Footer action */}
       {order.status === 'paid' && (
         <div className="px-4 py-2.5 border-t border-border">
-          <Link to={`/${order.app_id}`}>
+          <Link to={`/${order.product_id}`}>
             <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
               <FileText className="w-3.5 h-3.5" />
               {language === 'km' ? 'មើលកម្មវិធី' : 'View App'}
@@ -207,7 +207,7 @@ const PaymentHistory = () => {
       const result = await verifyPayment(order.id, order.payment_md5);
       if (result.status === 'paid' || result.status === 'approved') {
         queryClient.invalidateQueries({ queryKey: ['orders'] });
-        queryClient.invalidateQueries({ queryKey: ['purchased', order.app_id] });
+        queryClient.invalidateQueries({ queryKey: ['purchased', order.product_id] });
         toast.success(language === 'km' ? 'ការបង់ប្រាក់បានផ្ទៀងផ្ទាត់ជោគជ័យ!' : 'Payment verified successfully!');
       } else {
         toast.info(language === 'km' ? `ស្ថានភាព: ${result.status}` : `Status: ${result.status}`);

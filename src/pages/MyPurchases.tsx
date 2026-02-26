@@ -32,10 +32,10 @@ const PurchasedAppCard = ({ order, language }: PurchasedAppCardProps) => {
       <div className="px-4 py-3">
         <div className="flex items-center gap-3">
           {/* App icon */}
-          {order.app_icon_url ? (
+          {order.product_icon_url ? (
             <img 
-              src={order.app_icon_url} 
-              alt={order.app_name} 
+              src={order.product_icon_url} 
+              alt={order.product_name}
               className="w-9 h-9 rounded-md border border-border flex-shrink-0 object-cover"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -43,13 +43,13 @@ const PurchasedAppCard = ({ order, language }: PurchasedAppCardProps) => {
               }}
             />
           ) : null}
-          <div className={`w-9 h-9 rounded-md bg-muted border border-border flex items-center justify-center flex-shrink-0 ${order.app_icon_url ? 'hidden' : ''}`}>
+          <div className={`w-9 h-9 rounded-md bg-muted border border-border flex items-center justify-center flex-shrink-0 ${order.product_icon_url ? 'hidden' : ''}`}>
             <Package className="w-4 h-4 text-muted-foreground" />
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground truncate">{order.app_name}</span>
+              <span className="text-sm font-medium text-foreground truncate">{order.product_name}</span>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span className={`w-1.5 h-1.5 rounded-full ${status.dotClass} flex-shrink-0`} />
                 {language === 'km' ? status.labelKm : status.label}
@@ -67,7 +67,7 @@ const PurchasedAppCard = ({ order, language }: PurchasedAppCardProps) => {
             </div>
           </div>
 
-          <Link to={`/${order.app_id}`}>
+          <Link to={`/${order.product_id}`}>
             <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors p-1">
               <ExternalLink className="w-3.5 h-3.5" />
             </button>

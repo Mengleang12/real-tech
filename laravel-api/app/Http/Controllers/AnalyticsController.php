@@ -83,12 +83,12 @@ class AnalyticsController extends Controller
             ->limit(10)
             ->get();
 
-        // Top apps by revenue
-        $topApps = Order::where('status', 'paid')
+        // Top products by revenue
+        $topProducts = Order::where('status', 'paid')
             ->where('created_at', '>=', $startDate)
             ->where('created_at', '<=', $endDate)
-            ->select('app_id', 'app_name', DB::raw('SUM(amount) as revenue'), DB::raw('COUNT(*) as sales'))
-            ->groupBy('app_id', 'app_name')
+            ->select('product_id', 'product_name', DB::raw('SUM(amount) as revenue'), DB::raw('COUNT(*) as sales'))
+            ->groupBy('product_id', 'product_name')
             ->orderByDesc('revenue')
             ->limit(5)
             ->get();
@@ -99,7 +99,7 @@ class AnalyticsController extends Controller
             'revenue_by_date' => $revenueByDate,
             'orders_by_status' => $ordersByStatus,
             'recent_orders' => $recentOrders,
-            'top_apps' => $topApps,
+            'top_products' => $topProducts,
         ]);
     }
 }

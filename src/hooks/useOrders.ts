@@ -6,9 +6,9 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomput
 export interface Order {
   id: string;
   user_id: number;
-  app_id: number;
-  app_name: string;
-  app_icon_url?: string;
+  product_id: number;
+  product_name: string;
+  product_icon_url?: string;
   amount: number;
   currency: string;
   status: 'pending' | 'paid' | 'failed' | 'expired';
@@ -43,13 +43,13 @@ export const useOrders = () => {
   });
 };
 
-export const useHasPurchased = (appId: number) => {
+export const useHasPurchased = (productId: number) => {
   const { user, token } = useAuth();
 
   return useQuery({
-    queryKey: ['purchased', appId, user?.id],
+    queryKey: ['purchased', productId, user?.id],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/orders/purchased?app_id=${appId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/orders/purchased?product_id=${productId}`, {
         headers: {
           'Accept': 'application/json',
           ...getAuthHeader(),
@@ -63,7 +63,7 @@ export const useHasPurchased = (appId: number) => {
       
       return data.purchased === true;
     },
-    enabled: !!user && !!token && !!appId,
+    enabled: !!user && !!token && !!productId,
   });
 };
 
@@ -83,8 +83,8 @@ export const useCreateOrder = () => {
           ...getAuthHeader(),
         },
         body: JSON.stringify({
-          app_id: appId,
-          app_name: appName,
+          product_id: appId,
+          product_name: appName,
           amount,
         }),
       });

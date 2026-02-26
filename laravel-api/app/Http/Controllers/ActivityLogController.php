@@ -81,8 +81,8 @@ class ActivityLogController extends Controller
     public function trackDownload(Request $request)
     {
         $request->validate([
-            'app_id' => 'required|integer',
-            'app_name' => 'required|string',
+            'product_id' => 'required|integer',
+            'product_name' => 'required|string',
         ]);
 
         $user = $request->user();
@@ -95,8 +95,8 @@ class ActivityLogController extends Controller
             'user_id' => $user->id,
             'action' => 'download',
             'details' => [
-                'app_id' => $request->app_id,
-                'app_name' => $request->app_name,
+                'product_id' => $request->product_id,
+                'product_name' => $request->product_name,
                 'version' => $request->version,
             ],
             'ip_address' => $request->ip(),

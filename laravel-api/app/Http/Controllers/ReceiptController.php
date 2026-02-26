@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Mail;
 
 class ReceiptController extends Controller
 {
-    /**
-     * Get all receipts for the authenticated user
-     */
     public function index(Request $request)
     {
         $receipts = Receipt::where('user_id', $request->user()->id)
@@ -25,9 +22,6 @@ class ReceiptController extends Controller
         ]);
     }
 
-    /**
-     * Get a specific receipt
-     */
     public function show(Request $request, $id)
     {
         $receipt = Receipt::where('id', $id)
@@ -44,9 +38,6 @@ class ReceiptController extends Controller
         ]);
     }
 
-    /**
-     * Create a receipt for an order and send email
-     */
     public static function createFromOrder(Order $order, ?array $downloadLinks = null): Receipt
     {
         $user = $order->user;
@@ -54,8 +45,8 @@ class ReceiptController extends Controller
         $receipt = Receipt::create([
             'order_id' => $order->id,
             'user_id' => $order->user_id,
-            'app_id' => $order->app_id,
-            'app_name' => $order->app_name,
+            'product_id' => $order->product_id,
+            'product_name' => $order->product_name,
             'amount' => $order->amount,
             'currency' => $order->currency,
             'payment_method' => 'ABA PayWay',
@@ -66,7 +57,6 @@ class ReceiptController extends Controller
             'download_links' => $downloadLinks,
         ]);
 
-        // Send receipt email
         try {
             Mail::to($user->email)->send(new ReceiptMail($receipt));
             $receipt->update([
@@ -80,9 +70,6 @@ class ReceiptController extends Controller
         return $receipt;
     }
 
-    /**
-     * Resend receipt email
-     */
     public function resend(Request $request, $id)
     {
         $receipt = Receipt::where('id', $id)
@@ -112,9 +99,6 @@ class ReceiptController extends Controller
         }
     }
 
-    /**
-     * Admin: Get all receipts
-     */
     public function adminIndex(Request $request)
     {
         $query = Receipt::with('user:id,email,full_name')

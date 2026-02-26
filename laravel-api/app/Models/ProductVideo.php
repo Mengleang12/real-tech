@@ -10,7 +10,7 @@ class ProductVideo extends Model
     protected $table = 'product_videos';
 
     protected $fillable = [
-        'app_id',
+        'product_id',
         'title',
         'youtube_url',
         'sort_order',
@@ -18,6 +18,6 @@ class ProductVideo extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'app_id');
+        return $this->belongsTo(Product::class);
     }
 }
