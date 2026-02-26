@@ -429,7 +429,7 @@ export const UserManagement = () => {
                             const canApprove = order.status === 'pending' || order.status === 'expired';
                             return (
                               <tr key={order.id} className="hover:bg-muted/30">
-                                <td className="px-4 py-2 font-medium">{order.app_name}</td>
+                                <td className="px-4 py-2 font-medium">{order.product_name}</td>
                                 <td className="px-4 py-2 tabular-nums">${(typeof order.amount === 'string' ? parseFloat(order.amount) : order.amount).toFixed(2)}</td>
                                 <td className="px-4 py-2">
                                   <Badge variant={status.variant} className="text-xs">{status.label}</Badge>
