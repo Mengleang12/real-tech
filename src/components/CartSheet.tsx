@@ -2,7 +2,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Trash2, X } from "lucide-react";
+import { ShoppingCart, Trash2, X, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const CartSheet = () => {
@@ -29,7 +29,15 @@ export const CartSheet = () => {
           <>
             <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
               {items.map((item, i) => {
-                const price = typeof item.app.price === "string" ? parseFloat(item.app.price) : item.app.price || 0;
+                const basePrice = typeof item.app.price === "string" ? parseFloat(item.app.price) : item.app.price || 0;
+                const variantAdj = item.selectedVariant?.price_adjustment || 0;
+                const finalPrice = basePrice + variantAdj;
+                const variantLabel = item.selectedVariant 
+                  ? Object.values(item.selectedVariant.combination).join(' / ')
+                  : null;
+                const variantStock = item.selectedVariant?.stock_quantity ?? null;
+                const isLowStock = variantStock !== null && variantStock > 0 && variantStock <= 5;
+
                 return (
                   <div
                     key={item.app.id}
@@ -45,8 +53,17 @@ export const CartSheet = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{item.app.name}</p>
-                      <p className={`text-xs font-semibold ${price > 0 ? "text-destructive" : "text-primary"}`}>
-                        {price > 0 ? `$${price.toFixed(1)}` : language === "km" ? "ឥតគិតថ្លៃ" : "Free"}
+                      {variantLabel && (
+                        <p className="text-[10px] text-muted-foreground truncate">{variantLabel}</p>
+                      )}
+                      {isLowStock && (
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                          <AlertTriangle className="w-2.5 h-2.5" />
+                          {variantStock} {language === 'km' ? 'នៅសល់' : 'left'}
+                        </p>
+                      )}
+                      <p className={`text-xs font-semibold ${finalPrice > 0 ? "text-destructive" : "text-primary"}`}>
+                        {finalPrice > 0 ? `$${finalPrice.toFixed(2)}` : language === "km" ? "ឥតគិតថ្លៃ" : "Free"}
                       </p>
                     </div>
                     <button

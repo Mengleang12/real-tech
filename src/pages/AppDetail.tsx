@@ -5,7 +5,7 @@ import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import {
   Download, Calendar, HardDrive, ExternalLink, Package, ChevronLeft, 
   ChevronRight, X, Shield, ArrowLeft, Home, Search,
-  Box, Gamepad2, Puzzle, LayoutGrid, ChevronDown, ShoppingCart, Lock,
+  Box, Gamepad2, Puzzle, LayoutGrid, ChevronDown, ShoppingCart, Lock, AlertTriangle,
   ShoppingBag, Tag, Boxes, Play
 } from "lucide-react";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
@@ -261,6 +261,7 @@ const AppDetail = () => {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<ApplicableCoupon | null>(null);
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState<number | null>(null);
   const { language, setLanguage } = useLanguage();
   
   // Get the previous location from state or default to home
@@ -620,65 +621,146 @@ const AppDetail = () => {
                 <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
                   {/* Download / Purchase CTA */}
                   <div className="bg-card rounded-2xl border border-border/50 p-5 space-y-4">
-                    {/* Buy & Add to Cart buttons */}
+                    {/* Variant selector */}
                     {(() => {
                       const priceNum = typeof appData.price === 'string' ? parseFloat(appData.price) : (appData.price || 0);
                       const isPaidApp = priceNum > 0;
                       const inCart = items.some(i => i.app.id === appData.id);
-                      const priceDisplay = isPaidApp ? `$${priceNum.toFixed(2)}` : '';
+                      const hasVariants = appData.variants && appData.variants.length > 0;
+                      const activeVariants = hasVariants ? appData.variants!.filter(v => v.is_active) : [];
+                      const selectedVariant = selectedVariantIdx !== null ? activeVariants[selectedVariantIdx] : null;
+                      const variantAdj = selectedVariant?.price_adjustment || 0;
+                      const finalPrice = priceNum + variantAdj;
+                      const priceDisplay = finalPrice > 0 ? `$${finalPrice.toFixed(2)}` : '';
 
-                      if (isPaidApp && user && purchaseLoading) {
-                        return (
-                          <Button className="w-full h-12 text-sm font-semibold gap-2" disabled>
-                            <ShoppingCart className="w-4 h-4 animate-pulse" />
-                            {language === 'km' ? 'កំពុងពិនិត្យ...' : 'Checking...'}
-                          </Button>
-                        );
-                      }
+                      // Stock calculation
+                      const totalStock = hasVariants
+                        ? activeVariants.reduce((s, v) => s + v.stock_quantity, 0)
+                        : (appData.stock_quantity ?? 0);
+                      const selectedStock = selectedVariant ? selectedVariant.stock_quantity : totalStock;
+                      const isOOS = selectedStock <= 0;
+                      const isLowStock = selectedStock > 0 && selectedStock <= (appData.low_stock_threshold ?? 5);
 
                       return (
                         <div className="space-y-3">
-                          {/* Direct Buy button */}
-                          <Button
-                            className="w-full h-12 text-sm font-semibold gap-2 bg-green-600 hover:bg-green-700 text-white"
-                            onClick={() => {
-                              if (!user) {
-                                navigate('/auth');
-                                return;
-                              }
-                              if (isPaidApp && !hasPurchased) {
-                                setShowPaymentDialog(true);
-                              } else {
-                                // Free or purchased - go to checkout directly
-                                addToCart(appData);
-                                navigate('/checkout');
-                              }
-                            }}
-                          >
-                            <ShoppingCart className="w-4 h-4" />
-                            {isPaidApp && !hasPurchased
-                              ? (language === 'km' ? 'ទិញឥឡូវ' : 'Buy Now')
-                              : (language === 'km' ? 'ទទួលបានឥឡូវ' : 'Get Now')}
-                            {isPaidApp && !hasPurchased && ` — ${priceDisplay}`}
-                          </Button>
-                          {/* Add to Cart button */}
-                          <Button
-                            variant="outline"
-                            className="w-full h-10 text-sm font-medium gap-2"
-                            disabled={inCart}
-                            onClick={() => {
-                              addToCart(appData);
-                              toast.success(language === 'km' ? 'បានបន្ថែមទៅកន្ត្រក' : 'Added to cart');
-                            }}
-                          >
-                            <ShoppingBag className="w-4 h-4" />
-                            {inCart
-                              ? (language === 'km' ? 'មានក្នុងកន្ត្រក' : 'In Cart')
-                              : (language === 'km' ? 'បន្ថែមទៅកន្ត្រក' : 'Add to Cart')}
-                          </Button>
+                          {/* Variant picker */}
+                          {hasVariants && activeVariants.length > 0 && (
+                            <div className="space-y-2">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                {language === 'km' ? 'ជ្រើសរើសប្រភេទ' : 'Select variant'}
+                              </label>
+                              <div className="flex flex-wrap gap-1.5">
+                                {activeVariants.map((v, idx) => {
+                                  const label = Object.values(v.combination).join(' / ');
+                                  const vOOS = v.stock_quantity <= 0;
+                                  const selected = selectedVariantIdx === idx;
+                                  return (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => setSelectedVariantIdx(selected ? null : idx)}
+                                      disabled={vOOS}
+                                      className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                                        vOOS
+                                          ? 'border-border/30 text-muted-foreground/40 line-through cursor-not-allowed'
+                                          : selected
+                                            ? 'border-primary bg-primary text-primary-foreground'
+                                            : 'border-border hover:border-primary/50 text-foreground'
+                                      }`}
+                                    >
+                                      {label}
+                                      {v.price_adjustment > 0 && !vOOS && (
+                                        <span className="ml-1 text-[10px] opacity-70">+${v.price_adjustment.toFixed(0)}</span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Stock indicator */}
+                          {isOOS ? (
+                            <div className="text-center py-2 bg-destructive/10 rounded-lg">
+                              <span className="text-sm font-semibold text-destructive">
+                                {language === 'km' ? 'អស់ស្តុក' : 'Out of Stock'}
+                              </span>
+                            </div>
+                          ) : isLowStock ? (
+                            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              {selectedStock} {language === 'km' ? 'នៅសល់' : 'left in stock'}
+                            </div>
+                          ) : null}
+
+                          {/* Price display */}
+                          <div className="flex items-baseline gap-2">
+                            {finalPrice > 0 ? (
+                              <>
+                                <span className="text-2xl font-bold text-destructive">${finalPrice.toFixed(2)}</span>
+                                {variantAdj > 0 && (
+                                  <span className="text-xs text-muted-foreground line-through">${priceNum.toFixed(2)}</span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="text-xl font-bold text-primary">
+                                {language === 'km' ? 'ឥតគិតថ្លៃ' : 'Free'}
+                              </span>
+                            )}
+                          </div>
+
+                          {isPaidApp && user && purchaseLoading ? (
+                            <Button className="w-full h-12 text-sm font-semibold gap-2" disabled>
+                              <ShoppingCart className="w-4 h-4 animate-pulse" />
+                              {language === 'km' ? 'កំពុងពិនិត្យ...' : 'Checking...'}
+                            </Button>
+                          ) : (
+                            <>
+                              {/* Direct Buy button */}
+                              <Button
+                                className="w-full h-12 text-sm font-semibold gap-2 bg-green-600 hover:bg-green-700 text-white"
+                                disabled={isOOS || (hasVariants && !selectedVariant)}
+                                onClick={() => {
+                                  if (!user) { navigate('/auth'); return; }
+                                  if (isPaidApp && !hasPurchased) {
+                                    setShowPaymentDialog(true);
+                                  } else {
+                                    addToCart(appData, null, selectedVariant);
+                                    navigate('/checkout');
+                                  }
+                                }}
+                              >
+                                <ShoppingCart className="w-4 h-4" />
+                                {isOOS
+                                  ? (language === 'km' ? 'អស់ស្តុក' : 'Out of Stock')
+                                  : hasVariants && !selectedVariant
+                                    ? (language === 'km' ? 'សូមជ្រើសរើសប្រភេទ' : 'Select a variant')
+                                    : isPaidApp && !hasPurchased
+                                      ? (language === 'km' ? 'ទិញឥឡូវ' : 'Buy Now') + (priceDisplay ? ` — ${priceDisplay}` : '')
+                                      : (language === 'km' ? 'ទទួលបានឥឡូវ' : 'Get Now')
+                                }
+                              </Button>
+                              {/* Add to Cart button */}
+                              <Button
+                                variant="outline"
+                                className="w-full h-10 text-sm font-medium gap-2"
+                                disabled={inCart || isOOS || (hasVariants && !selectedVariant)}
+                                onClick={() => {
+                                  addToCart(appData, null, selectedVariant);
+                                  toast.success(language === 'km' ? 'បានបន្ថែមទៅកន្ត្រក' : 'Added to cart');
+                                }}
+                              >
+                                <ShoppingBag className="w-4 h-4" />
+                                {inCart
+                                  ? (language === 'km' ? 'មានក្នុងកន្ត្រក' : 'In Cart')
+                                  : (language === 'km' ? 'បន្ថែមទៅកន្ត្រក' : 'Add to Cart')}
+                              </Button>
+                            </>
+                          )}
+
                           {isPaidApp && !hasPurchased && (
                             <CouponSuggestion
-                              price={priceNum}
+                              price={finalPrice}
                               onSelectCoupon={setSelectedCoupon}
                               selectedCoupon={selectedCoupon}
                             />

@@ -782,7 +782,10 @@ const AppsTab = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground mb-1">Low Stock</p>
-                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{apps.filter(a => (a.stock_quantity ?? 0) > 0 && (a.stock_quantity ?? 0) <= (a.low_stock_threshold ?? 5)).length}</p>
+                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{apps.filter(a => {
+                    const total = a.variants?.length ? a.variants.filter(v => v.is_active).reduce((s, v) => s + v.stock_quantity, 0) : (a.stock_quantity ?? 0);
+                    return total > 0 && total <= (a.low_stock_threshold ?? 5);
+                  }).length}</p>
                 </div>
                 <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
                   <AlertTriangle className="w-4.5 h-4.5 text-amber-600 dark:text-amber-400" />
@@ -795,7 +798,10 @@ const AppsTab = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground mb-1">Out of Stock</p>
-                  <p className="text-2xl font-bold text-destructive">{apps.filter(a => (a.stock_quantity ?? 0) <= 0).length}</p>
+                  <p className="text-2xl font-bold text-destructive">{apps.filter(a => {
+                    const total = a.variants?.length ? a.variants.filter(v => v.is_active).reduce((s, v) => s + v.stock_quantity, 0) : (a.stock_quantity ?? 0);
+                    return total <= 0;
+                  }).length}</p>
                 </div>
                 <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
                   <PackageCheck className="w-4.5 h-4.5 text-destructive" />

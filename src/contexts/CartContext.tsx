@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
-import type { App } from "@/lib/api";
+import type { App, ProductVariant } from "@/lib/api";
 
 export interface CartItem {
   app: App;
   quantity: number;
+  selectedVariant?: ProductVariant | null;
 }
 
 interface FlyingItem {
@@ -16,12 +17,14 @@ interface CartContextType {
   items: CartItem[];
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  addToCart: (app: App, sourceElement?: HTMLElement | null) => void;
+  addToCart: (app: App, sourceElement?: HTMLElement | null, variant?: ProductVariant | null) => void;
   removeFromCart: (appId: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
   flyingItems: FlyingItem[];
+  getEffectiveStock: (app: App, variant?: ProductVariant | null) => number;
+  isOutOfStock: (app: App) => boolean;
 }
 
 const CartContext = createContext<CartContextType>({
@@ -34,6 +37,8 @@ const CartContext = createContext<CartContextType>({
   totalItems: 0,
   totalPrice: 0,
   flyingItems: [],
+  getEffectiveStock: () => 0,
+  isOutOfStock: () => false,
 });
 
 const CART_STORAGE_KEY = "cart-items";
@@ -47,6 +52,14 @@ const loadCartFromStorage = (): CartItem[] => {
   }
 };
 
+/** Calculate total available stock for a product (variant-level or product-level) */
+const calcTotalStock = (app: App): number => {
+  if (app.variants && app.variants.length > 0) {
+    return app.variants.filter(v => v.is_active).reduce((sum, v) => sum + v.stock_quantity, 0);
+  }
+  return app.stock_quantity ?? 0;
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>(loadCartFromStorage);
   const [isOpen, setIsOpen] = useState(false);
@@ -56,7 +69,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
-  const addToCart = useCallback((app: App, sourceElement?: HTMLElement | null) => {
+  const getEffectiveStock = useCallback((app: App, variant?: ProductVariant | null): number => {
+    if (variant) return variant.stock_quantity;
+    return calcTotalStock(app);
+  }, []);
+
+  const isOutOfStock = useCallback((app: App): boolean => {
+    return calcTotalStock(app) <= 0;
+  }, []);
+
+  const addToCart = useCallback((app: App, sourceElement?: HTMLElement | null, variant?: ProductVariant | null) => {
     // Trigger fly animation
     if (sourceElement) {
       const rect = sourceElement.getBoundingClientRect();
@@ -65,7 +87,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         { id: flyId, iconUrl: app.icon_url || "", startRect: rect },
       ]);
-      // Remove after animation
       setTimeout(() => {
         setFlyingItems((prev) => prev.filter((f) => f.id !== flyId));
       }, 700);
@@ -74,7 +95,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.app.id === app.id);
       if (existing) return prev; // already in cart
-      return [...prev, { app, quantity: 1 }];
+      return [...prev, { app, quantity: 1, selectedVariant: variant || null }];
     });
   }, []);
 
@@ -86,13 +107,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const totalItems = items.length;
   const totalPrice = items.reduce((sum, i) => {
-    const p = typeof i.app.price === "string" ? parseFloat(i.app.price) : i.app.price || 0;
-    return sum + p;
+    const basePrice = typeof i.app.price === "string" ? parseFloat(i.app.price) : i.app.price || 0;
+    const variantAdj = i.selectedVariant?.price_adjustment || 0;
+    return sum + basePrice + variantAdj;
   }, 0);
 
   return (
     <CartContext.Provider
-      value={{ items, isOpen, setIsOpen, addToCart, removeFromCart, clearCart, totalItems, totalPrice, flyingItems }}
+      value={{ items, isOpen, setIsOpen, addToCart, removeFromCart, clearCart, totalItems, totalPrice, flyingItems, getEffectiveStock, isOutOfStock }}
     >
       {children}
     </CartContext.Provider>

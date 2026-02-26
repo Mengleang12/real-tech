@@ -5,7 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { PaymentDialog } from "@/components/PaymentDialog";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingCart, Trash2, X, Package, CreditCard } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Trash2, X, Package, CreditCard, AlertTriangle } from "lucide-react";
 import DeliveryInfoForm, { type DeliveryInfo } from "@/components/DeliveryInfoForm";
 import GuestCheckoutDialog from "@/components/GuestCheckoutDialog";
 import { toast } from "sonner";
@@ -33,9 +33,10 @@ const Checkout = () => {
     return p > 0;
   });
 
-  const getPrice = (app: typeof items[0]["app"]) => {
-    const p = typeof app.price === "string" ? parseFloat(app.price) : app.price || 0;
-    return p;
+  const getPrice = (item: typeof items[0]) => {
+    const base = typeof item.app.price === "string" ? parseFloat(item.app.price) : item.app.price || 0;
+    const variantAdj = item.selectedVariant?.price_adjustment || 0;
+    return base + variantAdj;
   };
 
   const currentPayingItem = payingIndex !== null ? paidRequired[payingIndex] : null;
@@ -175,8 +176,13 @@ const Checkout = () => {
           <>
             <div className="space-y-2">
               {items.map((item, i) => {
-                const price = getPrice(item.app);
+                const price = getPrice(item);
                 const isPaid = paidIds.has(item.app.id);
+                const variantLabel = item.selectedVariant
+                  ? Object.values(item.selectedVariant.combination).join(' / ')
+                  : null;
+                const variantStock = item.selectedVariant?.stock_quantity ?? null;
+                const isLowStock = variantStock !== null && variantStock > 0 && variantStock <= 5;
                 return (
                   <div
                     key={item.app.id}
@@ -207,9 +213,18 @@ const Checkout = () => {
                       <p className="text-sm font-semibold text-foreground truncate">
                         {language === "km" && item.app.name_km ? item.app.name_km : item.app.name}
                       </p>
+                      {variantLabel && (
+                        <p className="text-[10px] text-muted-foreground truncate">{variantLabel}</p>
+                      )}
                       <p className="text-xs text-muted-foreground truncate">
                         {item.app.category || "Product"}
                       </p>
+                      {isLowStock && (
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-0.5 mt-0.5">
+                          <AlertTriangle className="w-2.5 h-2.5" />
+                          {variantStock} {language === 'km' ? 'នៅសល់' : 'left'}
+                        </p>
+                      )}
                       {isPaid && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary mt-0.5">
                           ✓ {language === "km" ? "បានបង់ប្រាក់" : "Paid"}
@@ -296,8 +311,8 @@ const Checkout = () => {
                   <CreditCard className="w-3.5 h-3.5" />
                   {paidRequired.length > 0
                     ? language === "km"
-                      ? `បង់ប្រាក់ ($${paidRequired.reduce((s, i) => s + getPrice(i.app), 0).toFixed(2)})`
-                      : `Pay $${paidRequired.reduce((s, i) => s + getPrice(i.app), 0).toFixed(2)}`
+                      ? `បង់ប្រាក់ ($${paidRequired.reduce((s, i) => s + getPrice(i), 0).toFixed(2)})`
+                      : `Pay $${paidRequired.reduce((s, i) => s + getPrice(i), 0).toFixed(2)}`
                     : language === "km"
                     ? "ទាញយកទាំងអស់"
                     : "Get All Free"}
@@ -317,7 +332,7 @@ const Checkout = () => {
           }}
           appId={currentPayingItem.app.id}
           appName={currentPayingItem.app.name}
-          price={getPrice(currentPayingItem.app)}
+          price={getPrice(currentPayingItem)}
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}

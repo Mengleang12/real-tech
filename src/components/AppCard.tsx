@@ -1,9 +1,10 @@
-import { Package, Heart, ShoppingCart, Zap } from "lucide-react";
+import { Package, Heart, ShoppingCart, Zap, AlertTriangle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/contexts/CartContext";
 import { useRef } from "react";
+import { toast } from "sonner";
 import type { App } from "@/lib/api";
 
 interface AppCardProps {
@@ -35,7 +36,7 @@ export const AppCard = (props: AppCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toggle, isWishlisted } = useWishlist();
-  const { addToCart } = useCart();
+  const { addToCart, isOutOfStock } = useCart();
   const imgRef = useRef<HTMLImageElement>(null);
   const placeholderRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +51,22 @@ export const AppCard = (props: AppCardProps) => {
   const isPaidApp = priceNum > 0;
   const displayName = t(nameKm, name);
 
+  const outOfStock = props.app ? isOutOfStock(props.app) : false;
+
+  // Calculate stock info
+  const getStockInfo = () => {
+    if (!props.app) return null;
+    const app = props.app;
+    const totalStock = app.variants && app.variants.length > 0
+      ? app.variants.filter(v => v.is_active).reduce((sum, v) => sum + v.stock_quantity, 0)
+      : (app.stock_quantity ?? 0);
+    const threshold = app.low_stock_threshold ?? 5;
+    if (totalStock <= 0) return { status: 'out', label: language === 'km' ? 'អស់ស្តុក' : 'Out of stock' };
+    if (totalStock <= threshold) return { status: 'low', label: language === 'km' ? `នៅសល់ ${totalStock}` : `${totalStock} left` };
+    return null; // normal stock, no badge needed
+  };
+  const stockInfo = getStockInfo();
+
   const handleClick = () => {
     if (props.app) {
       navigate(`/${props.app.id}`, {
@@ -58,9 +75,32 @@ export const AppCard = (props: AppCardProps) => {
     }
   };
 
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!props.app) return;
+    if (outOfStock) {
+      toast.error(language === 'km' ? 'ផលិតផលនេះអស់ស្តុក' : 'This product is out of stock');
+      return;
+    }
+    const sourceEl = imgRef.current || placeholderRef.current;
+    addToCart(props.app, sourceEl);
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!props.app) return;
+    if (outOfStock) {
+      toast.error(language === 'km' ? 'ផលិតផលនេះអស់ស្តុក' : 'This product is out of stock');
+      return;
+    }
+    const sourceEl = imgRef.current || placeholderRef.current;
+    addToCart(props.app, sourceEl);
+    navigate("/checkout");
+  };
+
   return (
     <div
-      className={`group relative rounded-2xl bg-card border border-border/40 overflow-hidden transition-all duration-300 ease-out hover:shadow-[0_8px_30px_-8px_hsl(var(--foreground)/0.1)] ${props.app ? "cursor-pointer" : ""}`}
+      className={`group relative rounded-2xl bg-card border border-border/40 overflow-hidden transition-all duration-300 ease-out hover:shadow-[0_8px_30px_-8px_hsl(var(--foreground)/0.1)] ${props.app ? "cursor-pointer" : ""} ${outOfStock ? 'opacity-75' : ''}`}
       onClick={handleClick}
     >
       {/* Image */}
@@ -83,6 +123,27 @@ export const AppCard = (props: AppCardProps) => {
         {props.purchased && (
           <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md">
             ✓ {language === "km" ? "បានទិញ" : "Owned"}
+          </div>
+        )}
+
+        {/* Stock badge */}
+        {stockInfo && (
+          <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full shadow-md ${
+            stockInfo.status === 'out' 
+              ? 'bg-destructive text-destructive-foreground' 
+              : 'bg-amber-500 text-white'
+          }`}>
+            {stockInfo.status === 'low' && <AlertTriangle className="w-3 h-3" />}
+            {stockInfo.label}
+          </div>
+        )}
+
+        {/* Out of stock overlay */}
+        {outOfStock && (
+          <div className="absolute inset-0 bg-background/40 flex items-center justify-center">
+            <span className="text-sm font-bold text-destructive bg-background/80 px-3 py-1 rounded-full">
+              {language === "km" ? "អស់ស្តុក" : "Out of Stock"}
+            </span>
           </div>
         )}
       </div>
@@ -113,29 +174,26 @@ export const AppCard = (props: AppCardProps) => {
         {/* Bottom row: buttons + heart */}
         <div className="flex items-center gap-1.5 pt-1">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (props.app) {
-                const sourceEl = imgRef.current || placeholderRef.current;
-                addToCart(props.app, sourceEl);
-              }
-            }}
-            className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground border border-border rounded-full px-2.5 py-1.5 hover:bg-muted active:scale-95 transition-all duration-150"
+            onClick={handleAddToCart}
+            disabled={outOfStock}
+            className={`flex items-center gap-1 text-[11px] font-semibold border rounded-full px-2.5 py-1.5 transition-all duration-150 ${
+              outOfStock 
+                ? 'text-muted-foreground/50 border-border/50 cursor-not-allowed' 
+                : 'text-muted-foreground border-border hover:bg-muted active:scale-95'
+            }`}
           >
             <ShoppingCart className="w-3 h-3" />
             {language === "km" ? "បន្ថែម" : "Cart"}
           </button>
 
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (props.app) {
-                const sourceEl = imgRef.current || placeholderRef.current;
-                addToCart(props.app, sourceEl);
-                navigate("/checkout");
-              }
-            }}
-            className="flex items-center gap-1 text-[11px] font-semibold text-destructive border border-destructive/40 rounded-full px-2.5 py-1.5 hover:bg-destructive/5 active:scale-95 transition-all duration-150"
+            onClick={handleBuyNow}
+            disabled={outOfStock}
+            className={`flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1.5 transition-all duration-150 ${
+              outOfStock
+                ? 'text-muted-foreground/50 border border-border/50 cursor-not-allowed'
+                : 'text-destructive border border-destructive/40 hover:bg-destructive/5 active:scale-95'
+            }`}
           >
             <Zap className="w-3 h-3" />
             {language === "km" ? "ទិញ" : "Buy"}
