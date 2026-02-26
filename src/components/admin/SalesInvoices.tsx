@@ -386,9 +386,17 @@ const InvoicesTab = () => {
 
   const handlePrint = (order: AdminOrder) => {
     const amount = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount;
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(`<!DOCTYPE html><html><head><title>Invoice #${order.id.slice(0, 8).toUpperCase()}</title>
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "none";
+    iframe.style.left = "-9999px";
+    document.body.appendChild(iframe);
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) { document.body.removeChild(iframe); return; }
+    doc.open();
+    doc.write(`<!DOCTYPE html><html><head><title>Invoice #${order.id.slice(0, 8).toUpperCase()}</title>
       <style>
         body{font-family:'Segoe UI',sans-serif;max-width:700px;margin:40px auto;padding:20px;color:#1a1a1a}
         .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px}
@@ -400,7 +408,6 @@ const InvoicesTab = () => {
         .status{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
         .status-paid{background:#d1fae5;color:#065f46}.status-pending{background:#fef3c7;color:#92400e}
         .footer{margin-top:40px;padding-top:20px;border-top:1px solid #e5e5e5;font-size:12px;color:#999;text-align:center}
-        @media print{.no-print{display:none}}
       </style></head><body>
       <div class="header"><div><div class="logo">Macsofy</div><div style="color:#666;font-size:13px;margin-top:4px">Software & Digital Products</div></div>
         <div style="text-align:right"><div style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:1px">Invoice</div>
@@ -418,9 +425,12 @@ const InvoicesTab = () => {
         <tbody><tr><td>${order.product_name}</td><td>1</td><td style="text-align:right">$${amount.toFixed(2)}</td></tr>
           <tr class="total"><td colspan="2">Total</td><td style="text-align:right">$${amount.toFixed(2)} ${order.currency}</td></tr></tbody></table>
       <div class="footer">Thank you for your purchase! — Macsofy</div>
-      <div class="no-print" style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:10px 24px;background:#1a1a1a;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px">Print Invoice</button></div>
       </body></html>`);
-    w.document.close();
+    doc.close();
+    iframe.onload = () => {
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    };
   };
 
   return (
