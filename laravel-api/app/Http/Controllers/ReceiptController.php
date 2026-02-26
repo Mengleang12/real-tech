@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\ReceiptMail;
-use App\Models\Order;
+use App\Models\Sale;
 use App\Models\Receipt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -38,22 +38,22 @@ class ReceiptController extends Controller
         ]);
     }
 
-    public static function createFromOrder(Order $order, ?array $downloadLinks = null): Receipt
+    public static function createFromSale(Sale $sale, ?array $downloadLinks = null): Receipt
     {
-        $user = $order->user;
+        $user = $sale->user;
 
         $receipt = Receipt::create([
-            'order_id' => $order->id,
-            'user_id' => $order->user_id,
-            'product_id' => $order->product_id,
-            'product_name' => $order->product_name,
-            'amount' => $order->amount,
-            'currency' => $order->currency,
+            'sale_id' => $sale->id,
+            'user_id' => $sale->user_id,
+            'product_id' => $sale->product_id,
+            'product_name' => $sale->product_name,
+            'amount' => $sale->amount,
+            'currency' => $sale->currency,
             'payment_method' => 'ABA PayWay',
-            'transaction_id' => $order->bakong_transaction_id,
+            'transaction_id' => $sale->bakong_transaction_id,
             'user_email' => $user->email,
             'user_name' => $user->full_name,
-            'paid_at' => $order->paid_at ?? now(),
+            'paid_at' => $sale->paid_at ?? now(),
             'download_links' => $downloadLinks,
         ]);
 

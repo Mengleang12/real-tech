@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
+use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,13 +11,11 @@ class AnalyticsController extends Controller
 {
     public function dashboard(Request $request)
     {
-        // Support from/to date range or fallback to days parameter
         $from = $request->input('from');
         $to = $request->input('to');
-        $tzOffset = $request->input('tz_offset'); // e.g. "+07:00"
+        $tzOffset = $request->input('tz_offset');
 
         if ($from && $to) {
-            // If timezone offset provided, convert from user's local timezone to UTC
             if ($tzOffset) {
                 $tz = new \DateTimeZone($tzOffset);
                 $startDate = new \DateTime($from . ' 00:00:00', $tz);
@@ -36,29 +34,25 @@ class AnalyticsController extends Controller
             $endDate = now()->endOfDay();
         }
 
-        // Get order statistics
-        $orders = Order::where('created_at', '>=', $startDate)
+        $sales = Sale::where('created_at', '>=', $startDate)
             ->where('created_at', '<=', $endDate)
             ->get();
-        $paidOrders = $orders->where('status', 'paid');
+        $paidSales = $sales->where('status', 'paid');
 
-        // Get user statistics
         $totalUsers = User::count();
         $newUsers = User::where('created_at', '>=', $startDate)->where('created_at', '<=', $endDate)->count();
 
-        // Calculate stats
         $stats = [
             'total_users' => $totalUsers,
             'new_users' => $newUsers,
-            'total_orders' => $orders->count(),
-            'paid_orders' => $paidOrders->count(),
-            'total_revenue' => $paidOrders->sum('amount'),
-            'avg_order_value' => $paidOrders->count() > 0 ? $paidOrders->sum('amount') / $paidOrders->count() : 0,
-            'conversion_rate' => $orders->count() > 0 ? ($paidOrders->count() / $orders->count()) * 100 : 0,
+            'total_orders' => $sales->count(),
+            'paid_orders' => $paidSales->count(),
+            'total_revenue' => $paidSales->sum('amount'),
+            'avg_order_value' => $paidSales->count() > 0 ? $paidSales->sum('amount') / $paidSales->count() : 0,
+            'conversion_rate' => $sales->count() > 0 ? ($paidSales->count() / $sales->count()) * 100 : 0,
         ];
 
-        // Revenue by date
-        $revenueByDate = Order::where('status', 'paid')
+        $revenueByDate = Sale::where('status', 'paid')
             ->where('created_at', '>=', $startDate)
             ->where('created_at', '<=', $endDate)
             ->select(
@@ -70,21 +64,18 @@ class AnalyticsController extends Controller
             ->orderBy('date')
             ->get();
 
-        // Orders by status
-        $ordersByStatus = Order::where('created_at', '>=', $startDate)
+        $ordersByStatus = Sale::where('created_at', '>=', $startDate)
             ->where('created_at', '<=', $endDate)
             ->select('status', DB::raw('COUNT(*) as count'))
             ->groupBy('status')
             ->get();
 
-        // Recent orders
-        $recentOrders = Order::with('user:id,email,full_name')
+        $recentOrders = Sale::with('user:id,email,full_name')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
-        // Top products by revenue
-        $topProducts = Order::where('status', 'paid')
+        $topProducts = Sale::where('status', 'paid')
             ->where('created_at', '>=', $startDate)
             ->where('created_at', '<=', $endDate)
             ->select('product_id', 'product_name', DB::raw('SUM(amount) as revenue'), DB::raw('COUNT(*) as sales'))

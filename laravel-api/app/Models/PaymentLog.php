@@ -13,7 +13,7 @@ class PaymentLog extends Model
 
     protected $fillable = [
         'id',
-        'order_id',
+        'sale_id',
         'tran_id',
         'device_id',
         'client_id',
@@ -40,8 +40,8 @@ class PaymentLog extends Model
         });
     }
 
-    public function order(): BelongsTo
+    public function sale(): BelongsTo
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Sale::class);
     }
 }

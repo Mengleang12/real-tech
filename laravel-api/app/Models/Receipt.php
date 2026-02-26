@@ -13,7 +13,7 @@ class Receipt extends Model
 
     protected $fillable = [
         'id',
-        'order_id',
+        'sale_id',
         'user_id',
         'receipt_number',
         'product_id',
@@ -60,9 +60,9 @@ class Receipt extends Model
         return "{$prefix}-{$date}-{$random}";
     }
 
-    public function order(): BelongsTo
+    public function sale(): BelongsTo
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Sale::class);
     }
 
     public function user(): BelongsTo

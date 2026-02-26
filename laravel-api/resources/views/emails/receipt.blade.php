@@ -436,8 +436,8 @@
                 <h4 class="details-title">Transaction Details</h4>
                 <div class="details-grid">
                     <div class="detail-item">
-                        <div class="detail-label">Order ID</div>
-                        <div class="detail-value">{{ substr($receipt->order_id, 0, 8) }}...</div>
+                        <div class="detail-label">Sale ID</div>
+                        <div class="detail-value">{{ substr($receipt->sale_id, 0, 8) }}...</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Transaction ID</div>
