@@ -629,7 +629,7 @@ const AppDetail = () => {
                       const hasVariants = appData.variants && appData.variants.length > 0;
                       const activeVariants = hasVariants ? appData.variants!.filter(v => v.is_active) : [];
                       const selectedVariant = selectedVariantIdx !== null ? activeVariants[selectedVariantIdx] : null;
-                      const variantAdj = selectedVariant?.price_adjustment || 0;
+                      const variantAdj = Number(selectedVariant?.price_adjustment) || 0;
                       const finalPrice = priceNum + variantAdj;
                       const priceDisplay = finalPrice > 0 ? `$${finalPrice.toFixed(2)}` : '';
 
