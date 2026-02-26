@@ -442,7 +442,7 @@ const AppDetail = () => {
         </header>
 
         <div className="px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 overflow-x-auto whitespace-nowrap pb-1">
             <Link to="/" className="flex items-center gap-1 hover:text-foreground transition-colors">
               <Home className="w-4 h-4" />
               <span>{translations.home}</span>

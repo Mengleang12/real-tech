@@ -176,27 +176,27 @@ export const AppCard = (props: AppCardProps) => {
           <button
             onClick={handleAddToCart}
             disabled={outOfStock}
-            className={`flex items-center gap-1 text-[11px] font-semibold border rounded-full px-2.5 py-1.5 transition-all duration-150 ${
+            className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold border rounded-full px-2 sm:px-2.5 py-1 sm:py-1.5 transition-all duration-150 ${
               outOfStock 
                 ? 'text-muted-foreground/50 border-border/50 cursor-not-allowed' 
                 : 'text-muted-foreground border-border hover:bg-muted active:scale-95'
             }`}
           >
             <ShoppingCart className="w-3 h-3" />
-            {language === "km" ? "បន្ថែម" : "Cart"}
+            <span className="hidden xs:inline">{language === "km" ? "បន្ថែម" : "Cart"}</span>
           </button>
 
           <button
             onClick={handleBuyNow}
             disabled={outOfStock}
-            className={`flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1.5 transition-all duration-150 ${
+            className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold rounded-full px-2 sm:px-2.5 py-1 sm:py-1.5 transition-all duration-150 ${
               outOfStock
                 ? 'text-muted-foreground/50 border border-border/50 cursor-not-allowed'
                 : 'text-destructive border border-destructive/40 hover:bg-destructive/5 active:scale-95'
             }`}
           >
             <Zap className="w-3 h-3" />
-            {language === "km" ? "ទិញ" : "Buy"}
+            <span className="hidden xs:inline">{language === "km" ? "ទិញ" : "Buy"}</span>
           </button>
 
           <div className="flex-1" />
