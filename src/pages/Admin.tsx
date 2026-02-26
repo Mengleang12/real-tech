@@ -688,9 +688,37 @@ const AppsTab = () => {
       ? app.variants.filter(v => v.is_active).reduce((sum, v) => sum + v.stock_quantity, 0)
       : (app.stock_quantity ?? 0);
     const threshold = app.low_stock_threshold ?? 5;
-    if (totalStock <= 0) return <Badge variant="destructive" className="text-xs">Out of Stock</Badge>;
-    if (totalStock <= threshold) return <Badge className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/10">Low: {totalStock}</Badge>;
-    return <span className="text-muted-foreground tabular-nums">{totalStock}</span>;
+    const maxDisplay = Math.max(totalStock, threshold * 3, 20);
+    const percent = Math.min((totalStock / maxDisplay) * 100, 100);
+
+    if (totalStock <= 0) {
+      return (
+        <div className="flex items-center gap-2 min-w-[120px]">
+          <div className="flex-1 h-1.5 rounded-full bg-destructive/15 overflow-hidden">
+            <div className="h-full w-0 rounded-full bg-destructive" />
+          </div>
+          <span className="text-[11px] font-semibold text-destructive whitespace-nowrap">Out of stock</span>
+        </div>
+      );
+    }
+    if (totalStock <= threshold) {
+      return (
+        <div className="flex items-center gap-2 min-w-[120px]">
+          <div className="flex-1 h-1.5 rounded-full bg-amber-500/15 overflow-hidden">
+            <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${percent}%` }} />
+          </div>
+          <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 whitespace-nowrap tabular-nums">{totalStock} left</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-2 min-w-[120px]">
+        <div className="flex-1 h-1.5 rounded-full bg-emerald-500/15 overflow-hidden">
+          <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${percent}%` }} />
+        </div>
+        <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap tabular-nums">{totalStock}</span>
+      </div>
+    );
   };
 
   return (
