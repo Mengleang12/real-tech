@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import macsofyLogo from '@/assets/macsofy-logo.png';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, KeyRound, ShieldX, Ban, Loader2 } from 'lucide-react';
@@ -19,11 +19,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import ReCAPTCHA from 'react-google-recaptcha';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
-const RECAPTCHA_SITE_KEY = '6Lfyb14sAAAAAHdR8wOO6NubpsKRq2ScBBYhHCNU';
-const RECAPTCHA_ENABLED = Boolean(RECAPTCHA_SITE_KEY);
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }),
@@ -55,7 +52,6 @@ const Auth = () => {
   const { user, loading } = useAuth();
   const { language } = useLanguage();
   const t = useTranslations();
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
@@ -70,21 +66,18 @@ const Auth = () => {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [banInfo, setBanInfo] = useState<{ status: string; reason?: string; suspendedUntil?: string } | null>(null);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       navigate('/');
     }
 
-    // Check for stored auth error (from banned user trying to access)
     const authError = sessionStorage.getItem('auth_error');
     if (authError) {
       sessionStorage.removeItem('auth_error');
       toast.error(authError);
     }
 
-    // Check for stored ban info (from mid-session ban)
     const storedBanInfo = sessionStorage.getItem('ban_info');
     if (storedBanInfo) {
       sessionStorage.removeItem('ban_info');
@@ -116,26 +109,15 @@ const Auth = () => {
       return;
     }
 
-    // Validate reCAPTCHA if enabled
-    if (RECAPTCHA_ENABLED && !recaptchaToken) {
-      setErrors({ recaptcha: language === 'km' ? 'សូមបញ្ជាក់ CAPTCHA' : 'Please complete the CAPTCHA' });
-      return;
-    }
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ email, password, ...(RECAPTCHA_ENABLED ? { recaptcha_token: recaptchaToken } : {}) }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
-      // Reset reCAPTCHA after submission
-      recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
-
-      // Handle banned/suspended users
       if (response.status === 403 && (data.status === 'banned' || data.status === 'suspended')) {
         setBanInfo({
           status: data.status,
@@ -156,8 +138,6 @@ const Auth = () => {
       toast.success(language === 'km' ? 'ចូលបានជោគជ័យ!' : 'Logged in successfully!');
       window.location.href = '/';
     } catch (error) {
-      recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
       toast.error(language === 'km' ? 'មានបញ្ហាកើតឡើង' : 'Something went wrong');
     }
   };
@@ -173,24 +153,14 @@ const Auth = () => {
       return;
     }
 
-    // Validate reCAPTCHA if enabled
-    if (RECAPTCHA_ENABLED && !recaptchaToken) {
-      setErrors({ recaptcha: language === 'km' ? 'សូមបញ្ជាក់ CAPTCHA' : 'Please complete the CAPTCHA' });
-      return;
-    }
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/otp/send-registration`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ email, ...(RECAPTCHA_ENABLED ? { recaptcha_token: recaptchaToken } : {}) }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
-
-      // Reset reCAPTCHA after submission
-      recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
 
       if (!response.ok || data.error) {
         toast.error(data.error || 'Failed to send OTP');
@@ -201,8 +171,6 @@ const Auth = () => {
       setMode('verify-registration');
       setResendCooldown(60);
     } catch (error) {
-      recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
       toast.error(language === 'km' ? 'មានបញ្ហាកើតឡើង' : 'Something went wrong');
     }
   };
@@ -270,7 +238,6 @@ const Auth = () => {
       return;
     }
 
-    // Verify OTP with backend before proceeding
     try {
       const response = await fetch(`${API_BASE_URL}/api/otp/verify-reset-code`, {
         method: 'POST',
@@ -390,8 +357,6 @@ const Auth = () => {
     setFullName('');
     setOtp('');
     setErrors({});
-    setRecaptchaToken(null);
-    recaptchaRef.current?.reset();
   };
 
   if (loading) {
@@ -481,7 +446,7 @@ const Auth = () => {
               </div>
             )}
 
-            {/* Email field (login, register, forgot-password) */}
+            {/* Email field */}
             {(mode === 'login' || mode === 'register' || mode === 'forgot-password') && (
               <div>
                 <Label htmlFor="email">{language === 'km' ? 'អ៊ីមែល' : 'Email'}</Label>
@@ -501,7 +466,7 @@ const Auth = () => {
               </div>
             )}
 
-            {/* Password field (login, register, reset-password) */}
+            {/* Password field */}
             {(mode === 'login' || mode === 'register' || mode === 'reset-password') && (
               <div>
                 <Label htmlFor="password">{language === 'km' ? 'ពាក្យសម្ងាត់' : 'Password'}</Label>
@@ -528,7 +493,7 @@ const Auth = () => {
               </div>
             )}
 
-            {/* Confirm Password field (register, reset-password) */}
+            {/* Confirm Password field */}
             {(mode === 'register' || mode === 'reset-password') && (
               <div>
                 <Label htmlFor="confirmPassword">{language === 'km' ? 'បញ្ជាក់ពាក្យសម្ងាត់' : 'Confirm Password'}</Label>
@@ -555,7 +520,7 @@ const Auth = () => {
               </div>
             )}
 
-            {/* OTP Input (verify modes) */}
+            {/* OTP Input */}
             {(mode === 'verify-registration' || mode === 'verify-reset') && (
               <div className="space-y-4">
                 <p className="text-center text-sm text-muted-foreground">
@@ -595,30 +560,6 @@ const Auth = () => {
               </div>
             )}
 
-            {/* reCAPTCHA (render only when a site key is configured and not in dev mode) */}
-            {RECAPTCHA_ENABLED && (mode === 'login' || mode === 'register' || mode === 'forgot-password') && (
-              <div>
-                <div className="flex justify-center">
-                  <ReCAPTCHA
-                    ref={recaptchaRef}
-                    sitekey={RECAPTCHA_SITE_KEY}
-                    onChange={(token) => {
-                      setRecaptchaToken(token);
-                      setErrors((prev) => {
-                        const next = { ...prev } as Record<string, string>;
-                        delete next.recaptcha;
-                        return next;
-                      });
-                    }}
-                    onExpired={() => setRecaptchaToken(null)}
-                  />
-                  {errors.recaptcha && <p className="text-sm text-destructive mt-1">{errors.recaptcha}</p>}
-                </div>
-              </div>
-            )}
-
-
-
             <Button type="submit" className="w-full h-11" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {isSubmitting
@@ -636,7 +577,7 @@ const Auth = () => {
             </Button>
           </form>
 
-          {/* Forgot password link (login mode only) */}
+          {/* Forgot password link */}
           {mode === 'login' && (
             <div className="mt-4 text-center">
               <button
