@@ -364,6 +364,11 @@ export interface AdminOrder {
   product_id: number;
   product_name: string;
   amount: number;
+  original_price?: string;
+  item_discount?: string;
+  item_discount_type?: string;
+  sale_discount?: string;
+  sale_discount_type?: string;
   currency: string;
   status: 'pending' | 'paid' | 'failed' | 'expired';
   bakong_transaction_id?: string;
