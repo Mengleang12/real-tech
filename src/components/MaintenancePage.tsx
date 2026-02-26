@@ -46,7 +46,7 @@ export function MaintenancePage({ message }: MaintenancePageProps) {
           <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 space-y-1.5">
             <Mail className="w-5 h-5 text-primary mx-auto" />
             <p className="text-xs font-medium text-foreground">Need Help?</p>
-            <p className="text-[11px] text-muted-foreground">support@macsofy.com</p>
+            <p className="text-[11px] text-muted-foreground">support@realtechcomputer.com</p>
           </div>
         </div>
 

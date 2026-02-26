@@ -23,7 +23,7 @@ interface PaymentDialogProps {
 }
 
 const KHQRLogo = () => (
-  <img src="https://macsofy.com/images/khqr-icon.svg" alt="KHQR" className="h-4" />
+  <img src="https://realtechcomputer.com/images/khqr-icon.svg" alt="KHQR" className="h-4" />
 );
 
 const DollarSymbol = () => (
@@ -230,7 +230,7 @@ export const PaymentDialog = ({
                     {qrDataUrl && <img src={qrDataUrl} alt="KHQR Code" className="w-36 h-36" />}
                     <DollarSymbol />
                   </div>
-                  <img src="https://macsofy.com/images/payment_icons.png" alt="Payment icons" className="w-full max-w-[200px] object-contain opacity-80" />
+                  <img src="https://realtechcomputer.com/images/payment_icons.png" alt="Payment icons" className="w-full max-w-[200px] object-contain opacity-80" />
                 </div>
               </div>
 
