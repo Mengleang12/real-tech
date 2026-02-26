@@ -40,6 +40,7 @@ import { BrandManagement } from "@/components/admin/BrandManagement";
 import { AttributeManagement } from "@/components/admin/AttributeManagement";
 import { cn } from "@/lib/utils";
 import { SystemSettingsPanel } from "@/components/admin/SystemSettings";
+import { SalesInvoices } from "@/components/admin/SalesInvoices";
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -574,7 +575,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
 
 interface NavItem {
   id: AdminTab;
@@ -608,6 +609,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Orders & Users",
     items: [
+      { id: "sales", label: "Sales & Invoices", icon: DollarSign, permission: "orders.view" },
       { id: "payments", label: "Payments", icon: TrendingUp, permission: "orders.view" },
       { id: "users", label: "Users", icon: Users, permission: "users.view" },
       { id: "coupons", label: "Coupons", icon: Tag, permission: "coupons.manage" },
@@ -1129,6 +1131,7 @@ const AdminDashboard = () => {
           {activeTab === "brands" && <BrandManagement />}
           {activeTab === "attributes" && <AttributeManagement />}
           {activeTab === "users" && <UserManagement />}
+          {activeTab === "sales" && <SalesInvoices />}
           {activeTab === "payments" && <PaymentHistoryAdmin />}
           {activeTab === "reviews" && <AppReviewSystem />}
           {activeTab === "roles" && <RoleManagement />}
