@@ -12,7 +12,7 @@ export const CartSheet = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetContent className="w-[360px] sm:w-[400px] flex flex-col p-0">
+      <SheetContent className="w-full max-w-[360px] sm:max-w-[400px] flex flex-col p-0">
         <SheetHeader className="px-5 pt-5 pb-3 border-b border-border/50">
           <SheetTitle className="flex items-center gap-2 text-base">
             <ShoppingCart className="w-4 h-4" />

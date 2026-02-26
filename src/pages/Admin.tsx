@@ -249,11 +249,11 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
           <Label className="text-base font-medium">Product Stock</Label>
 
           {/* Attributes row - selected as tags */}
-          <div className="flex items-center gap-4">
-            <div className="w-40 shrink-0 bg-muted/50 rounded-md px-3 py-2">
-              <span className="text-sm font-medium">Attributes</span>
-            </div>
-            <div className="flex-1 border border-border rounded-md px-3 py-2 flex flex-wrap items-center gap-2 min-h-[40px]">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div className="w-full sm:w-40 shrink-0 bg-muted/50 rounded-md px-3 py-2">
+                      <span className="text-sm font-medium">Attributes</span>
+                    </div>
+                    <div className="flex-1 w-full border border-border rounded-md px-3 py-2 flex flex-wrap items-center gap-2 min-h-[40px]">
               {Array.from(selectedAttrs).map(id => {
                 const attr = attributes.find(a => a.id === id);
                 if (!attr) return null;
@@ -334,11 +334,11 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
                 const selectedLower = selectedValues.map(v => v.toLowerCase());
                 const availableOptions = attr.options || [];
                 return (
-                  <div key={id} className="flex items-center gap-4">
-                    <div className="w-40 shrink-0 bg-muted/50 rounded-md px-3 py-2">
+                  <div key={id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div className="w-full sm:w-40 shrink-0 bg-muted/50 rounded-md px-3 py-2">
                       <span className="text-sm font-medium text-primary">{attr.name}</span>
                     </div>
-                    <div className="flex-1 border border-border rounded-md px-3 py-2 flex flex-wrap items-center gap-2 min-h-[40px]">
+                    <div className="flex-1 w-full border border-border rounded-md px-3 py-2 flex flex-wrap items-center gap-2 min-h-[40px]">
                       {selectedValues.map(val => (
                         <span key={val} className="inline-flex items-center gap-1 bg-primary text-primary-foreground text-xs font-medium px-2.5 py-1 rounded-md">
                           <button type="button" onClick={() => {
@@ -413,13 +413,13 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
                 <span className="text-sm text-muted-foreground">{variants.length} variants</span>
                 <Button type="button" variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => setVariants([])}>Clear All</Button>
               </div>
-              <div className="border border-border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
+              <div className="border border-border rounded-lg overflow-x-auto">
+               <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/50">
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant Price</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Quantity</th>
+                      <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant</th>
+                      <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant Price</th>
+                      <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Quantity</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -427,8 +427,8 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
                       const variantName = Object.values(variant.combination).join('-');
                       return (
                         <tr key={idx} className="hover:bg-muted/20">
-                          <td className="px-4 py-2.5 text-sm font-medium">{variantName}</td>
-                          <td className="px-4 py-2.5">
+                          <td className="px-3 sm:px-4 py-2.5 text-sm font-medium">{variantName}</td>
+                          <td className="px-3 sm:px-4 py-2.5">
                             <Input
                               type="number"
                               min="0"
@@ -439,10 +439,10 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
                                 next[idx] = { ...next[idx], price_adjustment: parseFloat(e.target.value) || 0 };
                                 setVariants(next);
                               }}
-                              className="h-8 w-32 text-sm"
+                              className="h-8 w-20 sm:w-32 text-sm"
                             />
                           </td>
-                          <td className="px-4 py-2.5">
+                          <td className="px-3 sm:px-4 py-2.5">
                             <Input
                               type="number"
                               min="0"
@@ -452,7 +452,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
                                 next[idx] = { ...next[idx], stock_quantity: parseInt(e.target.value) || 0 };
                                 setVariants(next);
                               }}
-                              className="h-8 w-32 text-sm"
+                              className="h-8 w-20 sm:w-32 text-sm"
                             />
                           </td>
                         </tr>
@@ -834,9 +834,9 @@ const AppsTab = () => {
             <p className="text-sm text-muted-foreground">No products found</p>
           </div>
         ) : (
-          <div className="border border-border rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="border border-border rounded-lg overflow-hidden">
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <table className="w-full text-sm min-w-[700px]">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
@@ -953,7 +953,7 @@ const AppsTab = () => {
       </div>
 
       <Dialog open={showAppForm} onOpenChange={setShowAppForm}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader><DialogTitle>{editingApp ? "Edit Product" : "Add New Product"}</DialogTitle></DialogHeader>
           <AppForm app={editingApp} onSave={handleSaveApp} onCancel={() => { setShowAppForm(false); setEditingApp(undefined); }} />
         </DialogContent>
