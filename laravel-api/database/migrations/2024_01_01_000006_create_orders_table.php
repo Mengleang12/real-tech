@@ -14,6 +14,11 @@ return new class extends Migration
             $table->integer('app_id');
             $table->string('app_name', 255);
             $table->decimal('amount', 10, 2);
+            $table->decimal('original_price', 10, 2)->nullable();
+            $table->decimal('item_discount', 10, 2)->nullable()->default(0);
+            $table->string('item_discount_type', 10)->nullable();
+            $table->decimal('sale_discount', 10, 2)->nullable()->default(0);
+            $table->string('sale_discount_type', 10)->nullable();
             $table->string('currency', 3)->default('USD');
             $table->enum('status', ['pending', 'paid', 'failed', 'expired'])->default('pending');
             $table->string('payment_md5', 64)->nullable();

@@ -105,10 +105,19 @@ class SaleController extends Controller
 
                 $qty = $item['quantity'];
                 $unitPrice = $item['price'];
+                $itemDiscount = $item['discount'] ?? 0;
+                $itemDiscountType = $item['discount_type'] ?? null;
+
+                // Original price before any item discount
+                $variant = isset($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
+                $originalPrice = $product->price + ($variant ? ($variant->price_adjustment ?? 0) : 0);
 
                 // Apply sale-level discount proportionally
                 $finalUnitPrice = round($unitPrice * (1 - $saleDiscountRatio), 2);
                 $totalAmount += $finalUnitPrice * $qty;
+
+                // Per-item sale discount amount
+                $perItemSaleDiscount = round($unitPrice - $finalUnitPrice, 2);
 
                 for ($i = 0; $i < $qty; $i++) {
                     $order = Order::create([
@@ -116,6 +125,11 @@ class SaleController extends Controller
                         'product_id' => $product->id,
                         'product_name' => $product->name,
                         'amount' => $finalUnitPrice,
+                        'original_price' => $originalPrice,
+                        'item_discount' => $itemDiscount,
+                        'item_discount_type' => $itemDiscountType,
+                        'sale_discount' => $perItemSaleDiscount > 0 ? $perItemSaleDiscount : 0,
+                        'sale_discount_type' => $saleDiscount > 0 ? $saleDiscountType : null,
                         'currency' => 'USD',
                         'status' => $orderStatus,
                         'paid_at' => $orderStatus === 'paid' ? now() : null,
