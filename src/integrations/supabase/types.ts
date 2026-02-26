@@ -162,8 +162,13 @@ export type Database = {
           currency: string
           expires_at: string | null
           id: string
+          item_discount: number | null
+          item_discount_type: string | null
+          original_price: number | null
           paid_at: string | null
           payment_md5: string | null
+          sale_discount: number | null
+          sale_discount_type: string | null
           status: string
           user_id: string
         }
@@ -176,8 +181,13 @@ export type Database = {
           currency?: string
           expires_at?: string | null
           id?: string
+          item_discount?: number | null
+          item_discount_type?: string | null
+          original_price?: number | null
           paid_at?: string | null
           payment_md5?: string | null
+          sale_discount?: number | null
+          sale_discount_type?: string | null
           status?: string
           user_id: string
         }
@@ -190,8 +200,13 @@ export type Database = {
           currency?: string
           expires_at?: string | null
           id?: string
+          item_discount?: number | null
+          item_discount_type?: string | null
+          original_price?: number | null
           paid_at?: string | null
           payment_md5?: string | null
+          sale_discount?: number | null
+          sale_discount_type?: string | null
           status?: string
           user_id?: string
         }
