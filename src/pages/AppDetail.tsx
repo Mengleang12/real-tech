@@ -669,8 +669,8 @@ const AppDetail = () => {
                                       }`}
                                     >
                                       {label}
-                                      {v.price_adjustment > 0 && !vOOS && (
-                                        <span className="ml-1 text-[10px] opacity-70">+${v.price_adjustment.toFixed(0)}</span>
+                                      {Number(v.price_adjustment) > 0 && !vOOS && (
+                                        <span className="ml-1 text-[10px] opacity-70">+${Number(v.price_adjustment).toFixed(0)}</span>
                                       )}
                                     </button>
                                   );
