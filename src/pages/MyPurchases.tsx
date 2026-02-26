@@ -3,21 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrders, Order } from "@/hooks/useOrders";
-import { useQuery } from "@tanstack/react-query";
-import { versionsApi, downloadApi, AppVersion } from "@/lib/api";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Download, Package, ShoppingBag, ArrowLeft,
+  Package, ShoppingBag, ArrowLeft,
   Calendar, DollarSign, CheckCircle, Clock, XCircle,
-  ChevronDown, ChevronUp, FileText, HardDrive, Cpu, Monitor,
   ExternalLink
 } from "lucide-react";
 
@@ -34,194 +25,55 @@ interface PurchasedAppCardProps {
 }
 
 const PurchasedAppCard = ({ order, language }: PurchasedAppCardProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const status = statusConfig[order.status] || statusConfig.pending;
-
-  const { data: versionsData, isLoading: versionsLoading } = useQuery({
-    queryKey: ['versions', order.app_id],
-    queryFn: () => versionsApi.getByAppId(order.app_id),
-    enabled: isExpanded,
-  });
-
-  const versions = versionsData || [];
 
   return (
     <div className="border border-border rounded-md bg-card overflow-hidden">
-      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-        <CollapsibleTrigger asChild>
-          <div className="px-4 py-3 cursor-pointer hover:bg-accent/50 transition-colors">
-            <div className="flex items-center gap-3">
-              {/* App icon */}
-              {order.app_icon_url ? (
-                <img 
-                  src={order.app_icon_url} 
-                  alt={order.app_name} 
-                  className="w-9 h-9 rounded-md border border-border flex-shrink-0 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
-              ) : null}
-              <div className={`w-9 h-9 rounded-md bg-muted border border-border flex items-center justify-center flex-shrink-0 ${order.app_icon_url ? 'hidden' : ''}`}>
-                <Package className="w-4 h-4 text-muted-foreground" />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground truncate">{order.app_name}</span>
-                  {/* Status dot + label */}
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span className={`w-1.5 h-1.5 rounded-full ${status.dotClass} flex-shrink-0`} />
-                    {language === 'km' ? status.labelKm : status.label}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <DollarSign className="w-3 h-3" />
-                    ${(typeof order.amount === 'string' ? parseFloat(order.amount) : order.amount).toFixed(2)}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(order.paid_at || order.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-
-              <button className="text-muted-foreground hover:text-foreground transition-colors p-1 flex-shrink-0">
-                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-            </div>
+      <div className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          {/* App icon */}
+          {order.app_icon_url ? (
+            <img 
+              src={order.app_icon_url} 
+              alt={order.app_name} 
+              className="w-9 h-9 rounded-md border border-border flex-shrink-0 object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`w-9 h-9 rounded-md bg-muted border border-border flex items-center justify-center flex-shrink-0 ${order.app_icon_url ? 'hidden' : ''}`}>
+            <Package className="w-4 h-4 text-muted-foreground" />
           </div>
-        </CollapsibleTrigger>
 
-        <CollapsibleContent>
-          <div className="border-t border-border bg-muted/20">
-            {versionsLoading ? (
-              <div className="p-4 space-y-2">
-                <Skeleton className="h-14 w-full" />
-                <Skeleton className="h-14 w-full" />
-              </div>
-            ) : versions.length === 0 ? (
-              <div className="p-6 text-center text-muted-foreground">
-                <FileText className="w-6 h-6 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">{language === 'km' ? 'គ្មានកំណែទេ' : 'No versions available'}</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-border">
-                {versions.map((version: AppVersion) => (
-                  <VersionItem key={version.id} version={version} language={language} />
-                ))}
-              </div>
-            )}
-
-            {/* Footer link */}
-            <div className="px-4 py-3 border-t border-border">
-              <Link to={`/${order.app_id}`}>
-                <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  {language === 'km' ? 'មើលព័ត៌មានលម្អិត' : 'View Full Details'}
-                </button>
-              </Link>
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-    </div>
-  );
-};
-
-interface VersionItemProps {
-  version: AppVersion;
-  language: string;
-}
-
-const VersionItem = ({ version, language }: VersionItemProps) => {
-  const downloadLinks = (version.download_links || []).filter(link => link.url !== null);
-  const hasDownloadUrl = version.download_url !== null;
-  const hasAnyDownloads = hasDownloadUrl || downloadLinks.length > 0;
-
-  return (
-    <div className="px-4 py-3">
-      <div className="flex items-start justify-between gap-4 mb-2">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-mono font-medium">v{version.version}</span>
-            {version.is_latest && (
-              <span className="text-[10px] text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded-sm">
-                {language === 'km' ? 'ចុងក្រោយ' : 'Latest'}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground truncate">{order.app_name}</span>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className={`w-1.5 h-1.5 rounded-full ${status.dotClass} flex-shrink-0`} />
+                {language === 'km' ? status.labelKm : status.label}
               </span>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted-foreground">
-            {version.release_date && (
+            </div>
+            <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <DollarSign className="w-3 h-3" />
+                ${(typeof order.amount === 'string' ? parseFloat(order.amount) : order.amount).toFixed(2)}
+              </span>
               <span className="flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
-                {new Date(version.release_date).toLocaleDateString()}
+                {new Date(order.paid_at || order.created_at).toLocaleDateString()}
               </span>
-            )}
-            {version.file_size && (
-              <span className="flex items-center gap-1">
-                <HardDrive className="w-3 h-3" />
-                {version.file_size}
-              </span>
-            )}
-            {version.min_os_version && (
-              <span className="flex items-center gap-1">
-                <Monitor className="w-3 h-3" />
-                {version.min_os_version}
-              </span>
-            )}
-            {version.architecture && (
-              <span className="flex items-center gap-1">
-                <Cpu className="w-3 h-3" />
-                {version.architecture}
-              </span>
-            )}
+            </div>
           </div>
+
+          <Link to={`/${order.app_id}`}>
+            <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors p-1">
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+          </Link>
         </div>
       </div>
-
-      {(version.changelog || version.changelog_km) && (
-        <p className="text-xs text-muted-foreground mb-2 line-clamp-2 bg-muted rounded-sm px-2 py-1.5">
-          {language === 'km' && version.changelog_km ? version.changelog_km : version.changelog}
-        </p>
-      )}
-
-      {hasAnyDownloads ? (
-        <div className="flex flex-wrap gap-2">
-          {hasDownloadUrl && (
-            <Button size="sm" className="h-7 text-xs gap-1.5" onClick={async () => {
-              try {
-                const result = await downloadApi.getSignedUrl(version.id);
-                if (result.url) window.open(result.url, '_blank');
-              } catch {
-                toast.error(language === 'km' ? 'មិនអាចទាញយកបានទេ។' : 'Download failed.');
-              }
-            }}>
-              <Download className="w-3 h-3" />
-              {language === 'km' ? 'ទាញយក' : 'Download'}
-            </Button>
-          )}
-          {downloadLinks.map((link) => (
-            <Button key={link.id} size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={async () => {
-              try {
-                const result = await downloadApi.getSignedUrl(version.id, link.id);
-                if (result.url) window.open(result.url, '_blank');
-              } catch {
-                toast.error(language === 'km' ? 'មិនអាចទាញយកបានទេ។' : 'Download failed.');
-              }
-            }}>
-              {link.link_type === 'page' ? <ExternalLink className="w-3 h-3" /> : <Download className="w-3 h-3" />}
-              {link.title}
-            </Button>
-          ))}
-        </div>
-      ) : (
-        <p className="text-xs text-muted-foreground italic">
-          {language === 'km' ? 'គ្មានតំណទាញយកទេ' : 'No download links available'}
-        </p>
-      )}
     </div>
   );
 };
@@ -251,7 +103,6 @@ const MyPurchases = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Notion-style top bar */}
       <header className="sticky top-0 z-40 glass px-4 sm:px-8 py-2.5">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -278,13 +129,12 @@ const MyPurchases = () => {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-8 py-10">
-        {/* Page title */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-foreground">
             {language === 'km' ? 'កម្មវិធីដែលបានទិញ' : 'My Purchases'}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {language === 'km' ? 'មើលកម្មវិធីដែលអ្នកបានទិញ និងទាញយក' : 'View and download your purchased apps'}
+            {language === 'km' ? 'មើលកម្មវិធីដែលអ្នកបានទិញ' : 'View your purchased apps'}
           </p>
         </div>
 
