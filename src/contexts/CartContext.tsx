@@ -108,7 +108,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const totalItems = items.length;
   const totalPrice = items.reduce((sum, i) => {
     const basePrice = typeof i.app.price === "string" ? parseFloat(i.app.price) : i.app.price || 0;
-    const variantAdj = i.selectedVariant?.price_adjustment || 0;
+    const variantAdj = Number(i.selectedVariant?.price_adjustment) || 0;
     return sum + basePrice + variantAdj;
   }, 0);
 

@@ -35,7 +35,7 @@ const Checkout = () => {
 
   const getPrice = (item: typeof items[0]) => {
     const base = typeof item.app.price === "string" ? parseFloat(item.app.price) : item.app.price || 0;
-    const variantAdj = item.selectedVariant?.price_adjustment || 0;
+    const variantAdj = Number(item.selectedVariant?.price_adjustment) || 0;
     return base + variantAdj;
   };
 
