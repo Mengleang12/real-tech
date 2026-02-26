@@ -607,9 +607,14 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Orders & Users",
+    label: "Sales",
     items: [
       { id: "sales", label: "Sales & Invoices", icon: DollarSign, permission: "orders.view" },
+    ],
+  },
+  {
+    label: "Orders & Users",
+    items: [
       { id: "payments", label: "Payments", icon: TrendingUp, permission: "orders.view" },
       { id: "users", label: "Users", icon: Users, permission: "users.view" },
       { id: "coupons", label: "Coupons", icon: Tag, permission: "coupons.manage" },
