@@ -133,6 +133,7 @@ class SaleController extends Controller
                         'currency' => 'USD',
                         'status' => $orderStatus,
                         'paid_at' => $orderStatus === 'paid' ? now() : null,
+                        'created_at' => now(),
                     ]);
 
                     // Deduct stock if paid

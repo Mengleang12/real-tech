@@ -11,7 +11,7 @@ class Order extends Model
 {
     protected $keyType = 'string';
     public $incrementing = false;
-    const UPDATED_AT = null;
+    public $timestamps = false;
 
     protected $fillable = [
         'id',
