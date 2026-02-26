@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Order;
+use App\Models\OrderAttachment;
+use App\Models\OrderPayment;
 use App\Traits\LogsAdminActivity;
 use App\Http\Controllers\SaleController;
 use Illuminate\Http\Request;
@@ -252,6 +254,158 @@ class AdminUserController extends Controller
                 'total' => $orders->total(),
                 'per_page' => $orders->perPage(),
             ],
+        ]);
+    }
+
+    // ─── Edit Order ───────────────────────────────────────────────────────
+    public function updateOrder(Request $request, $orderId)
+    {
+        $order = Order::findOrFail($orderId);
+
+        $request->validate([
+            'notes' => 'nullable|string|max:2000',
+            'amount' => 'nullable|numeric|min:0',
+            'original_price' => 'nullable|numeric|min:0',
+            'item_discount' => 'nullable|numeric|min:0',
+            'item_discount_type' => 'nullable|in:amount,percent',
+            'sale_discount' => 'nullable|numeric|min:0',
+            'sale_discount_type' => 'nullable|in:amount,percent',
+            'status' => 'nullable|in:pending,paid,failed,expired',
+            'bakong_transaction_id' => 'nullable|string|max:100',
+        ]);
+
+        $order->update($request->only([
+            'notes', 'amount', 'original_price',
+            'item_discount', 'item_discount_type',
+            'sale_discount', 'sale_discount_type',
+            'status', 'bakong_transaction_id',
+        ]));
+
+        if ($request->status === 'paid' && !$order->paid_at) {
+            $order->update(['paid_at' => now()]);
+        }
+
+        $this->logActivity($request, 'admin_update_order', [
+            'order_id' => $orderId,
+            'changes' => $request->only(['notes', 'amount', 'status']),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order updated successfully',
+            'order' => $order->load(['user:id,email,full_name', 'attachments', 'payments']),
+        ]);
+    }
+
+    // ─── Get Order Detail (with attachments & payments) ───────────────────
+    public function getOrderDetail($orderId)
+    {
+        $order = Order::with(['user:id,email,full_name', 'attachments', 'payments'])
+            ->findOrFail($orderId);
+
+        return response()->json([
+            'order' => $order,
+        ]);
+    }
+
+    // ─── Attachments ──────────────────────────────────────────────────────
+    public function addAttachment(Request $request, $orderId)
+    {
+        $order = Order::findOrFail($orderId);
+
+        $request->validate([
+            'file' => 'required|file|max:5120|mimes:jpg,jpeg,png,gif,webp,pdf',
+        ]);
+
+        $file = $request->file('file');
+        
+        // Upload via existing upload mechanism
+        $uploadController = new \App\Http\Controllers\UploadController();
+        $uploadRequest = new Request();
+        $uploadRequest->files->set('file', $file);
+        $uploadRequest->merge(['type' => 'general']);
+        $uploadRequest->headers->set('Authorization', $request->header('Authorization'));
+        
+        $uploadResponse = $uploadController->store($uploadRequest);
+        $uploadData = $uploadResponse->getData(true);
+
+        if (!($uploadData['success'] ?? false)) {
+            return response()->json(['error' => 'Upload failed'], 500);
+        }
+
+        $attachment = OrderAttachment::create([
+            'order_id' => $order->id,
+            'file_url' => $uploadData['url'],
+            'file_name' => $file->getClientOriginalName(),
+            'file_type' => str_starts_with($file->getMimeType(), 'image/') ? 'image' : 'document',
+            'file_size' => $file->getSize(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'attachment' => $attachment,
+        ]);
+    }
+
+    public function deleteAttachment(Request $request, $orderId, $attachmentId)
+    {
+        $attachment = OrderAttachment::where('order_id', $orderId)
+            ->where('id', $attachmentId)
+            ->firstOrFail();
+
+        $attachment->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Attachment deleted',
+        ]);
+    }
+
+    // ─── Payments ─────────────────────────────────────────────────────────
+    public function addPayment(Request $request, $orderId)
+    {
+        $order = Order::findOrFail($orderId);
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'method' => 'required|string|max:50',
+            'reference' => 'nullable|string|max:255',
+            'note' => 'nullable|string|max:500',
+            'paid_at' => 'nullable|date',
+        ]);
+
+        $payment = OrderPayment::create([
+            'order_id' => $order->id,
+            'amount' => $request->amount,
+            'method' => $request->method,
+            'reference' => $request->reference,
+            'note' => $request->note,
+            'paid_at' => $request->paid_at ?? now(),
+        ]);
+
+        $this->logActivity($request, 'admin_add_payment', [
+            'order_id' => $orderId,
+            'amount' => $request->amount,
+            'method' => $request->method,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'payment' => $payment,
+        ]);
+    }
+
+    public function deletePayment(Request $request, $orderId, $paymentId)
+    {
+        $payment = OrderPayment::where('order_id', $orderId)
+            ->where('id', $paymentId)
+            ->firstOrFail();
+
+        $payment->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment deleted',
         ]);
     }
 }

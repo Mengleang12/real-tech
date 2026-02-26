@@ -115,9 +115,19 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::post('/admin/users/{id}/grant-product', [AdminUserController::class, 'grantProduct']);
     Route::delete('/admin/users/{userId}/revoke-product/{productId}', [AdminUserController::class, 'revokeProduct']);
     Route::get('/admin/orders', [AdminUserController::class, 'allOrders']);
+    Route::get('/admin/orders/{orderId}', [AdminUserController::class, 'getOrderDetail']);
+    Route::put('/admin/orders/{orderId}', [AdminUserController::class, 'updateOrder']);
     Route::post('/admin/orders/{orderId}/approve', [AdminUserController::class, 'approveOrder']);
     Route::delete('/admin/orders/{orderId}', [AdminUserController::class, 'deleteOrder']);
     Route::post('/admin/orders/bulk-delete', [AdminUserController::class, 'bulkDeleteOrders']);
+    
+    // Order attachments
+    Route::post('/admin/orders/{orderId}/attachments', [AdminUserController::class, 'addAttachment']);
+    Route::delete('/admin/orders/{orderId}/attachments/{attachmentId}', [AdminUserController::class, 'deleteAttachment']);
+    
+    // Order payments
+    Route::post('/admin/orders/{orderId}/payments', [AdminUserController::class, 'addPayment']);
+    Route::delete('/admin/orders/{orderId}/payments/{paymentId}', [AdminUserController::class, 'deletePayment']);
     
     // Analytics
     Route::get('/admin/analytics', [AnalyticsController::class, 'dashboard']);

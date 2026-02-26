@@ -30,6 +30,7 @@ class Order extends Model
         'bakong_transaction_id',
         'paid_at',
         'expires_at',
+        'notes',
     ];
 
     protected $casts = [
@@ -60,6 +61,16 @@ class Order extends Model
     public function paymentLogs(): HasMany
     {
         return $this->hasMany(PaymentLog::class);
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(OrderAttachment::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(OrderPayment::class);
     }
 
     public function isPending(): bool
