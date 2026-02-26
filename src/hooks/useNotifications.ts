@@ -22,7 +22,7 @@ export function useNotifications() {
 
   const readIds: Set<string> = (() => {
     try {
-      return new Set(JSON.parse(localStorage.getItem('macsofy_read_notifs') || '[]'));
+      return new Set(JSON.parse(localStorage.getItem('realtech_read_notifs') || '[]'));
     } catch {
       return new Set<string>();
     }
@@ -30,7 +30,7 @@ export function useNotifications() {
 
   const markAsRead = (id: number) => {
     readIds.add(String(id));
-    localStorage.setItem('macsofy_read_notifs', JSON.stringify([...readIds]));
+    localStorage.setItem('realtech_read_notifs', JSON.stringify([...readIds]));
   };
 
   const unreadCount = notifications.filter(n => !readIds.has(String(n.id))).length;

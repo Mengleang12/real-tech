@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from "react";
 import { toast } from "sonner";
-import macsofyLogo from "@/assets/macsofy-logo.png";
+import realtechLogo from "@/assets/realtech-logo.png";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import {
   Download, Calendar, HardDrive, ExternalLink, Package, ChevronLeft, 
@@ -326,9 +326,9 @@ const AppDetail = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 px-4 mb-8">
           <div className="w-9 h-9 flex items-center justify-center flex-shrink-0">
-            <img src={macsofyLogo} alt="Macsofy" className="w-full h-full object-contain" />
+            <img src={realtechLogo} alt="Realtech Computer" className="w-full h-full object-contain" />
           </div>
-          <span className="text-lg font-bold text-foreground">Macsofy</span>
+          <span className="text-lg font-bold text-foreground">Realtech Computer</span>
         </Link>
 
         <nav className="flex-1 space-y-1">

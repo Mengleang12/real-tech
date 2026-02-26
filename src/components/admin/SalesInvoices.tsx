@@ -410,7 +410,7 @@ const InvoicesTab = () => {
         .status-paid{background:#d1fae5;color:#065f46}.status-pending{background:#fef3c7;color:#92400e}
         .footer{margin-top:40px;padding-top:20px;border-top:1px solid #e5e5e5;font-size:12px;color:#999;text-align:center}
       </style></head><body>
-      <div class="header"><div><div class="logo">Macsofy</div><div style="color:#666;font-size:13px;margin-top:4px">Software & Digital Products</div></div>
+      <div class="header"><div><div class="logo">Realtech Computer</div><div style="color:#666;font-size:13px;margin-top:4px">Software & Digital Products</div></div>
         <div style="text-align:right"><div style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:1px">Invoice</div>
           <div style="font-size:18px;font-weight:600;margin-top:4px">#${order.id.slice(0, 8).toUpperCase()}</div>
           <div style="color:#666;font-size:13px;margin-top:4px">${new Date(order.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div></div></div>
@@ -425,7 +425,7 @@ const InvoicesTab = () => {
       <table><thead><tr><th>Product</th><th>Qty</th><th style="text-align:right">Amount</th></tr></thead>
         <tbody><tr><td>${order.product_name}</td><td>1</td><td style="text-align:right">$${amount.toFixed(2)}</td></tr>
           <tr class="total"><td colspan="2">Total</td><td style="text-align:right">$${amount.toFixed(2)} ${order.currency}</td></tr></tbody></table>
-      <div class="footer">Thank you for your purchase! — Macsofy</div>
+      <div class="footer">Thank you for your purchase! — Realtech Computer</div>
       </body></html>`);
     doc.close();
     iframe.onload = () => {

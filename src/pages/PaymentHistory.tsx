@@ -351,7 +351,7 @@ const PaymentHistory = () => {
                   : 'First, try clicking "Verify Payment" on your order below. If it still shows Pending, contact us via our Facebook Page.'}
               </p>
               <a
-                href="https://www.facebook.com/macsofy"
+                href="https://www.facebook.com/realtechcomputer"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-medium text-amber-700 dark:text-amber-300 hover:underline"

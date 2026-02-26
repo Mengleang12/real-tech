@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import macsofyLogo from '@/assets/macsofy-logo.png';
+import realtechLogo from '@/assets/realtech-logo.png';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, KeyRound, ShieldX, Ban, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -390,10 +390,10 @@ const Auth = () => {
         {/* Logo */}
         <div className="text-center mb-6">
           <div className="w-12 h-12 flex items-center justify-center mx-auto mb-3">
-            <img src={macsofyLogo} alt="Macsofy" className="w-full h-full object-contain" />
+            <img src={realtechLogo} alt="Realtech Computer" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-xl font-semibold text-foreground">
-            Mac<span className="text-primary">sofy</span>
+            Realtech <span className="text-primary">Computer</span>
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {language === 'km' ? 'ចូលគណនីរបស់អ្នក' : 'Sign in to your account'}

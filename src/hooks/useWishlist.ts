@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const WISHLIST_KEY = 'macsofy_wishlist';
+const WISHLIST_KEY = 'realtech_wishlist';
 
 export function useWishlist() {
   const [wishlist, setWishlist] = useState<number[]>(() => {

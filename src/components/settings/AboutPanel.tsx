@@ -11,10 +11,10 @@ export function AboutPanel() {
       </h2>
 
       <GroupCard>
-        <InfoRow label={language === 'km' ? 'ឈ្មោះកម្មវិធី' : 'App Name'} value="Macsofy" />
+        <InfoRow label={language === 'km' ? 'ឈ្មោះកម្មវិធី' : 'App Name'} value="Realtech Computer" />
         <InfoRow label={language === 'km' ? 'កំណែ' : 'Version'} value="2.0.0" />
-        <InfoRow label={language === 'km' ? 'អ្នកអភិវឌ្ឍន៍' : 'Developer'} value="Macsofy" />
-        <InfoRow label={language === 'km' ? 'គេហទំព័រ' : 'Website'} value="macsofy.com" />
+        <InfoRow label={language === 'km' ? 'អ្នកអភិវឌ្ឍន៍' : 'Developer'} value="Realtech Computer" />
+        <InfoRow label={language === 'km' ? 'គេហទំព័រ' : 'Website'} value="realtechcomputer.com" />
       </GroupCard>
 
       <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider px-1 mt-6">
@@ -39,15 +39,15 @@ export function AboutPanel() {
         <div className="px-4 py-3">
           <p className="text-xs text-muted-foreground leading-relaxed">
             {language === 'km' 
-              ? 'Macsofy មិនលក់កម្មវិធីទេ។ យើងផ្តល់ដំណោះស្រាយ និងការណែនាំអំពីរបៀបដំឡើងកម្មវិធីនៅលើឧបករណ៍របស់អ្នក។ តម្លៃដែលបានបង់គឺសម្រាប់សេវាកម្មដំឡើង និងជំនួយបច្ចេកទេសរបស់យើង មិនមែនសម្រាប់កម្មវិធីខ្លួនឯងទេ។'
-              : 'Macsofy does not sell apps. We provide solutions and guidance on how to install applications on your device. The price paid is for our installation service and technical support, not for the software itself.'
+              ? 'Realtech Computer មិនលក់កម្មវិធីទេ។ យើងផ្តល់ដំណោះស្រាយ និងការណែនាំអំពីរបៀបដំឡើងកម្មវិធីនៅលើឧបករណ៍របស់អ្នក។ តម្លៃដែលបានបង់គឺសម្រាប់សេវាកម្មដំឡើង និងជំនួយបច្ចេកទេសរបស់យើង មិនមែនសម្រាប់កម្មវិធីខ្លួនឯងទេ។'
+              : 'Realtech Computer does not sell apps. We provide solutions and guidance on how to install applications on your device. The price paid is for our installation service and technical support, not for the software itself.'
             }
           </p>
         </div>
       </GroupCard>
 
       <p className="text-center text-xs text-muted-foreground mt-8">
-        © {new Date().getFullYear()} Macsofy. All rights reserved.
+        © {new Date().getFullYear()} Realtech Computer. All rights reserved.
       </p>
     </div>
   );

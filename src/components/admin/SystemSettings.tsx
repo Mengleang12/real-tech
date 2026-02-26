@@ -27,8 +27,8 @@ const defaultSettings: SystemSettings = {
   allow_new_registrations: true,
   max_upload_size: 500,
   auto_approve_apps: false,
-  site_name: 'Macsofy',
-  support_email: 'support@macsofy.com',
+  site_name: 'Realtech Computer',
+  support_email: 'support@realtechcomputer.com',
   enable_analytics: true,
 };
 
