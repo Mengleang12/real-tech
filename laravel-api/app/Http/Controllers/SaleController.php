@@ -23,7 +23,7 @@ class SaleController extends Controller
         $request->validate([
             'customer_type' => 'required|in:existing,new',
             'customer_id' => 'required_if:customer_type,existing|nullable|integer',
-            'customer_name' => 'required_if:customer_type,new|nullable|string|max:255',
+            'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:50',
             'customer_email' => 'nullable|email|max:255',
             'items' => 'required|array|min:1',
@@ -31,7 +31,11 @@ class SaleController extends Controller
             'items.*.variant_id' => 'nullable|integer',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.discount' => 'nullable|numeric|min:0',
+            'items.*.discount_type' => 'nullable|in:amount,percent',
             'payment_status' => 'required|in:paid,pending,partial,unpaid',
+            'sale_discount' => 'nullable|numeric|min:0',
+            'sale_discount_type' => 'nullable|in:amount,percent',
             'notes' => 'nullable|string|max:500',
         ]);
 
@@ -45,17 +49,55 @@ class SaleController extends Controller
                     return response()->json(['error' => 'Customer not found'], 404);
                 }
             } else {
-                // Create walk-in customer
-                $user = User::create([
-                    'full_name' => $request->customer_name,
-                    'phone' => $request->customer_phone,
-                    'email' => $request->customer_email ?? 'walkin_' . Str::random(8) . '@guest.local',
-                    'password_hash' => bcrypt(Str::random(32)),
-                ]);
+                $customerName = $request->customer_name ?: 'Walk-in Customer';
+                $isWalkin = $customerName === 'Walk-in Customer' && !$request->customer_email && !$request->customer_phone;
+
+                if ($isWalkin) {
+                    // Reuse or create a shared walk-in user
+                    $user = User::where('email', 'walkin@guest.local')->first();
+                    if (!$user) {
+                        $user = User::create([
+                            'full_name' => 'Walk-in Customer',
+                            'email' => 'walkin@guest.local',
+                            'password_hash' => bcrypt(Str::random(32)),
+                        ]);
+                    }
+                } else {
+                    $user = User::create([
+                        'full_name' => $customerName,
+                        'phone' => $request->customer_phone,
+                        'email' => $request->customer_email ?? 'walkin_' . Str::random(8) . '@guest.local',
+                        'password_hash' => bcrypt(Str::random(32)),
+                    ]);
+                }
             }
 
             $orders = [];
             $totalAmount = 0;
+
+            // Calculate sale-level discount ratio
+            $saleDiscount = $request->sale_discount ?? 0;
+            $saleDiscountType = $request->sale_discount_type ?? 'amount';
+
+            // First pass: compute subtotal for proportional sale discount
+            $subtotal = 0;
+            foreach ($request->items as $item) {
+                $subtotal += $item['price'] * $item['quantity'];
+            }
+
+            $saleDiscountAmount = $saleDiscountType === 'percent'
+                ? $subtotal * min($saleDiscount, 100) / 100
+                : min($saleDiscount, $subtotal);
+
+            $saleDiscountRatio = $subtotal > 0 ? $saleDiscountAmount / $subtotal : 0;
+
+            // Map payment_status to order status
+            $orderStatus = match ($request->payment_status) {
+                'paid' => 'paid',
+                'partial' => 'pending',
+                'unpaid' => 'pending',
+                default => 'pending',
+            };
 
             foreach ($request->items as $item) {
                 $product = Product::find($item['product_id']);
@@ -63,23 +105,17 @@ class SaleController extends Controller
 
                 $qty = $item['quantity'];
                 $unitPrice = $item['price'];
-                $lineTotal = $unitPrice * $qty;
-                $totalAmount += $lineTotal;
 
-                // Map payment_status to order status
-                $orderStatus = match ($request->payment_status) {
-                    'paid' => 'paid',
-                    'partial' => 'pending',
-                    'unpaid' => 'pending',
-                    default => 'pending',
-                };
+                // Apply sale-level discount proportionally
+                $finalUnitPrice = round($unitPrice * (1 - $saleDiscountRatio), 2);
+                $totalAmount += $finalUnitPrice * $qty;
 
                 for ($i = 0; $i < $qty; $i++) {
                     $order = Order::create([
                         'user_id' => $user->id,
                         'product_id' => $product->id,
                         'product_name' => $product->name,
-                        'amount' => $unitPrice,
+                        'amount' => $finalUnitPrice,
                         'currency' => 'USD',
                         'status' => $orderStatus,
                         'paid_at' => $orderStatus === 'paid' ? now() : null,

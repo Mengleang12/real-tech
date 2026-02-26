@@ -852,8 +852,10 @@ export interface CreateSalePayload {
   customer_name?: string;
   customer_phone?: string;
   customer_email?: string;
-  items: { product_id: number; variant_id?: number; quantity: number; price: number }[];
+  items: { product_id: number; variant_id?: number; quantity: number; price: number; discount?: number; discount_type?: 'amount' | 'percent' }[];
   payment_status: 'paid' | 'pending' | 'partial' | 'unpaid';
+  sale_discount?: number;
+  sale_discount_type?: 'amount' | 'percent';
   notes?: string;
 }
 
