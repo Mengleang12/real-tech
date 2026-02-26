@@ -500,9 +500,14 @@ const InvoicesTab = () => {
           <div class="summary-row"><span>Subtotal</span><span>$${originalPrice.toFixed(2)}</span></div>
           ${itemDiscount > 0 ? `<div class="summary-row discount"><span>Item Discount (${itemDiscountLabel})</span><span>-$${(originalPrice - amount + saleDiscountVal).toFixed(2)}</span></div>` : ''}
           ${saleDiscountVal > 0 ? `<div class="summary-row discount"><span>Sale Discount (${saleDiscountLabel})</span><span>-$${saleDiscountVal.toFixed(2)}</span></div>` : ''}
-          <div class="summary-row total"><span>Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
+          <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
         </div>
       </div>
+
+      ${order.notes ? `<div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid #2563eb">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div>
+        <div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div>
+      </div>` : ''}
 
       <div class="divider"></div>
 
@@ -654,10 +659,40 @@ const InvoicesTab = () => {
                   {selectedOrder.paid_at && <div><p className="text-xs text-muted-foreground mb-1">Paid At</p><p className="font-medium">{new Date(selectedOrder.paid_at).toLocaleString()}</p></div>}
                 </div>
                 <Separator />
+                {/* Discount & Grand Total breakdown */}
+                {(() => {
+                  const origPrice = selectedOrder.original_price ? parseFloat(selectedOrder.original_price) : amount;
+                  const itemDisc = selectedOrder.item_discount ? parseFloat(selectedOrder.item_discount) : 0;
+                  const saleDisc = selectedOrder.sale_discount ? parseFloat(selectedOrder.sale_discount) : 0;
+                  const hasDisc = itemDisc > 0 || saleDisc > 0;
+                  return hasDisc ? (
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>${origPrice.toFixed(2)}</span></div>
+                      {itemDisc > 0 && (
+                        <div className="flex justify-between text-destructive">
+                          <span>Item Discount ({selectedOrder.item_discount_type === 'percent' ? `${itemDisc}%` : `$${itemDisc.toFixed(2)}`})</span>
+                          <span>-${(origPrice - amount + saleDisc).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {saleDisc > 0 && (
+                        <div className="flex justify-between text-destructive">
+                          <span>Sale Discount ({selectedOrder.sale_discount_type === 'percent' ? `${saleDisc}%` : `$${saleDisc.toFixed(2)}`})</span>
+                          <span>-${saleDisc.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
                 <div className="flex items-center justify-between bg-primary/5 rounded-lg p-4">
-                  <span className="text-sm font-semibold">Total Amount</span>
+                  <span className="text-sm font-semibold">Grand Total</span>
                   <span className="text-2xl font-bold">${amount.toFixed(2)} <span className="text-sm font-normal text-muted-foreground">{selectedOrder.currency}</span></span>
                 </div>
+                {selectedOrder.notes && (
+                  <div className="rounded-lg border-l-2 border-primary bg-muted/40 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Note</p>
+                    <p className="text-sm text-foreground">{selectedOrder.notes}</p>
+                  </div>
+                )}
                 <Button variant="outline" className="w-full gap-2" onClick={() => handlePrint(selectedOrder)}>
                   <Printer className="w-4 h-4" /> Print Invoice
                 </Button>
