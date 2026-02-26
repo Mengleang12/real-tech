@@ -23,7 +23,7 @@ class ReceiptMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Payment Receipt - ' . $this->receipt->app_name . ' | AppsTorrent',
+            subject: 'Payment Receipt - ' . $this->receipt->product_name . ' | Macsofy',
         );
     }
 

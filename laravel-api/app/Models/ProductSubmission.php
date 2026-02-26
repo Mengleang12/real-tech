@@ -9,7 +9,7 @@ class ProductSubmission extends Model
     protected $table = 'product_submissions';
 
     protected $fillable = [
-        'app_id',
+        'product_id',
         'version',
         'status',
         'submitted_by',
@@ -29,7 +29,7 @@ class ProductSubmission extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class, 'app_id');
+        return $this->belongsTo(Product::class);
     }
 
     public function submittedBy()

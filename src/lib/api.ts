@@ -25,7 +25,7 @@ interface ApiOptions {
   method?: string;
   body?: unknown;
   requiresAuth?: boolean;
-  includeUserId?: boolean; // For download access verification
+  includeUserId?: boolean;
 }
 
 async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
@@ -37,7 +37,6 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
   };
   
   if (requiresAuth) {
-    // Try admin API key first, then fall back to user auth token
     const adminKey = getApiKey();
     const userToken = getUserAuthToken();
     if (adminKey) {
@@ -47,7 +46,6 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
     }
   }
   
-  // Include user auth token for download access verification on paid apps
   if (includeUserId) {
     const userToken = getUserAuthToken();
     if (userToken) {
@@ -99,16 +97,16 @@ async function userApiRequest<T>(endpoint: string, options: Omit<ApiOptions, 're
   return data;
 }
 
-// App Types
-export interface AppVideo {
+// Product Types
+export interface ProductVideo {
   id: number;
-  app_id: number;
+  product_id: number;
   title: string;
   youtube_url: string;
   sort_order: number;
 }
 
-export interface App {
+export interface Product {
   id: number;
   name: string;
   name_km?: string;
@@ -126,8 +124,8 @@ export interface App {
   download_count: number;
   latest_version?: string;
   versions?: never[];
-  screenshots?: AppScreenshot[];
-  videos?: AppVideo[];
+  screenshots?: ProductScreenshot[];
+  videos?: ProductVideo[];
   price?: number;
   stock_quantity?: number;
   low_stock_threshold?: number;
@@ -139,6 +137,9 @@ export interface App {
   created_at: string;
   updated_at: string;
 }
+
+/** @deprecated Use Product instead */
+export type App = Product;
 
 // Category & Brand types
 export interface Category {
@@ -180,7 +181,7 @@ export interface ProductAttribute {
 
 export interface ProductAttributeValue {
   id: number;
-  app_id: number;
+  product_id: number;
   attribute_id: number;
   value: string;
   stock_quantity?: number;
@@ -189,8 +190,8 @@ export interface ProductAttributeValue {
 
 export interface ProductVariant {
   id: number;
-  app_id: number;
-  combination: Record<string, string>; // { "attribute_id": "value" }
+  product_id: number;
+  combination: Record<string, string>;
   sku?: string;
   stock_quantity: number;
   price_adjustment: number;
@@ -199,15 +200,18 @@ export interface ProductVariant {
   updated_at?: string;
 }
 
-export interface AppScreenshot {
+export interface ProductScreenshot {
   id: number;
-  app_id: number;
+  product_id: number;
   image_url: string;
   sort_order: number;
 }
 
+/** @deprecated Use ProductScreenshot instead */
+export type AppScreenshot = ProductScreenshot;
+
 export interface PaginatedResponse<T> {
-  apps: T[];
+  products: T[];
   pagination: {
     page: number;
     limit: number;
@@ -216,7 +220,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
-export interface AppsQueryParams {
+export interface ProductsQueryParams {
   category?: string;
   search?: string;
   featured?: boolean;
@@ -228,9 +232,12 @@ export interface AppsQueryParams {
   limit?: number;
 }
 
-// Apps API - Laravel endpoints
-export const appsApi = {
-  getAll: async (params?: AppsQueryParams): Promise<{ data: App[]; pagination: { page: number; limit: number; total: number; total_pages: number } }> => {
+/** @deprecated Use ProductsQueryParams instead */
+export type AppsQueryParams = ProductsQueryParams;
+
+// Products API - Laravel endpoints
+export const productsApi = {
+  getAll: async (params?: ProductsQueryParams): Promise<{ data: Product[]; pagination: { page: number; limit: number; total: number; total_pages: number } }> => {
     const query = new URLSearchParams();
     if (params?.category) query.set('category', params.category);
     if (params?.search) query.set('search', params.search);
@@ -243,35 +250,38 @@ export const appsApi = {
     if (params?.limit) query.set('limit', params.limit.toString());
     
     const queryString = query.toString();
-    const response = await apiRequest<PaginatedResponse<App>>(
-      `apps${queryString ? `?${queryString}` : ''}`, 
+    const response = await apiRequest<PaginatedResponse<Product>>(
+      `products${queryString ? `?${queryString}` : ''}`, 
       { requiresAuth: false }
     );
     
     return {
-      data: response.apps,
+      data: response.products,
       pagination: response.pagination,
     };
   },
   
-  getById: async (id: number, asAdmin?: boolean): Promise<App> => {
+  getById: async (id: number, asAdmin?: boolean): Promise<Product> => {
     if (asAdmin) {
-      const response = await apiRequest<{ app: App }>(`apps/${id}`);
-      return response.app;
+      const response = await apiRequest<{ product: Product }>(`products/${id}`);
+      return response.product;
     }
-    const response = await apiRequest<{ app: App }>(`apps/${id}`, { requiresAuth: false, includeUserId: true });
-    return response.app;
+    const response = await apiRequest<{ product: Product }>(`products/${id}`, { requiresAuth: false, includeUserId: true });
+    return response.product;
   },
   
-  create: (data: Omit<Partial<App>, 'screenshots' | 'videos' | 'attribute_values' | 'variants'> & { screenshots?: string[]; videos?: { title: string; youtube_url: string }[]; attribute_values?: { attribute_id: number; value: string }[]; variants?: Omit<ProductVariant, 'id' | 'app_id' | 'created_at' | 'updated_at'>[] }) => 
-    apiRequest<{ success: boolean; id: number; message: string }>('apps', { method: 'POST', body: data }),
+  create: (data: Omit<Partial<Product>, 'screenshots' | 'videos' | 'attribute_values' | 'variants'> & { screenshots?: string[]; videos?: { title: string; youtube_url: string }[]; attribute_values?: { attribute_id: number; value: string }[]; variants?: Omit<ProductVariant, 'id' | 'product_id' | 'created_at' | 'updated_at'>[] }) => 
+    apiRequest<{ success: boolean; id: number; message: string }>('products', { method: 'POST', body: data }),
   
-  update: (id: number, data: Omit<Partial<App>, 'screenshots' | 'videos' | 'attribute_values' | 'variants'> & { screenshots?: string[]; videos?: { title: string; youtube_url: string }[]; attribute_values?: { attribute_id: number; value: string }[]; variants?: Omit<ProductVariant, 'id' | 'app_id' | 'created_at' | 'updated_at'>[] }) => 
-    apiRequest<{ success: boolean; message: string }>(`apps/${id}`, { method: 'PUT', body: data }),
+  update: (id: number, data: Omit<Partial<Product>, 'screenshots' | 'videos' | 'attribute_values' | 'variants'> & { screenshots?: string[]; videos?: { title: string; youtube_url: string }[]; attribute_values?: { attribute_id: number; value: string }[]; variants?: Omit<ProductVariant, 'id' | 'product_id' | 'created_at' | 'updated_at'>[] }) => 
+    apiRequest<{ success: boolean; message: string }>(`products/${id}`, { method: 'PUT', body: data }),
   
   delete: (id: number) => 
-    apiRequest<{ success: boolean; message: string }>(`apps/${id}`, { method: 'DELETE' }),
+    apiRequest<{ success: boolean; message: string }>(`products/${id}`, { method: 'DELETE' }),
 };
+
+/** @deprecated Use productsApi instead */
+export const appsApi = productsApi;
 
 
 export const authApi = {
@@ -349,8 +359,8 @@ export interface AdminUser {
 export interface AdminOrder {
   id: string;
   user_id: number;
-  app_id: number;
-  app_name: string;
+  product_id: number;
+  product_name: string;
   amount: number;
   currency: string;
   status: 'pending' | 'paid' | 'failed' | 'expired';
@@ -389,12 +399,12 @@ export const adminUsersApi = {
     return apiRequest(`admin/users/${userId}/orders`);
   },
   
-  grantApp: async (userId: number, data: { app_id: number; app_name: string; amount?: number }): Promise<{ success: boolean; message: string; order: AdminOrder }> => {
-    return apiRequest(`admin/users/${userId}/grant-app`, { method: 'POST', body: data });
+  grantProduct: async (userId: number, data: { product_id: number; product_name: string; amount?: number }): Promise<{ success: boolean; message: string; order: AdminOrder }> => {
+    return apiRequest(`admin/users/${userId}/grant-product`, { method: 'POST', body: data });
   },
   
-  revokeApp: async (userId: number, appId: number): Promise<{ success: boolean; message: string }> => {
-    return apiRequest(`admin/users/${userId}/revoke-app/${appId}`, { method: 'DELETE' });
+  revokeProduct: async (userId: number, productId: number): Promise<{ success: boolean; message: string }> => {
+    return apiRequest(`admin/users/${userId}/revoke-product/${productId}`, { method: 'DELETE' });
   },
   
   getAllOrders: async (params?: { status?: string; user_id?: number; page?: number; limit?: number }): Promise<{
@@ -453,15 +463,14 @@ export const analyticsApi = {
     revenue_by_date: RevenueByDate[];
     orders_by_status: OrdersByStatus[];
     recent_orders: AdminOrder[];
-    top_apps: { app_id: number; app_name: string; revenue: number; sales: number }[];
+    top_products: { product_id: number; product_name: string; revenue: number; sales: number }[];
   }> => {
     const params = new URLSearchParams();
     if (from && to) {
       params.set('from', from);
       params.set('to', to);
-      // Send timezone offset so server can interpret dates in user's local timezone
       const offsetMinutes = new Date().getTimezoneOffset();
-      const offsetHours = -offsetMinutes / 60; // e.g. UTC+7 = 7
+      const offsetHours = -offsetMinutes / 60;
       const sign = offsetHours >= 0 ? '+' : '-';
       params.set('tz_offset', `${sign}${String(Math.abs(Math.floor(offsetHours))).padStart(2, '0')}:${String(Math.abs(offsetMinutes) % 60).padStart(2, '0')}`);
     } else {
@@ -561,10 +570,10 @@ export const activityLogsApi = {
     return apiRequest(`admin/activity-logs${queryString ? `?${queryString}` : ''}`);
   },
   
-  trackDownload: async (appId: number, appName: string, version?: string): Promise<{ success: boolean }> => {
+  trackDownload: async (productId: number, productName: string, version?: string): Promise<{ success: boolean }> => {
     return apiRequest('track-download', { 
       method: 'POST', 
-      body: { app_id: appId, app_name: appName, version } 
+      body: { product_id: productId, product_name: productName, version } 
     });
   },
 };
@@ -633,10 +642,10 @@ export const notificationsApi = {
   },
 };
 
-// App Submission Types
-export interface AppSubmission {
+// Product Submission Types
+export interface ProductSubmission {
   id: number;
-  app_id: number;
+  product_id: number;
   version: string;
   status: 'draft' | 'pending_review' | 'approved' | 'rejected' | 'suspended';
   submitted_by: number;
@@ -645,21 +654,24 @@ export interface AppSubmission {
   rejection_reason: string | null;
   submitted_at: string;
   reviewed_at: string | null;
-  app?: { id: number; name: string; icon_url?: string };
+  product?: { id: number; name: string; icon_url?: string };
   submittedBy?: { id: number; email: string; full_name?: string };
 }
 
-// App Submissions API
+/** @deprecated Use ProductSubmission instead */
+export type AppSubmission = ProductSubmission;
+
+// Product Submissions API
 export const submissionsApi = {
   getAll: async (status?: string): Promise<{
-    submissions: AppSubmission[];
+    submissions: ProductSubmission[];
     stats: { pending: number; approved: number; rejected: number; suspended: number };
   }> => {
     const query = status && status !== 'all' ? `?status=${status}` : '';
     return apiRequest(`admin/submissions${query}`);
   },
   
-  update: async (id: number, data: { status: string; review_notes?: string; rejection_reason?: string }): Promise<{ success: boolean; submission: AppSubmission }> => {
+  update: async (id: number, data: { status: string; review_notes?: string; rejection_reason?: string }): Promise<{ success: boolean; submission: ProductSubmission }> => {
     return apiRequest(`admin/submissions/${id}`, { method: 'PUT', body: data });
   },
 };
@@ -699,7 +711,6 @@ export interface ApplicableCoupon {
 
 // Coupons API - Admin
 export const couponsApi = {
-  // Admin endpoints
   getAll: async (): Promise<{ coupons: Coupon[] }> => {
     return apiRequest('admin/coupons');
   },
@@ -728,7 +739,6 @@ export const couponsApi = {
     return apiRequest(`admin/coupons/${couponId}/users/${userId}`, { method: 'DELETE' });
   },
   
-  // User endpoints
   getMyAvailable: async (): Promise<{ coupons: ApplicableCoupon[] }> => {
     return userApiRequest('coupons/my');
   },

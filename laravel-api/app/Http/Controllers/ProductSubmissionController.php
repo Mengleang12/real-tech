@@ -21,7 +21,6 @@ class ProductSubmissionController extends Controller
 
         $submissions = $query->get();
 
-        // Get counts
         $stats = [
             'pending' => ProductSubmission::where('status', 'pending_review')->count(),
             'approved' => ProductSubmission::where('status', 'approved')->count(),
@@ -71,11 +70,10 @@ class ProductSubmissionController extends Controller
         ]);
     }
 
-    // For users to submit their products
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'app_id' => 'required|exists:products,id',
+            'product_id' => 'required|exists:products,id',
             'version' => 'required|string',
         ]);
 
@@ -86,7 +84,7 @@ class ProductSubmissionController extends Controller
         $userId = $request->attributes->get('user_id');
 
         $submission = ProductSubmission::create([
-            'app_id' => $request->app_id,
+            'product_id' => $request->product_id,
             'version' => $request->version,
             'status' => 'pending_review',
             'submitted_by' => $userId,

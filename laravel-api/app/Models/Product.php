@@ -42,12 +42,12 @@ class Product extends Model
 
     public function screenshots(): HasMany
     {
-        return $this->hasMany(ProductScreenshot::class, 'app_id');
+        return $this->hasMany(ProductScreenshot::class);
     }
 
     public function videos(): HasMany
     {
-        return $this->hasMany(ProductVideo::class, 'app_id')->orderBy('sort_order');
+        return $this->hasMany(ProductVideo::class)->orderBy('sort_order');
     }
 
     public function categoryRelation(): BelongsTo
@@ -62,12 +62,12 @@ class Product extends Model
 
     public function attributeValues(): HasMany
     {
-        return $this->hasMany(ProductAttributeValue::class, 'app_id');
+        return $this->hasMany(ProductAttributeValue::class);
     }
 
     public function variants(): HasMany
     {
-        return $this->hasMany(ProductVariant::class, 'app_id');
+        return $this->hasMany(ProductVariant::class);
     }
 
     /**

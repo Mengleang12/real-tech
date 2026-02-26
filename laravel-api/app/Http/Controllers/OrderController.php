@@ -14,12 +14,11 @@ class OrderController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Attach product icon_url to each order
-        $appIds = $orders->pluck('app_id')->unique()->toArray();
-        $products = Product::whereIn('id', $appIds)->pluck('icon_url', 'id');
+        $productIds = $orders->pluck('product_id')->unique()->toArray();
+        $products = Product::whereIn('id', $productIds)->pluck('icon_url', 'id');
         
         $orders = $orders->map(function ($order) use ($products) {
-            $order->app_icon_url = $products[$order->app_id] ?? null;
+            $order->product_icon_url = $products[$order->product_id] ?? null;
             return $order;
         });
 
@@ -29,11 +28,11 @@ class OrderController extends Controller
     public function hasPurchased(Request $request)
     {
         $request->validate([
-            'app_id' => 'required|integer',
+            'product_id' => 'required|integer',
         ]);
 
         $purchased = Order::where('user_id', $request->user()->id)
-            ->where('app_id', $request->app_id)
+            ->where('product_id', $request->product_id)
             ->where('status', 'paid')
             ->exists();
 
@@ -43,16 +42,15 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'app_id' => 'required|integer',
-            'app_name' => 'required|string',
+            'product_id' => 'required|integer',
+            'product_name' => 'required|string',
             'amount' => 'required|numeric|min:0',
         ]);
 
         $user = $request->user();
 
-        // Check if already paid for this product
         $existingPaid = Order::where('user_id', $user->id)
-            ->where('app_id', $request->app_id)
+            ->where('product_id', $request->product_id)
             ->where('status', 'paid')
             ->first();
 
@@ -62,9 +60,8 @@ class OrderController extends Controller
             ], 400);
         }
 
-        // Check for existing pending order
         $existingPending = Order::where('user_id', $user->id)
-            ->where('app_id', $request->app_id)
+            ->where('product_id', $request->product_id)
             ->where('status', 'pending')
             ->where('expires_at', '>', now())
             ->first();
@@ -78,8 +75,8 @@ class OrderController extends Controller
 
         $order = Order::create([
             'user_id' => $user->id,
-            'app_id' => $request->app_id,
-            'app_name' => $request->app_name,
+            'product_id' => $request->product_id,
+            'product_name' => $request->product_name,
             'amount' => $request->amount,
             'currency' => 'USD',
             'status' => 'pending',

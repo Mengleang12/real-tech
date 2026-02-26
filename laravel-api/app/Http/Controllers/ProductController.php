@@ -19,12 +19,10 @@ class ProductController extends Controller
     {
         $query = Product::with(['screenshots', 'categoryRelation', 'brand', 'attributeValues.attribute', 'variants']);
 
-        // Filter by category
         if ($request->has('category') && $request->category !== 'all') {
             $query->where('category', $request->category);
         }
 
-        // Search
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -34,17 +32,14 @@ class ProductController extends Controller
             });
         }
 
-        // Featured filter
         if ($request->has('featured') && $request->featured === 'true') {
             $query->where('is_featured', true);
         }
 
-        // Popular filter
         if ($request->has('popular') && $request->popular === 'true') {
             $query->where('is_popular', true);
         }
 
-        // Price range filters
         if ($request->has('min_price') && is_numeric($request->min_price)) {
             $query->where('price', '>=', (float) $request->min_price);
         }
@@ -53,14 +48,12 @@ class ProductController extends Controller
             $query->where('price', '<=', (float) $request->max_price);
         }
 
-        // Free only filter
         if ($request->has('free_only') && $request->free_only === 'true') {
             $query->where(function ($q) {
                 $q->whereNull('price')->orWhere('price', 0);
             });
         }
 
-        // Pagination
         $page = (int) ($request->page ?? 1);
         $limit = (int) ($request->limit ?? 20);
         $offset = ($page - 1) * $limit;
@@ -69,7 +62,7 @@ class ProductController extends Controller
         $products = $query->skip($offset)->take($limit)->get();
 
         return response()->json([
-            'apps' => $products,
+            'products' => $products,
             'pagination' => [
                 'page' => $page,
                 'limit' => $limit,
@@ -87,10 +80,8 @@ class ProductController extends Controller
             return response()->json(['error' => 'Product not found'], 404);
         }
 
-        // Check if user has access to download URLs
         $canAccessDownloads = false;
         
-        // Check if request is from admin
         $token = $request->bearerToken();
         if ($token) {
             $admin = \App\Models\Admin::where('auth_token', $token)
@@ -101,20 +92,18 @@ class ProductController extends Controller
             }
         }
 
-        // Free products allow downloads
         if (!$canAccessDownloads && (!$product->price || $product->price == 0)) {
             $canAccessDownloads = true;
         }
         
         if (!$canAccessDownloads) {
-            // For paid products, verify user authentication via JWT token
             if ($token) {
                 try {
                     $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key(config('app.jwt_secret'), 'HS256'));
                     $userId = $decoded->user_id;
                     
                     $hasPurchased = Order::where('user_id', $userId)
-                        ->where('app_id', $id)
+                        ->where('product_id', $id)
                         ->whereIn('status', ['paid', 'approved'])
                         ->exists();
                     $canAccessDownloads = $hasPurchased;
@@ -124,12 +113,11 @@ class ProductController extends Controller
             }
         }
 
-        // If user cannot access downloads, hide videos for paid products
         if (!$canAccessDownloads) {
             $product->setRelation('videos', collect([]));
         }
 
-        return response()->json(['app' => $product]);
+        return response()->json(['product' => $product]);
     }
 
     public function store(Request $request)
@@ -157,25 +145,22 @@ class ProductController extends Controller
             'low_stock_threshold' => $request->low_stock_threshold ?? 5,
         ]);
 
-        // Update stock status
         $product->updateStockStatus();
 
-        // Handle screenshots
         if ($request->has('screenshots') && is_array($request->screenshots)) {
             foreach ($request->screenshots as $index => $url) {
                 ProductScreenshot::create([
-                    'app_id' => $product->id,
+                    'product_id' => $product->id,
                     'image_url' => $url,
                     'sort_order' => $index,
                 ]);
             }
         }
 
-        // Handle videos
         if ($request->has('videos') && is_array($request->videos)) {
             foreach ($request->videos as $index => $video) {
                 ProductVideo::create([
-                    'app_id' => $product->id,
+                    'product_id' => $product->id,
                     'title' => $video['title'] ?? '',
                     'youtube_url' => $video['youtube_url'] ?? '',
                     'sort_order' => $index,
@@ -183,12 +168,11 @@ class ProductController extends Controller
             }
         }
 
-        // Handle attribute values
         if ($request->has('attribute_values') && is_array($request->attribute_values)) {
             foreach ($request->attribute_values as $av) {
                 if (!empty($av['attribute_id']) && isset($av['value'])) {
                     ProductAttributeValue::create([
-                        'app_id' => $product->id,
+                        'product_id' => $product->id,
                         'attribute_id' => $av['attribute_id'],
                         'value' => $av['value'],
                         'stock_quantity' => $av['stock_quantity'] ?? 0,
@@ -197,12 +181,11 @@ class ProductController extends Controller
             }
         }
 
-        // Handle variants
         if ($request->has('variants') && is_array($request->variants)) {
             foreach ($request->variants as $variant) {
                 if (!empty($variant['combination'])) {
                     ProductVariant::create([
-                        'app_id' => $product->id,
+                        'product_id' => $product->id,
                         'combination' => $variant['combination'],
                         'sku' => $variant['sku'] ?? null,
                         'stock_quantity' => $variant['stock_quantity'] ?? 0,
@@ -251,27 +234,24 @@ class ProductController extends Controller
             'low_stock_threshold' => $request->has('low_stock_threshold') ? $request->low_stock_threshold : $product->low_stock_threshold,
         ]);
 
-        // Update stock status
         $product->updateStockStatus();
 
-        // Handle screenshots update
         if ($request->has('screenshots') && is_array($request->screenshots)) {
             $product->screenshots()->delete();
             foreach ($request->screenshots as $index => $url) {
                 ProductScreenshot::create([
-                    'app_id' => $product->id,
+                    'product_id' => $product->id,
                     'image_url' => $url,
                     'sort_order' => $index,
                 ]);
             }
         }
 
-        // Handle videos update
         if ($request->has('videos') && is_array($request->videos)) {
             $product->videos()->delete();
             foreach ($request->videos as $index => $video) {
                 ProductVideo::create([
-                    'app_id' => $product->id,
+                    'product_id' => $product->id,
                     'title' => $video['title'] ?? '',
                     'youtube_url' => $video['youtube_url'] ?? '',
                     'sort_order' => $index,
@@ -279,13 +259,12 @@ class ProductController extends Controller
             }
         }
 
-        // Handle attribute values update
         if ($request->has('attribute_values') && is_array($request->attribute_values)) {
             $product->attributeValues()->delete();
             foreach ($request->attribute_values as $av) {
                 if (!empty($av['attribute_id']) && isset($av['value'])) {
                     ProductAttributeValue::create([
-                        'app_id' => $product->id,
+                        'product_id' => $product->id,
                         'attribute_id' => $av['attribute_id'],
                         'value' => $av['value'],
                         'stock_quantity' => $av['stock_quantity'] ?? 0,
@@ -294,13 +273,12 @@ class ProductController extends Controller
             }
         }
 
-        // Handle variants update
         if ($request->has('variants') && is_array($request->variants)) {
             $product->variants()->delete();
             foreach ($request->variants as $variant) {
                 if (!empty($variant['combination'])) {
                     ProductVariant::create([
-                        'app_id' => $product->id,
+                        'product_id' => $product->id,
                         'combination' => $variant['combination'],
                         'sku' => $variant['sku'] ?? null,
                         'stock_quantity' => $variant['stock_quantity'] ?? 0,

@@ -142,8 +142,8 @@ class PaymentController extends Controller
                 'action' => 'purchase',
                 'details' => [
                     'order_id' => $order->id,
-                    'app_id' => $order->app_id,
-                    'app_name' => $order->app_name,
+                    'product_id' => $order->product_id,
+                    'product_name' => $order->product_name,
                     'amount' => $order->amount,
                     'currency' => $order->currency,
                 ],
