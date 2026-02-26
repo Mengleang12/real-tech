@@ -48,7 +48,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   const [saleDiscountType, setSaleDiscountType] = useState<"amount" | "percent">("amount");
 
   // Payment
-  const [paymentStatus, setPaymentStatus] = useState<"paid" | "pending" | "partial" | "unpaid">("paid");
+  const [paymentStatus, setPaymentStatus] = useState<"paid" | "pending" | "partial" | "unpaid">("pending");
   const [notes, setNotes] = useState("");
 
   // Search customers
@@ -148,7 +148,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setCart([]);
     setSaleDiscount(0);
     setSaleDiscountType("amount");
-    setPaymentStatus("paid");
+    setPaymentStatus("pending");
     setNotes("");
     setCustomers([]);
     setProducts([]);
