@@ -18,6 +18,11 @@ class Order extends Model
         'product_id',
         'product_name',
         'amount',
+        'original_price',
+        'item_discount',
+        'item_discount_type',
+        'sale_discount',
+        'sale_discount_type',
         'currency',
         'status',
         'payment_md5',
@@ -28,6 +33,9 @@ class Order extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'original_price' => 'decimal:2',
+        'item_discount' => 'decimal:2',
+        'sale_discount' => 'decimal:2',
         'paid_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
