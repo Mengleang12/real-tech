@@ -5,13 +5,187 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\User;
 use App\Traits\LogsAdminActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class SaleController extends Controller
 {
     use LogsAdminActivity;
+
+    /**
+     * Create a sale from admin panel (POS-style)
+     */
+    public function createSale(Request $request)
+    {
+        $request->validate([
+            'customer_type' => 'required|in:existing,new',
+            'customer_id' => 'required_if:customer_type,existing|nullable|integer',
+            'customer_name' => 'required_if:customer_type,new|nullable|string|max:255',
+            'customer_phone' => 'nullable|string|max:50',
+            'customer_email' => 'nullable|email|max:255',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|integer',
+            'items.*.variant_id' => 'nullable|integer',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+            'payment_status' => 'required|in:paid,pending,partial,unpaid',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Resolve or create customer
+            if ($request->customer_type === 'existing') {
+                $user = User::find($request->customer_id);
+                if (!$user) {
+                    return response()->json(['error' => 'Customer not found'], 404);
+                }
+            } else {
+                // Create walk-in customer
+                $user = User::create([
+                    'full_name' => $request->customer_name,
+                    'phone' => $request->customer_phone,
+                    'email' => $request->customer_email ?? 'walkin_' . Str::random(8) . '@guest.local',
+                    'password_hash' => bcrypt(Str::random(32)),
+                ]);
+            }
+
+            $orders = [];
+            $totalAmount = 0;
+
+            foreach ($request->items as $item) {
+                $product = Product::find($item['product_id']);
+                if (!$product) continue;
+
+                $qty = $item['quantity'];
+                $unitPrice = $item['price'];
+                $lineTotal = $unitPrice * $qty;
+                $totalAmount += $lineTotal;
+
+                // Map payment_status to order status
+                $orderStatus = match ($request->payment_status) {
+                    'paid' => 'paid',
+                    'partial' => 'pending',
+                    'unpaid' => 'pending',
+                    default => 'pending',
+                };
+
+                for ($i = 0; $i < $qty; $i++) {
+                    $order = Order::create([
+                        'user_id' => $user->id,
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'amount' => $unitPrice,
+                        'currency' => 'USD',
+                        'status' => $orderStatus,
+                        'paid_at' => $orderStatus === 'paid' ? now() : null,
+                    ]);
+
+                    // Deduct stock if paid
+                    if ($orderStatus === 'paid') {
+                        self::deductStock($order, $item['variant_id'] ?? null);
+                    }
+
+                    $orders[] = $order;
+                }
+            }
+
+            $this->logActivity($request, 'admin_sale_created', [
+                'customer_id' => $user->id,
+                'customer_name' => $user->full_name,
+                'customer_type' => $request->customer_type,
+                'payment_status' => $request->payment_status,
+                'total_amount' => $totalAmount,
+                'items_count' => count($request->items),
+                'notes' => $request->notes,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sale created successfully',
+                'orders' => $orders,
+                'customer' => [
+                    'id' => $user->id,
+                    'full_name' => $user->full_name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                ],
+                'total_amount' => round($totalAmount, 2),
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to create sale: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Search customers for admin sale
+     */
+    public function searchCustomers(Request $request)
+    {
+        $search = $request->get('q', '');
+        if (strlen($search) < 2) {
+            return response()->json(['customers' => []]);
+        }
+
+        $customers = User::where(function ($q) use ($search) {
+            $q->where('full_name', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%")
+              ->orWhere('phone', 'like', "%{$search}%");
+        })
+        ->select('id', 'full_name', 'email', 'phone')
+        ->limit(10)
+        ->get();
+
+        return response()->json(['customers' => $customers]);
+    }
+
+    /**
+     * Search products for admin sale
+     */
+    public function searchProducts(Request $request)
+    {
+        $search = $request->get('q', '');
+
+        $query = Product::with('variants');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('name_km', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->select('id', 'name', 'name_km', 'icon_url', 'price', 'stock_quantity')
+            ->limit(20)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'icon_url' => $p->icon_url,
+                    'price' => $p->price,
+                    'stock_quantity' => $p->stock_quantity,
+                    'variants' => $p->variants->where('is_active', true)->map(function ($v) {
+                        return [
+                            'id' => $v->id,
+                            'combination' => $v->combination,
+                            'sku' => $v->sku,
+                            'stock_quantity' => $v->stock_quantity,
+                            'price_adjustment' => $v->price_adjustment,
+                        ];
+                    })->values(),
+                ];
+            });
+
+        return response()->json(['products' => $products]);
+    }
 
     /**
      * Admin sales dashboard with comprehensive stats
@@ -289,7 +463,6 @@ class SaleController extends Controller
                 $variant->decrement('stock_quantity');
             }
         } else {
-            // Try to deduct from product-level stock
             if ($product->stock_quantity > 0) {
                 $product->decrement('stock_quantity');
                 $product->refresh();

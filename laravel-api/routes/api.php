@@ -145,6 +145,9 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::get('/admin/sales/stock', [SaleController::class, 'stockOverview']);
     Route::put('/admin/sales/stock/{productId}', [SaleController::class, 'updateStock']);
     Route::post('/admin/sales/stock/bulk', [SaleController::class, 'bulkUpdateStock']);
+    Route::post('/admin/sales/create', [SaleController::class, 'createSale']);
+    Route::get('/admin/sales/customers', [SaleController::class, 'searchCustomers']);
+    Route::get('/admin/sales/products', [SaleController::class, 'searchProducts']);
     
     // Coupon management
     Route::get('/admin/coupons', [CouponController::class, 'index']);
