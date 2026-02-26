@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Order;
-use App\Models\OrderAttachment;
-use App\Models\OrderPayment;
+use App\Models\Sale;
+use App\Models\SaleAttachment;
+use App\Models\SalePayment;
 use App\Traits\LogsAdminActivity;
 use App\Http\Controllers\SaleController;
 use Illuminate\Http\Request;
@@ -29,7 +29,7 @@ class AdminUserController extends Controller
         }
         
         $perPage = $request->limit ?? 20;
-        $users = $query->withCount(['orders as paid_orders_count' => function($q) {
+        $users = $query->withCount(['sales as paid_sales_count' => function($q) {
             $q->where('status', 'paid');
         }])
         ->orderBy('created_at', 'desc')
@@ -48,13 +48,13 @@ class AdminUserController extends Controller
 
     public function show($id)
     {
-        $user = User::with(['orders' => function($q) {
+        $user = User::with(['sales' => function($q) {
             $q->orderBy('created_at', 'desc');
         }])->findOrFail($id);
         
         return response()->json([
             'user' => $user,
-            'orders' => $user->orders,
+            'orders' => $user->sales,
         ]);
     }
 
@@ -62,7 +62,7 @@ class AdminUserController extends Controller
     {
         $user = User::findOrFail($id);
         
-        $orders = Order::where('user_id', $id)
+        $sales = Sale::where('user_id', $id)
             ->orderBy('created_at', 'desc')
             ->get();
         
@@ -72,7 +72,7 @@ class AdminUserController extends Controller
                 'email' => $user->email,
                 'full_name' => $user->full_name,
             ],
-            'orders' => $orders,
+            'orders' => $sales,
         ]);
     }
 
@@ -86,7 +86,7 @@ class AdminUserController extends Controller
         
         $user = User::findOrFail($userId);
         
-        $existingPaid = Order::where('user_id', $userId)
+        $existingPaid = Sale::where('user_id', $userId)
             ->where('product_id', $request->product_id)
             ->where('status', 'paid')
             ->first();
@@ -97,7 +97,7 @@ class AdminUserController extends Controller
             ], 400);
         }
         
-        $order = Order::create([
+        $sale = Sale::create([
             'id' => (string) Str::uuid(),
             'user_id' => $userId,
             'product_id' => $request->product_id,
@@ -119,7 +119,7 @@ class AdminUserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product access granted successfully',
-            'order' => $order,
+            'order' => $sale,
         ]);
     }
 
@@ -127,19 +127,19 @@ class AdminUserController extends Controller
     {
         $user = User::findOrFail($userId);
         
-        $order = Order::where('user_id', $userId)
+        $sale = Sale::where('user_id', $userId)
             ->where('product_id', $productId)
             ->where('status', 'paid')
             ->first();
         
-        if (!$order) {
+        if (!$sale) {
             return response()->json([
                 'error' => 'User does not have access to this product',
             ], 404);
         }
         
-        $productName = $order->product_name;
-        $order->delete();
+        $productName = $sale->product_name;
+        $sale->delete();
 
         $this->logActivity($request, 'admin_revoke_product', [
             'target_user_id' => $userId,
@@ -156,52 +156,52 @@ class AdminUserController extends Controller
 
     public function approveOrder(Request $request, $orderId)
     {
-        $order = Order::findOrFail($orderId);
+        $sale = Sale::findOrFail($orderId);
         
-        if ($order->status === 'paid') {
+        if ($sale->status === 'paid') {
             return response()->json([
                 'error' => 'Order is already paid',
             ], 400);
         }
         
-        $order->update([
+        $sale->update([
             'status' => 'paid',
             'paid_at' => now(),
             'bakong_transaction_id' => 'ADMIN_APPROVED_' . time(),
         ]);
 
         // Deduct stock on approval
-        SaleController::deductStock($order);
+        SaleController::deductStock($sale);
 
         $this->logActivity($request, 'admin_approve_order', [
             'order_id' => $orderId,
-            'user_id' => $order->user_id,
-            'product_name' => $order->product_name,
-            'amount' => $order->amount,
+            'user_id' => $sale->user_id,
+            'product_name' => $sale->product_name,
+            'amount' => $sale->amount,
         ]);
         
         return response()->json([
             'success' => true,
             'message' => 'Order approved successfully',
-            'order' => $order,
+            'order' => $sale,
         ]);
     }
 
     public function deleteOrder(Request $request, $orderId)
     {
-        $order = Order::findOrFail($orderId);
+        $sale = Sale::findOrFail($orderId);
         
-        $orderData = [
+        $saleData = [
             'order_id' => $orderId,
-            'user_id' => $order->user_id,
-            'product_name' => $order->product_name,
-            'amount' => $order->amount,
-            'status' => $order->status,
+            'user_id' => $sale->user_id,
+            'product_name' => $sale->product_name,
+            'amount' => $sale->amount,
+            'status' => $sale->status,
         ];
         
-        $order->delete();
+        $sale->delete();
 
-        $this->logActivity($request, 'admin_delete_order', $orderData);
+        $this->logActivity($request, 'admin_delete_order', $saleData);
         
         return response()->json([
             'success' => true,
@@ -217,7 +217,7 @@ class AdminUserController extends Controller
         ]);
 
         $orderIds = $request->input('order_ids');
-        $deleted = Order::whereIn('id', $orderIds)->delete();
+        $deleted = Sale::whereIn('id', $orderIds)->delete();
 
         $this->logActivity($request, 'admin_bulk_delete_orders', [
             'count' => $deleted,
@@ -233,7 +233,7 @@ class AdminUserController extends Controller
 
     public function allOrders(Request $request)
     {
-        $query = Order::with(['user:id,email,full_name']);
+        $query = Sale::with(['user:id,email,full_name']);
         
         if ($request->status) {
             $query->where('status', $request->status);
@@ -244,15 +244,15 @@ class AdminUserController extends Controller
         }
         
         $perPage = $request->limit ?? 20;
-        $orders = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $sales = $query->orderBy('created_at', 'desc')->paginate($perPage);
         
         return response()->json([
-            'orders' => $orders->items(),
+            'orders' => $sales->items(),
             'pagination' => [
-                'current_page' => $orders->currentPage(),
-                'total_pages' => $orders->lastPage(),
-                'total' => $orders->total(),
-                'per_page' => $orders->perPage(),
+                'current_page' => $sales->currentPage(),
+                'total_pages' => $sales->lastPage(),
+                'total' => $sales->total(),
+                'per_page' => $sales->perPage(),
             ],
         ]);
     }
@@ -260,7 +260,7 @@ class AdminUserController extends Controller
     // ─── Edit Order ───────────────────────────────────────────────────────
     public function updateOrder(Request $request, $orderId)
     {
-        $order = Order::findOrFail($orderId);
+        $sale = Sale::findOrFail($orderId);
 
         $request->validate([
             'notes' => 'nullable|string|max:2000',
@@ -274,15 +274,15 @@ class AdminUserController extends Controller
             'bakong_transaction_id' => 'nullable|string|max:100',
         ]);
 
-        $order->update($request->only([
+        $sale->update($request->only([
             'notes', 'amount', 'original_price',
             'item_discount', 'item_discount_type',
             'sale_discount', 'sale_discount_type',
             'status', 'bakong_transaction_id',
         ]));
 
-        if ($request->status === 'paid' && !$order->paid_at) {
-            $order->update(['paid_at' => now()]);
+        if ($request->status === 'paid' && !$sale->paid_at) {
+            $sale->update(['paid_at' => now()]);
         }
 
         $this->logActivity($request, 'admin_update_order', [
@@ -293,25 +293,25 @@ class AdminUserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order updated successfully',
-            'order' => $order->load(['user:id,email,full_name', 'attachments', 'payments']),
+            'order' => $sale->load(['user:id,email,full_name', 'attachments', 'payments']),
         ]);
     }
 
     // ─── Get Order Detail (with attachments & payments) ───────────────────
     public function getOrderDetail($orderId)
     {
-        $order = Order::with(['user:id,email,full_name', 'attachments', 'payments'])
+        $sale = Sale::with(['user:id,email,full_name', 'attachments', 'payments'])
             ->findOrFail($orderId);
 
         return response()->json([
-            'order' => $order,
+            'order' => $sale,
         ]);
     }
 
     // ─── Attachments ──────────────────────────────────────────────────────
     public function addAttachment(Request $request, $orderId)
     {
-        $order = Order::findOrFail($orderId);
+        $sale = Sale::findOrFail($orderId);
 
         $request->validate([
             'file' => 'required|file|max:5120|mimes:jpg,jpeg,png,gif,webp,pdf',
@@ -333,8 +333,8 @@ class AdminUserController extends Controller
             return response()->json(['error' => 'Upload failed'], 500);
         }
 
-        $attachment = OrderAttachment::create([
-            'order_id' => $order->id,
+        $attachment = SaleAttachment::create([
+            'sale_id' => $sale->id,
             'file_url' => $uploadData['url'],
             'file_name' => $file->getClientOriginalName(),
             'file_type' => str_starts_with($file->getMimeType(), 'image/') ? 'image' : 'document',
@@ -349,7 +349,7 @@ class AdminUserController extends Controller
 
     public function deleteAttachment(Request $request, $orderId, $attachmentId)
     {
-        $attachment = OrderAttachment::where('order_id', $orderId)
+        $attachment = SaleAttachment::where('sale_id', $orderId)
             ->where('id', $attachmentId)
             ->firstOrFail();
 
@@ -364,7 +364,7 @@ class AdminUserController extends Controller
     // ─── Payments ─────────────────────────────────────────────────────────
     public function addPayment(Request $request, $orderId)
     {
-        $order = Order::findOrFail($orderId);
+        $sale = Sale::findOrFail($orderId);
 
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
@@ -374,8 +374,8 @@ class AdminUserController extends Controller
             'paid_at' => 'nullable|date',
         ]);
 
-        $payment = OrderPayment::create([
-            'order_id' => $order->id,
+        $payment = SalePayment::create([
+            'sale_id' => $sale->id,
             'amount' => $request->amount,
             'method' => $request->method,
             'reference' => $request->reference,
@@ -397,7 +397,7 @@ class AdminUserController extends Controller
 
     public function deletePayment(Request $request, $orderId, $paymentId)
     {
-        $payment = OrderPayment::where('order_id', $orderId)
+        $payment = SalePayment::where('sale_id', $orderId)
             ->where('id', $paymentId)
             ->firstOrFail();
 

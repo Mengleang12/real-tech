@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-class Order extends Model
+class Sale extends Model
 {
+    protected $table = 'sales';
     protected $keyType = 'string';
     public $incrementing = false;
     public $timestamps = false;
@@ -65,12 +66,12 @@ class Order extends Model
 
     public function attachments(): HasMany
     {
-        return $this->hasMany(OrderAttachment::class);
+        return $this->hasMany(SaleAttachment::class);
     }
 
     public function payments(): HasMany
     {
-        return $this->hasMany(OrderPayment::class);
+        return $this->hasMany(SalePayment::class);
     }
 
     public function isPending(): bool

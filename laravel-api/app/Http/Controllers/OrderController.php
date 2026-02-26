@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
+use App\Models\Sale;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -10,19 +10,19 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $orders = Order::where('user_id', $request->user()->id)
+        $sales = Sale::where('user_id', $request->user()->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $productIds = $orders->pluck('product_id')->unique()->toArray();
+        $productIds = $sales->pluck('product_id')->unique()->toArray();
         $products = Product::whereIn('id', $productIds)->pluck('icon_url', 'id');
         
-        $orders = $orders->map(function ($order) use ($products) {
-            $order->product_icon_url = $products[$order->product_id] ?? null;
-            return $order;
+        $sales = $sales->map(function ($sale) use ($products) {
+            $sale->product_icon_url = $products[$sale->product_id] ?? null;
+            return $sale;
         });
 
-        return response()->json(['orders' => $orders]);
+        return response()->json(['orders' => $sales]);
     }
 
     public function hasPurchased(Request $request)
@@ -31,7 +31,7 @@ class OrderController extends Controller
             'product_id' => 'required|integer',
         ]);
 
-        $purchased = Order::where('user_id', $request->user()->id)
+        $purchased = Sale::where('user_id', $request->user()->id)
             ->where('product_id', $request->product_id)
             ->where('status', 'paid')
             ->exists();
@@ -49,7 +49,7 @@ class OrderController extends Controller
 
         $user = $request->user();
 
-        $existingPaid = Order::where('user_id', $user->id)
+        $existingPaid = Sale::where('user_id', $user->id)
             ->where('product_id', $request->product_id)
             ->where('status', 'paid')
             ->first();
@@ -60,7 +60,7 @@ class OrderController extends Controller
             ], 400);
         }
 
-        $existingPending = Order::where('user_id', $user->id)
+        $existingPending = Sale::where('user_id', $user->id)
             ->where('product_id', $request->product_id)
             ->where('status', 'pending')
             ->where('expires_at', '>', now())
@@ -73,7 +73,7 @@ class OrderController extends Controller
             ]);
         }
 
-        $order = Order::create([
+        $sale = Sale::create([
             'user_id' => $user->id,
             'product_id' => $request->product_id,
             'product_name' => $request->product_name,
@@ -85,21 +85,21 @@ class OrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'order' => $order,
+            'order' => $sale,
         ], 201);
     }
 
     public function confirm(Request $request, $id)
     {
-        $order = Order::where('id', $id)
+        $sale = Sale::where('id', $id)
             ->where('user_id', $request->user()->id)
             ->first();
 
-        if (!$order) {
+        if (!$sale) {
             return response()->json(['error' => 'Order not found'], 404);
         }
 
-        $order->update([
+        $sale->update([
             'status' => 'paid',
             'paid_at' => now(),
         ]);

@@ -30,9 +30,9 @@ class User extends Authenticatable
         return $this->password_hash;
     }
 
-    public function orders(): HasMany
+    public function sales(): HasMany
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(Sale::class);
     }
 
     public function status(): HasOne

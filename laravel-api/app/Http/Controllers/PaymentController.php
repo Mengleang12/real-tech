@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
+use App\Models\Sale;
 use App\Models\PaymentLog;
 use App\Models\UserActivityLog;
 use App\Http\Controllers\ReceiptController;
@@ -33,18 +33,18 @@ class PaymentController extends Controller
             'amount' => 'required|numeric|min:0.01',
         ]);
 
-        $order = Order::find($request->order_id);
+        $sale = Sale::find($request->order_id);
 
-        if (!$order) {
+        if (!$sale) {
             return response()->json(['error' => 'Order not found'], 404);
         }
 
-        if ($order->user_id !== $request->user()->id) {
+        if ($sale->user_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         try {
-            $qrData = $this->getQRString($order->amount, $order->id);
+            $qrData = $this->getQRString($sale->amount, $sale->id);
 
             if (!$qrData) {
                 return response()->json(['error' => 'Failed to generate QR code'], 500);
@@ -52,19 +52,19 @@ class PaymentController extends Controller
 
             // Create payment log
             $paymentLog = PaymentLog::create([
-                'order_id' => $order->id,
+                'sale_id' => $sale->id,
                 'tran_id' => $qrData['tran_id'],
                 'device_id' => $qrData['device_id'],
                 'client_id' => $qrData['client_id'],
                 'hash' => $qrData['hash'],
                 'request_time' => $qrData['request_time'],
                 'qr_string' => $qrData['qr_string'],
-                'amount' => $order->amount,
+                'amount' => $sale->amount,
                 'status' => 'pending',
             ]);
 
-            // Update order with transaction ID
-            $order->update([
+            // Update sale with transaction ID
+            $sale->update([
                 'bakong_transaction_id' => $qrData['tran_id'],
                 'payment_md5' => $paymentLog->id,
             ]);
@@ -74,8 +74,8 @@ class PaymentController extends Controller
                 'qr_string' => $qrData['qr_string'],
                 'md5' => $paymentLog->id,
                 'tran_id' => $qrData['tran_id'],
-                'amount' => $order->amount,
-                'currency' => $order->currency,
+                'amount' => $sale->amount,
+                'currency' => $sale->currency,
             ]);
 
         } catch (\Exception $e) {
@@ -93,15 +93,15 @@ class PaymentController extends Controller
             'md5' => 'required|string',
         ]);
 
-        $order = Order::find($request->order_id);
+        $sale = Sale::find($request->order_id);
 
-        if (!$order) {
+        if (!$sale) {
             return response()->json(['error' => 'Order not found'], 404);
         }
 
-        // Check if order is expired
-        if ($order->isExpired()) {
-            $order->update(['status' => 'expired']);
+        // Check if sale is expired
+        if ($sale->isExpired()) {
+            $sale->update(['status' => 'expired']);
             return response()->json([
                 'status' => 'expired',
                 'message' => 'Order has expired',
@@ -109,7 +109,7 @@ class PaymentController extends Controller
         }
 
         // Already paid
-        if ($order->isPaid()) {
+        if ($sale->isPaid()) {
             return response()->json([
                 'status' => 'paid',
                 'message' => 'Order already paid',
@@ -127,7 +127,7 @@ class PaymentController extends Controller
         $statusResult = $this->checkPaymentStatus($paymentLog);
 
         if ($statusResult['status'] === 'approved') {
-            $order->update([
+            $sale->update([
                 'status' => 'paid',
                 'paid_at' => now(),
             ]);
@@ -139,28 +139,28 @@ class PaymentController extends Controller
 
             // Log purchase activity
             UserActivityLog::create([
-                'user_id' => $order->user_id,
+                'user_id' => $sale->user_id,
                 'action' => 'purchase',
                 'details' => [
-                    'order_id' => $order->id,
-                    'product_id' => $order->product_id,
-                    'product_name' => $order->product_name,
-                    'amount' => $order->amount,
-                    'currency' => $order->currency,
+                    'sale_id' => $sale->id,
+                    'product_id' => $sale->product_id,
+                    'product_name' => $sale->product_name,
+                    'amount' => $sale->amount,
+                    'currency' => $sale->currency,
                 ],
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
 
             // Send Telegram notification
-            $this->sendTelegramNotification($order);
+            $this->sendTelegramNotification($sale);
 
             // Deduct stock
-            SaleController::deductStock($order);
+            SaleController::deductStock($sale);
 
             // Create and send receipt email
             try {
-                ReceiptController::createFromOrder($order);
+                ReceiptController::createFromSale($sale);
             } catch (\Exception $e) {
                 \Log::error('Failed to create receipt: ' . $e->getMessage());
             }
@@ -188,19 +188,19 @@ class PaymentController extends Controller
             'order_id' => 'required|string',
         ]);
 
-        $order = Order::find($request->order_id);
+        $sale = Sale::find($request->order_id);
 
-        if (!$order) {
+        if (!$sale) {
             return response()->json(['error' => 'Order not found'], 404);
         }
 
-        $order->update([
+        $sale->update([
             'status' => 'paid',
             'paid_at' => now(),
         ]);
 
         // Update payment log if exists
-        $paymentLog = PaymentLog::where('order_id', $order->id)->latest()->first();
+        $paymentLog = PaymentLog::where('sale_id', $sale->id)->latest()->first();
         if ($paymentLog) {
             $paymentLog->update([
                 'status' => 'paid',
@@ -209,14 +209,14 @@ class PaymentController extends Controller
         }
 
         // Send Telegram notification
-        $this->sendTelegramNotification($order);
+        $this->sendTelegramNotification($sale);
 
         // Deduct stock
-        SaleController::deductStock($order);
+        SaleController::deductStock($sale);
 
         // Create and send receipt email
         try {
-            ReceiptController::createFromOrder($order);
+            ReceiptController::createFromSale($sale);
         } catch (\Exception $e) {
             \Log::error('Failed to create receipt: ' . $e->getMessage());
         }
@@ -227,7 +227,7 @@ class PaymentController extends Controller
         ]);
     }
 
-    private function getQRString(float $amount, string $orderId): ?array
+    private function getQRString(float $amount, string $saleId): ?array
     {
         // Fetch ABA data
         $abaDataResponse = Http::get($this->paywayUrl);
@@ -247,7 +247,7 @@ class PaymentController extends Controller
         $requestTime = now()->format('YmdHis');
 
         // Generate hash
-        $hashString = $deviceId . $requestTime . $orderId . $amount;
+        $hashString = $deviceId . $requestTime . $saleId . $amount;
         $hash = hash_hmac('sha512', $hashString, $this->paywaySecret);
 
         // Request QR from ABA
@@ -256,7 +256,7 @@ class PaymentController extends Controller
             'device_id' => $deviceId,
             'request_time' => $requestTime,
             'hash' => $hash,
-            'invoice_id' => $orderId,
+            'invoice_id' => $saleId,
             'amount' => number_format($amount, 2, '.', ''),
         ]);
 
@@ -309,13 +309,13 @@ class PaymentController extends Controller
         ];
     }
 
-    private function sendTelegramNotification(Order $order): void
+    private function sendTelegramNotification(Sale $sale): void
     {
         if (!$this->telegramToken || !$this->telegramChatId) {
             return;
         }
 
-        $message = "✅ Payment Approved\nOrder ID: {$order->id}\nAmount: {$order->amount} {$order->currency}";
+        $message = "✅ Payment Approved\nSale ID: {$sale->id}\nAmount: {$sale->amount} {$sale->currency}";
 
         Http::post("https://api.telegram.org/bot{$this->telegramToken}/sendMessage", [
             'chat_id' => $this->telegramChatId,

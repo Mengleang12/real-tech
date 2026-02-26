@@ -207,7 +207,7 @@ class CouponController extends Controller
 
         $validated = $request->validate([
             'user_coupon_id' => 'required|uuid',
-            'order_id' => 'required|uuid',
+            'sale_id' => 'required|uuid',
         ]);
 
         $userCoupon = UserCoupon::where('id', $validated['user_coupon_id'])
@@ -226,7 +226,7 @@ class CouponController extends Controller
 
         $userCoupon->update([
             'is_used' => true,
-            'used_on_order_id' => $validated['order_id'],
+            'used_on_sale_id' => $validated['sale_id'],
             'used_at' => now(),
         ]);
 

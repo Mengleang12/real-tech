@@ -13,7 +13,7 @@ class UserCoupon extends Model
         'user_id',
         'coupon_id',
         'is_used',
-        'used_on_order_id',
+        'used_on_sale_id',
         'used_at',
     ];
 
@@ -32,8 +32,8 @@ class UserCoupon extends Model
         return $this->belongsTo(Coupon::class);
     }
 
-    public function order()
+    public function sale()
     {
-        return $this->belongsTo(Order::class, 'used_on_order_id');
+        return $this->belongsTo(Sale::class, 'used_on_sale_id');
     }
 }

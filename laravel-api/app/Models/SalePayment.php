@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OrderPayment extends Model
+class SalePayment extends Model
 {
+    protected $table = 'sale_payments';
+
     protected $fillable = [
-        'order_id',
+        'sale_id',
         'amount',
         'method',
         'reference',
@@ -21,8 +23,8 @@ class OrderPayment extends Model
         'paid_at' => 'datetime',
     ];
 
-    public function order(): BelongsTo
+    public function sale(): BelongsTo
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Sale::class);
     }
 }

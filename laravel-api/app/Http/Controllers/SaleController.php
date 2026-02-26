@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
+use App\Models\Sale;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -53,7 +53,6 @@ class SaleController extends Controller
                 $isWalkin = $customerName === 'Walk-in Customer' && !$request->customer_email && !$request->customer_phone;
 
                 if ($isWalkin) {
-                    // Reuse or create a shared walk-in user
                     $user = User::where('email', 'walkin@guest.local')->first();
                     if (!$user) {
                         $user = User::create([
@@ -72,10 +71,9 @@ class SaleController extends Controller
                 }
             }
 
-            $orders = [];
+            $sales = [];
             $totalAmount = 0;
 
-            // Calculate sale-level discount ratio
             $saleDiscount = $request->sale_discount ?? 0;
             $saleDiscountType = $request->sale_discount_type ?? 'amount';
 
@@ -91,8 +89,7 @@ class SaleController extends Controller
 
             $saleDiscountRatio = $subtotal > 0 ? $saleDiscountAmount / $subtotal : 0;
 
-            // Map payment_status to order status
-            $orderStatus = match ($request->payment_status) {
+            $saleStatus = match ($request->payment_status) {
                 'paid' => 'paid',
                 'partial' => 'pending',
                 'unpaid' => 'pending',
@@ -108,19 +105,16 @@ class SaleController extends Controller
                 $itemDiscount = $item['discount'] ?? 0;
                 $itemDiscountType = $item['discount_type'] ?? null;
 
-                // Original price before any item discount
                 $variant = isset($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
                 $originalPrice = $product->price + ($variant ? ($variant->price_adjustment ?? 0) : 0);
 
-                // Apply sale-level discount proportionally
                 $finalUnitPrice = round($unitPrice * (1 - $saleDiscountRatio), 2);
                 $totalAmount += $finalUnitPrice * $qty;
 
-                // Per-item sale discount amount
                 $perItemSaleDiscount = round($unitPrice - $finalUnitPrice, 2);
 
                 for ($i = 0; $i < $qty; $i++) {
-                    $order = Order::create([
+                    $sale = Sale::create([
                         'user_id' => $user->id,
                         'product_id' => $product->id,
                         'product_name' => $product->name,
@@ -131,17 +125,16 @@ class SaleController extends Controller
                         'sale_discount' => $perItemSaleDiscount > 0 ? $perItemSaleDiscount : 0,
                         'sale_discount_type' => $saleDiscount > 0 ? $saleDiscountType : null,
                         'currency' => 'USD',
-                        'status' => $orderStatus,
-                        'paid_at' => $orderStatus === 'paid' ? now() : null,
+                        'status' => $saleStatus,
+                        'paid_at' => $saleStatus === 'paid' ? now() : null,
                         'created_at' => now(),
                     ]);
 
-                    // Deduct stock if paid
-                    if ($orderStatus === 'paid') {
-                        self::deductStock($order, $item['variant_id'] ?? null);
+                    if ($saleStatus === 'paid') {
+                        self::deductStock($sale, $item['variant_id'] ?? null);
                     }
 
-                    $orders[] = $order;
+                    $sales[] = $sale;
                 }
             }
 
@@ -160,7 +153,7 @@ class SaleController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Sale created successfully',
-                'orders' => $orders,
+                'orders' => $sales,
                 'customer' => [
                     'id' => $user->id,
                     'full_name' => $user->full_name,
@@ -247,7 +240,7 @@ class SaleController extends Controller
         $from = $request->get('from');
         $to = $request->get('to');
 
-        $query = Order::query();
+        $query = Sale::query();
 
         if ($from && $to) {
             $query->whereBetween('created_at', [$from, $to . ' 23:59:59']);
@@ -255,21 +248,18 @@ class SaleController extends Controller
             $query->where('created_at', '>=', now()->subDays($days));
         }
 
-        // Overall stats
-        $totalOrders = (clone $query)->count();
-        $paidOrders = (clone $query)->where('status', 'paid')->count();
-        $pendingOrders = (clone $query)->where('status', 'pending')->count();
+        $totalSales = (clone $query)->count();
+        $paidSales = (clone $query)->where('status', 'paid')->count();
+        $pendingSales = (clone $query)->where('status', 'pending')->count();
         $totalRevenue = (clone $query)->where('status', 'paid')->sum('amount');
-        $avgOrderValue = $paidOrders > 0 ? $totalRevenue / $paidOrders : 0;
+        $avgSaleValue = $paidSales > 0 ? $totalRevenue / $paidSales : 0;
 
-        // Revenue by date
         $revenueByDate = (clone $query)->where('status', 'paid')
             ->select(DB::raw('DATE(paid_at) as date'), DB::raw('SUM(amount) as revenue'), DB::raw('COUNT(*) as orders'))
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        // Top selling products
         $topProducts = (clone $query)->where('status', 'paid')
             ->select('product_id', 'product_name', DB::raw('SUM(amount) as revenue'), DB::raw('COUNT(*) as sales'))
             ->groupBy('product_id', 'product_name')
@@ -277,14 +267,12 @@ class SaleController extends Controller
             ->limit(10)
             ->get();
 
-        // Recent sales
-        $recentSales = Order::with('user:id,email,full_name')
+        $recentSales = Sale::with('user:id,email,full_name')
             ->where('status', 'paid')
             ->orderByDesc('paid_at')
             ->limit(10)
             ->get();
 
-        // Stock overview
         $products = Product::with('variants')->get();
         $lowStockCount = 0;
         $outOfStockCount = 0;
@@ -310,11 +298,11 @@ class SaleController extends Controller
         return response()->json([
             'success' => true,
             'stats' => [
-                'total_orders' => $totalOrders,
-                'paid_orders' => $paidOrders,
-                'pending_orders' => $pendingOrders,
+                'total_orders' => $totalSales,
+                'paid_orders' => $paidSales,
+                'pending_orders' => $pendingSales,
                 'total_revenue' => round($totalRevenue, 2),
-                'avg_order_value' => round($avgOrderValue, 2),
+                'avg_order_value' => round($avgSaleValue, 2),
                 'low_stock_count' => $lowStockCount,
                 'out_of_stock_count' => $outOfStockCount,
                 'total_stock_value' => round($totalStockValue, 2),
@@ -499,16 +487,16 @@ class SaleController extends Controller
     }
 
     /**
-     * Deduct stock when order is paid (called internally)
+     * Deduct stock when sale is paid (called internally)
      */
-    public static function deductStock(Order $order, ?int $variantId = null): void
+    public static function deductStock(Sale $sale, ?int $variantId = null): void
     {
-        $product = Product::find($order->product_id);
+        $product = Product::find($sale->product_id);
         if (!$product) return;
 
         if ($variantId) {
             $variant = ProductVariant::where('id', $variantId)
-                ->where('product_id', $order->product_id)
+                ->where('product_id', $sale->product_id)
                 ->first();
             if ($variant && $variant->stock_quantity > 0) {
                 $variant->decrement('stock_quantity');
