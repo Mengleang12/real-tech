@@ -324,8 +324,8 @@ const ProductDetail = () => {
       {/* Simple Sidebar */}
       <aside className="fixed left-0 top-0 h-full w-64 bg-background/95 backdrop-blur-xl py-6 px-4 flex-col z-50 border-r border-border/50 hidden lg:flex">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 px-4 mb-8">
-          <div className="w-9 h-9 flex items-center justify-center flex-shrink-0">
+        <Link to="/" className="flex items-center justify-center px-4 mb-8">
+          <div className="w-20 h-20 rounded-md overflow-hidden shrink-0">
             <img src={realtechLogo} alt="Realtech Computer" className="w-full h-full object-contain" />
           </div>
         </Link>
