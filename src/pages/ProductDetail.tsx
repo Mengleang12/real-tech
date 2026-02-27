@@ -628,8 +628,7 @@ const ProductDetail = () => {
                       const hasVariants = appData.variants && appData.variants.length > 0;
                       const activeVariants = hasVariants ? appData.variants!.filter(v => v.is_active) : [];
                       const selectedVariant = selectedVariantIdx !== null ? activeVariants[selectedVariantIdx] : null;
-                      const variantAdj = Number(selectedVariant?.price_adjustment) || 0;
-                      const finalPrice = priceNum + variantAdj;
+                      const finalPrice = selectedVariant ? Number(selectedVariant.price_adjustment) || 0 : priceNum;
                       const priceDisplay = finalPrice > 0 ? `$${finalPrice.toFixed(2)}` : '';
 
                       // Stock calculation
@@ -669,7 +668,7 @@ const ProductDetail = () => {
                                     >
                                       {label}
                                       {Number(v.price_adjustment) > 0 && !vOOS && (
-                                        <span className="ml-1 text-[10px] opacity-70">+${Number(v.price_adjustment).toFixed(0)}</span>
+                                        <span className="ml-1 text-[10px] opacity-70">${Number(v.price_adjustment).toFixed(0)}</span>
                                       )}
                                     </button>
                                   );
@@ -697,9 +696,6 @@ const ProductDetail = () => {
                             {finalPrice > 0 ? (
                               <>
                                 <span className="text-2xl font-bold text-destructive">${finalPrice.toFixed(2)}</span>
-                                {variantAdj > 0 && (
-                                  <span className="text-xs text-muted-foreground line-through">${priceNum.toFixed(2)}</span>
-                                )}
                               </>
                             ) : (
                               <span className="text-xl font-bold text-primary">
