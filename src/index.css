@@ -4,6 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Auto-apply Kantumruy Pro for any Khmer Unicode characters */
+@font-face {
+  font-family: 'KhmerFallback';
+  src: local('Kantumruy Pro');
+  unicode-range: U+1780-U+17FF, U+19E0-U+19FF, U+200C-U+200D;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     /* macOS Sonoma Light — warm gray palette with blue accent */
@@ -59,7 +67,7 @@
     --shadow-card-hover: 0 2px 8px hsl(0 0% 0% / 0.10), 0 1px 3px hsl(0 0% 0% / 0.06);
     --shadow-window: 0 8px 32px hsl(0 0% 0% / 0.12), 0 2px 8px hsl(0 0% 0% / 0.06);
 
-    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    --font-sans: 'KhmerFallback', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
     --font-khmer: "Kantumruy Pro", sans-serif;
   }
 
