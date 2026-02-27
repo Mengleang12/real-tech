@@ -261,7 +261,7 @@ const ProductDetail = () => {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<ApplicableCoupon | null>(null);
-  const [selectedVariantIdx, setSelectedVariantIdx] = useState<number | null>(null);
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState<number | null>(0);
   const { language, setLanguage } = useLanguage();
   
   // Get the previous location from state or default to home
