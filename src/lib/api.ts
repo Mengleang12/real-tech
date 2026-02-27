@@ -1034,6 +1034,8 @@ export interface Purchase {
   paid_amount: number;
   currency: string;
   notes?: string;
+  tracking_number?: string;
+  carrier?: string;
   ordered_at?: string;
   received_at?: string;
   completed_at?: string;
