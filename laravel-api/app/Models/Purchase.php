@@ -24,6 +24,8 @@ class Purchase extends Model
         'paid_amount',
         'currency',
         'notes',
+        'tracking_number',
+        'carrier',
         'ordered_at',
         'received_at',
         'completed_at',
