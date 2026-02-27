@@ -844,7 +844,7 @@ const AppDetail = () => {
                                 </td>
                                 <td className="px-4 py-2.5 text-right">
                                   <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${variant.stock_quantity > 0 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/10 text-destructive'}`}>
-                                    {variant.stock_quantity > 0 ? `${variant.stock_quantity} ${language === 'km' ? 'នៅក្នុងស្តុក' : 'in stock'}` : (language === 'km' ? 'អស់ស្តុក' : 'Out of stock')}
+                                    {variant.stock_quantity > 0 ? variant.stock_quantity : (language === 'km' ? 'អស់ស្តុក' : 'Out of stock')}
                                   </span>
                                 </td>
                               </tr>
