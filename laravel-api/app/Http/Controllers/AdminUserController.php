@@ -106,6 +106,7 @@ class AdminUserController extends Controller
             'currency' => 'USD',
             'status' => 'paid',
             'paid_at' => now(),
+            'created_at' => now(),
             'bakong_transaction_id' => 'ADMIN_GRANTED_' . time(),
         ]);
 

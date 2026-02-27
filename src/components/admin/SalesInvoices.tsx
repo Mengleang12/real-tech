@@ -635,7 +635,7 @@ const InvoicesTab = () => {
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
                   <Badge variant={status.variant} className="text-sm px-3 py-1">{status.label}</Badge>
-                  <span className="text-sm text-muted-foreground">{new Date(selectedOrder.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  <span className="text-sm text-muted-foreground">{selectedOrder.created_at ? new Date(selectedOrder.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}</span>
                 </div>
                 <Separator />
                 <div>

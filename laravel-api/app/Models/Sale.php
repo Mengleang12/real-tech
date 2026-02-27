@@ -33,6 +33,7 @@ class Sale extends Model
         'paid_at',
         'expires_at',
         'notes',
+        'created_at',
     ];
 
     protected $casts = [
