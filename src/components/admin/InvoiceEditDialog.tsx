@@ -298,50 +298,6 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sale Items ({cart.length})</p>
         </div>
 
-        {/* Product Search to Add */}
-        <div className="relative mb-3">
-          <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input
-            placeholder="Search & add products..."
-            value={productSearch}
-            onChange={(e) => handleSearchProducts(e.target.value)}
-            className="pl-9 h-9 text-sm"
-          />
-          {searchLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
-          {searchResults.length > 0 && (
-            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-              {searchResults.map(p => (
-                <div key={p.id}>
-                  {p.variants.length > 0 ? (
-                    p.variants.map(v => {
-                      const label = Object.values(v.combination).join(" / ");
-                      const price = Number(p.price) + Number(v.price_adjustment || 0);
-                      return (
-                        <button key={`${p.id}-${v.id}`} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors" onClick={() => addToCart(p, v.id)}>
-                          {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground truncate">{p.name}</p>
-                            <p className="text-xs text-muted-foreground">{label} · Stock: {v.stock_quantity}</p>
-                          </div>
-                          <span className="text-xs font-semibold text-foreground">${price.toFixed(2)}</span>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors" onClick={() => addToCart(p)}>
-                      {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground truncate">{p.name}</p>
-                        <p className="text-xs text-muted-foreground">Stock: {p.stock_quantity}</p>
-                      </div>
-                      <span className="text-xs font-semibold text-foreground">${Number(p.price).toFixed(2)}</span>
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* Cart Items */}
         <div className="border border-border rounded-lg overflow-hidden">
