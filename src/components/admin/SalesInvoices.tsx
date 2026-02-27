@@ -21,10 +21,11 @@ import {
 } from "lucide-react";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
-  paid:    { variant: "default",     label: "Paid" },
-  pending: { variant: "warning",     label: "Pending" },
-  failed:  { variant: "destructive", label: "Failed" },
-  expired: { variant: "outline",     label: "Expired" },
+  paid:      { variant: "default",     label: "Paid" },
+  pending:   { variant: "warning",     label: "Pending" },
+  failed:    { variant: "destructive", label: "Failed" },
+  expired:   { variant: "outline",     label: "Expired" },
+  cancelled: { variant: "secondary",   label: "Cancelled" },
 };
 
 // ─── Sales Overview Tab ───────────────────────────────────────────────────────
@@ -569,6 +570,7 @@ const InvoicesTab = () => {
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="expired">Expired</SelectItem>
             <SelectItem value="failed">Failed</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
           </SelectContent>
         </Select>
       </div>

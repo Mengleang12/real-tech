@@ -23,10 +23,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
-  paid: { variant: "default", label: "Paid" },
-  pending: { variant: "warning", label: "Pending" },
-  failed: { variant: "destructive", label: "Failed" },
-  expired: { variant: "outline", label: "Expired" },
+  paid:      { variant: "default",     label: "Paid" },
+  pending:   { variant: "warning",     label: "Pending" },
+  failed:    { variant: "destructive", label: "Failed" },
+  expired:   { variant: "outline",     label: "Expired" },
+  cancelled: { variant: "secondary",   label: "Cancelled" },
 };
 
 export const UserManagement = () => {
