@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./AdminDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { submissionsApi, type AppSubmission } from "@/lib/api";
@@ -206,21 +206,34 @@ export const AppReviewSystem = () => {
         )}
       </div>
 
-      {/* Review Dialog */}
-      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Review Submission</DialogTitle>
-          </DialogHeader>
-          
+      <AdminDialog 
+        open={showReviewDialog} 
+        onOpenChange={setShowReviewDialog} 
+        title="Review Submission" 
+        size="lg"
+        footer={
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:justify-end">
+            <Button variant="destructive" onClick={handleSuspend} disabled={updateSubmission.isPending}>
+              {updateSubmission.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
+              Suspend
+            </Button>
+            <Button variant="outline" onClick={handleReject} disabled={updateSubmission.isPending}>
+              {updateSubmission.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <XCircle className="w-4 h-4 mr-1" />}
+              Reject
+            </Button>
+            <Button onClick={handleApprove} disabled={updateSubmission.isPending}>
+              {updateSubmission.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-1" />}
+              Approve
+            </Button>
+          </div>
+        }
+      >
           {selectedSubmission && (
             <div className="space-y-4">
               <div className="p-4 rounded-lg bg-muted/50 space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Product</span>
-                  <span className="font-medium">
-                    {selectedSubmission.product?.name || `#${selectedSubmission.product_id}`}
-                  </span>
+                  <span className="font-medium">{selectedSubmission.product?.name || `#${selectedSubmission.product_id}`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Version</span>
@@ -228,69 +241,24 @@ export const AppReviewSystem = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Submitted</span>
-                  <span className="font-medium">
-                    {new Date(selectedSubmission.submitted_at).toLocaleString()}
-                  </span>
+                  <span className="font-medium">{new Date(selectedSubmission.submitted_at).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Current Status</span>
-                  <Badge className={statusConfig[selectedSubmission.status].color}>
-                    {statusConfig[selectedSubmission.status].label}
-                  </Badge>
+                  <Badge className={statusConfig[selectedSubmission.status].color}>{statusConfig[selectedSubmission.status].label}</Badge>
                 </div>
               </div>
-
               <div>
                 <label className="text-sm font-medium">Review Notes</label>
-                <Textarea
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  placeholder="Add internal notes about this submission..."
-                  className="mt-1.5"
-                  rows={3}
-                />
+                <Textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} placeholder="Add internal notes about this submission..." className="mt-1.5" rows={3} />
               </div>
-
               <div>
                 <label className="text-sm font-medium">Rejection Reason (required for rejection)</label>
-                <Textarea
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Explain why this submission is being rejected..."
-                  className="mt-1.5"
-                  rows={3}
-                />
+                <Textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="Explain why this submission is being rejected..." className="mt-1.5" rows={3} />
               </div>
             </div>
           )}
-
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="destructive"
-              onClick={handleSuspend}
-              disabled={updateSubmission.isPending}
-            >
-              {updateSubmission.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
-              Suspend
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleReject}
-              disabled={updateSubmission.isPending}
-            >
-              {updateSubmission.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <XCircle className="w-4 h-4 mr-1" />}
-              Reject
-            </Button>
-            <Button
-              onClick={handleApprove}
-              disabled={updateSubmission.isPending}
-            >
-              {updateSubmission.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-1" />}
-              Approve
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
     </div>
   );
 };

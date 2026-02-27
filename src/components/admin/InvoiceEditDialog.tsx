@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminUsersApi, salesApi, type AdminOrder, type OrderAttachment, type OrderPayment, type SaleProduct } from "@/lib/api";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle } from "./AdminDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,20 +60,22 @@ export const InvoiceEditDialog = ({ order, open, onOpenChange }: InvoiceEditDial
   if (!order) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <Pencil className="w-5 h-5 text-primary" />
-              Edit Invoice #{order.id.slice(0, 8).toUpperCase()}
-            </DialogTitle>
-            <Badge variant={statusConfig[order.status]?.variant || "secondary"} className="text-xs">
-              {statusConfig[order.status]?.label || order.status}
-            </Badge>
-          </div>
-        </DialogHeader>
-
+    <AdminDialog 
+      open={open} 
+      onOpenChange={onOpenChange} 
+      title={
+        <div className="flex items-center justify-between w-full">
+          <span className="flex items-center gap-2">
+            <Pencil className="w-5 h-5 text-primary" />
+            Edit Invoice #{order.id.slice(0, 8).toUpperCase()}
+          </span>
+          <Badge variant={statusConfig[order.status]?.variant || "secondary"} className="text-xs">
+            {statusConfig[order.status]?.label || order.status}
+          </Badge>
+        </div>
+      } 
+      size="3xl"
+    >
         <Tabs defaultValue="edit" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3 mt-4">
             <TabsTrigger value="edit" className="gap-1.5 text-xs"><Pencil className="w-3.5 h-3.5" /> Edit</TabsTrigger>
@@ -87,8 +89,7 @@ export const InvoiceEditDialog = ({ order, open, onOpenChange }: InvoiceEditDial
 
         <Separator />
         <BottomActions order={order} onClose={() => onOpenChange(false)} />
-      </DialogContent>
-    </Dialog>
+    </AdminDialog>
   );
 };
 

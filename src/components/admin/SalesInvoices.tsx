@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle } from "./AdminDialog";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -326,9 +326,7 @@ const StockManagement = () => {
       )}
 
       {/* Stock Update Dialog */}
-      <Dialog open={!!editingStock} onOpenChange={(open) => { if (!open) { setEditingStock(null); setStockReason(""); } }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Update Stock</DialogTitle></DialogHeader>
+      <AdminDialog open={!!editingStock} onOpenChange={(open) => { if (!open) { setEditingStock(null); setStockReason(""); } }} title="Update Stock" size="sm">
           {editingStock && (
             <div className="space-y-4">
               <div>
@@ -356,8 +354,7 @@ const StockManagement = () => {
               </Button>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
     </div>
   );
 };

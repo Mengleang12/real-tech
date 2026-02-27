@@ -3,7 +3,7 @@ import { Plus, Trash2, Users, Search, Tag, Percent, DollarSign, Calendar, X, Che
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle } from "./AdminDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -238,12 +238,7 @@ export const CouponManagement = () => {
         )}
       </div>
 
-      {/* Create/Edit Form Dialog */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{selectedCoupon ? 'Edit Coupon' : 'Create Coupon'}</DialogTitle>
-          </DialogHeader>
+      <AdminDialog open={showForm} onOpenChange={setShowForm} title={selectedCoupon ? 'Edit Coupon' : 'Create Coupon'} size="md">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -301,15 +296,10 @@ export const CouponManagement = () => {
               </Button>
             </div>
           </form>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
 
       {/* Assign Users Dialog */}
-      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Assign Coupon: {selectedCoupon?.code}</DialogTitle>
-          </DialogHeader>
+      <AdminDialog open={showAssignDialog} onOpenChange={setShowAssignDialog} title={`Assign Coupon: ${selectedCoupon?.code}`} size="lg">
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -367,8 +357,7 @@ export const CouponManagement = () => {
               </div>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
     </div>
   );
 };

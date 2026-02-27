@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle } from "./AdminDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -140,9 +140,7 @@ export const CategoryManagement = () => {
         </div>
       )}
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{editing ? "Edit Category" : "New Category"}</DialogTitle></DialogHeader>
+      <AdminDialog open={showForm} onOpenChange={setShowForm} title={editing ? "Edit Category" : "New Category"}>
           <div className="space-y-4">
             <div>
               <Label>Name (English) *</Label>
@@ -172,8 +170,7 @@ export const CategoryManagement = () => {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
 
       <AlertDialog open={!!deleting} onOpenChange={open => { if (!open) setDeleting(null); }}>
         <AlertDialogContent>

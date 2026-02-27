@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle } from "./AdminDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -330,9 +330,7 @@ export const AttributeManagement = () => {
         </>
       )}
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{editing ? "Edit Attribute" : "New Attribute"}</DialogTitle></DialogHeader>
+      <AdminDialog open={showForm} onOpenChange={setShowForm} title={editing ? "Edit Attribute" : "New Attribute"} size="lg">
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -420,8 +418,7 @@ export const AttributeManagement = () => {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
 
       <AlertDialog open={!!deleting} onOpenChange={open => { if (!open) setDeleting(null); }}>
         <AlertDialogContent>
@@ -436,9 +433,7 @@ export const AttributeManagement = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={!!optionsAttr} onOpenChange={open => { if (!open) setOptionsAttr(null); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Options for "{optionsAttr?.name}"</DialogTitle></DialogHeader>
+      <AdminDialog open={!!optionsAttr} onOpenChange={open => { if (!open) setOptionsAttr(null); }} title={`Options for "${optionsAttr?.name}"`} size="md">
           <div className="space-y-3">
             <div className="flex flex-wrap gap-1.5 mb-2">
               {presetGroups.map(g => (
@@ -473,8 +468,7 @@ export const AttributeManagement = () => {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
     </div>
   );
 };

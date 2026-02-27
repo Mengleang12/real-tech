@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AdminDialog } from "@/components/admin/AdminDialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -983,12 +983,9 @@ const AppsTab = () => {
         )}
       </div>
 
-      <Dialog open={showAppForm} onOpenChange={setShowAppForm}>
-        <DialogContent className="max-w-6xl w-[95vw]">
-          <DialogHeader><DialogTitle>{editingApp ? "Edit Product" : "Add New Product"}</DialogTitle></DialogHeader>
+      <AdminDialog open={showAppForm} onOpenChange={setShowAppForm} title={editingApp ? "Edit Product" : "Add New Product"} size="6xl">
           <AppForm app={editingApp} onSave={handleSaveApp} onCancel={() => { setShowAppForm(false); setEditingApp(undefined); }} />
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteConfirmApp} onOpenChange={(open) => { if (!open) setDeleteConfirmApp(null); }}>

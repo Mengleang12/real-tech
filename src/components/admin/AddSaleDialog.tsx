@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { salesApi, type SaleCustomer, type SaleProduct, type CreateSalePayload } from "@/lib/api";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./AdminDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -252,12 +252,13 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Plus className="w-5 h-5" /> New Sale</DialogTitle>
-          <DialogDescription>Create a sale for walk-in or existing customer</DialogDescription>
-        </DialogHeader>
+    <AdminDialog 
+      open={open} 
+      onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }} 
+      title={<span className="flex items-center gap-2"><Plus className="w-5 h-5" /> New Sale</span>} 
+      description="Create a sale for walk-in or existing customer" 
+      size="2xl"
+    >
 
         <div className="space-y-5">
           {/* ─── Customer Section ─── */}
@@ -531,7 +532,6 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+    </AdminDialog>
   );
 };
