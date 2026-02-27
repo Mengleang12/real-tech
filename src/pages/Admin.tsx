@@ -234,6 +234,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
             </SelectContent>
           </Select>
         </div>
+        {variants.length === 0 && (
         <div>
           <Label htmlFor="price">Price (USD)</Label>
           <div className="relative mt-1.5">
@@ -241,6 +242,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
             <Input id="price" type="number" min="0" step="0.01" value={formData.price || ""} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })} placeholder="0.00" className="pl-7" />
           </div>
         </div>
+        )}
       </div>
 
 
