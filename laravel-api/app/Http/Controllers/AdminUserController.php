@@ -262,6 +262,7 @@ class AdminUserController extends Controller
     public function updateOrder(Request $request, $orderId)
     {
         $sale = Sale::findOrFail($orderId);
+        $oldStatus = $sale->status;
 
         $request->validate([
             'notes' => 'nullable|string|max:2000',
@@ -275,6 +276,20 @@ class AdminUserController extends Controller
             'status' => 'nullable|in:pending,paid,failed,expired',
             'bakong_transaction_id' => 'nullable|string|max:100',
         ]);
+
+        $newStatus = $request->status ?? $oldStatus;
+
+        // Stock adjustment on status change
+        if ($oldStatus !== $newStatus) {
+            // Deduct stock when changing TO paid
+            if ($newStatus === 'paid' && $oldStatus !== 'paid') {
+                SaleController::deductStock($sale);
+            }
+            // Restore stock when changing FROM paid to non-paid
+            if ($oldStatus === 'paid' && $newStatus !== 'paid') {
+                SaleController::restoreStock($sale);
+            }
+        }
 
         $sale->update($request->only([
             'notes', 'amount', 'original_price',
@@ -290,6 +305,8 @@ class AdminUserController extends Controller
 
         $this->logActivity($request, 'admin_update_order', [
             'order_id' => $orderId,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
             'changes' => $request->only(['notes', 'amount', 'status']),
         ]);
 

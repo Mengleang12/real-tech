@@ -76,9 +76,27 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setProductLoading(false);
   }, []);
 
+  // Get available stock for a product/variant
+  const getAvailableStock = (product: SaleProduct, variantId?: number) => {
+    const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
+    return variant ? (variant.stock_quantity ?? 0) : (product.stock_quantity ?? 0);
+  };
+
   // Add product to cart
   const addToCart = (product: SaleProduct, variantId?: number) => {
+    const stock = getAvailableStock(product, variantId);
     const exists = cart.find(c => c.product.id === product.id && c.variant_id === variantId);
+    const currentQty = exists ? exists.quantity : 0;
+
+    if (stock <= 0) {
+      toast.error(`${product.name} is out of stock`);
+      return;
+    }
+    if (currentQty >= stock) {
+      toast.error(`Only ${stock} in stock for ${product.name}`);
+      return;
+    }
+
     if (exists) {
       setCart(cart.map(c =>
         c.product.id === product.id && c.variant_id === variantId
@@ -97,8 +115,12 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   const updateQty = (idx: number, delta: number) => {
     setCart(cart.map((c, i) => {
       if (i !== idx) return c;
+      const stock = getAvailableStock(c.product, c.variant_id);
       const newQty = Math.max(1, c.quantity + delta);
-      // Trim serials if qty decreased
+      if (delta > 0 && newQty > stock) {
+        toast.error(`Only ${stock} in stock for ${c.product.name}`);
+        return c;
+      }
       const newSerials = c.serial_numbers.filter(s => s.trim()).slice(0, newQty);
       return { ...c, quantity: newQty, serial_numbers: newSerials };
     }));
