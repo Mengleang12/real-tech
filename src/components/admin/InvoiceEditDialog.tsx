@@ -14,8 +14,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import {
   Pencil, Image, CreditCard, Loader2, Trash2, Upload, Plus,
-  DollarSign, FileText, X, Calendar, User, Package, CheckCircle,
-  Clock, AlertTriangle, Ban, Eye, Printer, Copy, Search, Percent, Minus
+  DollarSign, FileText, X, Package, CheckCircle,
+  Clock, Ban, Printer, Search, Percent, Minus
 } from "lucide-react";
 
 interface InvoiceEditDialogProps {
@@ -24,17 +24,29 @@ interface InvoiceEditDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface EditCartItem {
+  product_id: number;
+  product_name: string;
+  icon_url?: string;
+  variant_id?: number;
+  variant_label?: string;
+  quantity: number;
+  unit_price: number;
+  stock_quantity: number;
+  discount: number;
+  discount_type: "amount" | "percent";
+}
+
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string; icon: typeof CheckCircle; color: string }> = {
   paid:    { variant: "default",     label: "Paid",    icon: CheckCircle,  color: "text-emerald-600 dark:text-emerald-400" },
   pending: { variant: "secondary",   label: "Pending", icon: Clock,        color: "text-amber-600 dark:text-amber-400" },
   failed:  { variant: "destructive", label: "Failed",  icon: Ban,          color: "text-destructive" },
-  expired: { variant: "outline",     label: "Expired", icon: AlertTriangle, color: "text-muted-foreground" },
+  expired: { variant: "outline",     label: "Expired", icon: Ban,          color: "text-muted-foreground" },
 };
 
 export const InvoiceEditDialog = ({ order, open, onOpenChange }: InvoiceEditDialogProps) => {
   const queryClient = useQueryClient();
 
-  // Fetch full order detail with attachments/payments
   const { data: detailData } = useQuery({
     queryKey: ["order-detail", order?.id],
     queryFn: () => adminUsersApi.getOrderDetail(order!.id),
@@ -54,28 +66,23 @@ export const InvoiceEditDialog = ({ order, open, onOpenChange }: InvoiceEditDial
               <Pencil className="w-5 h-5 text-primary" />
               Edit Invoice #{order.id.slice(0, 8).toUpperCase()}
             </DialogTitle>
-            <div className="flex items-center gap-2">
-              <Badge variant={statusConfig[order.status]?.variant || "secondary"} className="text-xs">
-                {statusConfig[order.status]?.label || order.status}
-              </Badge>
-            </div>
+            <Badge variant={statusConfig[order.status]?.variant || "secondary"} className="text-xs">
+              {statusConfig[order.status]?.label || order.status}
+            </Badge>
           </div>
         </DialogHeader>
 
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview" className="gap-1.5 text-xs"><Eye className="w-3.5 h-3.5" /> Overview</TabsTrigger>
-            <TabsTrigger value="details" className="gap-1.5 text-xs"><FileText className="w-3.5 h-3.5" /> Edit</TabsTrigger>
+        <Tabs defaultValue="edit" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="edit" className="gap-1.5 text-xs"><Pencil className="w-3.5 h-3.5" /> Edit</TabsTrigger>
             <TabsTrigger value="attachments" className="gap-1.5 text-xs"><Image className="w-3.5 h-3.5" /> Files</TabsTrigger>
             <TabsTrigger value="payments" className="gap-1.5 text-xs"><CreditCard className="w-3.5 h-3.5" /> Payments</TabsTrigger>
           </TabsList>
-          <TabsContent value="overview"><OverviewTab order={fullOrder || order} /></TabsContent>
-          <TabsContent value="details"><DetailsTab order={fullOrder || order} onClose={() => onOpenChange(false)} /></TabsContent>
+          <TabsContent value="edit"><EditTab order={fullOrder || order} onClose={() => onOpenChange(false)} /></TabsContent>
           <TabsContent value="attachments"><AttachmentsTab order={fullOrder || order} /></TabsContent>
           <TabsContent value="payments"><PaymentsTab order={fullOrder || order} /></TabsContent>
         </Tabs>
 
-        {/* Bottom actions */}
         <Separator />
         <BottomActions order={order} onClose={() => onOpenChange(false)} />
       </DialogContent>
@@ -83,201 +90,65 @@ export const InvoiceEditDialog = ({ order, open, onOpenChange }: InvoiceEditDial
   );
 };
 
-// ─── Overview Tab ─────────────────────────────────────────────────────────────
-const OverviewTab = ({ order }: { order: AdminOrder }) => {
-  const amount = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount;
-  const originalPrice = order.original_price ? parseFloat(order.original_price) : amount;
-  const itemDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
-  const saleDiscount = order.sale_discount ? parseFloat(order.sale_discount) : 0;
-  const hasDiscount = itemDiscount > 0 || saleDiscount > 0;
-  const status = statusConfig[order.status] || statusConfig.pending;
-  const StatusIcon = status.icon;
-
-  const copyId = () => {
-    navigator.clipboard.writeText(order.id);
-    toast.success("Invoice ID copied");
-  };
-
-  return (
-    <div className="space-y-4">
-      {/* Status Banner */}
-      <div className={`flex items-center gap-3 rounded-lg p-3 ${
-        order.status === 'paid' ? 'bg-emerald-500/10' :
-        order.status === 'pending' ? 'bg-amber-500/10' :
-        order.status === 'failed' ? 'bg-destructive/10' : 'bg-muted/50'
-      }`}>
-        <StatusIcon className={`w-5 h-5 ${status.color}`} />
-        <div className="flex-1">
-          <p className={`font-semibold text-sm ${status.color}`}>{status.label}</p>
-          <p className="text-xs text-muted-foreground">
-            {order.status === 'paid' && order.paid_at ? `Paid on ${new Date(order.paid_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}` :
-             order.status === 'pending' ? 'Awaiting payment' :
-             order.status === 'failed' ? 'Payment failed' : 'Invoice expired'}
-          </p>
-        </div>
-        <Badge variant={status.variant}>{status.label}</Badge>
-      </div>
-
-      {/* Invoice ID */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span className="font-mono">ID: {order.id}</span>
-        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={copyId}><Copy className="w-3 h-3" /></Button>
-      </div>
-
-      {/* Customer & Product Cards */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <User className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Customer</span>
-            </div>
-            <p className="font-medium text-sm">{order.user?.full_name || "Walk-in Customer"}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{order.user?.email || "—"}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Package className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Product</span>
-            </div>
-            <p className="font-medium text-sm truncate">{order.product_name}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Product #{order.product_id}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Pricing Breakdown */}
-      <Card>
-        <CardContent className="p-4 space-y-2">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pricing</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Original Price</span>
-            <span className="tabular-nums">${originalPrice.toFixed(2)}</span>
-          </div>
-          {itemDiscount > 0 && (
-            <div className="flex justify-between text-sm text-destructive">
-              <span>Item Discount ({order.item_discount_type === 'percent' ? `${itemDiscount}%` : `$${itemDiscount.toFixed(2)}`})</span>
-              <span className="tabular-nums">-${(itemDiscount > 0 ? (order.item_discount_type === 'percent' ? originalPrice * itemDiscount / 100 : itemDiscount) : 0).toFixed(2)}</span>
-            </div>
-          )}
-          {saleDiscount > 0 && (
-            <div className="flex justify-between text-sm text-destructive">
-              <span>Sale Discount ({order.sale_discount_type === 'percent' ? `${saleDiscount}%` : `$${saleDiscount.toFixed(2)}`})</span>
-              <span className="tabular-nums">-${saleDiscount.toFixed(2)}</span>
-            </div>
-          )}
-          <Separator />
-          <div className="flex justify-between font-bold text-base">
-            <span>Total</span>
-            <span className="tabular-nums">${amount.toFixed(2)} {order.currency}</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Payment & Transaction Info */}
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Currency</p>
-          <p className="font-medium">{order.currency}</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Created</p>
-          <p className="font-medium">{order.created_at ? new Date(order.created_at).toLocaleString() : "—"}</p>
-        </div>
-        {order.bakong_transaction_id && (
-          <div className="col-span-2">
-            <p className="text-xs text-muted-foreground mb-1">Transaction ID</p>
-            <p className="font-mono text-xs break-all bg-muted/50 rounded px-2 py-1">{order.bakong_transaction_id}</p>
-          </div>
-        )}
-        {order.paid_at && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Paid At</p>
-            <p className="font-medium">{new Date(order.paid_at).toLocaleString()}</p>
-          </div>
-        )}
-        {order.expires_at && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Expires At</p>
-            <p className="font-medium">{new Date(order.expires_at).toLocaleString()}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Notes */}
-      {order.notes && (
-        <div className="rounded-lg border-l-2 border-primary bg-muted/40 p-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Notes</p>
-          <p className="text-sm">{order.notes}</p>
-        </div>
-      )}
-
-      {/* Attachments & Payments Summary */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="border border-border rounded-lg p-3 text-center">
-          <p className="text-xs text-muted-foreground">Attachments</p>
-          <p className="text-lg font-bold">{order.attachments?.length || 0}</p>
-        </div>
-        <div className="border border-border rounded-lg p-3 text-center">
-          <p className="text-xs text-muted-foreground">Payments</p>
-          <p className="text-lg font-bold">{order.payments?.length || 0}</p>
-        </div>
-      </div>
-    </div>
-  );
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const getLineTotal = (item: EditCartItem) => {
+  const gross = item.unit_price * item.quantity;
+  if (item.discount_type === "percent") {
+    return gross * (1 - Math.min(item.discount, 100) / 100);
+  }
+  return Math.max(0, gross - item.discount);
 };
 
-// ─── Details Tab ──────────────────────────────────────────────────────────────
-const DetailsTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void }) => {
+// ─── Edit Tab ─────────────────────────────────────────────────────────────────
+const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void }) => {
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState(order.notes || "");
   const [status, setStatus] = useState(order.status);
-  const [productName, setProductName] = useState(order.product_name);
-  const [originalPrice, setOriginalPrice] = useState(order.original_price || String(order.amount));
-  const [itemDiscount, setItemDiscount] = useState(order.item_discount || "0");
-  const [itemDiscountType, setItemDiscountType] = useState<"amount" | "percent">((order.item_discount_type as "amount" | "percent") || "amount");
-  const [saleDiscount, setSaleDiscount] = useState(order.sale_discount || "0");
-  const [saleDiscountType, setSaleDiscountType] = useState<"amount" | "percent">((order.sale_discount_type as "amount" | "percent") || "amount");
   const [txnId, setTxnId] = useState(order.bakong_transaction_id || "");
 
-  // Product search for replacing item
+  // Cart items - initialize from order
+  const [cart, setCart] = useState<EditCartItem[]>(() => [{
+    product_id: order.product_id,
+    product_name: order.product_name,
+    quantity: 1,
+    unit_price: order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount),
+    stock_quantity: 999,
+    discount: order.item_discount ? parseFloat(order.item_discount) : 0,
+    discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
+  }]);
+
+  // Sale-level discount
+  const [saleDiscount, setSaleDiscount] = useState(order.sale_discount ? parseFloat(order.sale_discount) : 0);
+  const [saleDiscountType, setSaleDiscountType] = useState<"amount" | "percent">((order.sale_discount_type as "amount" | "percent") || "amount");
+
+  // Product search
   const [productSearch, setProductSearch] = useState("");
   const [searchResults, setSearchResults] = useState<SaleProduct[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [showProductSearch, setShowProductSearch] = useState(false);
 
-  // Reset when order changes
   useEffect(() => {
     setNotes(order.notes || "");
     setStatus(order.status);
-    setProductName(order.product_name);
-    setOriginalPrice(order.original_price || String(order.amount));
-    setItemDiscount(order.item_discount || "0");
-    setItemDiscountType((order.item_discount_type as "amount" | "percent") || "amount");
-    setSaleDiscount(order.sale_discount || "0");
-    setSaleDiscountType((order.sale_discount_type as "amount" | "percent") || "amount");
     setTxnId(order.bakong_transaction_id || "");
+    setCart([{
+      product_id: order.product_id,
+      product_name: order.product_name,
+      quantity: 1,
+      unit_price: order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount),
+      stock_quantity: 999,
+      discount: order.item_discount ? parseFloat(order.item_discount) : 0,
+      discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
+    }]);
+    setSaleDiscount(order.sale_discount ? parseFloat(order.sale_discount) : 0);
+    setSaleDiscountType((order.sale_discount_type as "amount" | "percent") || "amount");
   }, [order]);
 
-  // Auto-calculate amount
-  const price = parseFloat(originalPrice) || 0;
-  const itemDiscVal = parseFloat(itemDiscount) || 0;
-  const saleDiscVal = parseFloat(saleDiscount) || 0;
-
-  const afterItemDiscount = itemDiscountType === "percent"
-    ? price * (1 - Math.min(itemDiscVal, 100) / 100)
-    : Math.max(0, price - itemDiscVal);
-
+  // Calculations
+  const subtotal = cart.reduce((s, c) => s + getLineTotal(c), 0);
   const saleDiscountAmount = saleDiscountType === "percent"
-    ? afterItemDiscount * Math.min(saleDiscVal, 100) / 100
-    : Math.min(saleDiscVal, afterItemDiscount);
-
-  const calculatedTotal = Math.max(0, afterItemDiscount - saleDiscountAmount);
+    ? subtotal * Math.min(saleDiscount, 100) / 100
+    : Math.min(saleDiscount, subtotal);
+  const grandTotal = Math.max(0, subtotal - saleDiscountAmount);
 
   // Search products
   const handleSearchProducts = useCallback(async (q: string) => {
@@ -291,13 +162,51 @@ const DetailsTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void
     setSearchLoading(false);
   }, []);
 
-  // Select a product from search
-  const selectProduct = (product: SaleProduct) => {
-    setProductName(product.name);
-    setOriginalPrice(String(product.price));
-    setShowProductSearch(false);
+  // Add product to cart
+  const addToCart = (product: SaleProduct, variantId?: number) => {
+    const existing = cart.find(c => c.product_id === product.id && c.variant_id === variantId);
+    if (existing) {
+      setCart(cart.map(c =>
+        c.product_id === product.id && c.variant_id === variantId
+          ? { ...c, quantity: c.quantity + 1 }
+          : c
+      ));
+    } else {
+      const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
+      const price = Number(product.price) + Number(variant?.price_adjustment || 0);
+      const variantLabel = variant ? Object.values(variant.combination).join(" / ") : undefined;
+      setCart([...cart, {
+        product_id: product.id,
+        product_name: product.name,
+        icon_url: product.icon_url,
+        variant_id: variantId,
+        variant_label: variantLabel,
+        quantity: 1,
+        unit_price: price,
+        stock_quantity: variant?.stock_quantity ?? product.stock_quantity,
+        discount: 0,
+        discount_type: "amount",
+      }]);
+    }
     setProductSearch("");
     setSearchResults([]);
+  };
+
+  const updateQty = (idx: number, delta: number) => {
+    setCart(cart.map((c, i) => i === idx ? { ...c, quantity: Math.max(1, c.quantity + delta) } : c));
+  };
+
+  const updateItemDiscount = (idx: number, value: number, type: "amount" | "percent") => {
+    setCart(cart.map((c, i) => i === idx ? { ...c, discount: value, discount_type: type } : c));
+  };
+
+  const updateItemPrice = (idx: number, price: number) => {
+    setCart(cart.map((c, i) => i === idx ? { ...c, unit_price: price } : c));
+  };
+
+  const removeFromCart = (idx: number) => {
+    if (cart.length <= 1) { toast.error("Must have at least one item"); return; }
+    setCart(cart.filter((_, i) => i !== idx));
   };
 
   const updateMutation = useMutation({
@@ -314,21 +223,29 @@ const DetailsTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void
   });
 
   const handleSave = () => {
+    if (cart.length === 0) { toast.error("Add at least one item"); return; }
+
+    // For single item, map directly. For multi-item, combine names & totals.
+    const firstItem = cart[0];
+    const combinedName = cart.map(c => c.product_name).join(", ");
+    const totalOriginal = cart.reduce((s, c) => s + c.unit_price * c.quantity, 0);
+    const totalItemDiscount = totalOriginal - subtotal;
+
     updateMutation.mutate({
-      product_name: productName,
+      product_name: combinedName,
+      product_id: firstItem.product_id as any,
       notes: notes || undefined,
       status,
-      amount: calculatedTotal as any,
-      original_price: originalPrice as any,
-      item_discount: itemDiscount as any,
-      item_discount_type: itemDiscountType as any,
-      sale_discount: saleDiscount as any,
+      amount: grandTotal as any,
+      original_price: totalOriginal.toFixed(2) as any,
+      item_discount: totalItemDiscount.toFixed(2) as any,
+      item_discount_type: "amount" as any,
+      sale_discount: saleDiscount > 0 ? saleDiscount.toString() as any : "0" as any,
       sale_discount_type: saleDiscountType as any,
       bakong_transaction_id: txnId || undefined,
     });
   };
 
-  // Quick status buttons
   const quickStatusUpdate = (newStatus: AdminOrder["status"]) => {
     updateMutation.mutate({ status: newStatus });
   };
@@ -375,155 +292,177 @@ const DetailsTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void
 
       <Separator />
 
-      {/* ─── Sale Item ─── */}
+      {/* ─── Sale Items ─── */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sale Item</p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-xs h-7"
-            onClick={() => setShowProductSearch(!showProductSearch)}
-          >
-            <Search className="w-3 h-3" /> {showProductSearch ? "Cancel" : "Change Product"}
-          </Button>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sale Items ({cart.length})</p>
         </div>
 
-        {/* Product Search */}
-        {showProductSearch && (
-          <div className="relative mb-3">
-            <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={productSearch}
-              onChange={(e) => handleSearchProducts(e.target.value)}
-              className="pl-9 h-9 text-sm"
-              autoFocus
-            />
-            {searchLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
-            {searchResults.length > 0 && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                {searchResults.map(p => (
-                  <button
-                    key={p.id}
-                    className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors"
-                    onClick={() => selectProduct(p)}
-                  >
-                    {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">Stock: {p.stock_quantity}</p>
-                    </div>
-                    <span className="text-xs font-semibold text-foreground">${Number(p.price).toFixed(2)}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+        {/* Product Search to Add */}
+        <div className="relative mb-3">
+          <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Search & add products..."
+            value={productSearch}
+            onChange={(e) => handleSearchProducts(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+          {searchLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+          {searchResults.length > 0 && (
+            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              {searchResults.map(p => (
+                <div key={p.id}>
+                  {p.variants.length > 0 ? (
+                    p.variants.map(v => {
+                      const label = Object.values(v.combination).join(" / ");
+                      const price = Number(p.price) + Number(v.price_adjustment || 0);
+                      return (
+                        <button key={`${p.id}-${v.id}`} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors" onClick={() => addToCart(p, v.id)}>
+                          {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-foreground truncate">{p.name}</p>
+                            <p className="text-xs text-muted-foreground">{label} · Stock: {v.stock_quantity}</p>
+                          </div>
+                          <span className="text-xs font-semibold text-foreground">${price.toFixed(2)}</span>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors" onClick={() => addToCart(p)}>
+                      {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">Stock: {p.stock_quantity}</p>
+                      </div>
+                      <span className="text-xs font-semibold text-foreground">${Number(p.price).toFixed(2)}</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Cart Items */}
+        <div className="border border-border rounded-lg overflow-hidden">
+          <div className="grid grid-cols-[1fr_70px_90px_70px_28px] gap-1 px-3 py-2 bg-muted/50 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+            <span>Product</span>
+            <span className="text-center">Qty</span>
+            <span className="text-center">Discount</span>
+            <span className="text-right">Total</span>
+            <span />
           </div>
-        )}
-
-        {/* Current Item Card */}
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            {/* Product name & price */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Product Name</label>
-                <Input value={productName} onChange={(e) => setProductName(e.target.value)} className="mt-1 h-9 text-sm" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Unit Price ($)</label>
-                <Input type="number" step="0.01" min="0" value={originalPrice} onChange={(e) => setOriginalPrice(e.target.value)} className="mt-1 h-9 text-sm" />
-              </div>
-            </div>
-
-            {/* Item Discount */}
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Item Discount</label>
-              <div className="flex items-center gap-2 mt-1">
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={itemDiscount}
-                  onChange={(e) => setItemDiscount(e.target.value)}
-                  className="h-9 text-sm flex-1"
-                  placeholder="0"
-                />
-                <button
-                  onClick={() => setItemDiscountType(itemDiscountType === "amount" ? "percent" : "amount")}
-                  className="h-9 w-9 shrink-0 rounded-md border border-input flex items-center justify-center text-xs font-bold text-muted-foreground hover:bg-muted transition-colors"
-                  title={itemDiscountType === "amount" ? "Switch to %" : "Switch to $"}
-                >
-                  {itemDiscountType === "percent" ? <Percent className="w-3.5 h-3.5" /> : <DollarSign className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-              {itemDiscVal > 0 && (
-                <p className="text-xs text-destructive mt-1">
-                  -{itemDiscountType === "percent" ? `${itemDiscVal}%` : `$${itemDiscVal.toFixed(2)}`} 
-                  {" "}= -${(price - afterItemDiscount).toFixed(2)}
-                </p>
-              )}
-            </div>
-
-            {/* Sale Discount */}
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Sale Discount</label>
-              <div className="flex items-center gap-2 mt-1">
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={saleDiscount}
-                  onChange={(e) => setSaleDiscount(e.target.value)}
-                  className="h-9 text-sm flex-1"
-                  placeholder="0"
-                />
-                <button
-                  onClick={() => setSaleDiscountType(saleDiscountType === "amount" ? "percent" : "amount")}
-                  className="h-9 w-9 shrink-0 rounded-md border border-input flex items-center justify-center text-xs font-bold text-muted-foreground hover:bg-muted transition-colors"
-                  title={saleDiscountType === "amount" ? "Switch to %" : "Switch to $"}
-                >
-                  {saleDiscountType === "percent" ? <Percent className="w-3.5 h-3.5" /> : <DollarSign className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-              {saleDiscVal > 0 && (
-                <p className="text-xs text-destructive mt-1">
-                  -{saleDiscountType === "percent" ? `${saleDiscVal}%` : `$${saleDiscVal.toFixed(2)}`}
-                  {" "}= -${saleDiscountAmount.toFixed(2)}
-                </p>
-              )}
-            </div>
-
-            <Separator />
-
-            {/* Price Summary */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Subtotal</span>
-                <span className="tabular-nums">${price.toFixed(2)}</span>
-              </div>
-              {itemDiscVal > 0 && (
-                <div className="flex justify-between text-sm text-destructive">
-                  <span>Item Discount</span>
-                  <span className="tabular-nums">-${(price - afterItemDiscount).toFixed(2)}</span>
+          {cart.map((item, idx) => {
+            const lineTotal = getLineTotal(item);
+            const overStock = item.quantity > item.stock_quantity && item.stock_quantity < 999;
+            return (
+              <div key={idx} className="grid grid-cols-[1fr_70px_90px_70px_28px] gap-1 px-3 py-2.5 items-center border-t border-border/50">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    {item.icon_url && <img src={item.icon_url} className="w-7 h-7 rounded object-cover shrink-0" alt="" />}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{item.product_name}</p>
+                      {item.variant_label && <p className="text-[10px] text-muted-foreground">{item.variant_label}</p>}
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={item.unit_price}
+                          onChange={e => updateItemPrice(idx, parseFloat(e.target.value) || 0)}
+                          className="h-5 text-[10px] px-1 w-16 border-dashed"
+                        />
+                        {item.stock_quantity < 999 && (
+                          <span className={`text-[10px] ${overStock ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                            Stock: {item.stock_quantity}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )}
-              {saleDiscVal > 0 && (
-                <div className="flex justify-between text-sm text-destructive">
-                  <span>Sale Discount</span>
-                  <span className="tabular-nums">-${saleDiscountAmount.toFixed(2)}</span>
+                <div className="flex items-center gap-0.5 justify-center">
+                  <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, -1)}><Minus className="w-2.5 h-2.5" /></Button>
+                  <span className={`text-xs font-medium w-5 text-center ${overStock ? "text-destructive" : ""}`}>{item.quantity}</span>
+                  <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, 1)}><Plus className="w-2.5 h-2.5" /></Button>
                 </div>
-              )}
-              <Separator />
-              <div className="flex justify-between font-bold text-base">
-                <span>Total</span>
-                <span className="tabular-nums">${calculatedTotal.toFixed(2)} {order.currency}</span>
+                <div className="flex items-center gap-0.5">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.discount || ""}
+                    onChange={e => updateItemDiscount(idx, parseFloat(e.target.value) || 0, item.discount_type)}
+                    className="h-6 text-[11px] px-1.5 w-12"
+                    placeholder="0"
+                  />
+                  <button
+                    onClick={() => updateItemDiscount(idx, item.discount, item.discount_type === "amount" ? "percent" : "amount")}
+                    className="h-6 w-6 shrink-0 rounded border border-input flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:bg-muted transition-colors"
+                    title={item.discount_type === "amount" ? "Switch to %" : "Switch to $"}
+                  >
+                    {item.discount_type === "percent" ? "%" : "$"}
+                  </button>
+                </div>
+                <p className="text-sm font-semibold text-right tabular-nums">${lineTotal.toFixed(2)}</p>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6"
+                  onClick={() => removeFromCart(idx)}
+                  disabled={cart.length <= 1}
+                >
+                  <Trash2 className="w-3 h-3 text-destructive" />
+                </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Sale Discount */}
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">Sale Discount</label>
+        <div className="flex items-center gap-2 mt-1">
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={saleDiscount || ""}
+            onChange={(e) => setSaleDiscount(parseFloat(e.target.value) || 0)}
+            className="h-9 text-sm flex-1"
+            placeholder="0"
+          />
+          <button
+            onClick={() => setSaleDiscountType(saleDiscountType === "amount" ? "percent" : "amount")}
+            className="h-9 w-9 shrink-0 rounded-md border border-input flex items-center justify-center text-xs font-bold text-muted-foreground hover:bg-muted transition-colors"
+            title={saleDiscountType === "amount" ? "Switch to %" : "Switch to $"}
+          >
+            {saleDiscountType === "percent" ? <Percent className="w-3.5 h-3.5" /> : <DollarSign className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Price Summary */}
+      <Card>
+        <CardContent className="p-4 space-y-1.5">
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Subtotal ({cart.length} item{cart.length > 1 ? "s" : ""})</span>
+            <span className="tabular-nums">${subtotal.toFixed(2)}</span>
+          </div>
+          {saleDiscount > 0 && (
+            <div className="flex justify-between text-sm text-destructive">
+              <span>Sale Discount ({saleDiscountType === "percent" ? `${saleDiscount}%` : `$${saleDiscount.toFixed(2)}`})</span>
+              <span className="tabular-nums">-${saleDiscountAmount.toFixed(2)}</span>
+            </div>
+          )}
+          <Separator />
+          <div className="flex justify-between font-bold text-base">
+            <span>Grand Total</span>
+            <span className="tabular-nums">${grandTotal.toFixed(2)} {order.currency}</span>
+          </div>
+        </CardContent>
+      </Card>
 
       <Separator />
 
@@ -536,7 +475,7 @@ const DetailsTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void
       {/* Notes */}
       <div>
         <label className="text-xs font-medium text-muted-foreground">Notes</label>
-        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="mt-1.5" placeholder="Add notes to this invoice..." />
+        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="mt-1.5" placeholder="Add notes..." />
       </div>
 
       <Button className="w-full gap-2" onClick={handleSave} disabled={updateMutation.isPending}>
@@ -552,7 +491,7 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ["order-detail", order.id],
     queryFn: () => adminUsersApi.getOrderDetail(order.id),
   });
@@ -589,13 +528,7 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium">{attachments.length} attachment(s)</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploadMutation.isPending}
-        >
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>
           {uploadMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
           Upload
         </Button>
@@ -625,13 +558,7 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
                 <p className="text-xs font-medium truncate">{att.file_name}</p>
                 <p className="text-[10px] text-muted-foreground">{att.file_size ? `${(att.file_size / 1024).toFixed(1)} KB` : ""}</p>
               </div>
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute top-1.5 right-1.5 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => deleteMutation.mutate(att.id)}
-                disabled={deleteMutation.isPending}
-              >
+              <Button variant="destructive" size="icon" className="absolute top-1.5 right-1.5 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteMutation.mutate(att.id)} disabled={deleteMutation.isPending}>
                 <X className="w-3 h-3" />
               </Button>
             </div>
@@ -689,17 +616,11 @@ const PaymentsTab = ({ order }: { order: AdminOrder }) => {
   const handleAdd = () => {
     const amt = parseFloat(payAmount);
     if (!amt || amt <= 0) { toast.error("Enter a valid amount"); return; }
-    addMutation.mutate({
-      amount: amt,
-      method: payMethod,
-      reference: payRef || undefined,
-      note: payNote || undefined,
-    });
+    addMutation.mutate({ amount: amt, method: payMethod, reference: payRef || undefined, note: payNote || undefined });
   };
 
   return (
     <div className="space-y-4">
-      {/* Summary */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-muted/50 rounded-lg p-3 text-center">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</p>
@@ -711,13 +632,10 @@ const PaymentsTab = ({ order }: { order: AdminOrder }) => {
         </div>
         <div className={`rounded-lg p-3 text-center ${remaining > 0 ? "bg-destructive/10" : "bg-emerald-500/10"}`}>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Remaining</p>
-          <p className={`text-lg font-bold ${remaining > 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>
-            ${remaining.toFixed(2)}
-          </p>
+          <p className={`text-lg font-bold ${remaining > 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>${remaining.toFixed(2)}</p>
         </div>
       </div>
 
-      {/* Payment List */}
       {payments.length > 0 && (
         <div className="space-y-2">
           {payments.map((p) => {
@@ -735,13 +653,7 @@ const PaymentsTab = ({ order }: { order: AdminOrder }) => {
                   </div>
                   {p.note && <p className="text-xs text-muted-foreground mt-1">{p.note}</p>}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 flex-shrink-0"
-                  onClick={() => deleteMutation.mutate(p.id)}
-                  disabled={deleteMutation.isPending}
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => deleteMutation.mutate(p.id)} disabled={deleteMutation.isPending}>
                   <Trash2 className="w-3.5 h-3.5 text-destructive" />
                 </Button>
               </div>
@@ -750,7 +662,6 @@ const PaymentsTab = ({ order }: { order: AdminOrder }) => {
         </div>
       )}
 
-      {/* Add Payment */}
       {!showAdd ? (
         <Button variant="outline" className="w-full gap-2" onClick={() => { setShowAdd(true); setPayAmount(remaining > 0 ? remaining.toFixed(2) : ""); }}>
           <Plus className="w-4 h-4" /> Add Payment
