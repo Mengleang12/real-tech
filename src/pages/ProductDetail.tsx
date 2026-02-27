@@ -6,9 +6,10 @@ import {
   Download, Calendar, HardDrive, ExternalLink, Package, ChevronLeft, 
   ChevronRight, X, Shield, ArrowLeft, Home, Search,
   Box, Gamepad2, Puzzle, LayoutGrid, ChevronDown, ShoppingCart, Lock, AlertTriangle,
-  ShoppingBag, Tag, Boxes, Play
+  ShoppingBag, Tag, Boxes, Play, LogIn, CreditCard, Settings
 } from "lucide-react";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
+import { useCategories } from "@/hooks/useCategories";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { CouponSuggestion } from "@/components/CouponSuggestion";
 import { useHasPurchased } from "@/hooks/useOrders";
 import { RichContent } from "@/components/RichTextEditor";
 import { useCart } from "@/contexts/CartContext";
+import { cn } from "@/lib/utils";
 import { FloatingCartButton } from "@/components/FloatingCartButton";
 const getGradientFromName = (name: string | undefined): string => {
   const gradients = [
@@ -257,6 +259,7 @@ const ProductDetail = () => {
   const translations = useTranslations();
   const { user } = useAuth();
   const { addToCart, items } = useCart();
+  const { data: categories } = useCategories();
   const [selectedScreenshot, setSelectedScreenshot] = useState(0);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -321,41 +324,107 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Simple Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-background/95 backdrop-blur-xl py-6 px-4 flex-col z-50 border-r border-border/50 hidden lg:flex">
+      {/* Sidebar - matching home page */}
+      <aside className="fixed inset-y-0 left-0 z-50 w-[220px] bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex-col hidden lg:flex">
         {/* Logo */}
-        <Link to="/" className="flex items-center justify-center px-4 mb-8">
-          <div className="w-20 h-20 rounded-md overflow-hidden shrink-0">
-            <img src={realtechLogo} alt="Realtech Computer" className="w-full h-full object-contain" />
-          </div>
-        </Link>
-        <Separator className="my-3 opacity-30" />
-
-        <nav className="flex-1 space-y-1">
-          {[
-            { id: "all", label: translations.all, icon: LayoutGrid },
-            { id: "programs", label: translations.programs, icon: Box },
-            { id: "games", label: translations.games, icon: Gamepad2 },
-            { id: "extensions", label: translations.extensions, icon: Puzzle },
-          ].map((item, index, arr) => (
-            <div key={item.id}>
-              <Link
-                to={item.id === "all" ? "/" : `/?category=${item.id}`}
-                className="sidebar-nav-item w-full group"
-              >
-                <div className="p-2 rounded-lg transition-all duration-300 bg-accent/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary">
-                  <item.icon className="w-4 h-4" />
-                </div>
-                <span className="flex-1 text-left font-medium">{item.label}</span>
-              </Link>
-              {index < arr.length - 1 && <Separator className="my-1 opacity-30" />}
+        <div className="h-[70px] flex items-center justify-center px-4 border-b border-sidebar-border/60">
+          <Link to="/">
+            <div className="w-20 h-20 rounded-md overflow-hidden shrink-0">
+              <img src={realtechLogo} alt="Realtech" className="w-full h-full object-contain" />
             </div>
-          ))}
+          </Link>
+        </div>
+
+        {/* Categories */}
+        <nav className="flex-1 overflow-y-auto scrollbar-macos px-2 py-3 space-y-4">
+          <div className="space-y-0.5">
+            <p className="px-2.5 py-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider select-none">
+              {language === "km" ? "ប្រភេទ" : "Categories"}
+            </p>
+            
+            <Link
+              to="/"
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
+            >
+              <LayoutGrid className="w-[16px] h-[16px] shrink-0 opacity-80" />
+              <span className="flex-1 truncate">{language === "km" ? "ទាំងអស់" : "All Products"}</span>
+            </Link>
+
+            {(categories || [])
+              .filter(c => c.is_active)
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .map((cat) => {
+                const displayCatName = language === "km" && cat.name_km ? cat.name_km : cat.name;
+                return (
+                  <Link
+                    key={cat.id}
+                    to={`/?category=${cat.slug}`}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
+                  >
+                    {cat.icon_url ? (
+                      <img src={cat.icon_url} alt="" className="w-4 h-4 rounded object-contain shrink-0 opacity-80" />
+                    ) : (
+                      <Package className="w-[16px] h-[16px] shrink-0 opacity-80" />
+                    )}
+                    <span className="flex-1 truncate">{displayCatName}</span>
+                  </Link>
+                );
+              })}
+          </div>
+
+          {user && (
+            <div className="space-y-0.5">
+              <p className="px-2.5 py-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider select-none">
+                {language === "km" ? "គណនី" : "Account"}
+              </p>
+              {[
+                { path: "/my-purchases", label: language === "km" ? "កម្មវិធីដែលបានទិញ" : "My Purchases", icon: ShoppingCart },
+                { path: "/payment-history", label: language === "km" ? "ប្រវត្តិបង់ប្រាក់" : "Payment History", icon: CreditCard },
+                { path: "/profile", label: language === "km" ? "ការកំណត់គណនី" : "Profile Settings", icon: Settings },
+              ].map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    "w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all",
+                    location.pathname === item.path
+                      ? "bg-primary text-primary-foreground"
+                      : "text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="w-[16px] h-[16px] shrink-0 opacity-80" />
+                  <span className="flex-1 truncate">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          )}
         </nav>
+
+        <div className="px-3 py-2.5 border-t border-sidebar-border/60">
+          {!user && (
+            <Link
+              to="/auth"
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium text-sidebar-foreground hover:bg-accent/70 hover:text-foreground transition-all mb-1.5"
+            >
+              <LogIn className="w-4 h-4 opacity-80" />
+              <span>{language === "km" ? "ចូល" : "Sign In"}</span>
+            </Link>
+          )}
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 px-1">
+            {["DMCA", "Privacy", "FAQ", "Contact"].map((link) => (
+              <span
+                key={link}
+                className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground cursor-pointer transition-colors"
+              >
+                {link}
+              </span>
+            ))}
+          </div>
+        </div>
       </aside>
       
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen">
+      <main className="lg:ml-[220px] min-h-screen">
         {/* Header */}
         <header className="sticky top-0 z-40 glass py-3 sm:py-4 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 sm:gap-4">
