@@ -46,8 +46,11 @@ export const AppCard = (props: AppCardProps) => {
   const iconUrl = props.app?.icon_url || props.icon_url;
   const category = props.app?.category || "programs";
 
-  const priceValue = props.app?.price;
-  const priceNum = typeof priceValue === "string" ? parseFloat(priceValue) : priceValue || 0;
+  const basePriceValue = props.app?.price;
+  const basePriceNum = typeof basePriceValue === "string" ? parseFloat(basePriceValue) : basePriceValue || 0;
+  // If product has active variants, use first variant price as default
+  const activeVariants = props.app?.variants?.filter(v => v.is_active) || [];
+  const priceNum = activeVariants.length > 0 ? (Number(activeVariants[0].price_adjustment) || 0) : basePriceNum;
   const isPaidApp = priceNum > 0;
   const displayName = t(nameKm, name);
 
