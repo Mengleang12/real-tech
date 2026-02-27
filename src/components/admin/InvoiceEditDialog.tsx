@@ -383,9 +383,9 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
                   <Input
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="1"
                     value={item.discount || ""}
-                    onChange={e => updateItemDiscount(idx, parseFloat(e.target.value) || 0, item.discount_type)}
+                    onChange={e => updateItemDiscount(idx, parseInt(e.target.value) || 0, item.discount_type)}
                     className="h-6 text-[11px] px-1.5 w-12"
                     placeholder="0"
                   />
@@ -419,10 +419,10 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
         <div className="flex items-center gap-2 mt-1">
           <Input
             type="number"
-            step="0.01"
+            step="1"
             min="0"
             value={saleDiscount || ""}
-            onChange={(e) => setSaleDiscount(parseFloat(e.target.value) || 0)}
+            onChange={(e) => setSaleDiscount(parseInt(e.target.value) || 0)}
             className="h-9 text-sm flex-1"
             placeholder="0"
           />
