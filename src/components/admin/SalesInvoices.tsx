@@ -359,11 +359,23 @@ const StockManagement = () => {
 
 // ─── Invoices Tab ─────────────────────────────────────────────────────────────
 const InvoicesTab = () => {
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [editOrder, setEditOrder] = useState<AdminOrder | null>(null);
+
+  const markPaidMutation = useMutation({
+    mutationFn: (orderId: string) =>
+      adminUsersApi.updateOrder(orderId, { status: 'paid', paid_at: new Date().toISOString() } as any),
+    onSuccess: () => {
+      toast.success("Marked as paid");
+      queryClient.invalidateQueries({ queryKey: ["admin-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-sales-dashboard"] });
+    },
+    onError: () => toast.error("Failed to update status"),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-invoices", statusFilter, currentPage],
@@ -594,6 +606,18 @@ const InvoicesTab = () => {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {order.status !== 'paid' && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+                              onClick={() => markPaidMutation.mutate(order.id)}
+                              disabled={markPaidMutation.isPending}
+                              title="Set to Paid"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedOrder(order)} title="View"><Eye className="w-3.5 h-3.5" /></Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditOrder(order)} title="Edit"><Pencil className="w-3.5 h-3.5 text-primary" /></Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handlePrint(order)} title="Print"><Printer className="w-3.5 h-3.5" /></Button>
