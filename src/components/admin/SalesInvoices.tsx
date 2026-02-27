@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AddSaleDialog } from "./AddSaleDialog";
 import { InvoiceEditDialog } from "./InvoiceEditDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminUsersApi, salesApi, type AdminOrder, type StockProduct } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +17,7 @@ import { toast } from "sonner";
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, ShoppingCart,
   FileText, Eye, Package, CheckCircle, Clock, Printer, Pencil,
-  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus
+  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2
 } from "lucide-react";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
@@ -367,6 +368,18 @@ const InvoicesTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [editOrder, setEditOrder] = useState<AdminOrder | null>(null);
+  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (orderId: string) => adminUsersApi.deleteOrder(orderId),
+    onSuccess: () => {
+      toast.success("Invoice deleted");
+      queryClient.invalidateQueries({ queryKey: ["admin-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-sales-dashboard"] });
+      setDeleteOrderId(null);
+    },
+    onError: () => toast.error("Failed to delete invoice"),
+  });
 
   const markPaidMutation = useMutation({
     mutationFn: (orderId: string) =>
@@ -623,6 +636,7 @@ const InvoicesTab = () => {
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedOrder(order)} title="View"><Eye className="w-3.5 h-3.5" /></Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditOrder(order)} title="Edit"><Pencil className="w-3.5 h-3.5 text-primary" /></Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handlePrint(order)} title="Print"><Printer className="w-3.5 h-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteOrderId(order.id)} title="Delete"><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                         </div>
                       </td>
                     </tr>
@@ -737,6 +751,29 @@ const InvoicesTab = () => {
         open={!!editOrder}
         onOpenChange={(open) => { if (!open) setEditOrder(null); }}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteOrderId} onOpenChange={(open) => { if (!open) setDeleteOrderId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this invoice?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this invoice and restore stock if it was paid. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteOrderId && deleteMutation.mutate(deleteOrderId)}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
