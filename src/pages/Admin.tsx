@@ -4,7 +4,8 @@ import {
   Plus, Edit, Trash2, LogOut, Package, Search, X, Save, ArrowLeft, 
   ChevronLeft, ChevronRight, Users, BarChart3, Bell, Shield, Activity, 
   UserX, Tag, Play, Home, Menu, Download, Star, TrendingUp, Settings2, Loader2, ClipboardPaste, ShieldAlert, DollarSign,
-  FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw, FileText, Pencil
+  FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw, FileText, Pencil,
+  ShoppingBag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ import { AttributeManagement } from "@/components/admin/AttributeManagement";
 import { cn } from "@/lib/utils";
 import { SystemSettingsPanel } from "@/components/admin/SystemSettings";
 import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/components/admin/SalesInvoices";
+import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -604,7 +606,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "stock" | "invoices" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
 
 interface NavItem {
   id: AdminTab;
@@ -625,6 +627,7 @@ const navGroups: NavGroup[] = [
     items: [
       { id: "sales", label: "Dashboard", icon: BarChart3, permission: "orders.view" },
       { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
+      { id: "purchases", label: "Purchase", icon: ShoppingBag, permission: "orders.view" },
       { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
     ],
   },
@@ -1209,6 +1212,7 @@ const AdminDashboard = () => {
           {activeTab === "sales" && <SalesDashboardPage />}
           {activeTab === "stock" && <StockPage />}
           {activeTab === "invoices" && <InvoicesPage />}
+          {activeTab === "purchases" && <PurchaseManagement />}
           {activeTab === "payments" && <PaymentHistoryAdmin />}
           {activeTab === "reviews" && <AppReviewSystem />}
           {activeTab === "roles" && <RoleManagement />}

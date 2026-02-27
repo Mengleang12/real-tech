@@ -25,6 +25,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ProductAttributeController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\PurchaseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -175,6 +176,17 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     // System settings
     Route::get('/admin/settings', [SystemSettingController::class, 'index']);
     Route::put('/admin/settings', [SystemSettingController::class, 'update']);
+
+    // Purchase module (from supplier)
+    Route::get('/admin/purchases/dashboard', [PurchaseController::class, 'dashboard']);
+    Route::get('/admin/purchases', [PurchaseController::class, 'index']);
+    Route::get('/admin/purchases/{id}', [PurchaseController::class, 'show']);
+    Route::post('/admin/purchases', [PurchaseController::class, 'store']);
+    Route::put('/admin/purchases/{id}', [PurchaseController::class, 'update']);
+    Route::put('/admin/purchases/{id}/status', [PurchaseController::class, 'updateStatus']);
+    Route::delete('/admin/purchases/{id}', [PurchaseController::class, 'destroy']);
+    Route::post('/admin/purchases/{id}/payments', [PurchaseController::class, 'addPayment']);
+    Route::delete('/admin/purchases/{id}/payments/{paymentId}', [PurchaseController::class, 'deletePayment']);
 });
 
 // Protected user routes

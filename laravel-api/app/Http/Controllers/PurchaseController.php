@@ -1,0 +1,438 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Purchase;
+use App\Models\PurchaseItem;
+use App\Models\PurchasePayment;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Traits\LogsAdminActivity;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class PurchaseController extends Controller
+{
+    use LogsAdminActivity;
+
+    /**
+     * List all purchases with pagination
+     */
+    public function index(Request $request)
+    {
+        $query = Purchase::with(['items', 'payments'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('reference_number', 'like', "%{$search}%")
+                  ->orWhere('supplier_name', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = $request->input('limit', 20);
+        $purchases = $query->paginate($perPage);
+
+        return response()->json([
+            'purchases' => $purchases->items(),
+            'pagination' => [
+                'current_page' => $purchases->currentPage(),
+                'total_pages' => $purchases->lastPage(),
+                'total' => $purchases->total(),
+                'per_page' => $purchases->perPage(),
+            ],
+        ]);
+    }
+
+    /**
+     * Get single purchase detail
+     */
+    public function show($id)
+    {
+        $purchase = Purchase::with(['items', 'payments'])->find($id);
+
+        if (!$purchase) {
+            return response()->json(['error' => 'Purchase not found'], 404);
+        }
+
+        return response()->json(['purchase' => $purchase]);
+    }
+
+    /**
+     * Create a new purchase order
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'supplier_name' => 'required|string|max:255',
+            'status' => 'nullable|in:draft,ordered',
+            'notes' => 'nullable|string|max:1000',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|integer',
+            'items.*.product_name' => 'required|string|max:255',
+            'items.*.variant_id' => 'nullable|integer',
+            'items.*.variant_label' => 'nullable|string|max:255',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_cost' => 'required|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $status = $request->input('status', 'draft');
+
+            $purchase = Purchase::create([
+                'supplier_name' => $request->supplier_name,
+                'status' => $status,
+                'notes' => $request->notes,
+                'currency' => 'USD',
+                'ordered_at' => $status === 'ordered' ? now() : null,
+                'created_by' => $request->user()->id ?? null,
+            ]);
+
+            $totalAmount = 0;
+
+            foreach ($request->items as $item) {
+                $totalCost = $item['quantity'] * $item['unit_cost'];
+                $totalAmount += $totalCost;
+
+                PurchaseItem::create([
+                    'purchase_id' => $purchase->id,
+                    'product_id' => $item['product_id'],
+                    'product_name' => $item['product_name'],
+                    'variant_id' => $item['variant_id'] ?? null,
+                    'variant_label' => $item['variant_label'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'unit_cost' => $item['unit_cost'],
+                    'total_cost' => $totalCost,
+                ]);
+            }
+
+            $purchase->update(['total_amount' => $totalAmount]);
+
+            DB::commit();
+
+            $this->logActivity('purchase_created', "Created PO {$purchase->reference_number}");
+
+            return response()->json([
+                'success' => true,
+                'purchase' => $purchase->load(['items', 'payments']),
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to create purchase: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update purchase order
+     */
+    public function update(Request $request, $id)
+    {
+        $purchase = Purchase::find($id);
+        if (!$purchase) {
+            return response()->json(['error' => 'Purchase not found'], 404);
+        }
+
+        $request->validate([
+            'supplier_name' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:1000',
+            'items' => 'nullable|array|min:1',
+            'items.*.product_id' => 'required_with:items|integer',
+            'items.*.product_name' => 'required_with:items|string|max:255',
+            'items.*.variant_id' => 'nullable|integer',
+            'items.*.variant_label' => 'nullable|string|max:255',
+            'items.*.quantity' => 'required_with:items|integer|min:1',
+            'items.*.unit_cost' => 'required_with:items|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $purchase->update(array_filter([
+                'supplier_name' => $request->supplier_name,
+                'notes' => $request->notes,
+            ], fn($v) => $v !== null));
+
+            if ($request->has('items')) {
+                // Delete old items and recreate
+                $purchase->items()->delete();
+
+                $totalAmount = 0;
+                foreach ($request->items as $item) {
+                    $totalCost = $item['quantity'] * $item['unit_cost'];
+                    $totalAmount += $totalCost;
+
+                    PurchaseItem::create([
+                        'purchase_id' => $purchase->id,
+                        'product_id' => $item['product_id'],
+                        'product_name' => $item['product_name'],
+                        'variant_id' => $item['variant_id'] ?? null,
+                        'variant_label' => $item['variant_label'] ?? null,
+                        'quantity' => $item['quantity'],
+                        'unit_cost' => $item['unit_cost'],
+                        'total_cost' => $totalCost,
+                    ]);
+                }
+
+                $purchase->update(['total_amount' => $totalAmount]);
+            }
+
+            DB::commit();
+
+            $this->logActivity('purchase_updated', "Updated PO {$purchase->reference_number}");
+
+            return response()->json([
+                'success' => true,
+                'purchase' => $purchase->load(['items', 'payments']),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to update purchase: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update purchase status with auto-restock on receive
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $purchase = Purchase::with('items')->find($id);
+        if (!$purchase) {
+            return response()->json(['error' => 'Purchase not found'], 404);
+        }
+
+        $request->validate([
+            'status' => 'required|in:draft,ordered,partial,received,completed,cancelled',
+        ]);
+
+        $oldStatus = $purchase->status;
+        $newStatus = $request->status;
+
+        if ($oldStatus === $newStatus) {
+            return response()->json(['success' => true, 'purchase' => $purchase]);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $updateData = ['status' => $newStatus];
+
+            if ($newStatus === 'ordered' && !$purchase->ordered_at) {
+                $updateData['ordered_at'] = now();
+            }
+
+            if ($newStatus === 'received' && !$purchase->received_at) {
+                $updateData['received_at'] = now();
+            }
+
+            if ($newStatus === 'completed') {
+                $updateData['completed_at'] = now();
+            }
+
+            // Auto-restock: when status changes to 'received' or 'completed', add stock
+            if (in_array($newStatus, ['received', 'completed']) && !in_array($oldStatus, ['received', 'completed'])) {
+                foreach ($purchase->items as $item) {
+                    $qty = $item->quantity;
+
+                    if ($item->variant_id) {
+                        $variant = ProductVariant::find($item->variant_id);
+                        if ($variant) {
+                            $variant->increment('stock_quantity', $qty);
+                        }
+                    }
+
+                    // Always update main product stock
+                    $product = Product::find($item->product_id);
+                    if ($product) {
+                        $product->increment('stock_quantity', $qty);
+                        // Update stock status
+                        $newQty = $product->stock_quantity + $qty;
+                        if ($newQty > 0) {
+                            $lowThreshold = $product->low_stock_threshold ?? 5;
+                            $product->update([
+                                'stock_status' => $newQty <= $lowThreshold ? 'low_stock' : 'in_stock',
+                            ]);
+                        }
+                    }
+
+                    // Mark items as received
+                    $item->update(['received_quantity' => $qty]);
+                }
+            }
+
+            // If cancelled after being received, reverse stock
+            if ($newStatus === 'cancelled' && in_array($oldStatus, ['received', 'completed'])) {
+                foreach ($purchase->items as $item) {
+                    $qty = $item->quantity;
+
+                    if ($item->variant_id) {
+                        $variant = ProductVariant::find($item->variant_id);
+                        if ($variant) {
+                            $variant->decrement('stock_quantity', $qty);
+                        }
+                    }
+
+                    $product = Product::find($item->product_id);
+                    if ($product) {
+                        $product->decrement('stock_quantity', $qty);
+                        $newQty = max(0, $product->stock_quantity - $qty);
+                        $lowThreshold = $product->low_stock_threshold ?? 5;
+                        $product->update([
+                            'stock_status' => $newQty <= 0 ? 'out_of_stock' : ($newQty <= $lowThreshold ? 'low_stock' : 'in_stock'),
+                        ]);
+                    }
+
+                    $item->update(['received_quantity' => 0]);
+                }
+            }
+
+            $purchase->update($updateData);
+
+            DB::commit();
+
+            $this->logActivity('purchase_status_updated', "PO {$purchase->reference_number}: {$oldStatus} → {$newStatus}");
+
+            return response()->json([
+                'success' => true,
+                'purchase' => $purchase->load(['items', 'payments']),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to update status: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Add payment to purchase
+     */
+    public function addPayment(Request $request, $id)
+    {
+        $purchase = Purchase::find($id);
+        if (!$purchase) {
+            return response()->json(['error' => 'Purchase not found'], 404);
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'method' => 'nullable|string|max:50',
+            'reference' => 'nullable|string|max:255',
+            'note' => 'nullable|string|max:500',
+        ]);
+
+        $payment = PurchasePayment::create([
+            'purchase_id' => $purchase->id,
+            'amount' => $request->amount,
+            'method' => $request->input('method', 'cash'),
+            'reference' => $request->reference,
+            'note' => $request->note,
+            'paid_at' => now(),
+        ]);
+
+        // Update paid_amount
+        $totalPaid = $purchase->payments()->sum('amount') + $request->amount;
+        $purchase->update(['paid_amount' => $totalPaid]);
+
+        $this->logActivity('purchase_payment_added', "Payment \${$request->amount} for PO {$purchase->reference_number}");
+
+        return response()->json([
+            'success' => true,
+            'payment' => $payment,
+            'purchase' => $purchase->load(['items', 'payments']),
+        ]);
+    }
+
+    /**
+     * Delete payment from purchase
+     */
+    public function deletePayment($id, $paymentId)
+    {
+        $purchase = Purchase::find($id);
+        if (!$purchase) {
+            return response()->json(['error' => 'Purchase not found'], 404);
+        }
+
+        $payment = PurchasePayment::where('id', $paymentId)
+            ->where('purchase_id', $id)
+            ->first();
+
+        if (!$payment) {
+            return response()->json(['error' => 'Payment not found'], 404);
+        }
+
+        $payment->delete();
+
+        $totalPaid = $purchase->payments()->sum('amount');
+        $purchase->update(['paid_amount' => $totalPaid]);
+
+        return response()->json([
+            'success' => true,
+            'purchase' => $purchase->load(['items', 'payments']),
+        ]);
+    }
+
+    /**
+     * Delete purchase order
+     */
+    public function destroy($id)
+    {
+        $purchase = Purchase::find($id);
+        if (!$purchase) {
+            return response()->json(['error' => 'Purchase not found'], 404);
+        }
+
+        // If received, reverse stock first
+        if (in_array($purchase->status, ['received', 'completed'])) {
+            $purchase->load('items');
+            foreach ($purchase->items as $item) {
+                if ($item->variant_id) {
+                    ProductVariant::where('id', $item->variant_id)->decrement('stock_quantity', $item->quantity);
+                }
+                $product = Product::find($item->product_id);
+                if ($product) {
+                    $product->decrement('stock_quantity', $item->quantity);
+                    $newQty = max(0, $product->stock_quantity - $item->quantity);
+                    $lowThreshold = $product->low_stock_threshold ?? 5;
+                    $product->update([
+                        'stock_status' => $newQty <= 0 ? 'out_of_stock' : ($newQty <= $lowThreshold ? 'low_stock' : 'in_stock'),
+                    ]);
+                }
+            }
+        }
+
+        $ref = $purchase->reference_number;
+        $purchase->delete();
+
+        $this->logActivity('purchase_deleted', "Deleted PO {$ref}");
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Dashboard summary for purchases
+     */
+    public function dashboard(Request $request)
+    {
+        $totalPurchases = Purchase::count();
+        $pendingPurchases = Purchase::whereIn('status', ['draft', 'ordered'])->count();
+        $totalSpent = Purchase::whereIn('status', ['received', 'completed'])->sum('total_amount');
+        $totalPaid = Purchase::sum('paid_amount');
+        $totalOwed = $totalSpent - $totalPaid;
+
+        return response()->json([
+            'success' => true,
+            'stats' => [
+                'total_purchases' => $totalPurchases,
+                'pending_purchases' => $pendingPurchases,
+                'total_spent' => round($totalSpent, 2),
+                'total_paid' => round($totalPaid, 2),
+                'total_owed' => round(max(0, $totalOwed), 2),
+            ],
+        ]);
+    }
+}
