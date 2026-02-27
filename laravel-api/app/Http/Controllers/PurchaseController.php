@@ -493,7 +493,6 @@ class PurchaseController extends Controller
             ],
         ]);
     }
-    }
 
     /**
      * Add expense to purchase
