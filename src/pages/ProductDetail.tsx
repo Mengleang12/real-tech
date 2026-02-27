@@ -599,7 +599,7 @@ const ProductDetail = () => {
               {/* ── Main Content Grid ── */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left — Screenshots + Description */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-6 order-2 lg:order-1">
                   {/* Screenshots */}
                   <div className="bg-card rounded-2xl border border-border/50 p-4 sm:p-5">
                     {appData.screenshots && appData.screenshots.length > 0 ? (
@@ -689,7 +689,7 @@ const ProductDetail = () => {
                 </div>
 
                 {/* Right Sidebar — Download + Metadata */}
-                <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+                <div className="space-y-5 lg:sticky lg:top-24 lg:self-start order-1 lg:order-2">
                   {/* Download / Purchase CTA */}
                   <div className="bg-card rounded-2xl border border-border/50 p-5 space-y-4">
                     {/* Variant selector */}
