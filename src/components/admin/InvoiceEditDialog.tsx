@@ -483,6 +483,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
 const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const { data } = useQuery({
     queryKey: ["order-detail", order.id],
@@ -519,6 +520,29 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
 
   return (
     <div className="space-y-4">
+      {/* Inline image preview lightbox */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center cursor-pointer"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <img
+            src={previewUrl}
+            alt="Preview"
+            className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 text-white hover:bg-white/20"
+            onClick={() => setPreviewUrl(null)}
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium">{attachments.length} attachment(s)</p>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>
@@ -539,9 +563,12 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
           {attachments.map((att) => (
             <div key={att.id} className="relative group border border-border rounded-lg overflow-hidden">
               {att.file_type === 'image' ? (
-                <a href={att.file_url} target="_blank" rel="noopener noreferrer">
-                  <img src={att.file_url} alt={att.file_name} className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity" />
-                </a>
+                <img
+                  src={att.file_url}
+                  alt={att.file_name}
+                  className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => setPreviewUrl(att.file_url)}
+                />
               ) : (
                 <a href={att.file_url} target="_blank" rel="noopener noreferrer" className="w-full h-32 bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
                   <FileText className="w-8 h-8 text-muted-foreground" />
