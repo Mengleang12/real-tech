@@ -41,6 +41,7 @@ import { AttributeManagement } from "@/components/admin/AttributeManagement";
 import { cn } from "@/lib/utils";
 import { SystemSettingsPanel } from "@/components/admin/SystemSettings";
 import { SalesInvoices, InvoicesTab } from "@/components/admin/SalesInvoices";
+import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -984,6 +985,26 @@ const AppsTab = () => {
   );
 };
 
+// ─── Invoices Page (with New Sale button) ─────────────────────────────────────
+const InvoicesPage = () => {
+  const [addSaleOpen, setAddSaleOpen] = useState(false);
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Invoices</h2>
+          <p className="text-sm text-muted-foreground mt-1">View and manage all invoices</p>
+        </div>
+        <Button onClick={() => setAddSaleOpen(true)} className="gap-2">
+          <Plus className="w-4 h-4" /> New Sale
+        </Button>
+      </div>
+      <InvoicesTab />
+      <AddSaleDialog open={addSaleOpen} onOpenChange={setAddSaleOpen} />
+    </div>
+  );
+};
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -1138,15 +1159,7 @@ const AdminDashboard = () => {
           {activeTab === "attributes" && <AttributeManagement />}
           {activeTab === "users" && <UserManagement />}
           {activeTab === "sales" && <SalesInvoices />}
-          {activeTab === "invoices" && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold">Invoices</h2>
-                <p className="text-sm text-muted-foreground mt-1">View and manage all invoices</p>
-              </div>
-              <InvoicesTab />
-            </div>
-          )}
+          {activeTab === "invoices" && <InvoicesPage />}
           {activeTab === "payments" && <PaymentHistoryAdmin />}
           {activeTab === "reviews" && <AppReviewSystem />}
           {activeTab === "roles" && <RoleManagement />}
