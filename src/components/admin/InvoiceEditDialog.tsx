@@ -962,6 +962,7 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
         .footer-thanks{font-size:15px;font-weight:600;margin-bottom:4px}
         .footer-brand{font-size:12px;color:#9ca3af;margin-top:8px}
         .footer-brand a{color:#2563eb;text-decoration:none}
+        body{transform:scale(0.85);transform-origin:top left;width:117.6%}
         @media print{body{padding:24px 20px}}
       </style></head><body>
       <div class="header">
