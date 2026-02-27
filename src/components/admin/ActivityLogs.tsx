@@ -29,6 +29,8 @@ const actionConfig: Record<string, { icon: typeof Activity; label: string; color
   role_remove: { icon: Shield, label: "Role Removed", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
   notification_create: { icon: Bell, label: "Notification", color: "text-primary", bg: "bg-primary/10" },
   settings_update: { icon: Settings, label: "Settings", color: "text-muted-foreground", bg: "bg-muted" },
+  stock_update: { icon: Edit, label: "Stock Update", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
+  admin_sale_created: { icon: ShoppingCart, label: "Sale Created", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
 };
 
 const getActionConfig = (action: string) => actionConfig[action] || {

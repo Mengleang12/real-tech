@@ -281,7 +281,7 @@ const StockManagement = () => {
                                   className="h-5 w-5"
                                   onClick={() => setEditingStock({ productId: product.id, variantId: v.id, qty: v.stock_quantity })}
                                 >
-                                  <Save className="w-3 h-3" />
+                                  <Pencil className="w-3 h-3" />
                                 </Button>
                               </div>
                             );
@@ -292,14 +292,16 @@ const StockManagement = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs gap-1"
-                        onClick={() => setEditingStock({ productId: product.id, qty: product.variants.length > 0 ? product.total_variant_stock : (product.stock_quantity ?? 0) })}
-                      >
-                        <Save className="w-3 h-3" /> Update
-                      </Button>
+                      {product.variants.length === 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1"
+                          onClick={() => setEditingStock({ productId: product.id, qty: product.stock_quantity ?? 0 })}
+                        >
+                          <Save className="w-3 h-3" /> Update
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}
