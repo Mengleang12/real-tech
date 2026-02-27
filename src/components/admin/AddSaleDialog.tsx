@@ -82,13 +82,13 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     if (exists) {
       setCart(cart.map(c =>
         c.product.id === product.id && c.variant_id === variantId
-          ? { ...c, quantity: c.quantity + 1, serial_numbers: [...c.serial_numbers, ""] }
+          ? { ...c, quantity: c.quantity + 1 }
           : c
       ));
     } else {
       const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
       const price = Number(product.price) + Number(variant?.price_adjustment || 0);
-      setCart([...cart, { product, variant_id: variantId, quantity: 1, unit_price: price, discount: 0, discount_type: "amount", serial_numbers: [""] }]);
+      setCart([...cart, { product, variant_id: variantId, quantity: 1, unit_price: price, discount: 0, discount_type: "amount", serial_numbers: [] }]);
     }
     setProductSearch("");
     setProducts([]);
@@ -98,19 +98,27 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setCart(cart.map((c, i) => {
       if (i !== idx) return c;
       const newQty = Math.max(1, c.quantity + delta);
-      const newSerials = [...c.serial_numbers];
-      while (newSerials.length < newQty) newSerials.push("");
-      while (newSerials.length > newQty) newSerials.pop();
+      // Trim serials if qty decreased
+      const newSerials = c.serial_numbers.filter(s => s.trim()).slice(0, newQty);
       return { ...c, quantity: newQty, serial_numbers: newSerials };
     }));
   };
 
-  const updateSerialNumber = (cartIdx: number, serialIdx: number, value: string) => {
+  const addSerialNumber = (cartIdx: number, value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
     setCart(cart.map((c, i) => {
       if (i !== cartIdx) return c;
-      const newSerials = [...c.serial_numbers];
-      newSerials[serialIdx] = value;
-      return { ...c, serial_numbers: newSerials };
+      if (c.serial_numbers.length >= c.quantity) return c;
+      if (c.serial_numbers.includes(trimmed)) return c; // no duplicates
+      return { ...c, serial_numbers: [...c.serial_numbers, trimmed] };
+    }));
+  };
+
+  const removeSerialNumber = (cartIdx: number, serialIdx: number) => {
+    setCart(cart.map((c, i) => {
+      if (i !== cartIdx) return c;
+      return { ...c, serial_numbers: c.serial_numbers.filter((_, si) => si !== serialIdx) };
     }));
   };
 
@@ -387,17 +395,29 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                         <span className="text-sm font-semibold text-right">${lineTotal.toFixed(2)}</span>
                         <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(idx)}><Trash2 className="w-3 h-3" /></Button>
                       </div>
-                      {/* Serial number inputs */}
-                      <div className="px-3 pb-2 space-y-1">
-                        {item.serial_numbers.map((sn, snIdx) => (
-                          <Input
-                            key={snIdx}
-                            value={sn}
-                            onChange={e => updateSerialNumber(idx, snIdx, e.target.value)}
-                            className="h-6 text-[11px] px-2"
-                            placeholder={`S/N ${item.quantity > 1 ? `#${snIdx + 1}` : ""} (optional)`}
-                          />
-                        ))}
+                      {/* Serial number tag input */}
+                      <div className="px-3 pb-2">
+                        <div className="flex flex-wrap gap-1 items-center p-1.5 rounded border border-border bg-background min-h-[28px]">
+                          {item.serial_numbers.map((sn, snIdx) => (
+                            <span key={snIdx} className="inline-flex items-center gap-0.5 bg-muted text-foreground text-[11px] px-1.5 py-0.5 rounded font-mono">
+                              {sn}
+                              <button type="button" onClick={() => removeSerialNumber(idx, snIdx)} className="hover:text-destructive transition-colors"><X className="w-3 h-3" /></button>
+                            </span>
+                          ))}
+                          {item.serial_numbers.length < item.quantity && (
+                            <input
+                              className="flex-1 min-w-[80px] bg-transparent text-[11px] outline-none placeholder:text-muted-foreground font-mono"
+                              placeholder={`Add S/N (${item.serial_numbers.length}/${item.quantity})`}
+                              onKeyDown={e => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  addSerialNumber(idx, e.currentTarget.value);
+                                  e.currentTarget.value = "";
+                                }
+                              }}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
