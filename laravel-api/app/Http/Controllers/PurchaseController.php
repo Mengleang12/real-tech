@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\PurchasePayment;
+use App\Models\PurchaseExpense;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Traits\LogsAdminActivity;
@@ -20,7 +21,7 @@ class PurchaseController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Purchase::with(['items', 'payments'])
+        $query = Purchase::with(['items', 'payments', 'expenses'])
             ->orderBy('created_at', 'desc');
 
         if ($request->has('status') && $request->status !== 'all') {
@@ -54,7 +55,7 @@ class PurchaseController extends Controller
      */
     public function show($id)
     {
-        $purchase = Purchase::with(['items', 'payments'])->find($id);
+        $purchase = Purchase::with(['items', 'payments', 'expenses'])->find($id);
 
         if (!$purchase) {
             return response()->json(['error' => 'Purchase not found'], 404);
@@ -121,7 +122,21 @@ class PurchaseController extends Controller
                 ]);
             }
 
-            $grandTotal = $totalAmount + $deliveryFee + $otherExpense;
+            // Create expenses
+            $expensesTotal = 0;
+            if ($request->has('expenses') && is_array($request->expenses)) {
+                foreach ($request->expenses as $exp) {
+                    $expensesTotal += $exp['amount'] ?? 0;
+                    PurchaseExpense::create([
+                        'purchase_id' => $purchase->id,
+                        'category' => $exp['category'],
+                        'description' => $exp['description'] ?? null,
+                        'amount' => $exp['amount'] ?? 0,
+                    ]);
+                }
+            }
+
+            $grandTotal = $totalAmount + $deliveryFee + $otherExpense + $expensesTotal;
             $purchase->update(['total_amount' => $totalAmount, 'grand_total' => $grandTotal]);
 
             DB::commit();
@@ -130,7 +145,7 @@ class PurchaseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'purchase' => $purchase->load(['items', 'payments']),
+                'purchase' => $purchase->load(['items', 'payments', 'expenses']),
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -207,9 +222,23 @@ class PurchaseController extends Controller
                 $purchase->update(['total_amount' => $totalAmount]);
             }
 
+            // Handle expenses
+            if ($request->has('expenses')) {
+                $purchase->expenses()->delete();
+                foreach ($request->expenses as $exp) {
+                    PurchaseExpense::create([
+                        'purchase_id' => $purchase->id,
+                        'category' => $exp['category'],
+                        'description' => $exp['description'] ?? null,
+                        'amount' => $exp['amount'] ?? 0,
+                    ]);
+                }
+            }
+
             // Recalculate grand_total
             $purchase->refresh();
-            $grandTotal = $purchase->total_amount + $purchase->delivery_fee + $purchase->other_expense;
+            $expensesTotal = $purchase->expenses()->sum('amount');
+            $grandTotal = $purchase->total_amount + $purchase->delivery_fee + $purchase->other_expense + $expensesTotal;
             $purchase->update(['grand_total' => $grandTotal]);
 
             DB::commit();
@@ -218,7 +247,7 @@ class PurchaseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'purchase' => $purchase->load(['items', 'payments']),
+                'purchase' => $purchase->load(['items', 'payments', 'expenses']),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -329,7 +358,7 @@ class PurchaseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'purchase' => $purchase->load(['items', 'payments']),
+                'purchase' => $purchase->load(['items', 'payments', 'expenses']),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -372,7 +401,7 @@ class PurchaseController extends Controller
         return response()->json([
             'success' => true,
             'payment' => $payment,
-            'purchase' => $purchase->load(['items', 'payments']),
+            'purchase' => $purchase->load(['items', 'payments', 'expenses']),
         ]);
     }
 
@@ -401,7 +430,7 @@ class PurchaseController extends Controller
 
         return response()->json([
             'success' => true,
-            'purchase' => $purchase->load(['items', 'payments']),
+            'purchase' => $purchase->load(['items', 'payments', 'expenses']),
         ]);
     }
 
@@ -462,6 +491,75 @@ class PurchaseController extends Controller
                 'total_paid' => round($totalPaid, 2),
                 'total_owed' => round(max(0, $totalOwed), 2),
             ],
+        ]);
+    }
+    }
+
+    /**
+     * Add expense to purchase
+     */
+    public function addExpense(Request $request, $id)
+    {
+        $purchase = Purchase::find($id);
+        if (!$purchase) {
+            return response()->json(['error' => 'Purchase not found'], 404);
+        }
+
+        $request->validate([
+            'category' => 'required|string|max:100',
+            'description' => 'nullable|string|max:255',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        $expense = PurchaseExpense::create([
+            'purchase_id' => $purchase->id,
+            'category' => $request->category,
+            'description' => $request->description,
+            'amount' => $request->amount,
+        ]);
+
+        // Recalculate grand_total
+        $expensesTotal = $purchase->expenses()->sum('amount');
+        $grandTotal = $purchase->total_amount + $purchase->delivery_fee + $purchase->other_expense + $expensesTotal;
+        $purchase->update(['grand_total' => $grandTotal]);
+
+        $this->logActivity('purchase_expense_added', "Expense \${$request->amount} ({$request->category}) for PO {$purchase->reference_number}");
+
+        return response()->json([
+            'success' => true,
+            'expense' => $expense,
+            'purchase' => $purchase->load(['items', 'payments', 'expenses']),
+        ]);
+    }
+
+    /**
+     * Delete expense from purchase
+     */
+    public function deleteExpense($id, $expenseId)
+    {
+        $purchase = Purchase::find($id);
+        if (!$purchase) {
+            return response()->json(['error' => 'Purchase not found'], 404);
+        }
+
+        $expense = PurchaseExpense::where('id', $expenseId)
+            ->where('purchase_id', $id)
+            ->first();
+
+        if (!$expense) {
+            return response()->json(['error' => 'Expense not found'], 404);
+        }
+
+        $expense->delete();
+
+        // Recalculate grand_total
+        $expensesTotal = $purchase->expenses()->sum('amount');
+        $grandTotal = $purchase->total_amount + $purchase->delivery_fee + $purchase->other_expense + $expensesTotal;
+        $purchase->update(['grand_total' => $grandTotal]);
+
+        return response()->json([
+            'success' => true,
+            'purchase' => $purchase->load(['items', 'payments', 'expenses']),
         ]);
     }
 }

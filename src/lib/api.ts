@@ -1000,6 +1000,16 @@ export interface PurchasePayment {
   created_at: string;
 }
 
+export interface PurchaseExpense {
+  id: number;
+  purchase_id: string;
+  category: string;
+  description?: string;
+  amount: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Purchase {
   id: string;
   reference_number: string;
@@ -1021,6 +1031,7 @@ export interface Purchase {
   updated_at: string;
   items: PurchaseItem[];
   payments: PurchasePayment[];
+  expenses: PurchaseExpense[];
 }
 
 export interface PurchaseDashboardStats {
@@ -1069,5 +1080,13 @@ export const purchasesApi = {
 
   deletePayment: async (id: string, paymentId: number): Promise<{ success: boolean; purchase: Purchase }> => {
     return apiRequest(`admin/purchases/${id}/payments/${paymentId}`, { method: 'DELETE' });
+  },
+
+  addExpense: async (id: string, data: { category: string; description?: string; amount: number }): Promise<{ success: boolean; expense: PurchaseExpense; purchase: Purchase }> => {
+    return apiRequest(`admin/purchases/${id}/expenses`, { method: 'POST', body: data });
+  },
+
+  deleteExpense: async (id: string, expenseId: number): Promise<{ success: boolean; purchase: Purchase }> => {
+    return apiRequest(`admin/purchases/${id}/expenses/${expenseId}`, { method: 'DELETE' });
   },
 };
