@@ -974,3 +974,96 @@ export const salesApi = {
     return apiRequest('admin/sales/create', { method: 'POST', body: data });
   },
 };
+
+// ─── Purchase Types ───────────────────────────────────────────────────────────
+export interface PurchaseItem {
+  id?: number;
+  purchase_id?: string;
+  product_id: number;
+  product_name: string;
+  variant_id?: number | null;
+  variant_label?: string | null;
+  quantity: number;
+  received_quantity?: number;
+  unit_cost: number;
+  total_cost?: number;
+}
+
+export interface PurchasePayment {
+  id: number;
+  purchase_id: string;
+  amount: number;
+  method: string;
+  reference?: string;
+  note?: string;
+  paid_at: string;
+  created_at: string;
+}
+
+export interface Purchase {
+  id: string;
+  reference_number: string;
+  supplier_name: string;
+  status: 'draft' | 'ordered' | 'partial' | 'received' | 'completed' | 'cancelled';
+  total_amount: number;
+  paid_amount: number;
+  currency: string;
+  notes?: string;
+  ordered_at?: string;
+  received_at?: string;
+  completed_at?: string;
+  created_by?: number;
+  created_at: string;
+  updated_at: string;
+  items: PurchaseItem[];
+  payments: PurchasePayment[];
+}
+
+export interface PurchaseDashboardStats {
+  total_purchases: number;
+  pending_purchases: number;
+  total_spent: number;
+  total_paid: number;
+  total_owed: number;
+}
+
+export const purchasesApi = {
+  dashboard: async (): Promise<{ success: boolean; stats: PurchaseDashboardStats }> => {
+    return apiRequest('admin/purchases/dashboard');
+  },
+
+  getAll: async (page = 1, limit = 20, status = 'all', search = ''): Promise<{ purchases: Purchase[]; pagination: { current_page: number; total_pages: number; total: number; per_page: number } }> => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (status !== 'all') params.append('status', status);
+    if (search) params.append('search', search);
+    return apiRequest(`admin/purchases?${params}`);
+  },
+
+  getById: async (id: string): Promise<{ purchase: Purchase }> => {
+    return apiRequest(`admin/purchases/${id}`);
+  },
+
+  create: async (data: { supplier_name: string; status?: string; notes?: string; items: Omit<PurchaseItem, 'id' | 'purchase_id' | 'received_quantity' | 'total_cost'>[] }): Promise<{ success: boolean; purchase: Purchase }> => {
+    return apiRequest('admin/purchases', { method: 'POST', body: data });
+  },
+
+  update: async (id: string, data: { supplier_name?: string; notes?: string; items?: Omit<PurchaseItem, 'id' | 'purchase_id' | 'received_quantity' | 'total_cost'>[] }): Promise<{ success: boolean; purchase: Purchase }> => {
+    return apiRequest(`admin/purchases/${id}`, { method: 'PUT', body: data });
+  },
+
+  updateStatus: async (id: string, status: string): Promise<{ success: boolean; purchase: Purchase }> => {
+    return apiRequest(`admin/purchases/${id}/status`, { method: 'PUT', body: { status } });
+  },
+
+  delete: async (id: string): Promise<{ success: boolean }> => {
+    return apiRequest(`admin/purchases/${id}`, { method: 'DELETE' });
+  },
+
+  addPayment: async (id: string, data: { amount: number; method?: string; reference?: string; note?: string }): Promise<{ success: boolean; payment: PurchasePayment; purchase: Purchase }> => {
+    return apiRequest(`admin/purchases/${id}/payments`, { method: 'POST', body: data });
+  },
+
+  deletePayment: async (id: string, paymentId: number): Promise<{ success: boolean; purchase: Purchase }> => {
+    return apiRequest(`admin/purchases/${id}/payments/${paymentId}`, { method: 'DELETE' });
+  },
+};
