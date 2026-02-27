@@ -715,8 +715,8 @@ const InvoicesTab = () => {
   );
 };
 
-// Export InvoicesTab for standalone use
-export { InvoicesTab };
+// Export components for standalone use
+export { InvoicesTab, StockManagement, SalesOverview };
 
 // ─── Main Sales Component ──────────────────────────────────────────
 export const SalesInvoices = () => {
