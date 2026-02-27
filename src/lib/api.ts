@@ -476,9 +476,10 @@ export const adminUsersApi = {
     const formData = new FormData();
     formData.append('file', file);
 
+    const token = getApiKey() || getUserAuthToken();
     const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/attachments`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${getApiKey()}` },
+      headers: { 'Authorization': `Bearer ${token}` },
       body: formData,
     });
     const data = await response.json();
