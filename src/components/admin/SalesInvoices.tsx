@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
@@ -17,7 +18,7 @@ import { toast } from "sonner";
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, ShoppingCart,
   FileText, Eye, Package, CheckCircle, Clock, Printer, Pencil,
-  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2
+  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal
 } from "lucide-react";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
@@ -623,7 +624,7 @@ const InvoicesTab = () => {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {order.status !== 'paid' && (
+                          {order.status !== 'paid' && order.status !== 'cancelled' && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -635,10 +636,18 @@ const InvoicesTab = () => {
                               <CheckCircle className="w-3.5 h-3.5" />
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedOrder(order)} title="View"><Eye className="w-3.5 h-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditOrder(order)} title="Edit"><Pencil className="w-3.5 h-3.5 text-primary" /></Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handlePrint(order)} title="Print"><Printer className="w-3.5 h-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteOrderId(order.id)} title="Delete"><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setSelectedOrder(order)}><Eye className="w-3.5 h-3.5 mr-2" /> View</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setEditOrder(order)}><Pencil className="w-3.5 h-3.5 mr-2" /> Edit</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteOrderId(order.id)}><Trash2 className="w-3.5 h-3.5 mr-2" /> Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </td>
                     </tr>

@@ -392,7 +392,7 @@ export interface AdminOrder {
   sale_discount?: string;
   sale_discount_type?: string;
   currency: string;
-  status: 'pending' | 'paid' | 'failed' | 'expired';
+  status: 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
   bakong_transaction_id?: string;
   payment_md5?: string;
   created_at: string;
