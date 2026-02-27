@@ -285,13 +285,20 @@ class AdminUserController extends Controller
             'sale_discount' => 'nullable|numeric|min:0',
             'sale_discount_type' => 'nullable|in:amount,percent',
             'serial_number' => 'nullable|string|max:255',
-            'status' => 'nullable|in:pending,paid,failed,expired',
+            'status' => 'nullable|in:pending,paid,failed,expired,cancelled',
             'bakong_transaction_id' => 'nullable|string|max:100',
         ]);
 
         $newStatus = $request->status ?? $oldStatus;
 
-        // Stock is deducted on creation, no adjustment needed on status change
+        // Restore stock when changing to cancelled (stock was deducted on creation)
+        if ($oldStatus !== 'cancelled' && $newStatus === 'cancelled') {
+            SaleController::restoreStock($sale);
+        }
+        // Re-deduct stock when un-cancelling
+        if ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
+            SaleController::deductStock($sale);
+        }
 
         $sale->update($request->only([
             'notes', 'amount', 'original_price',
