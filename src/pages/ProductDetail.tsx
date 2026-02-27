@@ -249,7 +249,7 @@ const AppDetailSkeleton = () => (
   </div>
 );
 
-const AppDetail = () => {
+const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -888,4 +888,4 @@ const AppDetail = () => {
   );
 };
 
-export default AppDetail;
+export default ProductDetail;
