@@ -813,7 +813,7 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
   };
 
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="flex items-center justify-between gap-2 mt-4">
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive">
