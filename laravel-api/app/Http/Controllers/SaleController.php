@@ -109,7 +109,7 @@ class SaleController extends Controller
                 $serialNumbers = $item['serial_numbers'] ?? [];
 
                 $variant = isset($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
-                $originalPrice = $product->price + ($variant ? ($variant->price_adjustment ?? 0) : 0);
+                $originalPrice = $variant ? ($variant->price_adjustment ?? $product->price) : $product->price;
 
                 $finalUnitPrice = round($unitPrice * (1 - $saleDiscountRatio), 2);
                 $totalAmount += $finalUnitPrice * $qty;
