@@ -141,7 +141,7 @@ class PurchaseController extends Controller
 
             DB::commit();
 
-            $this->logActivity('purchase_created', "Created PO {$purchase->reference_number}");
+            $this->logActivity($request, 'purchase_created', ['details' => "Created PO {$purchase->reference_number}"]);
 
             return response()->json([
                 'success' => true,
@@ -243,7 +243,7 @@ class PurchaseController extends Controller
 
             DB::commit();
 
-            $this->logActivity('purchase_updated', "Updated PO {$purchase->reference_number}");
+            $this->logActivity($request, 'purchase_updated', ['details' => "Updated PO {$purchase->reference_number}"]);
 
             return response()->json([
                 'success' => true,
@@ -354,7 +354,7 @@ class PurchaseController extends Controller
 
             DB::commit();
 
-            $this->logActivity('purchase_status_updated', "PO {$purchase->reference_number}: {$oldStatus} → {$newStatus}");
+            $this->logActivity($request, 'purchase_status_updated', ['details' => "PO {$purchase->reference_number}: {$oldStatus} → {$newStatus}"]);
 
             return response()->json([
                 'success' => true,
@@ -396,7 +396,7 @@ class PurchaseController extends Controller
         $totalPaid = $purchase->payments()->sum('amount') + $request->amount;
         $purchase->update(['paid_amount' => $totalPaid]);
 
-        $this->logActivity('purchase_payment_added', "Payment \${$request->amount} for PO {$purchase->reference_number}");
+        $this->logActivity($request, 'purchase_payment_added', ['details' => "Payment \${$request->amount} for PO {$purchase->reference_number}"]);
 
         return response()->json([
             'success' => true,
@@ -437,7 +437,7 @@ class PurchaseController extends Controller
     /**
      * Delete purchase order
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $purchase = Purchase::find($id);
         if (!$purchase) {
@@ -466,7 +466,7 @@ class PurchaseController extends Controller
         $ref = $purchase->reference_number;
         $purchase->delete();
 
-        $this->logActivity('purchase_deleted', "Deleted PO {$ref}");
+        $this->logActivity($request, 'purchase_deleted', ['details' => "Deleted PO {$ref}"]);
 
         return response()->json(['success' => true]);
     }
@@ -522,7 +522,7 @@ class PurchaseController extends Controller
         $grandTotal = $purchase->total_amount + $purchase->delivery_fee + $purchase->other_expense + $expensesTotal;
         $purchase->update(['grand_total' => $grandTotal]);
 
-        $this->logActivity('purchase_expense_added', "Expense \${$request->amount} ({$request->category}) for PO {$purchase->reference_number}");
+        $this->logActivity($request, 'purchase_expense_added', ['details' => "Expense \${$request->amount} ({$request->category}) for PO {$purchase->reference_number}"]);
 
         return response()->json([
             'success' => true,
