@@ -593,6 +593,14 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
+    label: "Sales",
+    items: [
+      { id: "sales", label: "Dashboard", icon: BarChart3, permission: "orders.view" },
+      { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
+      { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
+    ],
+  },
+  {
     label: "Overview",
     items: [
       { id: "analytics", label: "Analytics", icon: BarChart3, permission: "analytics.view" },
@@ -605,14 +613,6 @@ const navGroups: NavGroup[] = [
       { id: "categories", label: "Categories", icon: FolderTree, permission: "apps.view" },
       { id: "brands", label: "Brands", icon: Bookmark, permission: "apps.view" },
       { id: "attributes", label: "Attributes", icon: SlidersHorizontal, permission: "apps.view" },
-    ],
-  },
-  {
-    label: "Sales",
-    items: [
-      { id: "sales", label: "Dashboard", icon: BarChart3, permission: "orders.view" },
-      { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
-      { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
     ],
   },
   {
