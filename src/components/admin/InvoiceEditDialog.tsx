@@ -364,14 +364,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
                       <p className="text-sm font-medium text-foreground truncate">{item.product_name}</p>
                       {item.variant_label && <p className="text-[10px] text-muted-foreground">{item.variant_label}</p>}
                       <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={item.unit_price}
-                          onChange={e => updateItemPrice(idx, parseFloat(e.target.value) || 0)}
-                          className="h-5 text-[10px] px-1 w-16 border-dashed"
-                        />
+                        <span className="text-[10px] text-muted-foreground">${item.unit_price.toFixed(2)} each</span>
                         {item.stock_quantity < 999 && (
                           <span className={`text-[10px] ${overStock ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
                             Stock: {item.stock_quantity}
