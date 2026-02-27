@@ -318,33 +318,30 @@ class AdminUserController extends Controller
         ]);
 
         $file = $request->file('file');
-        
-        // Upload via existing upload mechanism
-        $uploadController = new \App\Http\Controllers\UploadController();
-        $uploadRequest = new Request();
-        $uploadRequest->files->set('file', $file);
-        $uploadRequest->merge(['type' => 'general']);
-        $uploadRequest->headers->set('Authorization', $request->header('Authorization'));
-        
-        $uploadResponse = $uploadController->store($uploadRequest);
-        $uploadData = $uploadResponse->getData(true);
 
-        if (!($uploadData['success'] ?? false)) {
-            return response()->json(['error' => 'Upload failed'], 500);
+        try {
+            // Upload directly instead of routing through UploadController
+            $extension = $file->getClientOriginalExtension();
+            $filename = uniqid() . '_' . time() . '.' . $extension;
+            $path = $file->storeAs('uploads/general', $filename, 'public');
+
+            $fileUrl = asset('storage/' . $path);
+
+            $attachment = SaleAttachment::create([
+                'sale_id' => $sale->id,
+                'file_url' => $fileUrl,
+                'file_name' => $file->getClientOriginalName(),
+                'file_type' => str_starts_with($file->getMimeType(), 'image/') ? 'image' : 'document',
+                'file_size' => $file->getSize(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'attachment' => $attachment,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Upload failed: ' . $e->getMessage()], 500);
         }
-
-        $attachment = SaleAttachment::create([
-            'sale_id' => $sale->id,
-            'file_url' => $uploadData['url'],
-            'file_name' => $file->getClientOriginalName(),
-            'file_type' => str_starts_with($file->getMimeType(), 'image/') ? 'image' : 'document',
-            'file_size' => $file->getSize(),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'attachment' => $attachment,
-        ]);
     }
 
     public function deleteAttachment(Request $request, $orderId, $attachmentId)
