@@ -107,10 +107,15 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   const addSerialNumber = (cartIdx: number, value: string) => {
     const trimmed = value.trim();
     if (!trimmed) return;
+    // Check duplicate across ALL cart items
+    const allSerials = cart.flatMap(c => c.serial_numbers);
+    if (allSerials.includes(trimmed)) {
+      toast.error(`Serial number "${trimmed}" is already added`);
+      return;
+    }
     setCart(cart.map((c, i) => {
       if (i !== cartIdx) return c;
       if (c.serial_numbers.length >= c.quantity) return c;
-      if (c.serial_numbers.includes(trimmed)) return c; // no duplicates
       return { ...c, serial_numbers: [...c.serial_numbers, trimmed] };
     }));
   };
