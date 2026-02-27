@@ -18,9 +18,9 @@ import {
   XCircle, Hash, Receipt, Calendar, CreditCard, Trash2, ThumbsUp, Loader2
 } from "lucide-react";
 
-const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
+const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
   paid:    { variant: "default",     label: "Paid" },
-  pending: { variant: "secondary",   label: "Pending" },
+  pending: { variant: "warning",     label: "Pending" },
   failed:  { variant: "destructive", label: "Failed" },
   expired: { variant: "outline",     label: "Expired" },
 };
