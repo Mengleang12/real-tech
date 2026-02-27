@@ -855,6 +855,8 @@ const AppDetail = () => {
               </div>
             </div>
           )}
+          {/* Bottom spacing so floating cart button doesn't hide content */}
+          <div className="pb-24" />
         </div>
       </main>
       
