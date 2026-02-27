@@ -515,13 +515,14 @@ const InvoicesTab = () => {
 
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Description</th><th>Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Amount</th></tr></thead>
+          <thead><tr><th>Description</th><th>Qty</th><th style="text-align:right">Unit Price</th>${hasDiscount ? '<th style="text-align:right">Discount</th>' : ''}<th style="text-align:right">Amount</th></tr></thead>
           <tbody>
             <tr>
               <td style="font-weight:500;color:#111827">${order.product_name}</td>
               <td>1</td>
               <td style="text-align:right">$${originalPrice.toFixed(2)}</td>
-              <td style="text-align:right;font-weight:600;color:#111827">$${originalPrice.toFixed(2)}</td>
+              ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${itemDiscount > 0 ? (itemDiscountType === 'percent' ? `${itemDiscount}%` : `-$${itemDiscount.toFixed(2)}`) : '—'}</td>` : ''}
+              <td style="text-align:right;font-weight:600;color:#111827">$${amount.toFixed(2)}</td>
             </tr>
           </tbody>
         </table>
