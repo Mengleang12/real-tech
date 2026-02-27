@@ -38,9 +38,9 @@ interface EditCartItem {
   serial_numbers: string[];
 }
 
-const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string; icon: typeof CheckCircle; color: string }> = {
+const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string; icon: typeof CheckCircle; color: string }> = {
   paid:    { variant: "default",     label: "Paid",    icon: CheckCircle,  color: "text-emerald-600 dark:text-emerald-400" },
-  pending: { variant: "secondary",   label: "Pending", icon: Clock,        color: "text-amber-600 dark:text-amber-400" },
+  pending: { variant: "warning",     label: "Pending", icon: Clock,        color: "text-yellow-600 dark:text-yellow-400" },
   failed:  { variant: "destructive", label: "Failed",  icon: Ban,          color: "text-destructive" },
   expired: { variant: "outline",     label: "Expired", icon: Ban,          color: "text-muted-foreground" },
 };
