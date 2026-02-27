@@ -176,7 +176,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
       ));
     } else {
       const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
-      const price = Number(product.price) + Number(variant?.price_adjustment || 0);
+      const price = variant ? Number(variant.price_adjustment || 0) : Number(product.price);
       const variantLabel = variant ? Object.values(variant.combination).join(" / ") : undefined;
       setCart([...cart, {
         product_id: product.id,
@@ -347,7 +347,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
                   {p.variants.length > 0 ? (
                     p.variants.map(v => {
                       const label = Object.values(v.combination).join(" / ");
-                      const price = Number(p.price) + Number(v.price_adjustment || 0);
+                      const price = Number(v.price_adjustment || 0);
                       return (
                         <button key={`${p.id}-${v.id}`} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors" onClick={() => addToCart(p, v.id)}>
                           {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
