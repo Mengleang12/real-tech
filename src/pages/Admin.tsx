@@ -482,7 +482,18 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
         <Label className="text-base font-medium">Product Card Image</Label>
         <div className="flex flex-col sm:flex-row items-start gap-4">
           <div className="shrink-0">
-            <FileUpload type="icons" currentUrl={formData.icon_url} onUpload={(url) => setFormData({ ...formData, icon_url: url })} />
+            {formData.icon_url ? (
+              <div className="relative group w-20 h-20 rounded-xl border border-border overflow-hidden bg-background shadow-sm">
+                <img src={formData.icon_url} alt="Product" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <FileUpload type="icons" currentUrl={formData.icon_url} onUpload={(url) => setFormData({ ...formData, icon_url: url })} label="" />
+                </div>
+              </div>
+            ) : (
+              <div className="w-20 h-20 rounded-xl border-2 border-dashed border-border bg-background flex items-center justify-center">
+                <FileUpload type="icons" currentUrl={formData.icon_url} onUpload={(url) => setFormData({ ...formData, icon_url: url })} label="" />
+              </div>
+            )}
           </div>
           <div className="flex-1 w-full space-y-1.5">
             <Input
