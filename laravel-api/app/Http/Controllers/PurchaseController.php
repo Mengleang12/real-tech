@@ -73,6 +73,8 @@ class PurchaseController extends Controller
             'supplier_name' => 'required|string|max:255',
             'status' => 'nullable|in:draft,ordered',
             'notes' => 'nullable|string|max:1000',
+            'tracking_number' => 'nullable|string|max:100',
+            'carrier' => 'nullable|string|max:100',
             'delivery_fee' => 'nullable|numeric|min:0',
             'other_expense' => 'nullable|numeric|min:0',
             'other_expense_note' => 'nullable|string|max:255',
@@ -96,6 +98,8 @@ class PurchaseController extends Controller
                 'supplier_name' => $request->supplier_name,
                 'status' => $status,
                 'notes' => $request->notes,
+                'tracking_number' => $request->tracking_number,
+                'carrier' => $request->carrier,
                 'delivery_fee' => $deliveryFee,
                 'other_expense' => $otherExpense,
                 'other_expense_note' => $request->other_expense_note,
@@ -166,6 +170,8 @@ class PurchaseController extends Controller
         $request->validate([
             'supplier_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
+            'tracking_number' => 'nullable|string|max:100',
+            'carrier' => 'nullable|string|max:100',
             'delivery_fee' => 'nullable|numeric|min:0',
             'other_expense' => 'nullable|numeric|min:0',
             'other_expense_note' => 'nullable|string|max:255',
@@ -184,6 +190,8 @@ class PurchaseController extends Controller
             $updateData = array_filter([
                 'supplier_name' => $request->supplier_name,
                 'notes' => $request->notes,
+                'tracking_number' => $request->tracking_number,
+                'carrier' => $request->carrier,
             ], fn($v) => $v !== null);
 
             if ($request->has('delivery_fee')) {
