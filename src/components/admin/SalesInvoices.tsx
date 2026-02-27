@@ -436,6 +436,11 @@ const InvoicesTab = () => {
     const saleDiscountType = order.sale_discount_type || null;
     const hasDiscount = itemDiscount > 0 || saleDiscountVal > 0;
 
+    // Calculate actual discount amounts
+    const itemDiscountAmount = itemDiscountType === 'percent' ? originalPrice * itemDiscount / 100 : itemDiscount;
+    const priceAfterItemDiscount = originalPrice - itemDiscountAmount;
+    const saleDiscountAmount = saleDiscountType === 'percent' ? priceAfterItemDiscount * saleDiscountVal / 100 : saleDiscountVal;
+
     const itemDiscountLabel = itemDiscountType === 'percent' ? `${itemDiscount}%` : `$${itemDiscount.toFixed(2)}`;
     const saleDiscountLabel = saleDiscountType === 'percent' ? `${saleDiscountVal}%` : `$${saleDiscountVal.toFixed(2)}`;
 
@@ -532,8 +537,8 @@ const InvoicesTab = () => {
       <div class="summary-section">
         <div class="summary-table">
           <div class="summary-row"><span>Subtotal</span><span>$${originalPrice.toFixed(2)}</span></div>
-          ${itemDiscount > 0 ? `<div class="summary-row discount"><span>Item Discount (${itemDiscountLabel})</span><span>-$${(originalPrice - amount + saleDiscountVal).toFixed(2)}</span></div>` : ''}
-          ${saleDiscountVal > 0 ? `<div class="summary-row discount"><span>Sale Discount (${saleDiscountLabel})</span><span>-$${saleDiscountVal.toFixed(2)}</span></div>` : ''}
+          ${itemDiscount > 0 ? `<div class="summary-row discount"><span>Item Discount (${itemDiscountLabel})</span><span>-$${itemDiscountAmount.toFixed(2)}</span></div>` : ''}
+          ${saleDiscountVal > 0 ? `<div class="summary-row discount"><span>Sale Discount (${saleDiscountLabel})</span><span>-$${saleDiscountAmount.toFixed(2)}</span></div>` : ''}
           <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
         </div>
       </div>
