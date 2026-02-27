@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import {
   Pencil, Image, CreditCard, Loader2, Trash2, Upload, Plus,
   DollarSign, FileText, X, Package, CheckCircle,
-  Clock, Ban, Printer, Search, Percent, Minus
+  Clock, Ban, Printer, Search, Percent, Minus, ChevronLeft, ChevronRight
 } from "lucide-react";
 
 interface InvoiceEditDialogProps {
@@ -483,7 +483,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
 const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
   const { data } = useQuery({
     queryKey: ["order-detail", order.id],
@@ -491,6 +491,7 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
   });
 
   const attachments = data?.order?.attachments || order.attachments || [];
+  const imageAttachments = attachments.filter((a) => a.file_type === 'image');
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => adminUsersApi.uploadAttachment(order.id, file),
@@ -521,22 +522,48 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
   return (
     <div className="space-y-4">
       {/* Inline image preview lightbox */}
-      {previewUrl && (
+      {previewIndex !== null && imageAttachments[previewIndex] && (
         <div
-          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center cursor-pointer"
-          onClick={() => setPreviewUrl(null)}
+          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center"
+          onClick={() => setPreviewIndex(null)}
         >
+          {/* Prev */}
+          {imageAttachments.length > 1 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 z-10"
+              onClick={(e) => { e.stopPropagation(); setPreviewIndex((previewIndex - 1 + imageAttachments.length) % imageAttachments.length); }}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </Button>
+          )}
           <img
-            src={previewUrl}
+            src={imageAttachments[previewIndex].file_url}
             alt="Preview"
             className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
+          {/* Next */}
+          {imageAttachments.length > 1 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-14 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 z-10"
+              onClick={(e) => { e.stopPropagation(); setPreviewIndex((previewIndex + 1) % imageAttachments.length); }}
+            >
+              <ChevronRight className="w-6 h-6" />
+            </Button>
+          )}
+          {/* Counter */}
+          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+            {previewIndex + 1} / {imageAttachments.length}
+          </span>
           <Button
             variant="ghost"
             size="icon"
             className="absolute top-4 right-4 text-white hover:bg-white/20"
-            onClick={() => setPreviewUrl(null)}
+            onClick={() => setPreviewIndex(null)}
           >
             <X className="w-5 h-5" />
           </Button>
@@ -567,7 +594,7 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
                   src={att.file_url}
                   alt={att.file_name}
                   className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setPreviewUrl(att.file_url)}
+                  onClick={() => setPreviewIndex(imageAttachments.findIndex((img) => img.id === att.id))}
                 />
               ) : (
                 <a href={att.file_url} target="_blank" rel="noopener noreferrer" className="w-full h-32 bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
