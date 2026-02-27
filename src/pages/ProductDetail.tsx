@@ -615,6 +615,47 @@ const ProductDetail = () => {
                     )}
                   </div>
 
+                  {/* Mobile-only variant selector — after gallery */}
+                  {(() => {
+                    const hasVariants = appData.variants && appData.variants.length > 0;
+                    const activeVariants = hasVariants ? appData.variants!.filter(v => v.is_active) : [];
+                    if (!hasVariants || activeVariants.length === 0) return null;
+                    return (
+                      <div className="lg:hidden bg-card rounded-2xl border border-border/50 p-4 space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          {language === 'km' ? 'ជ្រើសរើសប្រភេទ' : 'Select variant'}
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {activeVariants.map((v, idx) => {
+                            const label = Object.values(v.combination).join(' / ');
+                            const vOOS = v.stock_quantity <= 0;
+                            const selected = selectedVariantIdx === idx;
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setSelectedVariantIdx(selected ? null : idx)}
+                                disabled={vOOS}
+                                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                                  vOOS
+                                    ? 'border-border/30 text-muted-foreground/40 line-through cursor-not-allowed'
+                                    : selected
+                                      ? 'border-primary bg-primary text-primary-foreground'
+                                      : 'border-border hover:border-primary/50 text-foreground'
+                                }`}
+                              >
+                                {label}
+                                {Number(v.price_adjustment) > 0 && !vOOS && (
+                                  <span className="ml-1 text-[10px] opacity-70">${Number(v.price_adjustment).toFixed(0)}</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Description */}
                   {displayDescription && (
                     <div className="bg-card rounded-2xl border border-border/50 p-6 sm:p-8">
