@@ -199,6 +199,11 @@ class AdminUserController extends Controller
             'amount' => $sale->amount,
             'status' => $sale->status,
         ];
+
+        // Restore stock if sale was paid
+        if ($sale->status === 'paid') {
+            SaleController::restoreStock($sale);
+        }
         
         $sale->delete();
 
@@ -218,6 +223,13 @@ class AdminUserController extends Controller
         ]);
 
         $orderIds = $request->input('order_ids');
+
+        // Restore stock for paid sales before deleting
+        $paidSales = Sale::whereIn('id', $orderIds)->where('status', 'paid')->get();
+        foreach ($paidSales as $paidSale) {
+            SaleController::restoreStock($paidSale);
+        }
+
         $deleted = Sale::whereIn('id', $orderIds)->delete();
 
         $this->logActivity($request, 'admin_bulk_delete_orders', [
