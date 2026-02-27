@@ -21,6 +21,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
+import Install from "./pages/Install";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
 
@@ -65,6 +66,7 @@ function AppRoutes() {
       <Route path="/profile" element={<Profile />} />
       <Route path="/wishlist" element={<Wishlist />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/install" element={<Install />} />
       <Route path="/:id" element={<ProductDetail />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
