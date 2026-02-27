@@ -519,14 +519,17 @@ const InvoicesTab = () => {
       <div class="table-wrap">
         <table>
           <thead><tr><th>Description</th><th>Qty</th><th style="text-align:right">Unit Price</th>${hasDiscount ? '<th style="text-align:right">Discount</th>' : ''}<th style="text-align:right">Amount</th></tr></thead>
-          <tbody>
-            <tr>
-              <td style="font-weight:500;color:#111827">${order.product_name}</td>
+           <tbody>
+            ${order.product_name.split(",").map((name: string, i: number, arr: string[]) => {
+              const isLast = i === arr.length - 1;
+              return `<tr>
+              <td style="font-weight:500;color:#111827">${name.trim()}</td>
               <td>1</td>
-              <td style="text-align:right">$${originalPrice.toFixed(2)}</td>
-              ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${itemDiscountAmount > 0 ? `-$${itemDiscountAmount.toFixed(2)}` : '—'}</td>` : ''}
-              <td style="text-align:right;font-weight:600;color:#111827">$${amount.toFixed(2)}</td>
-            </tr>
+              <td style="text-align:right">${i === 0 ? '$' + originalPrice.toFixed(2) : '—'}</td>
+              ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${i === 0 && itemDiscountAmount > 0 ? '-$' + itemDiscountAmount.toFixed(2) : '—'}</td>` : ''}
+              <td style="text-align:right;font-weight:600;color:#111827">${isLast ? '$' + amount.toFixed(2) : '—'}</td>
+            </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>
@@ -620,7 +623,13 @@ const InvoicesTab = () => {
                         <div className="font-medium text-xs">{order.user?.full_name || "—"}</div>
                         <div className="text-xs text-muted-foreground">{order.user?.email}</div>
                       </td>
-                      <td className="px-4 py-3 font-medium text-sm">{order.product_name}</td>
+                      <td className="px-4 py-3">
+                        <div className="space-y-0.5">
+                          {order.product_name.split(",").map((name, i) => (
+                            <div key={i} className="font-medium text-sm">{name.trim()}</div>
+                          ))}
+                        </div>
+                      </td>
                       <td className="px-4 py-3 font-semibold tabular-nums">${amount.toFixed(2)}</td>
                       <td className="px-4 py-3"><Badge variant={status.variant} className="text-xs">{status.label}</Badge></td>
                       <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
@@ -702,12 +711,16 @@ const InvoicesTab = () => {
                 <Separator />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Product</p>
-                  <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center"><Package className="w-5 h-5 text-primary" /></div>
-                      <div><p className="font-medium text-sm">{selectedOrder.product_name}</p><p className="text-xs text-muted-foreground">Qty: 1</p></div>
-                    </div>
-                    <p className="font-bold text-lg">${amount.toFixed(2)}</p>
+                  <div className="space-y-2">
+                    {selectedOrder.product_name.split(",").map((name, i) => (
+                      <div key={i} className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center"><Package className="w-5 h-5 text-primary" /></div>
+                          <div><p className="font-medium text-sm">{name.trim()}</p><p className="text-xs text-muted-foreground">Qty: 1</p></div>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex justify-end"><p className="font-bold text-lg">${amount.toFixed(2)}</p></div>
                   </div>
                 </div>
                 <Separator />
