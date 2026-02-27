@@ -984,7 +984,7 @@ const AppsTab = () => {
       </div>
 
       <Dialog open={showAppForm} onOpenChange={setShowAppForm}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogContent className="max-w-6xl w-[95vw]">
           <DialogHeader><DialogTitle>{editingApp ? "Edit Product" : "Add New Product"}</DialogTitle></DialogHeader>
           <AppForm app={editingApp} onSave={handleSaveApp} onCancel={() => { setShowAppForm(false); setEditingApp(undefined); }} />
         </DialogContent>
