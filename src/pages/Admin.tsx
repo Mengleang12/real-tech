@@ -505,8 +505,8 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
                 }} />
               </div>
             ) : (
-              <div className="w-20 h-20 rounded-xl border-2 border-dashed border-border bg-background flex items-center justify-center">
-                <FileUpload type="icons" currentUrl={formData.icon_url} onUpload={(url) => setFormData({ ...formData, icon_url: url })} label="" />
+              <div className="w-20 h-20 rounded-xl border-2 border-dashed border-border bg-background flex items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors" onClick={() => document.getElementById('product-card-image-input')?.click()}>
+                <Plus className="w-5 h-5 text-muted-foreground" />
               </div>
             )}
           </div>
