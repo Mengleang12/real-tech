@@ -99,6 +99,7 @@ const AddPurchaseDialog = ({
 }) => {
   const [supplierName, setSupplierName] = useState("");
   const [notes, setNotes] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
   const [items, setItems] = useState<PurchaseFormItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [deliveryFee, setDeliveryFee] = useState(0);
@@ -114,6 +115,7 @@ const AddPurchaseDialog = ({
       if (editPurchase) {
         setSupplierName(editPurchase.supplier_name);
         setNotes(editPurchase.notes || "");
+        setTrackingNumber(editPurchase.tracking_number || "");
         setDeliveryFee(Number(editPurchase.delivery_fee) || 0);
         setOtherExpense(Number(editPurchase.other_expense) || 0);
         setOtherExpenseNote(editPurchase.other_expense_note || "");
@@ -128,6 +130,7 @@ const AddPurchaseDialog = ({
       } else {
         setSupplierName("");
         setNotes("");
+        setTrackingNumber("");
         setDeliveryFee(0);
         setOtherExpense(0);
         setOtherExpenseNote("");
@@ -184,6 +187,7 @@ const AddPurchaseDialog = ({
       const payload = {
         supplier_name: supplierName,
         notes,
+        tracking_number: trackingNumber || undefined,
         delivery_fee: deliveryFee,
         other_expense: otherExpense,
         other_expense_note: otherExpenseNote || undefined,
@@ -222,10 +226,14 @@ const AddPurchaseDialog = ({
     >
       <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
         {/* Supplier */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <Label>Supplier Name *</Label>
             <Input value={supplierName} onChange={(e) => setSupplierName(e.target.value)} placeholder="Enter supplier name" />
+          </div>
+          <div>
+            <Label>Tracking Number</Label>
+            <Input value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} placeholder="e.g. YT2312345678" />
           </div>
           <div>
             <Label>Notes</Label>
@@ -605,6 +613,13 @@ const PurchaseDetailDialog = ({
             </div>
           )}
 
+          {purchase.tracking_number && (
+            <div className="text-sm">
+              <Label className="text-muted-foreground">Tracking Number</Label>
+              <p className="mt-1 font-mono">{purchase.tracking_number}</p>
+            </div>
+          )}
+
           <div className="text-xs text-muted-foreground space-y-0.5">
             <p>Created: {format(new Date(purchase.created_at), 'MMM d, yyyy h:mm a')}</p>
             {purchase.ordered_at && <p>Ordered: {format(new Date(purchase.ordered_at), 'MMM d, yyyy h:mm a')}</p>}
@@ -852,7 +867,7 @@ export const PurchaseManagement = () => {
           <Input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search by PO# or supplier..."
+            placeholder="Search by PO#, supplier, or tracking#..."
             className="pl-9"
           />
         </div>
@@ -889,6 +904,7 @@ export const PurchaseManagement = () => {
                 <TableHead>Items</TableHead>
                 <TableHead>Grand Total</TableHead>
                 <TableHead>Paid</TableHead>
+                <TableHead>Tracking</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="w-10"></TableHead>
@@ -902,6 +918,7 @@ export const PurchaseManagement = () => {
                   <TableCell className="text-sm">{po.items?.length || 0}</TableCell>
                   <TableCell className="text-sm font-medium">${(Number(po.grand_total) || Number(po.total_amount)).toFixed(2)}</TableCell>
                   <TableCell className="text-sm">${Number(po.paid_amount).toFixed(2)}</TableCell>
+                  <TableCell className="text-sm font-mono text-muted-foreground">{po.tracking_number || '—'}</TableCell>
                   <TableCell>
                     <Badge className={statusColors[po.status]}>{statusLabels[po.status]}</Badge>
                   </TableCell>
