@@ -35,7 +35,7 @@ interface EditCartItem {
   stock_quantity: number;
   discount: number;
   discount_type: "amount" | "percent";
-  serial_number?: string;
+  serial_numbers: string[];
 }
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string; icon: typeof CheckCircle; color: string }> = {
@@ -116,7 +116,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
     stock_quantity: 999,
     discount: order.item_discount ? parseFloat(order.item_discount) : 0,
     discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
-    serial_number: order.serial_number || "",
+    serial_numbers: order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [],
   }]);
 
   // Sale-level discount
@@ -140,7 +140,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
       stock_quantity: 999,
       discount: order.item_discount ? parseFloat(order.item_discount) : 0,
       discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
-      serial_number: order.serial_number || "",
+      serial_numbers: order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [],
     }]);
     setSaleDiscount(order.sale_discount ? parseFloat(order.sale_discount) : 0);
     setSaleDiscountType((order.sale_discount_type as "amount" | "percent") || "amount");
@@ -189,6 +189,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
         stock_quantity: variant?.stock_quantity ?? product.stock_quantity,
         discount: 0,
         discount_type: "amount",
+        serial_numbers: [],
       }]);
     }
     setProductSearch("");
@@ -196,7 +197,34 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
   };
 
   const updateQty = (idx: number, delta: number) => {
-    setCart(cart.map((c, i) => i === idx ? { ...c, quantity: Math.max(1, c.quantity + delta) } : c));
+    setCart(cart.map((c, i) => {
+      if (i !== idx) return c;
+      const newQty = Math.max(1, c.quantity + delta);
+      const trimmedSerials = c.serial_numbers.slice(0, newQty);
+      return { ...c, quantity: newQty, serial_numbers: trimmedSerials };
+    }));
+  };
+
+  const addSerialToItem = (cartIdx: number, value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    const allSerials = cart.flatMap(c => c.serial_numbers);
+    if (allSerials.includes(trimmed)) {
+      toast.error(`Serial number "${trimmed}" is already added`);
+      return;
+    }
+    setCart(cart.map((c, i) => {
+      if (i !== cartIdx) return c;
+      if (c.serial_numbers.length >= c.quantity) return c;
+      return { ...c, serial_numbers: [...c.serial_numbers, trimmed] };
+    }));
+  };
+
+  const removeSerialFromItem = (cartIdx: number, serialIdx: number) => {
+    setCart(cart.map((c, i) => {
+      if (i !== cartIdx) return c;
+      return { ...c, serial_numbers: c.serial_numbers.filter((_, si) => si !== serialIdx) };
+    }));
   };
 
   const updateItemDiscount = (idx: number, value: number, type: "amount" | "percent") => {
@@ -237,7 +265,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
     updateMutation.mutate({
       product_name: combinedName,
       product_id: firstItem.product_id as any,
-      serial_number: firstItem.serial_number || undefined,
+      serial_number: firstItem.serial_numbers.join(", ") || undefined,
       notes: notes || undefined,
       status,
       amount: grandTotal as any,
@@ -413,14 +441,29 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
                     <Trash2 className="w-3 h-3 text-destructive" />
                   </Button>
                 </div>
-                {/* Serial Number */}
+                {/* Serial number tag input */}
                 <div className="px-3 pb-2">
-                  <Input
-                    value={item.serial_number || ""}
-                    onChange={e => setCart(cart.map((c, i) => i === idx ? { ...c, serial_number: e.target.value } : c))}
-                    className="h-6 text-[11px] px-2"
-                    placeholder="Serial number (optional)"
-                  />
+                  <div className="flex flex-wrap gap-1 items-center p-1.5 rounded border border-border bg-background min-h-[28px]">
+                    {item.serial_numbers.map((sn, snIdx) => (
+                      <span key={snIdx} className="inline-flex items-center gap-0.5 bg-muted text-foreground text-[11px] px-1.5 py-0.5 rounded font-mono">
+                        {sn}
+                        <button type="button" onClick={() => removeSerialFromItem(idx, snIdx)} className="hover:text-destructive transition-colors"><X className="w-3 h-3" /></button>
+                      </span>
+                    ))}
+                    {item.serial_numbers.length < item.quantity && (
+                      <input
+                        className="flex-1 min-w-[80px] bg-transparent text-[11px] outline-none placeholder:text-muted-foreground font-mono"
+                        placeholder={`Add S/N (${item.serial_numbers.length}/${item.quantity})`}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addSerialToItem(idx, e.currentTarget.value);
+                            e.currentTarget.value = "";
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             );
