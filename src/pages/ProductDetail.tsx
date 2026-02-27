@@ -628,7 +628,9 @@ const ProductDetail = () => {
                       const hasVariants = appData.variants && appData.variants.length > 0;
                       const activeVariants = hasVariants ? appData.variants!.filter(v => v.is_active) : [];
                       const selectedVariant = selectedVariantIdx !== null ? activeVariants[selectedVariantIdx] : null;
-                      const finalPrice = selectedVariant ? Number(selectedVariant.price_adjustment) || 0 : priceNum;
+                      // Use first variant price as default if variants exist
+                      const defaultVariantPrice = activeVariants.length > 0 ? (Number(activeVariants[0].price_adjustment) || 0) : priceNum;
+                      const finalPrice = selectedVariant ? Number(selectedVariant.price_adjustment) || 0 : defaultVariantPrice;
                       const priceDisplay = finalPrice > 0 ? `$${finalPrice.toFixed(2)}` : '';
 
                       // Stock calculation

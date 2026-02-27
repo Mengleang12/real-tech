@@ -108,7 +108,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const totalItems = items.length;
   const totalPrice = items.reduce((sum, i) => {
     const basePrice = typeof i.app.price === "string" ? parseFloat(i.app.price) : i.app.price || 0;
-    const finalPrice = i.selectedVariant ? Number(i.selectedVariant.price_adjustment) || 0 : basePrice;
+    const activeVariants = i.app.variants?.filter(v => v.is_active) || [];
+    const defaultPrice = activeVariants.length > 0 ? (Number(activeVariants[0].price_adjustment) || 0) : basePrice;
+    const finalPrice = i.selectedVariant ? Number(i.selectedVariant.price_adjustment) || 0 : defaultPrice;
     return sum + finalPrice;
   }, 0);
 
