@@ -212,20 +212,20 @@ export const AttributeManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold">Product Attributes</h2>
-          <p className="text-sm text-muted-foreground mt-1">Define attribute templates for products</p>
+          <h2 className="text-lg sm:text-xl font-semibold">Product Attributes</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Define attribute templates for products</p>
         </div>
-        <Button size="sm" onClick={() => openForm()} className="gap-1.5">
-          <Plus className="w-3.5 h-3.5" /> New Attribute
+        <Button size="sm" onClick={() => openForm()} className="gap-1.5 shrink-0">
+          <Plus className="w-3.5 h-3.5" /> <span className="hidden xs:inline">New</span> <span className="hidden sm:inline">Attribute</span>
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card><CardContent className="p-5"><p className="text-xs text-muted-foreground mb-1">Total</p><p className="text-2xl font-bold">{attributes.length}</p></CardContent></Card>
-        <Card><CardContent className="p-5"><p className="text-xs text-muted-foreground mb-1">Required</p><p className="text-2xl font-bold">{attributes.filter(a => a.is_required).length}</p></CardContent></Card>
-        <Card><CardContent className="p-5"><p className="text-xs text-muted-foreground mb-1">Active</p><p className="text-2xl font-bold">{attributes.filter(a => a.is_active).length}</p></CardContent></Card>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <Card><CardContent className="p-3 sm:p-5"><p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Total</p><p className="text-xl sm:text-2xl font-bold">{attributes.length}</p></CardContent></Card>
+        <Card><CardContent className="p-3 sm:p-5"><p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Required</p><p className="text-xl sm:text-2xl font-bold">{attributes.filter(a => a.is_required).length}</p></CardContent></Card>
+        <Card><CardContent className="p-3 sm:p-5"><p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Active</p><p className="text-xl sm:text-2xl font-bold">{attributes.filter(a => a.is_active).length}</p></CardContent></Card>
       </div>
 
       {loading ? (
@@ -235,65 +235,106 @@ export const AttributeManagement = () => {
           <p className="text-sm text-muted-foreground">No attributes yet. Create templates like Color, Size, Material, etc.</p>
         </div>
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Attribute</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Options</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Required</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {attributes.map(attr => (
-                <tr key={attr.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
+        <>
+          {/* Mobile card layout */}
+          <div className="space-y-3 sm:hidden">
+            {attributes.map(attr => (
+              <Card key={attr.id}>
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
                       {attr.icon && (
-                        <div className="p-1.5 rounded-md bg-primary/10">
+                        <div className="p-1.5 rounded-md bg-primary/10 shrink-0">
                           <LazyIcon name={attr.icon as keyof typeof dynamicIconImports} className="w-4 h-4 text-primary" />
                         </div>
                       )}
-                      <div>
-                        <p className="font-medium">{attr.name}</p>
-                        {attr.name_km && <p className="text-xs text-muted-foreground">{attr.name_km}</p>}
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{attr.name}</p>
+                        {attr.name_km && <p className="text-xs text-muted-foreground truncate">{attr.name_km}</p>}
                       </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3"><Badge variant="outline">{typeLabels[attr.type]}</Badge></td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">
-                    {attr.type === "select" && attr.options ? attr.options.join(", ") : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {attr.is_required ? <Badge variant="destructive" className="text-xs">Required</Badge> : <span className="text-muted-foreground text-xs">Optional</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge variant={attr.is_active ? "default" : "secondary"}>{attr.is_active ? "Active" : "Inactive"}</Badge>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center gap-1 shrink-0">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openOptionsEditor(attr)} title="Manage values">
                         <Settings2 className="w-3.5 h-3.5 text-primary" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openForm(attr)}><Edit className="w-3.5 h-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleting(attr)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                     </div>
-                  </td>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Badge variant="outline" className="text-xs">{typeLabels[attr.type]}</Badge>
+                    {attr.is_required && <Badge variant="destructive" className="text-xs">Required</Badge>}
+                    <Badge variant={attr.is_active ? "default" : "secondary"} className="text-xs">{attr.is_active ? "Active" : "Inactive"}</Badge>
+                  </div>
+                  {attr.type === "select" && attr.options && (
+                    <p className="text-xs text-muted-foreground truncate">{attr.options.join(", ")}</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop table layout */}
+          <div className="border border-border rounded-lg overflow-hidden hidden sm:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Attribute</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Options</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Required</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {attributes.map(attr => (
+                  <tr key={attr.id} className="hover:bg-muted/30">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {attr.icon && (
+                          <div className="p-1.5 rounded-md bg-primary/10">
+                            <LazyIcon name={attr.icon as keyof typeof dynamicIconImports} className="w-4 h-4 text-primary" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-medium">{attr.name}</p>
+                          {attr.name_km && <p className="text-xs text-muted-foreground">{attr.name_km}</p>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3"><Badge variant="outline">{typeLabels[attr.type]}</Badge></td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">
+                      {attr.type === "select" && attr.options ? attr.options.join(", ") : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {attr.is_required ? <Badge variant="destructive" className="text-xs">Required</Badge> : <span className="text-muted-foreground text-xs">Optional</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant={attr.is_active ? "default" : "secondary"}>{attr.is_active ? "Active" : "Inactive"}</Badge>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openOptionsEditor(attr)} title="Manage values">
+                          <Settings2 className="w-3.5 h-3.5 text-primary" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openForm(attr)}><Edit className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleting(attr)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing ? "Edit Attribute" : "New Attribute"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Name (English) *</Label>
                 <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="mt-1.5" placeholder="e.g. Color" />
@@ -303,7 +344,7 @@ export const AttributeManagement = () => {
                 <Input value={formData.name_km} onChange={e => setFormData({ ...formData, name_km: e.target.value })} className="mt-1.5" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Type *</Label>
                 <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v as typeof formData.type })}>
