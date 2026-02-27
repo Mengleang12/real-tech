@@ -430,19 +430,16 @@ const InvoicesTab = () => {
     if (!doc) { document.body.removeChild(iframe); return; }
     doc.open();
     const originalPrice = order.original_price ? parseFloat(order.original_price) : amount;
-    const itemDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
-    const itemDiscountType = order.item_discount_type || null;
-    const saleDiscountVal = order.sale_discount ? parseFloat(order.sale_discount) : 0;
-    const saleDiscountType = order.sale_discount_type || null;
-    const hasDiscount = itemDiscount > 0 || saleDiscountVal > 0;
+    const totalDiscount = originalPrice - amount;
+    const hasDiscount = totalDiscount > 0.005;
 
-    // Calculate actual discount amounts
-    const itemDiscountAmount = itemDiscountType === 'percent' ? originalPrice * itemDiscount / 100 : itemDiscount;
-    const priceAfterItemDiscount = originalPrice - itemDiscountAmount;
-    const saleDiscountAmount = saleDiscountType === 'percent' ? priceAfterItemDiscount * saleDiscountVal / 100 : saleDiscountVal;
+    // Item & sale discount stored values (for display labels only)
+    const itemDiscountRaw = order.item_discount ? parseFloat(order.item_discount) : 0;
+    const saleDiscountRaw = order.sale_discount ? parseFloat(order.sale_discount) : 0;
 
-    const itemDiscountLabel = itemDiscountType === 'percent' ? `${itemDiscount}%` : `$${itemDiscount.toFixed(2)}`;
-    const saleDiscountLabel = saleDiscountType === 'percent' ? `${saleDiscountVal}%` : `$${saleDiscountVal.toFixed(2)}`;
+    // If both discounts exist, item discount = totalDiscount - saleDiscount; otherwise one takes all
+    const saleDiscountAmount = Math.min(saleDiscountRaw, totalDiscount);
+    const itemDiscountAmount = totalDiscount - saleDiscountAmount;
 
     doc.write(`<!DOCTYPE html><html><head><title>Invoice #${order.id.slice(0, 8).toUpperCase()}</title>
       <style>
@@ -527,7 +524,7 @@ const InvoicesTab = () => {
               <td style="font-weight:500;color:#111827">${order.product_name}</td>
               <td>1</td>
               <td style="text-align:right">$${originalPrice.toFixed(2)}</td>
-              ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${itemDiscount > 0 ? (itemDiscountType === 'percent' ? `${itemDiscount}%` : `-$${itemDiscount.toFixed(2)}`) : '—'}</td>` : ''}
+              ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${itemDiscountAmount > 0 ? `-$${itemDiscountAmount.toFixed(2)}` : '—'}</td>` : ''}
               <td style="text-align:right;font-weight:600;color:#111827">$${amount.toFixed(2)}</td>
             </tr>
           </tbody>
@@ -537,8 +534,8 @@ const InvoicesTab = () => {
       <div class="summary-section">
         <div class="summary-table">
           <div class="summary-row"><span>Subtotal</span><span>$${originalPrice.toFixed(2)}</span></div>
-          ${itemDiscount > 0 ? `<div class="summary-row discount"><span>Item Discount (${itemDiscountLabel})</span><span>-$${itemDiscountAmount.toFixed(2)}</span></div>` : ''}
-          ${saleDiscountVal > 0 ? `<div class="summary-row discount"><span>Sale Discount (${saleDiscountLabel})</span><span>-$${saleDiscountAmount.toFixed(2)}</span></div>` : ''}
+          ${itemDiscountAmount > 0 ? `<div class="summary-row discount"><span>Item Discount</span><span>-$${itemDiscountAmount.toFixed(2)}</span></div>` : ''}
+          ${saleDiscountAmount > 0 ? `<div class="summary-row discount"><span>Sale Discount</span><span>-$${saleDiscountAmount.toFixed(2)}</span></div>` : ''}
           <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
         </div>
       </div>
