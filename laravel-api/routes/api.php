@@ -132,6 +132,7 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     
     // Analytics
     Route::get('/admin/analytics', [AnalyticsController::class, 'dashboard']);
+    Route::get('/admin/analytics/profit', [AnalyticsController::class, 'profitAnalysis']);
     
     // Roles management
     Route::get('/admin/roles', [RoleController::class, 'index']);

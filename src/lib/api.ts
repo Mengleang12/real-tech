@@ -545,6 +545,17 @@ export const analyticsApi = {
     }
     return apiRequest(`admin/analytics?${params.toString()}`);
   },
+
+  profitAnalysis: async (search = '', sortBy = 'profit', sortDir = 'desc'): Promise<{
+    products: any[];
+    summary: { total_cost: number; total_revenue: number; total_profit: number; overall_margin: number; product_count: number };
+  }> => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    params.set('sort_by', sortBy);
+    params.set('sort_dir', sortDir);
+    return apiRequest(`admin/analytics/profit?${params.toString()}`);
+  },
 };
 
 // Roles Types
