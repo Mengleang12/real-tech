@@ -13,7 +13,7 @@ import { CartSheet } from "@/components/CartSheet";
 import { MaintenancePage } from "@/components/MaintenancePage";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
-import AppDetail from "./pages/AppDetail";
+import ProductDetail from "./pages/ProductDetail";
 import Auth from "./pages/Auth";
 import MyPurchases from "./pages/MyPurchases";
 import PaymentHistory from "./pages/PaymentHistory";
@@ -65,7 +65,7 @@ function AppRoutes() {
       <Route path="/profile" element={<Profile />} />
       <Route path="/wishlist" element={<Wishlist />} />
       <Route path="/checkout" element={<Checkout />} />
-      <Route path="/:id" element={<AppDetail />} />
+      <Route path="/:id" element={<ProductDetail />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
