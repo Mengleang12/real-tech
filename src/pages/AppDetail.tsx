@@ -841,7 +841,7 @@ const AppDetail = () => {
                                   return <td key={attrId} className="px-4 py-2.5">{display}</td>;
                                 })}
                                 <td className="px-4 py-2.5 text-right font-medium text-foreground">
-                                  ${((appData.price || 0) + (variant.price_adjustment || 0)).toFixed(2)}
+                                  ${(Number(appData.price ?? 0) + Number(variant.price_adjustment ?? 0)).toFixed(2)}
                                 </td>
                                 <td className="px-4 py-2.5 text-right">
                                   <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${variant.stock_quantity > 0 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/10 text-destructive'}`}>
