@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useMemo } from "react";
+import React, { createContext, useContext, useState, ReactNode, useMemo } from "react";
 
 type Language = "km" | "en";
 
@@ -177,8 +177,12 @@ const LanguageContext = createContext<LanguageContextType>(defaultContextValue);
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>("en");
 
+  // Sync html lang attribute so CSS font rules apply globally
+  React.useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
   const value = useMemo((): LanguageContextType => {
-    // Translation helper - returns text based on current language
     const t = (km: string | undefined, en: string | undefined): string => {
       if (language === "km") {
         return km || en || "";
