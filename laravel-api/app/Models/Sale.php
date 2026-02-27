@@ -19,6 +19,7 @@ class Sale extends Model
         'user_id',
         'product_id',
         'product_name',
+        'serial_number',
         'amount',
         'original_price',
         'item_discount',

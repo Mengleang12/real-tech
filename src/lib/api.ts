@@ -384,6 +384,7 @@ export interface AdminOrder {
   user_id: number;
   product_id: number;
   product_name: string;
+  serial_number?: string;
   amount: number;
   original_price?: string;
   item_discount?: string;
@@ -916,7 +917,7 @@ export interface CreateSalePayload {
   customer_name?: string;
   customer_phone?: string;
   customer_email?: string;
-  items: { product_id: number; variant_id?: number; quantity: number; price: number; discount?: number; discount_type?: 'amount' | 'percent' }[];
+  items: { product_id: number; variant_id?: number; quantity: number; price: number; discount?: number; discount_type?: 'amount' | 'percent'; serial_numbers?: string[] }[];
   payment_status: 'paid' | 'pending' | 'partial' | 'unpaid';
   sale_discount?: number;
   sale_discount_type?: 'amount' | 'percent';

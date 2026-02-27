@@ -270,6 +270,7 @@ class AdminUserController extends Controller
             'item_discount_type' => 'nullable|in:amount,percent',
             'sale_discount' => 'nullable|numeric|min:0',
             'sale_discount_type' => 'nullable|in:amount,percent',
+            'serial_number' => 'nullable|string|max:255',
             'status' => 'nullable|in:pending,paid,failed,expired',
             'bakong_transaction_id' => 'nullable|string|max:100',
         ]);
@@ -278,6 +279,7 @@ class AdminUserController extends Controller
             'notes', 'amount', 'original_price',
             'item_discount', 'item_discount_type',
             'sale_discount', 'sale_discount_type',
+            'serial_number',
             'status', 'bakong_transaction_id',
         ]));
 

@@ -17,6 +17,7 @@ interface CartItem {
   unit_price: number;
   discount: number; // per-item discount amount
   discount_type: "amount" | "percent";
+  serial_numbers: string[]; // one per unit
 }
 
 interface AddSaleDialogProps {
@@ -81,20 +82,36 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     if (exists) {
       setCart(cart.map(c =>
         c.product.id === product.id && c.variant_id === variantId
-          ? { ...c, quantity: c.quantity + 1 }
+          ? { ...c, quantity: c.quantity + 1, serial_numbers: [...c.serial_numbers, ""] }
           : c
       ));
     } else {
       const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
       const price = Number(product.price) + Number(variant?.price_adjustment || 0);
-      setCart([...cart, { product, variant_id: variantId, quantity: 1, unit_price: price, discount: 0, discount_type: "amount" }]);
+      setCart([...cart, { product, variant_id: variantId, quantity: 1, unit_price: price, discount: 0, discount_type: "amount", serial_numbers: [""] }]);
     }
     setProductSearch("");
     setProducts([]);
   };
 
   const updateQty = (idx: number, delta: number) => {
-    setCart(cart.map((c, i) => i === idx ? { ...c, quantity: Math.max(1, c.quantity + delta) } : c));
+    setCart(cart.map((c, i) => {
+      if (i !== idx) return c;
+      const newQty = Math.max(1, c.quantity + delta);
+      const newSerials = [...c.serial_numbers];
+      while (newSerials.length < newQty) newSerials.push("");
+      while (newSerials.length > newQty) newSerials.pop();
+      return { ...c, quantity: newQty, serial_numbers: newSerials };
+    }));
+  };
+
+  const updateSerialNumber = (cartIdx: number, serialIdx: number, value: string) => {
+    setCart(cart.map((c, i) => {
+      if (i !== cartIdx) return c;
+      const newSerials = [...c.serial_numbers];
+      newSerials[serialIdx] = value;
+      return { ...c, serial_numbers: newSerials };
+    }));
   };
 
   const updateItemDiscount = (idx: number, value: number, type: "amount" | "percent") => {
@@ -185,9 +202,10 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
         product_id: c.product.id,
         variant_id: c.variant_id,
         quantity: c.quantity,
-        price: +(getLineTotal(c) / c.quantity).toFixed(2), // price after per-item discount
+        price: +(getLineTotal(c) / c.quantity).toFixed(2),
         discount: c.discount > 0 ? c.discount : undefined,
         discount_type: c.discount > 0 ? c.discount_type : undefined,
+        serial_numbers: c.serial_numbers.some(s => s.trim()) ? c.serial_numbers : undefined,
       })),
       payment_status: paymentStatus,
       sale_discount: saleDiscount > 0 ? saleDiscount : undefined,
@@ -336,37 +354,51 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                   const variantLabel = variant ? Object.values(variant.combination).join(" / ") : null;
                   const lineTotal = getLineTotal(item);
                   return (
-                    <div key={idx} className="grid grid-cols-[1fr_80px_100px_80px_32px] gap-1 px-3 py-2 items-center border-t border-border/50">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{item.product.name}</p>
-                        {variantLabel && <p className="text-[10px] text-muted-foreground">{variantLabel}</p>}
-                        <p className="text-[10px] text-muted-foreground">${item.unit_price.toFixed(2)} each</p>
+                    <div key={idx} className="border-t border-border/50">
+                      <div className="grid grid-cols-[1fr_80px_100px_80px_32px] gap-1 px-3 py-2 items-center">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{item.product.name}</p>
+                          {variantLabel && <p className="text-[10px] text-muted-foreground">{variantLabel}</p>}
+                          <p className="text-[10px] text-muted-foreground">${item.unit_price.toFixed(2)} each</p>
+                        </div>
+                        <div className="flex items-center gap-0.5 justify-center">
+                          <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, -1)}><Minus className="w-2.5 h-2.5" /></Button>
+                          <span className="text-xs font-medium w-5 text-center">{item.quantity}</span>
+                          <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, 1)}><Plus className="w-2.5 h-2.5" /></Button>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={item.discount || ""}
+                            onChange={e => updateItemDiscount(idx, parseFloat(e.target.value) || 0, item.discount_type)}
+                            className="h-6 text-[11px] px-1.5 w-14"
+                            placeholder="0"
+                          />
+                          <button
+                            onClick={() => updateItemDiscount(idx, item.discount, item.discount_type === "amount" ? "percent" : "amount")}
+                            className="h-6 w-6 shrink-0 rounded border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:bg-muted transition-colors"
+                            title={item.discount_type === "amount" ? "Switch to %" : "Switch to $"}
+                          >
+                            {item.discount_type === "percent" ? "%" : "$"}
+                          </button>
+                        </div>
+                        <span className="text-sm font-semibold text-right">${lineTotal.toFixed(2)}</span>
+                        <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(idx)}><Trash2 className="w-3 h-3" /></Button>
                       </div>
-                      <div className="flex items-center gap-0.5 justify-center">
-                        <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, -1)}><Minus className="w-2.5 h-2.5" /></Button>
-                        <span className="text-xs font-medium w-5 text-center">{item.quantity}</span>
-                        <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, 1)}><Plus className="w-2.5 h-2.5" /></Button>
+                      {/* Serial number inputs */}
+                      <div className="px-3 pb-2 space-y-1">
+                        {item.serial_numbers.map((sn, snIdx) => (
+                          <Input
+                            key={snIdx}
+                            value={sn}
+                            onChange={e => updateSerialNumber(idx, snIdx, e.target.value)}
+                            className="h-6 text-[11px] px-2"
+                            placeholder={`S/N ${item.quantity > 1 ? `#${snIdx + 1}` : ""} (optional)`}
+                          />
+                        ))}
                       </div>
-                      <div className="flex items-center gap-0.5">
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.discount || ""}
-                          onChange={e => updateItemDiscount(idx, parseFloat(e.target.value) || 0, item.discount_type)}
-                          className="h-6 text-[11px] px-1.5 w-14"
-                          placeholder="0"
-                        />
-                        <button
-                          onClick={() => updateItemDiscount(idx, item.discount, item.discount_type === "amount" ? "percent" : "amount")}
-                          className="h-6 w-6 shrink-0 rounded border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:bg-muted transition-colors"
-                          title={item.discount_type === "amount" ? "Switch to %" : "Switch to $"}
-                        >
-                          {item.discount_type === "percent" ? "%" : "$"}
-                        </button>
-                      </div>
-                      <span className="text-sm font-semibold text-right">${lineTotal.toFixed(2)}</span>
-                      <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(idx)}><Trash2 className="w-3 h-3" /></Button>
                     </div>
                   );
                 })}
