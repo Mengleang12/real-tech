@@ -482,27 +482,27 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
         <Label className="text-base font-medium">Product Card Image</Label>
         <div className="flex flex-col sm:flex-row items-start gap-4">
           <div className="shrink-0">
+            <input id="product-card-image-input" type="file" accept="image/*" className="hidden" onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const token = localStorage.getItem('admin_api_key') || localStorage.getItem('auth_token') || '';
+              const formDataUpload = new FormData();
+              formDataUpload.append('file', file);
+              formDataUpload.append('type', 'icons');
+              try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com'}/api/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }, body: formDataUpload });
+                if (!res.ok) throw new Error('Upload failed');
+                const data = await res.json();
+                setFormData({ ...formData, icon_url: data.url });
+              } catch { toast.error('Upload failed'); }
+              e.target.value = '';
+            }} />
             {formData.icon_url ? (
               <div className="relative group w-20 h-20 rounded-xl border border-border overflow-hidden bg-background shadow-sm cursor-pointer" onClick={() => document.getElementById('product-card-image-input')?.click()}>
                 <img src={formData.icon_url} alt="Product" className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                   <Pencil className="w-5 h-5 text-white drop-shadow-md" />
                 </div>
-                <input id="product-card-image-input" type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  const token = localStorage.getItem('admin_api_key') || localStorage.getItem('auth_token') || '';
-                  const formDataUpload = new FormData();
-                  formDataUpload.append('file', file);
-                  formDataUpload.append('type', 'icons');
-                  try {
-                    const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com'}/api/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }, body: formDataUpload });
-                    if (!res.ok) throw new Error('Upload failed');
-                    const data = await res.json();
-                    setFormData({ ...formData, icon_url: data.url });
-                  } catch { toast.error('Upload failed'); }
-                  e.target.value = '';
-                }} />
               </div>
             ) : (
               <div className="w-20 h-20 rounded-xl border-2 border-dashed border-border bg-background flex items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors" onClick={() => document.getElementById('product-card-image-input')?.click()}>
