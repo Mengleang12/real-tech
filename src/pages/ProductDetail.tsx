@@ -329,6 +329,7 @@ const ProductDetail = () => {
             <img src={realtechLogo} alt="Realtech Computer" className="w-full h-full object-contain" />
           </div>
         </Link>
+        <Separator className="my-3 opacity-30" />
 
         <nav className="flex-1 space-y-1">
           {[
@@ -347,7 +348,7 @@ const ProductDetail = () => {
                 </div>
                 <span className="flex-1 text-left font-medium">{item.label}</span>
               </Link>
-              {index < arr.length - 1 && <Separator className="my-1" />}
+              {index < arr.length - 1 && <Separator className="my-1 opacity-30" />}
             </div>
           ))}
         </nav>
