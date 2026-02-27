@@ -40,7 +40,7 @@ import { BrandManagement } from "@/components/admin/BrandManagement";
 import { AttributeManagement } from "@/components/admin/AttributeManagement";
 import { cn } from "@/lib/utils";
 import { SystemSettingsPanel } from "@/components/admin/SystemSettings";
-import { SalesInvoices, InvoicesTab } from "@/components/admin/SalesInvoices";
+import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/components/admin/SalesInvoices";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -576,7 +576,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "invoices" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "stock" | "invoices" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
 
 interface NavItem {
   id: AdminTab;
@@ -610,8 +610,9 @@ const navGroups: NavGroup[] = [
   {
     label: "Sales",
     items: [
-      { id: "sales", label: "Sales", icon: DollarSign, permission: "orders.view" },
+      { id: "sales", label: "Dashboard", icon: BarChart3, permission: "orders.view" },
       { id: "invoices", label: "Invoices", icon: FileText, permission: "orders.view" },
+      { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
     ],
   },
   {
@@ -985,6 +986,37 @@ const AppsTab = () => {
   );
 };
 
+// ─── Sales Dashboard Page ─────────────────────────────────────────────────────
+const SalesDashboardPage = () => {
+  const [addSaleOpen, setAddSaleOpen] = useState(false);
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Sales Dashboard</h2>
+          <p className="text-sm text-muted-foreground mt-1">Overview of sales performance</p>
+        </div>
+        <Button onClick={() => setAddSaleOpen(true)} className="gap-2">
+          <Plus className="w-4 h-4" /> New Sale
+        </Button>
+      </div>
+      <SalesOverview />
+      <AddSaleDialog open={addSaleOpen} onOpenChange={setAddSaleOpen} />
+    </div>
+  );
+};
+
+// ─── Stock Page ───────────────────────────────────────────────────────────────
+const StockPage = () => (
+  <div className="space-y-6">
+    <div>
+      <h2 className="text-xl font-semibold">Stock Management</h2>
+      <p className="text-sm text-muted-foreground mt-1">Monitor and manage product inventory</p>
+    </div>
+    <StockManagement />
+  </div>
+);
+
 // ─── Invoices Page (with New Sale button) ─────────────────────────────────────
 const InvoicesPage = () => {
   const [addSaleOpen, setAddSaleOpen] = useState(false);
@@ -1158,7 +1190,8 @@ const AdminDashboard = () => {
           {activeTab === "brands" && <BrandManagement />}
           {activeTab === "attributes" && <AttributeManagement />}
           {activeTab === "users" && <UserManagement />}
-          {activeTab === "sales" && <SalesInvoices />}
+          {activeTab === "sales" && <SalesDashboardPage />}
+          {activeTab === "stock" && <StockPage />}
           {activeTab === "invoices" && <InvoicesPage />}
           {activeTab === "payments" && <PaymentHistoryAdmin />}
           {activeTab === "reviews" && <AppReviewSystem />}
