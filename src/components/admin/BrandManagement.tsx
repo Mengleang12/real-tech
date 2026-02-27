@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle } from "./AdminDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -150,9 +150,7 @@ export const BrandManagement = () => {
         </div>
       )}
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>{editing ? "Edit Brand" : "New Brand"}</DialogTitle></DialogHeader>
+      <AdminDialog open={showForm} onOpenChange={setShowForm} title={editing ? "Edit Brand" : "New Brand"} size="md">
           <div className="space-y-4">
             <div>
               <Label>Name *</Label>
@@ -181,8 +179,7 @@ export const BrandManagement = () => {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
 
       <AlertDialog open={!!deleting} onOpenChange={open => { if (!open) setDeleting(null); }}>
         <AlertDialogContent>

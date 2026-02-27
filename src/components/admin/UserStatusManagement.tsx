@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./AdminDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userStatusApi, type UserWithStatus } from "@/lib/api";
@@ -98,9 +98,20 @@ export const UserStatusManagement = () => {
         })}
       </div>
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{actionType === "active" ? "Restore" : actionType === "suspended" ? "Suspend" : "Ban"} User</DialogTitle></DialogHeader>
+      <AdminDialog 
+        open={showDialog} 
+        onOpenChange={setShowDialog} 
+        title={`${actionType === "active" ? "Restore" : actionType === "suspended" ? "Suspend" : "Ban"} User`}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
+            <Button variant={actionType === "banned" ? "destructive" : "default"} onClick={() => updateStatus.mutate({ userId: selectedUser!.user_id, status: actionType, reason, suspendUntil })} disabled={updateStatus.isPending}>
+              {updateStatus.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {updateStatus.isPending ? "Processing..." : actionType === "active" ? "Restore" : actionType === "suspended" ? "Suspend" : "Ban"}
+            </Button>
+          </>
+        }
+      >
           {selectedUser && (
             <div className="space-y-4">
               <div className="p-4 rounded-lg bg-muted/50"><p className="font-medium">{selectedUser.full_name || selectedUser.email}</p></div>
@@ -108,15 +119,7 @@ export const UserStatusManagement = () => {
               {actionType === "suspended" && <div><label className="text-sm font-medium">Until</label><Input type="datetime-local" value={suspendUntil} onChange={(e) => setSuspendUntil(e.target.value)} className="mt-1.5" /></div>}
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
-            <Button variant={actionType === "banned" ? "destructive" : "default"} onClick={() => updateStatus.mutate({ userId: selectedUser!.user_id, status: actionType, reason, suspendUntil })} disabled={updateStatus.isPending}>
-              {updateStatus.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              {updateStatus.isPending ? "Processing..." : actionType === "active" ? "Restore" : actionType === "suspended" ? "Suspend" : "Ban"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
     </div>
   );
 };

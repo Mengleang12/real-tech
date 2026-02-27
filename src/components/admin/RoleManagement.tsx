@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "./AdminDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -166,12 +166,21 @@ const AssignRolesTab = () => {
         )}
       </div>
 
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign Role</DialogTitle>
-            <DialogDescription>Select a user and role to assign</DialogDescription>
-          </DialogHeader>
+      <AdminDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog} 
+        title="Assign Role" 
+        description="Select a user and role to assign"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</Button>
+            <Button onClick={() => addRole.mutate({ userId: parseInt(newRoleUserId), role: newRole })} disabled={!newRoleUserId || addRole.isPending}>
+              {addRole.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+              {addRole.isPending ? "Assigning..." : "Assign"}
+            </Button>
+          </>
+        }
+      >
           <div className="space-y-4">
             <Select value={newRoleUserId} onValueChange={setNewRoleUserId}>
               <SelectTrigger><SelectValue placeholder="Select user" /></SelectTrigger>
@@ -188,15 +197,7 @@ const AssignRolesTab = () => {
               </SelectContent>
             </Select>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</Button>
-            <Button onClick={() => addRole.mutate({ userId: parseInt(newRoleUserId), role: newRole })} disabled={!newRoleUserId || addRole.isPending}>
-              {addRole.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
-              {addRole.isPending ? "Assigning..." : "Assign"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
     </div>
   );
 };
@@ -379,13 +380,22 @@ const PermissionsTab = () => {
         })}
       </div>
 
-      {/* Create Role Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Role</DialogTitle>
-            <DialogDescription>Define a custom role with specific permissions</DialogDescription>
-          </DialogHeader>
+      <AdminDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog} 
+        title="Create New Role" 
+        description="Define a custom role with specific permissions" 
+        size="lg"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
+            <Button onClick={() => createRole.mutate()} disabled={!newRoleName || selectedPerms.length === 0 || createRole.isPending}>
+              {createRole.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+              Create Role
+            </Button>
+          </>
+        }
+      >
           <div className="space-y-4">
             <div>
               <Label>Role Name</Label>
@@ -420,15 +430,7 @@ const PermissionsTab = () => {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
-            <Button onClick={() => createRole.mutate()} disabled={!newRoleName || selectedPerms.length === 0 || createRole.isPending}>
-              {createRole.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-              Create Role
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
     </div>
   );
 };

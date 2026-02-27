@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./AdminDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationsApi, type AdminNotification } from "@/lib/api";
@@ -293,71 +293,47 @@ export const NotificationSystem = () => {
       </div>
 
       {/* Create/Edit Form Dialog */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingNotification ? "Edit Notification" : "Create Notification"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
+      <AdminDialog 
+        open={showForm} 
+        onOpenChange={setShowForm} 
+        title={editingNotification ? "Edit Notification" : "Create Notification"} 
+        size="2xl"
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={handleCloseForm}>Cancel</Button>
+            <Button type="submit" form="notification-form" disabled={saveNotification.isPending}>
+              {saveNotification.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+              {saveNotification.isPending ? "Saving..." : editingNotification ? "Update" : "Publish"}
+            </Button>
+          </>
+        }
+      >
+          <form id="notification-form" onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Title (English) *</Label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Notification title"
-                  className="mt-1.5"
-                  required
-                />
+                <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Notification title" className="mt-1.5" required />
               </div>
               <div>
                 <Label>Title (Khmer)</Label>
-                <Input
-                  value={formData.title_km}
-                  onChange={(e) => setFormData({ ...formData, title_km: e.target.value })}
-                  placeholder="ចំណងជើង"
-                  className="mt-1.5"
-                />
+                <Input value={formData.title_km} onChange={(e) => setFormData({ ...formData, title_km: e.target.value })} placeholder="ចំណងជើង" className="mt-1.5" />
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Message (English) *</Label>
-                <Textarea
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  placeholder="Notification message"
-                  className="mt-1.5"
-                  rows={4}
-                  required
-                />
+                <Textarea value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} placeholder="Notification message" className="mt-1.5" rows={4} required />
               </div>
               <div>
                 <Label>Message (Khmer)</Label>
-                <Textarea
-                  value={formData.message_km}
-                  onChange={(e) => setFormData({ ...formData, message_km: e.target.value })}
-                  placeholder="សារ"
-                  className="mt-1.5"
-                  rows={4}
-                />
+                <Textarea value={formData.message_km} onChange={(e) => setFormData({ ...formData, message_km: e.target.value })} placeholder="សារ" className="mt-1.5" rows={4} />
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Type</Label>
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(v) => setFormData({ ...formData, type: v as NotificationType })}
-                >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
+                <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v as NotificationType })}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="announcement">Announcement</SelectItem>
                     <SelectItem value="update">App Update</SelectItem>
@@ -368,13 +344,8 @@ export const NotificationSystem = () => {
               </div>
               <div>
                 <Label>Target Audience</Label>
-                <Select 
-                  value={formData.target_users} 
-                  onValueChange={(v) => setFormData({ ...formData, target_users: v as TargetUsers })}
-                >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
+                <Select value={formData.target_users} onValueChange={(v) => setFormData({ ...formData, target_users: v as TargetUsers })}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Users</SelectItem>
                     <SelectItem value="admins">Admins Only</SelectItem>
@@ -382,50 +353,22 @@ export const NotificationSystem = () => {
                 </Select>
               </div>
             </div>
-
             <div className="flex items-center gap-2">
-              <Switch
-                id="publish_immediately"
-                checked={formData.publish_immediately}
-                onCheckedChange={(checked) => setFormData({ ...formData, publish_immediately: checked })}
-              />
+              <Switch id="publish_immediately" checked={formData.publish_immediately} onCheckedChange={(checked) => setFormData({ ...formData, publish_immediately: checked })} />
               <Label htmlFor="publish_immediately">Publish Immediately</Label>
             </div>
-
             {!formData.publish_immediately && (
               <div>
                 <Label>Scheduled Date</Label>
-                <Input
-                  type="datetime-local"
-                  value={formData.published_at}
-                  onChange={(e) => setFormData({ ...formData, published_at: e.target.value })}
-                  className="mt-1.5"
-                />
+                <Input type="datetime-local" value={formData.published_at} onChange={(e) => setFormData({ ...formData, published_at: e.target.value })} className="mt-1.5" />
               </div>
             )}
-
             <div>
               <Label>Expiration Date (optional)</Label>
-              <Input
-                type="datetime-local"
-                value={formData.expires_at}
-                onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
-                className="mt-1.5"
-              />
+              <Input type="datetime-local" value={formData.expires_at} onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })} className="mt-1.5" />
             </div>
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCloseForm}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saveNotification.isPending}>
-                {saveNotification.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                {saveNotification.isPending ? "Saving..." : editingNotification ? "Update" : "Publish"}
-              </Button>
-            </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+      </AdminDialog>
     </div>
   );
 };
