@@ -336,17 +336,19 @@ const ProductDetail = () => {
             { id: "programs", label: translations.programs, icon: Box },
             { id: "games", label: translations.games, icon: Gamepad2 },
             { id: "extensions", label: translations.extensions, icon: Puzzle },
-          ].map((item) => (
-            <Link
-              key={item.id}
-              to={item.id === "all" ? "/" : `/?category=${item.id}`}
-              className="sidebar-nav-item w-full group"
-            >
-              <div className="p-2 rounded-lg transition-all duration-300 bg-accent/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary">
-                <item.icon className="w-4 h-4" />
-              </div>
-              <span className="flex-1 text-left font-medium">{item.label}</span>
-            </Link>
+          ].map((item, index, arr) => (
+            <div key={item.id}>
+              <Link
+                to={item.id === "all" ? "/" : `/?category=${item.id}`}
+                className="sidebar-nav-item w-full group"
+              >
+                <div className="p-2 rounded-lg transition-all duration-300 bg-accent/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary">
+                  <item.icon className="w-4 h-4" />
+                </div>
+                <span className="flex-1 text-left font-medium">{item.label}</span>
+              </Link>
+              {index < arr.length - 1 && <Separator className="my-1" />}
+            </div>
           ))}
         </nav>
       </aside>
