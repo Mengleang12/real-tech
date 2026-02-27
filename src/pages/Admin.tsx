@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 import { SystemSettingsPanel } from "@/components/admin/SystemSettings";
 import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/components/admin/SalesInvoices";
 import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
+import { ProfitAnalysis } from "@/components/admin/ProfitAnalysis";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -606,7 +607,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "profit" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
 
 interface NavItem {
   id: AdminTab;
@@ -628,6 +629,7 @@ const navGroups: NavGroup[] = [
       { id: "sales", label: "Dashboard", icon: BarChart3, permission: "orders.view" },
       { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
       { id: "purchases", label: "Purchase", icon: ShoppingBag, permission: "orders.view" },
+      { id: "profit", label: "Profit", icon: DollarSign, permission: "orders.view" },
       { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
     ],
   },
@@ -1213,6 +1215,7 @@ const AdminDashboard = () => {
           {activeTab === "stock" && <StockPage />}
           {activeTab === "invoices" && <InvoicesPage />}
           {activeTab === "purchases" && <PurchaseManagement />}
+          {activeTab === "profit" && <ProfitAnalysis />}
           {activeTab === "payments" && <PaymentHistoryAdmin />}
           {activeTab === "reviews" && <AppReviewSystem />}
           {activeTab === "roles" && <RoleManagement />}
