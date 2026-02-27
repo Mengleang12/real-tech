@@ -4,7 +4,7 @@ import {
   Plus, Edit, Trash2, LogOut, Package, Search, X, Save, ArrowLeft, 
   ChevronLeft, ChevronRight, Users, BarChart3, Bell, Shield, Activity, 
   UserX, Tag, Play, Home, Menu, Download, Star, TrendingUp, Settings2, Loader2, ClipboardPaste, ShieldAlert, DollarSign,
-  FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw
+  FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw, FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,7 @@ import { BrandManagement } from "@/components/admin/BrandManagement";
 import { AttributeManagement } from "@/components/admin/AttributeManagement";
 import { cn } from "@/lib/utils";
 import { SystemSettingsPanel } from "@/components/admin/SystemSettings";
-import { SalesInvoices } from "@/components/admin/SalesInvoices";
+import { SalesInvoices, InvoicesTab } from "@/components/admin/SalesInvoices";
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -575,7 +575,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "invoices" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
 
 interface NavItem {
   id: AdminTab;
@@ -609,7 +609,8 @@ const navGroups: NavGroup[] = [
   {
     label: "Sales",
     items: [
-      { id: "sales", label: "Sales & Invoices", icon: DollarSign, permission: "orders.view" },
+      { id: "sales", label: "Sales", icon: DollarSign, permission: "orders.view" },
+      { id: "invoices", label: "Invoices", icon: FileText, permission: "orders.view" },
     ],
   },
   {
@@ -1137,6 +1138,15 @@ const AdminDashboard = () => {
           {activeTab === "attributes" && <AttributeManagement />}
           {activeTab === "users" && <UserManagement />}
           {activeTab === "sales" && <SalesInvoices />}
+          {activeTab === "invoices" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold">Invoices</h2>
+                <p className="text-sm text-muted-foreground mt-1">View and manage all invoices</p>
+              </div>
+              <InvoicesTab />
+            </div>
+          )}
           {activeTab === "payments" && <PaymentHistoryAdmin />}
           {activeTab === "reviews" && <AppReviewSystem />}
           {activeTab === "roles" && <RoleManagement />}

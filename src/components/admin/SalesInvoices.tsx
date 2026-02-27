@@ -715,7 +715,10 @@ const InvoicesTab = () => {
   );
 };
 
-// ─── Main Sales & Invoices Component ──────────────────────────────────────────
+// Export InvoicesTab for standalone use
+export { InvoicesTab };
+
+// ─── Main Sales Component ──────────────────────────────────────────
 export const SalesInvoices = () => {
   const [addSaleOpen, setAddSaleOpen] = useState(false);
 
@@ -723,8 +726,8 @@ export const SalesInvoices = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Sales & Invoices</h2>
-          <p className="text-sm text-muted-foreground mt-1">Track sales, manage stock, and view invoices</p>
+          <h2 className="text-xl font-semibold">Sales</h2>
+          <p className="text-sm text-muted-foreground mt-1">Track sales and manage stock</p>
         </div>
         <Button onClick={() => setAddSaleOpen(true)} className="gap-2">
           <Plus className="w-4 h-4" /> New Sale
@@ -737,12 +740,10 @@ export const SalesInvoices = () => {
         <TabsList>
           <TabsTrigger value="overview" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" /> Overview</TabsTrigger>
           <TabsTrigger value="stock" className="gap-1.5"><Boxes className="w-3.5 h-3.5" /> Stock</TabsTrigger>
-          <TabsTrigger value="invoices" className="gap-1.5"><FileText className="w-3.5 h-3.5" /> Invoices</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview"><SalesOverview /></TabsContent>
         <TabsContent value="stock"><StockManagement /></TabsContent>
-        <TabsContent value="invoices"><InvoicesTab /></TabsContent>
       </Tabs>
     </div>
   );
