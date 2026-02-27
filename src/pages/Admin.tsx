@@ -611,7 +611,7 @@ const navGroups: NavGroup[] = [
     label: "Sales",
     items: [
       { id: "sales", label: "Dashboard", icon: BarChart3, permission: "orders.view" },
-      { id: "invoices", label: "Invoices", icon: FileText, permission: "orders.view" },
+      { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
       { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
     ],
   },
