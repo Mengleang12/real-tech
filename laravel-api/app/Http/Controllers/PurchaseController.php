@@ -72,6 +72,9 @@ class PurchaseController extends Controller
             'supplier_name' => 'required|string|max:255',
             'status' => 'nullable|in:draft,ordered',
             'notes' => 'nullable|string|max:1000',
+            'delivery_fee' => 'nullable|numeric|min:0',
+            'other_expense' => 'nullable|numeric|min:0',
+            'other_expense_note' => 'nullable|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|integer',
             'items.*.product_name' => 'required|string|max:255',
@@ -85,11 +88,16 @@ class PurchaseController extends Controller
 
         try {
             $status = $request->input('status', 'draft');
+            $deliveryFee = $request->input('delivery_fee', 0);
+            $otherExpense = $request->input('other_expense', 0);
 
             $purchase = Purchase::create([
                 'supplier_name' => $request->supplier_name,
                 'status' => $status,
                 'notes' => $request->notes,
+                'delivery_fee' => $deliveryFee,
+                'other_expense' => $otherExpense,
+                'other_expense_note' => $request->other_expense_note,
                 'currency' => 'USD',
                 'ordered_at' => $status === 'ordered' ? now() : null,
                 'created_by' => $request->user()->id ?? null,
@@ -113,7 +121,8 @@ class PurchaseController extends Controller
                 ]);
             }
 
-            $purchase->update(['total_amount' => $totalAmount]);
+            $grandTotal = $totalAmount + $deliveryFee + $otherExpense;
+            $purchase->update(['total_amount' => $totalAmount, 'grand_total' => $grandTotal]);
 
             DB::commit();
 
@@ -142,6 +151,9 @@ class PurchaseController extends Controller
         $request->validate([
             'supplier_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
+            'delivery_fee' => 'nullable|numeric|min:0',
+            'other_expense' => 'nullable|numeric|min:0',
+            'other_expense_note' => 'nullable|string|max:255',
             'items' => 'nullable|array|min:1',
             'items.*.product_id' => 'required_with:items|integer',
             'items.*.product_name' => 'required_with:items|string|max:255',
@@ -154,10 +166,22 @@ class PurchaseController extends Controller
         DB::beginTransaction();
 
         try {
-            $purchase->update(array_filter([
+            $updateData = array_filter([
                 'supplier_name' => $request->supplier_name,
                 'notes' => $request->notes,
-            ], fn($v) => $v !== null));
+            ], fn($v) => $v !== null);
+
+            if ($request->has('delivery_fee')) {
+                $updateData['delivery_fee'] = $request->delivery_fee;
+            }
+            if ($request->has('other_expense')) {
+                $updateData['other_expense'] = $request->other_expense;
+            }
+            if ($request->has('other_expense_note')) {
+                $updateData['other_expense_note'] = $request->other_expense_note;
+            }
+
+            $purchase->update($updateData);
 
             if ($request->has('items')) {
                 // Delete old items and recreate
@@ -182,6 +206,11 @@ class PurchaseController extends Controller
 
                 $purchase->update(['total_amount' => $totalAmount]);
             }
+
+            // Recalculate grand_total
+            $purchase->refresh();
+            $grandTotal = $purchase->total_amount + $purchase->delivery_fee + $purchase->other_expense;
+            $purchase->update(['grand_total' => $grandTotal]);
 
             DB::commit();
 

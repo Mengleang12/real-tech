@@ -1006,6 +1006,10 @@ export interface Purchase {
   supplier_name: string;
   status: 'draft' | 'ordered' | 'partial' | 'received' | 'completed' | 'cancelled';
   total_amount: number;
+  delivery_fee: number;
+  other_expense: number;
+  other_expense_note?: string;
+  grand_total: number;
   paid_amount: number;
   currency: string;
   notes?: string;
@@ -1043,11 +1047,11 @@ export const purchasesApi = {
     return apiRequest(`admin/purchases/${id}`);
   },
 
-  create: async (data: { supplier_name: string; status?: string; notes?: string; items: Omit<PurchaseItem, 'id' | 'purchase_id' | 'received_quantity' | 'total_cost'>[] }): Promise<{ success: boolean; purchase: Purchase }> => {
+  create: async (data: { supplier_name: string; status?: string; notes?: string; delivery_fee?: number; other_expense?: number; other_expense_note?: string; items: Omit<PurchaseItem, 'id' | 'purchase_id' | 'received_quantity' | 'total_cost'>[] }): Promise<{ success: boolean; purchase: Purchase }> => {
     return apiRequest('admin/purchases', { method: 'POST', body: data });
   },
 
-  update: async (id: string, data: { supplier_name?: string; notes?: string; items?: Omit<PurchaseItem, 'id' | 'purchase_id' | 'received_quantity' | 'total_cost'>[] }): Promise<{ success: boolean; purchase: Purchase }> => {
+  update: async (id: string, data: { supplier_name?: string; notes?: string; delivery_fee?: number; other_expense?: number; other_expense_note?: string; items?: Omit<PurchaseItem, 'id' | 'purchase_id' | 'received_quantity' | 'total_cost'>[] }): Promise<{ success: boolean; purchase: Purchase }> => {
     return apiRequest(`admin/purchases/${id}`, { method: 'PUT', body: data });
   },
 
