@@ -154,9 +154,8 @@ class SaleController extends Controller
                         'created_at' => now(),
                     ]);
 
-                    if ($saleStatus === 'paid') {
-                        self::deductStock($sale, $item['variant_id'] ?? null);
-                    }
+                    // Always deduct stock on creation (POS flow)
+                    self::deductStock($sale, $item['variant_id'] ?? null);
 
                     $sales[] = $sale;
                 }

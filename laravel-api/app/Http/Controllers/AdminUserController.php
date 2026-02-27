@@ -110,6 +110,9 @@ class AdminUserController extends Controller
             'bakong_transaction_id' => 'ADMIN_GRANTED_' . time(),
         ]);
 
+        // Deduct stock on grant
+        SaleController::deductStock($sale);
+
         $this->logActivity($request, 'admin_grant_product', [
             'target_user_id' => $userId,
             'target_email' => $user->email,
@@ -171,8 +174,7 @@ class AdminUserController extends Controller
             'bakong_transaction_id' => 'ADMIN_APPROVED_' . time(),
         ]);
 
-        // Deduct stock on approval
-        SaleController::deductStock($sale);
+        // Stock already deducted on creation, no need to deduct again
 
         $this->logActivity($request, 'admin_approve_order', [
             'order_id' => $orderId,
@@ -200,10 +202,8 @@ class AdminUserController extends Controller
             'status' => $sale->status,
         ];
 
-        // Restore stock if sale was paid
-        if ($sale->status === 'paid') {
-            SaleController::restoreStock($sale);
-        }
+        // Always restore stock on delete (stock deducted on creation)
+        SaleController::restoreStock($sale);
         
         $sale->delete();
 
@@ -224,10 +224,10 @@ class AdminUserController extends Controller
 
         $orderIds = $request->input('order_ids');
 
-        // Restore stock for paid sales before deleting
-        $paidSales = Sale::whereIn('id', $orderIds)->where('status', 'paid')->get();
-        foreach ($paidSales as $paidSale) {
-            SaleController::restoreStock($paidSale);
+        // Always restore stock on delete (stock deducted on creation)
+        $salesToDelete = Sale::whereIn('id', $orderIds)->get();
+        foreach ($salesToDelete as $saleToDelete) {
+            SaleController::restoreStock($saleToDelete);
         }
 
         $deleted = Sale::whereIn('id', $orderIds)->delete();
@@ -291,17 +291,7 @@ class AdminUserController extends Controller
 
         $newStatus = $request->status ?? $oldStatus;
 
-        // Stock adjustment on status change
-        if ($oldStatus !== $newStatus) {
-            // Deduct stock when changing TO paid
-            if ($newStatus === 'paid' && $oldStatus !== 'paid') {
-                SaleController::deductStock($sale);
-            }
-            // Restore stock when changing FROM paid to non-paid
-            if ($oldStatus === 'paid' && $newStatus !== 'paid') {
-                SaleController::restoreStock($sale);
-            }
-        }
+        // Stock is deducted on creation, no adjustment needed on status change
 
         $sale->update($request->only([
             'notes', 'amount', 'original_price',
