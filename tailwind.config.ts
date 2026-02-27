@@ -23,7 +23,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', 'system-ui', 'sans-serif'],
-        khmer: ['"Kantumruy Pro"', 'sans-serif'],
+        khmer: ['"Google Sans"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
