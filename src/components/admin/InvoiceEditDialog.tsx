@@ -542,6 +542,7 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  const [selectedGalleryIdx, setSelectedGalleryIdx] = useState(0);
 
   const { data } = useQuery({
     queryKey: ["order-detail", order.id],
@@ -579,48 +580,45 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
 
   return (
     <div className="space-y-4">
-      {/* Inline image preview lightbox */}
+      {/* Fullscreen Lightbox */}
       {previewIndex !== null && imageAttachments[previewIndex] && (
         <div
-          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center"
+          className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center"
           onClick={() => setPreviewIndex(null)}
         >
-          {/* Prev */}
           {imageAttachments.length > 1 && (
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 z-10"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 z-10"
               onClick={(e) => { e.stopPropagation(); setPreviewIndex((previewIndex - 1 + imageAttachments.length) % imageAttachments.length); }}
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-8 h-8" />
             </Button>
           )}
           <img
             src={imageAttachments[previewIndex].file_url}
             alt="Preview"
-            className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl"
+            className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
           />
-          {/* Next */}
           {imageAttachments.length > 1 && (
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-14 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 z-10"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 z-10"
               onClick={(e) => { e.stopPropagation(); setPreviewIndex((previewIndex + 1) % imageAttachments.length); }}
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-8 h-8" />
             </Button>
           )}
-          {/* Counter */}
-          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
             {previewIndex + 1} / {imageAttachments.length}
           </span>
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 text-white hover:bg-white/20"
+            className="absolute top-4 right-4 text-white/70 hover:text-white hover:bg-white/10"
             onClick={() => setPreviewIndex(null)}
           >
             <X className="w-5 h-5" />
@@ -644,30 +642,93 @@ const AttachmentsTab = ({ order }: { order: AdminOrder }) => {
           <p className="text-xs text-muted-foreground mt-1">Upload receipt photos or documents</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {attachments.map((att) => (
-            <div key={att.id} className="relative group border border-border rounded-lg overflow-hidden">
-              {att.file_type === 'image' ? (
+        <div className="space-y-3">
+          {/* Main Gallery Preview */}
+          {imageAttachments.length > 0 && (
+            <div className="space-y-2">
+              {/* Main Image */}
+              <div
+                className="relative aspect-video bg-muted rounded-xl overflow-hidden cursor-pointer group"
+                onClick={() => setPreviewIndex(selectedGalleryIdx)}
+              >
                 <img
-                  src={att.file_url}
-                  alt={att.file_name}
-                  className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setPreviewIndex(imageAttachments.findIndex((img) => img.id === att.id))}
+                  src={imageAttachments[selectedGalleryIdx]?.file_url}
+                  alt={imageAttachments[selectedGalleryIdx]?.file_name}
+                  className="w-full h-full object-contain"
                 />
-              ) : (
-                <a href={att.file_url} target="_blank" rel="noopener noreferrer" className="w-full h-32 bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
-                  <FileText className="w-8 h-8 text-muted-foreground" />
-                </a>
-              )}
-              <div className="p-2">
-                <p className="text-xs font-medium truncate">{att.file_name}</p>
-                <p className="text-[10px] text-muted-foreground">{att.file_size ? `${(att.file_size / 1024).toFixed(1)} KB` : ""}</p>
+                {/* Nav arrows */}
+                {imageAttachments.length > 1 && (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedGalleryIdx((selectedGalleryIdx - 1 + imageAttachments.length) % imageAttachments.length); }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedGalleryIdx((selectedGalleryIdx + 1) % imageAttachments.length); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+                {/* Counter */}
+                {imageAttachments.length > 1 && (
+                  <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/60 rounded-md text-white text-xs">
+                    {selectedGalleryIdx + 1} / {imageAttachments.length}
+                  </div>
+                )}
               </div>
-              <Button variant="destructive" size="icon" className="absolute top-1.5 right-1.5 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteMutation.mutate(att.id)} disabled={deleteMutation.isPending}>
-                <X className="w-3 h-3" />
-              </Button>
+
+              {/* Thumbnail Strip */}
+              {imageAttachments.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {imageAttachments.map((att, idx) => (
+                    <button
+                      key={att.id}
+                      onClick={() => setSelectedGalleryIdx(idx)}
+                      className={`relative flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                        idx === selectedGalleryIdx
+                          ? 'border-primary ring-2 ring-primary/30'
+                          : 'border-transparent hover:border-muted-foreground/50'
+                      }`}
+                    >
+                      <img src={att.file_url} alt={att.file_name} className="w-16 h-12 object-cover" />
+                      {/* Delete button on thumbnail */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(att.id); }}
+                        className="absolute top-0.5 right-0.5 p-0.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 hover:!opacity-100 transition-opacity"
+                        disabled={deleteMutation.isPending}
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
+          )}
+
+          {/* Non-image files list */}
+          {attachments.filter(a => a.file_type !== 'image').length > 0 && (
+            <div className="space-y-2">
+              {attachments.filter(a => a.file_type !== 'image').map((att) => (
+                <div key={att.id} className="relative group flex items-center gap-3 p-2.5 border border-border rounded-lg hover:bg-muted/30 transition-colors">
+                  <a href={att.file_url} target="_blank" rel="noopener noreferrer" className="p-2 bg-muted rounded-lg">
+                    <FileText className="w-5 h-5 text-muted-foreground" />
+                  </a>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{att.file_name}</p>
+                    <p className="text-[10px] text-muted-foreground">{att.file_size ? `${(att.file_size / 1024).toFixed(1)} KB` : ""}</p>
+                  </div>
+                  <Button variant="destructive" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteMutation.mutate(att.id)} disabled={deleteMutation.isPending}>
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
