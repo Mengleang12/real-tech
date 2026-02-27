@@ -108,17 +108,25 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
   const [status, setStatus] = useState(order.status);
   const [txnId, setTxnId] = useState(order.bakong_transaction_id || "");
 
-  // Cart items - initialize from order
-  const [cart, setCart] = useState<EditCartItem[]>(() => [{
-    product_id: order.product_id,
-    product_name: order.product_name,
-    quantity: 1,
-    unit_price: order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount),
-    stock_quantity: 999,
-    discount: order.item_discount ? parseFloat(order.item_discount) : 0,
-    discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
-    serial_numbers: order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [],
-  }]);
+  // Cart items - initialize from order (split comma-separated product names into individual items)
+  const [cart, setCart] = useState<EditCartItem[]>(() => {
+    const names = order.product_name.split(",").map(n => n.trim()).filter(Boolean);
+    const totalOriginal = order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount);
+    const perItemPrice = names.length > 1 ? totalOriginal / names.length : totalOriginal;
+    const totalDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
+    const serials = order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [];
+
+    return names.map((name, i) => ({
+      product_id: i === 0 ? order.product_id : 0,
+      product_name: name,
+      quantity: 1,
+      unit_price: names.length === 1 ? totalOriginal : perItemPrice,
+      stock_quantity: 999,
+      discount: i === 0 ? totalDiscount : 0,
+      discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
+      serial_numbers: i === 0 ? serials : [],
+    }));
+  });
 
   // Sale-level discount
   const [saleDiscount, setSaleDiscount] = useState(order.sale_discount ? parseFloat(order.sale_discount) : 0);
@@ -133,16 +141,22 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
     setNotes(order.notes || "");
     setStatus(order.status);
     setTxnId(order.bakong_transaction_id || "");
-    setCart([{
-      product_id: order.product_id,
-      product_name: order.product_name,
+    const names = order.product_name.split(",").map(n => n.trim()).filter(Boolean);
+    const totalOriginal = order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount);
+    const perItemPrice = names.length > 1 ? totalOriginal / names.length : totalOriginal;
+    const totalDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
+    const serials = order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [];
+
+    setCart(names.map((name, i) => ({
+      product_id: i === 0 ? order.product_id : 0,
+      product_name: name,
       quantity: 1,
-      unit_price: order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount),
+      unit_price: names.length === 1 ? totalOriginal : perItemPrice,
       stock_quantity: 999,
-      discount: order.item_discount ? parseFloat(order.item_discount) : 0,
+      discount: i === 0 ? totalDiscount : 0,
       discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
-      serial_numbers: order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [],
-    }]);
+      serial_numbers: i === 0 ? serials : [],
+    })));
     setSaleDiscount(order.sale_discount ? parseFloat(order.sale_discount) : 0);
     setSaleDiscountType((order.sale_discount_type as "amount" | "percent") || "amount");
   }, [order]);
