@@ -987,24 +987,15 @@ const AppsTab = () => {
 };
 
 // ─── Sales Dashboard Page ─────────────────────────────────────────────────────
-const SalesDashboardPage = () => {
-  const [addSaleOpen, setAddSaleOpen] = useState(false);
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">Sales Dashboard</h2>
-          <p className="text-sm text-muted-foreground mt-1">Overview of sales performance</p>
-        </div>
-        <Button onClick={() => setAddSaleOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" /> New Sale
-        </Button>
-      </div>
-      <SalesOverview />
-      <AddSaleDialog open={addSaleOpen} onOpenChange={setAddSaleOpen} />
+const SalesDashboardPage = () => (
+  <div className="space-y-6">
+    <div>
+      <h2 className="text-xl font-semibold">Sales Dashboard</h2>
+      <p className="text-sm text-muted-foreground mt-1">Overview of sales performance</p>
     </div>
-  );
-};
+    <SalesOverview />
+  </div>
+);
 
 // ─── Stock Page ───────────────────────────────────────────────────────────────
 const StockPage = () => (
