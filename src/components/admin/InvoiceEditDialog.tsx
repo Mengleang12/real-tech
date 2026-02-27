@@ -167,7 +167,20 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
 
   // Add product to cart
   const addToCart = (product: SaleProduct, variantId?: number) => {
+    const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
+    const stock = variant ? (variant.stock_quantity ?? 0) : (product.stock_quantity ?? 0);
     const existing = cart.find(c => c.product_id === product.id && c.variant_id === variantId);
+    const currentQty = existing ? existing.quantity : 0;
+
+    if (stock <= 0) {
+      toast.error(`${product.name} is out of stock`);
+      return;
+    }
+    if (currentQty >= stock) {
+      toast.error(`Only ${stock} in stock for ${product.name}`);
+      return;
+    }
+
     if (existing) {
       setCart(cart.map(c =>
         c.product_id === product.id && c.variant_id === variantId
@@ -175,7 +188,6 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
           : c
       ));
     } else {
-      const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
       const price = variant ? Number(variant.price_adjustment || 0) : Number(product.price);
       const variantLabel = variant ? Object.values(variant.combination).join(" / ") : undefined;
       setCart([...cart, {
@@ -186,7 +198,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
         variant_label: variantLabel,
         quantity: 1,
         unit_price: price,
-        stock_quantity: variant?.stock_quantity ?? product.stock_quantity,
+        stock_quantity: stock,
         discount: 0,
         discount_type: "amount",
         serial_numbers: [],
@@ -200,6 +212,10 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
     setCart(cart.map((c, i) => {
       if (i !== idx) return c;
       const newQty = Math.max(1, c.quantity + delta);
+      if (delta > 0 && newQty > c.stock_quantity) {
+        toast.error(`Only ${c.stock_quantity} in stock for ${c.product_name}`);
+        return c;
+      }
       const trimmedSerials = c.serial_numbers.slice(0, newQty);
       return { ...c, quantity: newQty, serial_numbers: trimmedSerials };
     }));

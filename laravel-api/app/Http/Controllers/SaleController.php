@@ -98,6 +98,24 @@ class SaleController extends Controller
                 default => 'pending',
             };
 
+            // Validate stock availability first
+            foreach ($request->items as $item) {
+                $product = Product::find($item['product_id']);
+                if (!$product) continue;
+
+                $qty = $item['quantity'];
+                $variant = isset($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
+
+                $availableStock = $variant ? ($variant->stock_quantity ?? 0) : ($product->stock_quantity ?? 0);
+
+                if ($availableStock < $qty) {
+                    $name = $product->name . ($variant ? ' (' . ($variant->sku ?? 'variant') . ')' : '');
+                    return response()->json([
+                        'error' => "Insufficient stock for {$name}. Available: {$availableStock}, Requested: {$qty}",
+                    ], 422);
+                }
+            }
+
             foreach ($request->items as $item) {
                 $product = Product::find($item['product_id']);
                 if (!$product) continue;
@@ -513,6 +531,31 @@ class SaleController extends Controller
                 $product->refresh();
                 $product->updateStockStatus();
             }
+        }
+    }
+
+    /**
+     * Restore stock when sale status changes from paid to non-paid
+     */
+    public static function restoreStock(Sale $sale): void
+    {
+        $product = Product::find($sale->product_id);
+        if (!$product) return;
+
+        // Try to find matching variant (check if product has variants)
+        $variants = ProductVariant::where('product_id', $sale->product_id)->where('is_active', true)->get();
+
+        if ($variants->count() > 0) {
+            // If the sale has a variant reference, restore to that variant
+            // Otherwise restore to the first active variant
+            $variant = $variants->first();
+            if ($variant) {
+                $variant->increment('stock_quantity');
+            }
+        } else {
+            $product->increment('stock_quantity');
+            $product->refresh();
+            $product->updateStockStatus();
         }
     }
 }
