@@ -371,6 +371,7 @@ const InvoicesTab = () => {
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [editOrder, setEditOrder] = useState<AdminOrder | null>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
+  const [markPaidOrderId, setMarkPaidOrderId] = useState<string | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: (orderId: string) => adminUsersApi.deleteOrder(orderId),
@@ -629,7 +630,7 @@ const InvoicesTab = () => {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
-                              onClick={() => markPaidMutation.mutate(order.id)}
+                              onClick={() => setMarkPaidOrderId(order.id)}
                               disabled={markPaidMutation.isPending}
                               title="Set to Paid"
                             >
@@ -781,6 +782,26 @@ const InvoicesTab = () => {
             >
               {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Mark Paid Confirmation Dialog */}
+      <AlertDialog open={!!markPaidOrderId} onOpenChange={(open) => { if (!open) setMarkPaidOrderId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark as paid?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will set the invoice status to paid. Are you sure?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { if (markPaidOrderId) { markPaidMutation.mutate(markPaidOrderId); setMarkPaidOrderId(null); } }}
+            >
+              Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
