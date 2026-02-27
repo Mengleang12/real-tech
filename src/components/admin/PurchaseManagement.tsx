@@ -101,7 +101,9 @@ const AddPurchaseDialog = ({
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<PurchaseFormItem[]>([]);
   const [saving, setSaving] = useState(false);
-
+  const [deliveryFee, setDeliveryFee] = useState(0);
+  const [otherExpense, setOtherExpense] = useState(0);
+  const [otherExpenseNote, setOtherExpenseNote] = useState("");
   // Product search
   const [productSearch, setProductSearch] = useState("");
   const [productResults, setProductResults] = useState<SaleProduct[]>([]);
@@ -112,6 +114,9 @@ const AddPurchaseDialog = ({
       if (editPurchase) {
         setSupplierName(editPurchase.supplier_name);
         setNotes(editPurchase.notes || "");
+        setDeliveryFee(Number(editPurchase.delivery_fee) || 0);
+        setOtherExpense(Number(editPurchase.other_expense) || 0);
+        setOtherExpenseNote(editPurchase.other_expense_note || "");
         setItems(editPurchase.items.map((i) => ({
           product_id: i.product_id,
           product_name: i.product_name,
@@ -123,6 +128,9 @@ const AddPurchaseDialog = ({
       } else {
         setSupplierName("");
         setNotes("");
+        setDeliveryFee(0);
+        setOtherExpense(0);
+        setOtherExpenseNote("");
         setItems([]);
       }
       setProductSearch("");
@@ -164,7 +172,8 @@ const AddPurchaseDialog = ({
     setItems((prev) => prev.map((item, i) => i === idx ? { ...item, [field]: value } : item));
   };
 
-  const total = items.reduce((sum, i) => sum + i.quantity * i.unit_cost, 0);
+  const subtotal = items.reduce((sum, i) => sum + i.quantity * i.unit_cost, 0);
+  const grandTotal = subtotal + deliveryFee + otherExpense;
 
   const handleSave = async () => {
     if (!supplierName.trim()) { toast.error("Supplier name is required"); return; }
@@ -175,6 +184,9 @@ const AddPurchaseDialog = ({
       const payload = {
         supplier_name: supplierName,
         notes,
+        delivery_fee: deliveryFee,
+        other_expense: otherExpense,
+        other_expense_note: otherExpenseNote || undefined,
         items: items.map((i) => ({
           product_id: i.product_id,
           product_name: i.product_name,
@@ -313,12 +325,56 @@ const AddPurchaseDialog = ({
                 </TableRow>
               ))}
               <TableRow>
-                <TableCell colSpan={3} className="text-right font-semibold">Total</TableCell>
-                <TableCell className="text-right font-bold">${total.toFixed(2)}</TableCell>
+                <TableCell colSpan={3} className="text-right text-sm text-muted-foreground">Subtotal</TableCell>
+                <TableCell className="text-right font-medium text-sm">${subtotal.toFixed(2)}</TableCell>
                 <TableCell />
               </TableRow>
             </TableBody>
           </Table>
+        )}
+
+        {/* Extra Costs */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <Label>Delivery Fee</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={deliveryFee}
+              onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <Label>Other Expense</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={otherExpense}
+              onChange={(e) => setOtherExpense(parseFloat(e.target.value) || 0)}
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <Label>Expense Note</Label>
+            <Input
+              value={otherExpenseNote}
+              onChange={(e) => setOtherExpenseNote(e.target.value)}
+              placeholder="e.g. Packaging, tax..."
+            />
+          </div>
+        </div>
+
+        {/* Grand Total */}
+        {items.length > 0 && (
+          <div className="flex justify-end text-sm space-x-6 border-t border-border pt-3">
+            <span>Items: <strong>${subtotal.toFixed(2)}</strong></span>
+            {deliveryFee > 0 && <span>Delivery: <strong>${deliveryFee.toFixed(2)}</strong></span>}
+            {otherExpense > 0 && <span>Other: <strong>${otherExpense.toFixed(2)}</strong></span>}
+            <span className="text-base">Grand Total: <strong>${grandTotal.toFixed(2)}</strong></span>
+          </div>
         )}
       </div>
 
@@ -400,7 +456,8 @@ const PurchaseDetailDialog = ({
     }
   };
 
-  const remaining = Number(purchase.total_amount) - Number(purchase.paid_amount);
+  const grandTotal = Number(purchase.grand_total) || (Number(purchase.total_amount) + Number(purchase.delivery_fee || 0) + Number(purchase.other_expense || 0));
+  const remaining = grandTotal - Number(purchase.paid_amount);
 
   return (
     <AdminDialog
@@ -423,7 +480,21 @@ const PurchaseDetailDialog = ({
           <div className="flex flex-wrap gap-3 items-center">
             <Badge className={statusColors[purchase.status]}>{statusLabels[purchase.status]}</Badge>
             <span className="text-sm text-muted-foreground">
-              Total: <strong>${Number(purchase.total_amount).toFixed(2)}</strong>
+              Items: <strong>${Number(purchase.total_amount).toFixed(2)}</strong>
+            </span>
+            {Number(purchase.delivery_fee) > 0 && (
+              <span className="text-sm text-muted-foreground">
+                Delivery: <strong>${Number(purchase.delivery_fee).toFixed(2)}</strong>
+              </span>
+            )}
+            {Number(purchase.other_expense) > 0 && (
+              <span className="text-sm text-muted-foreground">
+                Other: <strong>${Number(purchase.other_expense).toFixed(2)}</strong>
+                {purchase.other_expense_note && <span className="text-xs ml-1">({purchase.other_expense_note})</span>}
+              </span>
+            )}
+            <span className="text-sm font-medium">
+              Grand Total: <strong>${grandTotal.toFixed(2)}</strong>
             </span>
             <span className="text-sm text-muted-foreground">
               Paid: <strong>${Number(purchase.paid_amount).toFixed(2)}</strong>
@@ -568,7 +639,7 @@ const PurchaseDetailDialog = ({
 
           {/* Summary */}
           <div className="flex justify-end gap-6 text-sm border-t border-border pt-3">
-            <span>Total: <strong>${Number(purchase.total_amount).toFixed(2)}</strong></span>
+            <span>Grand Total: <strong>${grandTotal.toFixed(2)}</strong></span>
             <span>Paid: <strong className="text-green-600">${Number(purchase.paid_amount).toFixed(2)}</strong></span>
             <span>Remaining: <strong className={remaining > 0 ? "text-destructive" : "text-green-600"}>${remaining.toFixed(2)}</strong></span>
           </div>
@@ -694,7 +765,7 @@ export const PurchaseManagement = () => {
                 <TableHead>Reference</TableHead>
                 <TableHead>Supplier</TableHead>
                 <TableHead>Items</TableHead>
-                <TableHead>Total</TableHead>
+                <TableHead>Grand Total</TableHead>
                 <TableHead>Paid</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
@@ -707,7 +778,7 @@ export const PurchaseManagement = () => {
                   <TableCell className="font-mono text-sm">{po.reference_number}</TableCell>
                   <TableCell className="text-sm">{po.supplier_name}</TableCell>
                   <TableCell className="text-sm">{po.items?.length || 0}</TableCell>
-                  <TableCell className="text-sm font-medium">${Number(po.total_amount).toFixed(2)}</TableCell>
+                  <TableCell className="text-sm font-medium">${(Number(po.grand_total) || Number(po.total_amount)).toFixed(2)}</TableCell>
                   <TableCell className="text-sm">${Number(po.paid_amount).toFixed(2)}</TableCell>
                   <TableCell>
                     <Badge className={statusColors[po.status]}>{statusLabels[po.status]}</Badge>
