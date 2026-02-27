@@ -31,6 +31,8 @@ class SaleController extends Controller
             'items.*.variant_id' => 'nullable|integer',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.serial_numbers' => 'nullable|array',
+            'items.*.serial_numbers.*' => 'nullable|string|max:255',
             'items.*.discount' => 'nullable|numeric|min:0',
             'items.*.discount_type' => 'nullable|in:amount,percent',
             'payment_status' => 'required|in:paid,pending,partial,unpaid',
@@ -104,6 +106,7 @@ class SaleController extends Controller
                 $unitPrice = $item['price'];
                 $itemDiscount = $item['discount'] ?? 0;
                 $itemDiscountType = $item['discount_type'] ?? null;
+                $serialNumbers = $item['serial_numbers'] ?? [];
 
                 $variant = isset($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
                 $originalPrice = $product->price + ($variant ? ($variant->price_adjustment ?? 0) : 0);
@@ -114,10 +117,13 @@ class SaleController extends Controller
                 $perItemSaleDiscount = round($unitPrice - $finalUnitPrice, 2);
 
                 for ($i = 0; $i < $qty; $i++) {
+                    $serialNumber = $serialNumbers[$i] ?? null;
+
                     $sale = Sale::create([
                         'user_id' => $user->id,
                         'product_id' => $product->id,
                         'product_name' => $product->name,
+                        'serial_number' => $serialNumber ?: null,
                         'amount' => $finalUnitPrice,
                         'original_price' => $originalPrice,
                         'item_discount' => $itemDiscount,
