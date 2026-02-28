@@ -514,6 +514,7 @@ const PurchaseDetailDialog = ({
   const [expenseAmount, setExpenseAmount] = useState("");
   const [addingExpense, setAddingExpense] = useState(false);
   const [orderConfirmOpen, setOrderConfirmOpen] = useState(false);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   if (!purchase) return null;
 
@@ -521,6 +522,11 @@ const PurchaseDetailDialog = ({
     // Intercept draft → ordered with confirmation
     if (purchase.status === 'draft' && newStatus === 'ordered') {
       setOrderConfirmOpen(true);
+      return;
+    }
+    // Intercept cancel with confirmation
+    if (newStatus === 'cancelled') {
+      setCancelConfirmOpen(true);
       return;
     }
     await executeStatusChange(newStatus);
@@ -929,6 +935,30 @@ const PurchaseDetailDialog = ({
               }}
             >
               Yes, Already Paid
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Purchase Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this purchase order? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, Go Back</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                setCancelConfirmOpen(false);
+                await executeStatusChange('cancelled');
+              }}
+            >
+              Yes, Cancel Order
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
