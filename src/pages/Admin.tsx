@@ -623,7 +623,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Overview",
     items: [
-      { id: "analytics", label: "Analytics", icon: BarChart3, permission: "analytics.view" },
+      { id: "analytics", label: "Dashboard", icon: BarChart3, permission: "analytics.view" },
     ],
   },
   {
