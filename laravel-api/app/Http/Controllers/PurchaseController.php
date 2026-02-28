@@ -326,14 +326,13 @@ class PurchaseController extends Controller
                     $product = Product::find($item->product_id);
                     if ($product) {
                         $product->increment('stock_quantity', $qty);
+                        $product->refresh();
                         // Update stock status
-                        $newQty = $product->stock_quantity + $qty;
-                        if ($newQty > 0) {
-                            $lowThreshold = $product->low_stock_threshold ?? 5;
-                            $product->update([
-                                'stock_status' => $newQty <= $lowThreshold ? 'low_stock' : 'in_stock',
-                            ]);
-                        }
+                        $newQty = $product->stock_quantity;
+                        $lowThreshold = $product->low_stock_threshold ?? 5;
+                        $product->update([
+                            'stock_status' => $newQty <= 0 ? 'out_of_stock' : ($newQty <= $lowThreshold ? 'low_stock' : 'in_stock'),
+                        ]);
                     }
 
                     // Mark items as received
