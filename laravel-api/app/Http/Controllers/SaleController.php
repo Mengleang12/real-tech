@@ -74,9 +74,6 @@ class SaleController extends Controller
                 }
             }
 
-            $sales = [];
-            $totalAmount = 0;
-
             $saleDiscount = $request->sale_discount ?? 0;
             $saleDiscountType = $request->sale_discount_type ?? 'amount';
 
@@ -89,8 +86,6 @@ class SaleController extends Controller
             $saleDiscountAmount = $saleDiscountType === 'percent'
                 ? $subtotal * min($saleDiscount, 100) / 100
                 : min($saleDiscount, $subtotal);
-
-            $saleDiscountRatio = $subtotal > 0 ? $saleDiscountAmount / $subtotal : 0;
 
             $saleStatus = match ($request->payment_status) {
                 'paid' => 'paid',
@@ -117,57 +112,82 @@ class SaleController extends Controller
                 }
             }
 
-            foreach ($request->items as $item) {
+            // Collect all product names, serial numbers, and compute total
+            $productNames = [];
+            $allSerialNumbers = [];
+            $totalAmount = $subtotal - $saleDiscountAmount;
+            $firstItemDiscount = 0;
+            $firstItemDiscountType = null;
+            $firstOriginalPrice = 0;
+            $firstProductId = null;
+
+            foreach ($request->items as $idx => $item) {
                 $product = Product::find($item['product_id']);
                 if (!$product) continue;
 
                 $qty = $item['quantity'];
-                $unitPrice = $item['price'];
-                $itemDiscount = $item['discount'] ?? 0;
-                $itemDiscountType = $item['discount_type'] ?? null;
-                $serialNumbers = $item['serial_numbers'] ?? [];
-
                 $variant = isset($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
                 $originalPrice = $variant ? ($variant->price_adjustment ?? $product->price) : $product->price;
 
-                $finalUnitPrice = round($unitPrice * (1 - $saleDiscountRatio), 2);
-                $totalAmount += $finalUnitPrice * $qty;
-
-                $perItemSaleDiscount = round($unitPrice - $finalUnitPrice, 2);
-
+                // Collect product name (repeat for qty > 1)
                 for ($i = 0; $i < $qty; $i++) {
-                    $serialNumber = $serialNumbers[$i] ?? null;
+                    $productNames[] = $product->name;
+                    $serialNumbers = $item['serial_numbers'] ?? [];
+                    $allSerialNumbers[] = $serialNumbers[$i] ?? null;
+                }
 
-                    $sale = Sale::create([
-                        'user_id' => $user->id,
-                        'product_id' => $product->id,
-                        'product_name' => $product->name,
-                        'serial_number' => $serialNumber ?: null,
-                        'amount' => $finalUnitPrice,
-                        'original_price' => $originalPrice,
-                        'item_discount' => $itemDiscount,
-                        'item_discount_type' => $itemDiscountType,
-                        'sale_discount' => $perItemSaleDiscount > 0 ? $perItemSaleDiscount : 0,
-                        'sale_discount_type' => $saleDiscount > 0 ? $saleDiscountType : null,
-                        'currency' => 'USD',
-                        'status' => $saleStatus,
-                        'paid_at' => $saleStatus === 'paid' ? now() : null,
-                        'created_at' => $request->sale_date ? $request->sale_date . ' ' . now()->format('H:i:s') : now(),
-                    ]);
+                // Keep first item's info for the sale record
+                if ($idx === 0) {
+                    $firstItemDiscount = $item['discount'] ?? 0;
+                    $firstItemDiscountType = $item['discount_type'] ?? null;
+                    $firstOriginalPrice = $originalPrice;
+                    $firstProductId = $product->id;
+                }
 
-                    // Always deduct stock on creation (POS flow)
-                    self::deductStock($sale, $item['variant_id'] ?? null);
-
-                    $sales[] = $sale;
+                // Deduct stock
+                for ($i = 0; $i < $qty; $i++) {
+                    if ($variant) {
+                        if ($variant->stock_quantity > 0) {
+                            $variant->decrement('stock_quantity');
+                        }
+                    } else {
+                        if ($product->stock_quantity > 0) {
+                            $product->decrement('stock_quantity');
+                            $product->refresh();
+                            $product->updateStockStatus();
+                        }
+                    }
                 }
             }
+
+            // Build comma-separated serial numbers (filter out nulls)
+            $serialNumberStr = collect($allSerialNumbers)->filter()->implode(',') ?: null;
+
+            // Create a single sale record
+            $sale = Sale::create([
+                'user_id' => $user->id,
+                'product_id' => $firstProductId,
+                'product_name' => implode(', ', $productNames),
+                'serial_number' => $serialNumberStr,
+                'amount' => round($totalAmount, 2),
+                'original_price' => $subtotal,
+                'item_discount' => $firstItemDiscount,
+                'item_discount_type' => $firstItemDiscountType,
+                'sale_discount' => $saleDiscountAmount > 0 ? round($saleDiscountAmount, 2) : 0,
+                'sale_discount_type' => $saleDiscount > 0 ? $saleDiscountType : null,
+                'currency' => 'USD',
+                'status' => $saleStatus,
+                'paid_at' => $saleStatus === 'paid' ? now() : null,
+                'notes' => $request->notes,
+                'created_at' => $request->sale_date ? $request->sale_date . ' ' . now()->format('H:i:s') : now(),
+            ]);
 
             $this->logActivity($request, 'admin_sale_created', [
                 'customer_id' => $user->id,
                 'customer_name' => $user->full_name,
                 'customer_type' => $request->customer_type,
                 'payment_status' => $request->payment_status,
-                'total_amount' => $totalAmount,
+                'total_amount' => round($totalAmount, 2),
                 'items_count' => count($request->items),
                 'notes' => $request->notes,
             ]);
@@ -177,7 +197,7 @@ class SaleController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Sale created successfully',
-                'orders' => $sales,
+                'orders' => [$sale],
                 'customer' => [
                     'id' => $user->id,
                     'full_name' => $user->full_name,
