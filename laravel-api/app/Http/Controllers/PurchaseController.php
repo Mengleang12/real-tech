@@ -401,8 +401,8 @@ class PurchaseController extends Controller
             'paid_at' => now(),
         ]);
 
-        // Update paid_amount
-        $totalPaid = $purchase->payments()->sum('amount') + $request->amount;
+        // Update paid_amount (payment already inserted, so sum includes it)
+        $totalPaid = $purchase->payments()->sum('amount');
         $purchase->update(['paid_amount' => $totalPaid]);
 
         $this->logActivity($request, 'purchase_payment_added', ['details' => "Payment \${$request->amount} for PO {$purchase->reference_number}"]);
