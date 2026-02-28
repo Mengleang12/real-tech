@@ -17,42 +17,38 @@ interface ParsedApp {
   name: string;
   icon_url: string;
   is_popular: boolean;
-  download_count: number;
   description: string;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
 const CHAT_URL = `${API_BASE_URL}/api/ai/chat/stream`;
 
-// Parse [APP:id:name:icon_url:is_popular:download_count:description] tags from message content
-// icon_url can be relative (e.g., /icons/app.png) or absolute (https://...)
+// Parse [APP:id:name:icon_url:is_popular:description] tags from message content
 const parseAppTags = (content: string): { text: string; apps: ParsedApp[] }[] => {
-  // Use a global regex to find all APP tags first - support both relative and absolute URLs
-  const appTagRegex = /\[APP:(\d+):([^:]+):([^:]+):([^:]*):(\d*):([^\]]+)\]/g;
+  const appTagRegex = /\[APP:(\d+):([^:]+):([^:]+):([^:]*):([^\]]+)\]/g;
   const fourPartRegex = /\[APP:(\d+):([^:]+):((?:https?:\/\/[^:]+|\/[^:]+)):([^\]]+)\]/g;
   const oldFormatRegex = /\[APP:(\d+):([^:]+):([^\]]+)\]/g;
   
   let apps: ParsedApp[] = [];
   let cleanText = content;
   
-  // Try 6-part format first (with is_popular and download_count) - support relative and absolute URLs
+  // Try 5-part format first (with is_popular)
   let match;
-  const sixPartMatches: ParsedApp[] = [];
-  const appTagRegexLocal = /\[APP:(\d+):([^:]+):([^:]+):([^:]*):(\d*):([^\]]+)\]/g;
+  const fivePartMatches: ParsedApp[] = [];
+  const appTagRegexLocal = /\[APP:(\d+):([^:]+):([^:]+):([^:]*):([^\]]+)\]/g;
   while ((match = appTagRegexLocal.exec(content)) !== null) {
-    sixPartMatches.push({
+    fivePartMatches.push({
       id: parseInt(match[1], 10),
       name: match[2],
       icon_url: match[3],
       is_popular: match[4] === 'true',
-      download_count: parseInt(match[5], 10) || 0,
-      description: match[6]
+      description: match[5]
     });
     cleanText = cleanText.replace(match[0], '');
   }
   
-  if (sixPartMatches.length > 0) {
-    apps = sixPartMatches;
+  if (fivePartMatches.length > 0) {
+    apps = fivePartMatches;
   } else {
     // Try 4-part format with URL
     const fourPartRegexLocal = /\[APP:(\d+):([^:]+):([^:]+):([^\]]+)\]/g;
@@ -63,7 +59,6 @@ const parseAppTags = (content: string): { text: string; apps: ParsedApp[] }[] =>
         name: match[2],
         icon_url: match[3],
         is_popular: false,
-        download_count: 0,
         description: match[4]
       });
       cleanText = cleanText.replace(match[0], '');
@@ -80,7 +75,6 @@ const parseAppTags = (content: string): { text: string; apps: ParsedApp[] }[] =>
           name: match[2],
           icon_url: "",
           is_popular: false,
-          download_count: 0,
           description: match[3]
         });
         cleanText = cleanText.replace(match[0], '');
@@ -102,11 +96,6 @@ const createSlug = (name: string): string => {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 };
 
-const formatDownloads = (count: number): string => {
-  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-  return count.toString();
-};
 
 // Typing dots animation component
 const TypingDots = () => (
@@ -183,12 +172,6 @@ const AppRecommendCard = ({ app, onClick, isFullPage }: { app: ParsedApp; onClic
             </Badge>
           )}
         </div>
-        {app.download_count > 0 && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-            <Download className="h-3 w-3" />
-            <span>{formatDownloads(app.download_count)} {language === 'km' ? 'ទាញយក' : (app.download_count === 1 ? 'download' : 'downloads')}</span>
-          </div>
-        )}
         <p className={cn(
           "text-muted-foreground mt-1",
           isFullPage ? "text-sm" : "text-xs line-clamp-2"

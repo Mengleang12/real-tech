@@ -576,19 +576,6 @@ const ProductDetail = () => {
                       </div>
                     </div>
 
-                    {/* Quick stats row */}
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      {appData.latest_version && (
-                        <span className="flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-full">
-                          <Package className="w-3 h-3" /> v{appData.latest_version}
-                        </span>
-                      )}
-                      {appData.download_count > 0 && (
-                        <span className="flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-full">
-                          <Download className="w-3 h-3" /> {appData.download_count.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>

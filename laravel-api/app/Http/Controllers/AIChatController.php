@@ -268,9 +268,9 @@ class AIChatController extends Controller
      */
     private function getAppsFromDatabase()
     {
-        // Fetch top 1000 apps sorted by popularity to prevent timeout while still covering most apps
-        return Product::select(['id', 'name', 'name_km', 'description', 'description_km', 'icon_url', 'price', 'category', 'is_popular', 'download_count'])
-            ->orderBy('download_count', 'desc')
+        // Fetch top 1000 products sorted by popularity
+        return Product::select(['id', 'name', 'name_km', 'description', 'description_km', 'icon_url', 'price', 'category', 'is_popular'])
+            ->orderBy('is_popular', 'desc')
             ->limit(1000)
             ->get()
             ->map(function ($app) {
@@ -284,7 +284,6 @@ class AIChatController extends Controller
                     'price' => $app->price ?? 0,
                     'category' => $app->category ?? 'programs',
                     'is_popular' => $app->is_popular ?? false,
-                    'download_count' => $app->download_count ?? 0,
                 ];
             });
     }
@@ -297,12 +296,12 @@ class AIChatController extends Controller
         // Limit to 500 most popular apps to keep context manageable
         $limitedApps = array_slice($apps, 0, 500);
         
-        // Create condensed format: "id|name|icon_url|is_popular|download_count|short_desc"
+        // Create condensed format: "id|name|icon_url|is_popular|short_desc"
         $lines = [];
         foreach ($limitedApps as $app) {
             $shortDesc = substr(str_replace(["\n", "\r", "|"], " ", $app['description']), 0, 80);
             $lines[] = "{$app['id']}|{$app['name']}|{$app['icon_url']}|" . 
-                       ($app['is_popular'] ? '1' : '0') . "|{$app['download_count']}|{$shortDesc}";
+                       ($app['is_popular'] ? '1' : '0') . "|{$shortDesc}";
         }
         return implode("\n", $lines);
     }
@@ -581,30 +580,29 @@ PROMPT;
         $appsContext = $this->getAppsForAIContext($apps);
 
         return <<<PROMPT
-You are an intelligent assistant for "Style Ghost" app store. Your job is to UNDERSTAND what users need and recommend the BEST matching apps.
+You are an intelligent assistant for "Style Ghost" product store. Your job is to UNDERSTAND what users need and recommend the BEST matching products.
 
-Available apps (format: id|name|icon_url|is_popular|download_count|description):
+Available products (format: id|name|icon_url|is_popular|description):
 {$appsContext}
 
 ## YOUR CORE MISSION:
-Deeply understand what the user needs and recommend the BEST matching apps from the list above.
+Deeply understand what the user needs and recommend the BEST matching products from the list above.
 
 ## UNDERSTANDING USER INTENT:
-1. **Direct requests**: "I need Photoshop" → find Photoshop AND similar photo editors
-2. **Task-based requests**: "I want to download videos" → find ALL video downloaders
-3. **Problem-based requests**: "My computer is slow" → find optimizers, cleaners, antivirus
-4. **Category requests**: "Show me games" → find apps in games category
+1. **Direct requests**: "I need Photoshop" → find Photoshop AND similar products
+2. **Task-based requests**: "I want to edit photos" → find ALL photo editing products
+3. **Problem-based requests**: "My computer is slow" → find optimizers, cleaners
+4. **Category requests**: "Show me monitors" → find products in that category
 
 ## CRITICAL RESPONSE FORMAT:
-You MUST use this EXACT 7-part format for EACH app (all on one line):
-[APP:id:name:icon_url:is_popular:download_count:description]
+You MUST use this EXACT 6-part format for EACH product (all on one line):
+[APP:id:name:icon_url:is_popular:description]
 
 Where:
 - id = numeric ID from the list
-- name = app name from the list
-- icon_url = icon URL from the list (use relative path like /icons/app.png)
+- name = product name from the list
+- icon_url = icon URL from the list
 - is_popular = true or false
-- download_count = number
 - description = short description (max 100 chars, NO colons)
 
 ## RULES:

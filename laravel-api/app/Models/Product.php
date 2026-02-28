@@ -19,10 +19,8 @@ class Product extends Model
         'category_id',
         'icon_url',
         'brand_id',
-        'youtube_url',
         'is_featured',
         'is_popular',
-        'download_count',
         'price',
         'purchase_price',
         'stock_quantity',
@@ -33,7 +31,6 @@ class Product extends Model
     protected $casts = [
         'is_featured' => 'boolean',
         'is_popular' => 'boolean',
-        'download_count' => 'integer',
         'price' => 'decimal:2',
         'purchase_price' => 'decimal:2',
         'stock_quantity' => 'integer',

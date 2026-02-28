@@ -184,7 +184,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
       const attribute_values = Object.entries(attrValues)
         .filter(([id, v]) => v.length > 0 && selectedAttrs.has(parseInt(id)))
         .map(([id, values]) => ({ attribute_id: parseInt(id), value: values.join(',') }));
-      await onSave({ ...formData, youtube_url: formData.youtube_url || '', screenshots, videos, attribute_values, variants });
+      await onSave({ ...formData, screenshots, videos, attribute_values, variants });
     } finally { setSaving(false); }
   };
 
