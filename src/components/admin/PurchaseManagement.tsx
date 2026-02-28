@@ -1280,6 +1280,7 @@ export const PurchaseManagement = () => {
                     placeholder="Scan barcode or type tracking number..."
                     className="pl-11 text-lg h-12"
                     autoFocus
+                    disabled={scanning}
                   />
                 </div>
                 <div className="flex gap-3">
