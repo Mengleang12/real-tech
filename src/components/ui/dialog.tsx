@@ -118,13 +118,7 @@ const DialogContent = React.forwardRef<
         ref={ref}
         {...props}
         onInteractOutside={(e) => {
-          // Don't close when interacting with portaled elements (Select, Popover, Calendar, etc.)
-          const target = e.target as HTMLElement;
-          if (target?.closest('[role="listbox"]') || target?.closest('[data-radix-popper-content-wrapper]')) {
-            e.preventDefault();
-            return;
-          }
-          props.onInteractOutside?.(e);
+          e.preventDefault();
         }}
         className={cn(
           "fixed z-50 flex flex-col w-full max-w-lg border-0 bg-card overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 left-[50%] top-[50%]",
