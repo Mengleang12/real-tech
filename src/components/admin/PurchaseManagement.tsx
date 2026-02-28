@@ -877,12 +877,16 @@ export const PurchaseManagement = () => {
         // Auto-receive: update status to 'received' for eligible POs
         if (autoReceive) {
           for (const po of newPurchases) {
-            if (['draft', 'ordered', 'partial'].includes(po.status)) {
+            if (po.status === 'received' || po.status === 'completed') {
+              toast.warning(`${po.reference_number} is already ${statusLabels[po.status]}`);
+              playScanBeep(false);
+            } else if (['draft', 'ordered', 'partial'].includes(po.status)) {
               try {
                 await purchasesApi.updateStatus(po.id, 'received');
+                const now = new Date().toISOString();
                 toast.success(`${po.reference_number} marked as received`);
                 playScanBeep(true);
-                setScannedResults((prev) => prev.map((p) => p.id === po.id ? { ...p, status: 'received' } : p));
+                setScannedResults((prev) => prev.map((p) => p.id === po.id ? { ...p, status: 'received', received_at: now } : p));
               } catch {
                 toast.error(`Failed to receive ${po.reference_number}`);
                 playScanBeep(false);
