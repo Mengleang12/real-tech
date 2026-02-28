@@ -73,6 +73,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
     brand_id: app?.brand_id || undefined,
     is_featured: app?.is_featured || false, is_popular: app?.is_popular || false,
     price: app?.price || 0,
+    purchase_price: app?.purchase_price ?? undefined,
     stock_quantity: app?.stock_quantity ?? 0,
     low_stock_threshold: app?.low_stock_threshold ?? 5,
   });
