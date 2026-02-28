@@ -244,6 +244,13 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
             <Input id="price" type="number" min="0" step="0.01" value={formData.price || ""} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })} placeholder="0.00" className="pl-7" />
           </div>
         </div>
+        <div>
+          <Label htmlFor="purchase_price">Purchase Price (USD)</Label>
+          <div className="relative mt-1.5">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+            <Input id="purchase_price" type="number" min="0" step="0.01" value={formData.purchase_price || ""} onChange={(e) => setFormData({ ...formData, purchase_price: parseFloat(e.target.value) || 0 })} placeholder="0.00" className="pl-7" />
+          </div>
+        </div>
       </div>
 
 
