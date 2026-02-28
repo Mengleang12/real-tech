@@ -44,7 +44,7 @@ import { SystemSettingsPanel } from "@/components/admin/SystemSettings";
 import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/components/admin/SalesInvoices";
 import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
 import { SupplierManagement } from "@/components/admin/SupplierManagement";
-import { ProfitAnalysis } from "@/components/admin/ProfitAnalysis";
+
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabelDialog";
 import { SalesReport } from "@/components/admin/SalesReport";
@@ -628,7 +628,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "profit" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
 
 interface NavItem {
   id: AdminTab;
@@ -656,7 +656,7 @@ const navGroups: NavGroup[] = [
       { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
       { id: "purchases", label: "Purchase", icon: ShoppingBag, permission: "orders.view" },
       { id: "suppliers", label: "Suppliers", icon: Truck, permission: "orders.view" },
-      { id: "profit", label: "Profit", icon: DollarSign, permission: "orders.view" },
+      
       { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
       { id: "reports", label: "Reports", icon: TrendingUp, permission: "orders.view" },
     ],
@@ -1239,7 +1239,7 @@ const AdminDashboard = () => {
           {activeTab === "invoices" && <InvoicesPage />}
           {activeTab === "purchases" && <PurchaseManagement />}
           {activeTab === "suppliers" && <SupplierManagement />}
-          {activeTab === "profit" && <ProfitAnalysis />}
+          
           {activeTab === "reports" && <SalesReport />}
           {activeTab === "payments" && <PaymentHistoryAdmin />}
           {activeTab === "reviews" && <ProductReviewSystem />}
