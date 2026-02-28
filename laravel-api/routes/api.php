@@ -26,6 +26,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ProductAttributeController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\SalesReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -158,6 +159,12 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::post('/admin/sales/create', [SaleController::class, 'createSale']);
     Route::get('/admin/sales/customers', [SaleController::class, 'searchCustomers']);
     Route::get('/admin/sales/products', [SaleController::class, 'searchProducts']);
+
+    // Sales Reports
+    Route::get('/admin/reports/product-sales', [SalesReportController::class, 'productSales']);
+    Route::get('/admin/reports/revenue-trend', [SalesReportController::class, 'revenueTrend']);
+    Route::get('/admin/reports/profit-by-period', [SalesReportController::class, 'profitByPeriod']);
+    Route::get('/admin/reports/customer-report', [SalesReportController::class, 'customerReport']);
     
     // Coupon management
     Route::get('/admin/coupons', [CouponController::class, 'index']);
