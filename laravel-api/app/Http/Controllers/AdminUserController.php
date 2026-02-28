@@ -325,33 +325,81 @@ class AdminUserController extends Controller
         DB::beginTransaction();
 
         try {
+            $resolveItem = function (array $item) {
+                $product = Product::find($item['product_id']);
+                if (!$product) {
+                    return [null, null, "Product not found (ID: {$item['product_id']})"];
+                }
+
+                $variant = null;
+                if (!empty($item['variant_id'])) {
+                    $variant = ProductVariant::where('id', $item['variant_id'])
+                        ->where('product_id', $product->id)
+                        ->first();
+
+                    if (!$variant) {
+                        return [null, null, "Variant not found (ID: {$item['variant_id']}) for product {$product->name}"];
+                    }
+                }
+
+                return [$product, $variant, null];
+            };
+
+            $validateRequestedStock = function (array $items) use ($resolveItem) {
+                $requested = [];
+
+                foreach ($items as $item) {
+                    [$product, $variant, $resolveError] = $resolveItem($item);
+                    if ($resolveError) {
+                        return $resolveError;
+                    }
+
+                    $key = $product->id . ':' . ($variant?->id ?? 'base');
+                    if (!isset($requested[$key])) {
+                        $requested[$key] = [
+                            'product' => $product,
+                            'variant' => $variant,
+                            'qty' => 0,
+                        ];
+                    }
+
+                    $requested[$key]['qty'] += (int) ($item['quantity'] ?? 0);
+                }
+
+                foreach ($requested as $entry) {
+                    $availableStock = $entry['variant']
+                        ? ($entry['variant']->stock_quantity ?? 0)
+                        : ($entry['product']->stock_quantity ?? 0);
+
+                    if ($availableStock < $entry['qty']) {
+                        $name = $entry['product']->name . ($entry['variant'] ? ' (' . ($entry['variant']->sku ?? 'variant') . ')' : '');
+                        return "Insufficient stock for {$name}. Available: {$availableStock}, Requested: {$entry['qty']}";
+                    }
+                }
+
+                return null;
+            };
+
             if ($request->has('items') && !$wasStockRemoved && !$willStockRemove) {
                 // Active sale with item changes: restore old stock, validate new stock, deduct new stock
                 SaleController::restoreStock($sale);
                 SaleItem::where('sale_id', $sale->id)->delete();
 
-                // Validate stock availability for all new items FIRST
-                foreach ($request->items as $item) {
-                    $product = Product::find($item['product_id']);
-                    if (!$product) continue;
-                    $qty = $item['quantity'];
-                    $variant = !empty($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
-                    $availableStock = $variant ? $variant->stock_quantity : $product->stock_quantity;
-                    if ($availableStock < $qty) {
-                        DB::rollBack();
-                        $name = $product->name . ($variant ? ' (' . ($variant->sku ?? 'variant') . ')' : '');
-                        return response()->json([
-                            'error' => "Insufficient stock for {$name}. Available: {$availableStock}, Requested: {$qty}",
-                        ], 422);
-                    }
+                $stockError = $validateRequestedStock($request->items);
+                if ($stockError) {
+                    DB::rollBack();
+                    return response()->json(['error' => $stockError], 422);
                 }
 
                 // Create new sale_items and deduct stock in bulk
                 foreach ($request->items as $item) {
-                    $product = Product::find($item['product_id']);
-                    if (!$product) continue;
+                    [$product, $variant, $resolveError] = $resolveItem($item);
+                    if ($resolveError) {
+                        DB::rollBack();
+                        return response()->json(['error' => $resolveError], 422);
+                    }
+
                     $qty = $item['quantity'];
-                    $variant = !empty($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
 
                     SaleItem::create([
                         'sale_id' => $sale->id,
@@ -402,9 +450,12 @@ class AdminUserController extends Controller
                     SaleController::restoreStock($sale);
                     SaleItem::where('sale_id', $sale->id)->delete();
                     foreach ($request->items as $item) {
-                        $product = Product::find($item['product_id']);
-                        if (!$product) continue;
-                        $variant = !empty($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
+                        [$product, $variant, $resolveError] = $resolveItem($item);
+                        if ($resolveError) {
+                            DB::rollBack();
+                            return response()->json(['error' => $resolveError], 422);
+                        }
+
                         SaleItem::create([
                             'sale_id' => $sale->id,
                             'product_id' => $product->id,
@@ -419,13 +470,22 @@ class AdminUserController extends Controller
                         ]);
                     }
                 } elseif ($wasStockRemoved && !$willStockRemove) {
-                    // Was cancelled, now active with new items — just deduct new items
+                    // Was cancelled, now active with new items — validate and deduct new items
+                    $stockError = $validateRequestedStock($request->items);
+                    if ($stockError) {
+                        DB::rollBack();
+                        return response()->json(['error' => $stockError], 422);
+                    }
+
                     SaleItem::where('sale_id', $sale->id)->delete();
                     foreach ($request->items as $item) {
-                        $product = Product::find($item['product_id']);
-                        if (!$product) continue;
+                        [$product, $variant, $resolveError] = $resolveItem($item);
+                        if ($resolveError) {
+                            DB::rollBack();
+                            return response()->json(['error' => $resolveError], 422);
+                        }
+
                         $qty = $item['quantity'];
-                        $variant = !empty($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
                         SaleItem::create([
                             'sale_id' => $sale->id,
                             'product_id' => $product->id,
