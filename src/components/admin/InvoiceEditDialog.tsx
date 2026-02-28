@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { getInvoiceBranding } from "@/lib/invoice-branding";
+import { printInvoice } from "@/lib/print-invoice";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminUsersApi, salesApi, type AdminOrder, type OrderAttachment, type OrderPayment, type SaleProduct } from "@/lib/api";
 import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle } from "./AdminDialog";
@@ -931,106 +931,7 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
     onError: (e: Error) => toast.error(e.message || "Failed to delete"),
   });
 
-  const handlePrint = async () => {
-    const branding = await getInvoiceBranding();
-    const amount = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount;
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText = "position:fixed;width:0;height:0;border:none;left:-9999px";
-    document.body.appendChild(iframe);
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) { document.body.removeChild(iframe); return; }
-    doc.open();
-    const originalPrice = order.original_price ? parseFloat(order.original_price) : amount;
-    const itemDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
-    const saleDiscountVal = order.sale_discount ? parseFloat(order.sale_discount) : 0;
-    const itemDiscountLabel = order.item_discount_type === 'percent' ? `${itemDiscount}%` : `$${itemDiscount.toFixed(2)}`;
-    const saleDiscountLabel = order.sale_discount_type === 'percent' ? `${saleDiscountVal}%` : `$${saleDiscountVal.toFixed(2)}`;
-
-    doc.write(`<!DOCTYPE html><html><head><title>Invoice #${order.id.slice(0, 8).toUpperCase()}</title>
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Inter',system-ui,sans-serif;max-width:760px;margin:0 auto;padding:48px 40px;color:#111827;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-        .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:32px;border-bottom:1px solid #e5e7eb}
-        .brand{display:flex;align-items:center;gap:14px}
-        .brand-icon{width:44px;height:44px;border-radius:10px;overflow:hidden}
-        .brand-icon img{width:100%;height:100%;object-fit:contain}
-        .brand-name{font-size:20px;font-weight:700;color:#111827}
-        .brand-sub{font-size:12px;color:#6b7280;margin-top:2px}
-        .meta{text-align:right}
-        .invoice-badge{display:inline-flex;background:#eff6ff;color:${branding.primary_color};font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:6px}
-        .invoice-number{font-size:22px;font-weight:700;margin-top:8px;font-variant-numeric:tabular-nums}
-        .invoice-date{font-size:13px;color:#6b7280;margin-top:4px}
-        .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin:32px 0}
-        .detail-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:10px}
-        .detail-name{font-size:15px;font-weight:600}
-        .detail-sub{font-size:13px;color:#6b7280;margin-top:3px}
-        .status-badge{display:inline-flex;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
-        .status-paid{background:#dcfce7;color:#166534}
-        .status-pending{background:#fef9c3;color:#854d0e}
-        .status-failed{background:#fee2e2;color:#991b1b}
-        .status-expired{background:#f3f4f6;color:#6b7280}
-        .table-wrap{background:#f9fafb;border-radius:12px;padding:4px;margin:32px 0}
-        table{width:100%;border-collapse:collapse}
-        thead th{text-align:left;padding:14px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6b7280;border-bottom:1px solid #e5e7eb}
-        thead th:last-child{text-align:right}
-        tbody td{padding:16px;font-size:14px;color:#374151;border-bottom:1px solid #f3f4f6}
-        tbody td:last-child{text-align:right;font-variant-numeric:tabular-nums}
-        .summary-section{display:flex;justify-content:flex-end}
-        .summary-table{width:280px}
-        .summary-row{display:flex;justify-content:space-between;padding:8px 16px;font-size:13px;color:#6b7280}
-        .summary-row.discount{color:#dc2626}
-        .summary-row.total{background:#111827;color:#fff;border-radius:8px;padding:14px 16px;font-size:16px;font-weight:700;margin-top:4px}
-        .divider{height:1px;background:#e5e7eb;margin:40px 0 24px}
-        .footer{text-align:center;padding:24px 0}
-        .footer-thanks{font-size:15px;font-weight:600;margin-bottom:4px}
-        .footer-brand{font-size:12px;color:#9ca3af;margin-top:8px}
-        .footer-brand a{color:${branding.primary_color};text-decoration:none}
-        body{transform:scale(0.85);transform-origin:top left;width:117.6%}
-        @media print{body{padding:24px 20px}}
-      </style></head><body>
-      <div class="header">
-        <div class="brand">
-          ${branding.site_logo_url
-            ? `<div class="brand-icon"><img src="${branding.site_logo_url}" alt="${branding.site_name}" /></div>`
-            : `<div class="brand-icon" style="background:linear-gradient(135deg,${branding.primary_color},#1d4ed8);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center">${branding.site_name.charAt(0)}</div>`
-          }
-          <div>
-            <div class="brand-name">${branding.site_name}</div>
-            <div class="brand-sub">${branding.site_tagline || ''}</div>
-            ${branding.support_phone ? `<div class="brand-sub">${branding.support_phone}</div>` : ''}
-            ${branding.site_address ? `<div class="brand-sub">${branding.site_address}</div>` : ''}
-          </div>
-        </div>
-        <div class="meta"><div class="invoice-badge">Invoice</div><div class="invoice-number">#${order.id.slice(0, 8).toUpperCase()}</div>
-        <div class="invoice-date">${order.created_at ? new Date(order.created_at).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</div></div>
-      </div>
-      <div class="details-grid">
-        <div><div class="detail-label">Bill To</div><div class="detail-name">${order.user?.full_name || "Walk-in Customer"}</div><div class="detail-sub">${order.user?.email || "—"}</div></div>
-        <div><div class="detail-label">Payment Info</div><div style="margin-bottom:6px"><span class="status-badge status-${order.status}">● ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span></div>
-        ${order.bakong_transaction_id ? `<div class="detail-sub">Txn: ${order.bakong_transaction_id}</div>` : ""}
-        ${order.paid_at ? `<div class="detail-sub">Paid: ${new Date(order.paid_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>` : ""}</div>
-      </div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Description</th><th>Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Amount</th></tr></thead>
-        <tbody><tr><td style="font-weight:500">${order.product_name}${order.serial_number ? `<div style="font-size:12px;color:#6b7280;margin-top:2px">S/N: ${order.serial_number}</div>` : ''}</td><td>1</td><td style="text-align:right">$${originalPrice.toFixed(2)}</td><td style="text-align:right;font-weight:600">$${originalPrice.toFixed(2)}</td></tr></tbody>
-      </table></div>
-      <div class="summary-section"><div class="summary-table">
-        <div class="summary-row"><span>Subtotal</span><span>$${originalPrice.toFixed(2)}</span></div>
-        ${itemDiscount > 0 ? `<div class="summary-row discount"><span>Item Discount (${itemDiscountLabel})</span><span>-$${(originalPrice - amount + saleDiscountVal).toFixed(2)}</span></div>` : ''}
-        ${saleDiscountVal > 0 ? `<div class="summary-row discount"><span>Sale Discount (${saleDiscountLabel})</span><span>-$${saleDiscountVal.toFixed(2)}</span></div>` : ''}
-        <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
-      </div></div>
-      ${order.notes ? `<div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div><div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div></div>` : ''}
-      <div class="divider"></div>
-      <div class="footer"><div class="footer-thanks">${branding.invoice_footer_text}</div><div class="footer-brand">${branding.site_name}${branding.support_email ? ` — ${branding.support_email}` : ''}</div></div>
-      </body></html>`);
-    doc.close();
-    iframe.onload = () => {
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 1000);
-    };
-  };
+  const handlePrint = () => printInvoice(order);
 
   return (
     <div className="flex items-center justify-between gap-2 mt-4">
