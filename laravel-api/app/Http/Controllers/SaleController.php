@@ -145,19 +145,13 @@ class SaleController extends Controller
                     $firstProductId = $product->id;
                 }
 
-                // Deduct stock
-                for ($i = 0; $i < $qty; $i++) {
-                    if ($variant) {
-                        if ($variant->stock_quantity > 0) {
-                            $variant->decrement('stock_quantity');
-                        }
-                    } else {
-                        if ($product->stock_quantity > 0) {
-                            $product->decrement('stock_quantity');
-                            $product->refresh();
-                            $product->updateStockStatus();
-                        }
-                    }
+                // Deduct stock in bulk
+                if ($variant) {
+                    $variant->decrement('stock_quantity', $qty);
+                } else {
+                    $product->decrement('stock_quantity', $qty);
+                    $product->refresh();
+                    $product->updateStockStatus();
                 }
             }
 

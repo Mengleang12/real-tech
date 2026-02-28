@@ -6,9 +6,13 @@ use App\Models\User;
 use App\Models\Sale;
 use App\Models\SaleAttachment;
 use App\Models\SalePayment;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\SaleItem;
 use App\Traits\LogsAdminActivity;
 use App\Http\Controllers\SaleController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AdminUserController extends Controller
@@ -318,90 +322,38 @@ class AdminUserController extends Controller
         $wasStockRemoved = in_array($oldStatus, $stockRemovedStatuses);
         $willStockRemove = in_array($newStatus, $stockRemovedStatuses);
 
-        // If items are provided, handle stock diff for the item changes
-        if ($request->has('items') && !$wasStockRemoved && !$willStockRemove) {
-            // Restore stock for old items
-            SaleController::restoreStock($sale);
+        DB::beginTransaction();
 
-            // Delete old sale_items
-            \App\Models\SaleItem::where('sale_id', $sale->id)->delete();
-
-            // Create new sale_items and deduct stock
-            foreach ($request->items as $item) {
-                $product = \App\Models\Product::find($item['product_id']);
-                if (!$product) continue;
-
-                $qty = $item['quantity'];
-                $variant = isset($item['variant_id']) ? \App\Models\ProductVariant::find($item['variant_id']) : null;
-
-                \App\Models\SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $product->id,
-                    'variant_id' => $variant?->id,
-                    'product_name' => $product->name,
-                    'quantity' => $qty,
-                    'unit_price' => $item['unit_price'],
-                    'total_price' => $item['unit_price'] * $qty,
-                    'discount' => $item['discount'] ?? 0,
-                    'discount_type' => $item['discount_type'] ?? null,
-                    'serial_numbers' => $item['serial_numbers'] ?? null,
-                ]);
-
-                // Deduct stock for new items
-                for ($i = 0; $i < $qty; $i++) {
-                    if ($variant) {
-                        if ($variant->stock_quantity > 0) {
-                            $variant->decrement('stock_quantity');
-                        }
-                    } else {
-                        if ($product->stock_quantity > 0) {
-                            $product->decrement('stock_quantity');
-                            $product->refresh();
-                            $product->updateStockStatus();
-                        }
-                    }
-                }
-            }
-        } elseif (!$request->has('items')) {
-            // Status-only changes: handle stock for status transitions
-            if (!$wasStockRemoved && $willStockRemove) {
+        try {
+            if ($request->has('items') && !$wasStockRemoved && !$willStockRemove) {
+                // Active sale with item changes: restore old stock, validate new stock, deduct new stock
                 SaleController::restoreStock($sale);
-            }
-            if ($wasStockRemoved && !$willStockRemove) {
-                SaleController::deductStock($sale);
-            }
-        } else {
-            // Items provided but transitioning to/from cancelled/failed
-            if (!$wasStockRemoved && $willStockRemove) {
-                // Restore old stock, replace items, don't deduct (sale is cancelled)
-                SaleController::restoreStock($sale);
-                \App\Models\SaleItem::where('sale_id', $sale->id)->delete();
+                SaleItem::where('sale_id', $sale->id)->delete();
+
+                // Validate stock availability for all new items FIRST
                 foreach ($request->items as $item) {
-                    $product = \App\Models\Product::find($item['product_id']);
-                    if (!$product) continue;
-                    $variant = isset($item['variant_id']) ? \App\Models\ProductVariant::find($item['variant_id']) : null;
-                    \App\Models\SaleItem::create([
-                        'sale_id' => $sale->id,
-                        'product_id' => $product->id,
-                        'variant_id' => $variant?->id,
-                        'product_name' => $product->name,
-                        'quantity' => $item['quantity'],
-                        'unit_price' => $item['unit_price'],
-                        'total_price' => $item['unit_price'] * $item['quantity'],
-                        'discount' => $item['discount'] ?? 0,
-                        'discount_type' => $item['discount_type'] ?? null,
-                        'serial_numbers' => $item['serial_numbers'] ?? null,
-                    ]);
-                }
-            } elseif ($wasStockRemoved && !$willStockRemove) {
-                // Was cancelled, now active with new items — just deduct new items
-                \App\Models\SaleItem::where('sale_id', $sale->id)->delete();
-                foreach ($request->items as $item) {
-                    $product = \App\Models\Product::find($item['product_id']);
+                    $product = Product::find($item['product_id']);
                     if (!$product) continue;
                     $qty = $item['quantity'];
-                    $variant = isset($item['variant_id']) ? \App\Models\ProductVariant::find($item['variant_id']) : null;
-                    \App\Models\SaleItem::create([
+                    $variant = !empty($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
+                    $availableStock = $variant ? $variant->stock_quantity : $product->stock_quantity;
+                    if ($availableStock < $qty) {
+                        DB::rollBack();
+                        $name = $product->name . ($variant ? ' (' . ($variant->sku ?? 'variant') . ')' : '');
+                        return response()->json([
+                            'error' => "Insufficient stock for {$name}. Available: {$availableStock}, Requested: {$qty}",
+                        ], 422);
+                    }
+                }
+
+                // Create new sale_items and deduct stock in bulk
+                foreach ($request->items as $item) {
+                    $product = Product::find($item['product_id']);
+                    if (!$product) continue;
+                    $qty = $item['quantity'];
+                    $variant = !empty($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
+
+                    SaleItem::create([
                         'sale_id' => $sale->id,
                         'product_id' => $product->id,
                         'variant_id' => $variant?->id,
@@ -413,46 +365,121 @@ class AdminUserController extends Controller
                         'discount_type' => $item['discount_type'] ?? null,
                         'serial_numbers' => $item['serial_numbers'] ?? null,
                     ]);
-                    for ($i = 0; $i < $qty; $i++) {
-                        if ($variant) {
-                            if ($variant->stock_quantity > 0) $variant->decrement('stock_quantity');
+
+                    if ($variant) {
+                        $variant->decrement('stock_quantity', $qty);
+                    } else {
+                        $product->decrement('stock_quantity', $qty);
+                        $product->refresh();
+                        $product->updateStockStatus();
+                    }
+                }
+            } elseif (!$request->has('items')) {
+                // Status-only changes: handle stock for status transitions
+                if (!$wasStockRemoved && $willStockRemove) {
+                    SaleController::restoreStock($sale);
+                }
+                if ($wasStockRemoved && !$willStockRemove) {
+                    // Re-deduct stock for all existing sale_items
+                    $existingItems = SaleItem::where('sale_id', $sale->id)->get();
+                    foreach ($existingItems as $saleItem) {
+                        $product = Product::find($saleItem->product_id);
+                        if (!$product) continue;
+                        if ($saleItem->variant_id) {
+                            $variant = ProductVariant::find($saleItem->variant_id);
+                            if ($variant) $variant->decrement('stock_quantity', $saleItem->quantity);
                         } else {
-                            if ($product->stock_quantity > 0) {
-                                $product->decrement('stock_quantity');
-                                $product->refresh();
-                                $product->updateStockStatus();
-                            }
+                            $product->decrement('stock_quantity', $saleItem->quantity);
+                            $product->refresh();
+                            $product->updateStockStatus();
+                        }
+                    }
+                }
+            } else {
+                // Items provided AND transitioning to/from cancelled/failed
+                if (!$wasStockRemoved && $willStockRemove) {
+                    // Restore old stock, replace items, don't deduct (sale is cancelled)
+                    SaleController::restoreStock($sale);
+                    SaleItem::where('sale_id', $sale->id)->delete();
+                    foreach ($request->items as $item) {
+                        $product = Product::find($item['product_id']);
+                        if (!$product) continue;
+                        $variant = !empty($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
+                        SaleItem::create([
+                            'sale_id' => $sale->id,
+                            'product_id' => $product->id,
+                            'variant_id' => $variant?->id,
+                            'product_name' => $product->name,
+                            'quantity' => $item['quantity'],
+                            'unit_price' => $item['unit_price'],
+                            'total_price' => $item['unit_price'] * $item['quantity'],
+                            'discount' => $item['discount'] ?? 0,
+                            'discount_type' => $item['discount_type'] ?? null,
+                            'serial_numbers' => $item['serial_numbers'] ?? null,
+                        ]);
+                    }
+                } elseif ($wasStockRemoved && !$willStockRemove) {
+                    // Was cancelled, now active with new items — just deduct new items
+                    SaleItem::where('sale_id', $sale->id)->delete();
+                    foreach ($request->items as $item) {
+                        $product = Product::find($item['product_id']);
+                        if (!$product) continue;
+                        $qty = $item['quantity'];
+                        $variant = !empty($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
+                        SaleItem::create([
+                            'sale_id' => $sale->id,
+                            'product_id' => $product->id,
+                            'variant_id' => $variant?->id,
+                            'product_name' => $product->name,
+                            'quantity' => $qty,
+                            'unit_price' => $item['unit_price'],
+                            'total_price' => $item['unit_price'] * $qty,
+                            'discount' => $item['discount'] ?? 0,
+                            'discount_type' => $item['discount_type'] ?? null,
+                            'serial_numbers' => $item['serial_numbers'] ?? null,
+                        ]);
+                        if ($variant) {
+                            $variant->decrement('stock_quantity', $qty);
+                        } else {
+                            $product->decrement('stock_quantity', $qty);
+                            $product->refresh();
+                            $product->updateStockStatus();
                         }
                     }
                 }
             }
+
+            $sale->update($request->only([
+                'product_name', 'product_id',
+                'notes', 'amount', 'original_price',
+                'item_discount', 'item_discount_type',
+                'sale_discount', 'sale_discount_type',
+                'serial_number',
+                'status', 'bakong_transaction_id',
+            ]));
+
+            if ($request->status === 'paid' && !$sale->paid_at) {
+                $sale->update(['paid_at' => now()]);
+            }
+
+            $this->logActivity($request, 'admin_update_order', [
+                'order_id' => $orderId,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'changes' => $request->only(['notes', 'amount', 'status']),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order updated successfully',
+                'order' => $sale->load(['user:id,email,full_name,phone', 'items', 'attachments', 'payments']),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to update order: ' . $e->getMessage()], 500);
         }
-
-        $sale->update($request->only([
-            'product_name', 'product_id',
-            'notes', 'amount', 'original_price',
-            'item_discount', 'item_discount_type',
-            'sale_discount', 'sale_discount_type',
-            'serial_number',
-            'status', 'bakong_transaction_id',
-        ]));
-
-        if ($request->status === 'paid' && !$sale->paid_at) {
-            $sale->update(['paid_at' => now()]);
-        }
-
-        $this->logActivity($request, 'admin_update_order', [
-            'order_id' => $orderId,
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus,
-            'changes' => $request->only(['notes', 'amount', 'status']),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Order updated successfully',
-            'order' => $sale->load(['user:id,email,full_name,phone', 'items', 'attachments', 'payments']),
-        ]);
     }
 
     // ─── Get Order Detail (with attachments & payments) ───────────────────
