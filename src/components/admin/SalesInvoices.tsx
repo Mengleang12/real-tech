@@ -29,6 +29,24 @@ const statusConfig: Record<string, { variant: "default" | "secondary" | "destruc
   cancelled: { variant: "secondary",   label: "Cancelled" },
 };
 
+type ProductLineItem = { name: string; quantity: number };
+
+const aggregateProductLines = (rawProductName: string): ProductLineItem[] => {
+  const counts = new Map<string, number>();
+  const ordered: string[] = [];
+
+  rawProductName
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .forEach((name) => {
+      if (!counts.has(name)) ordered.push(name);
+      counts.set(name, (counts.get(name) || 0) + 1);
+    });
+
+  return ordered.map((name) => ({ name, quantity: counts.get(name) || 0 }));
+};
+
 // ─── Sales Overview Tab ───────────────────────────────────────────────────────
 const SalesOverview = () => {
   const { data, isLoading } = useQuery({
@@ -145,10 +163,13 @@ const SalesOverview = () => {
               <div className="space-y-3">
                 {recentSales.slice(0, 5).map((sale) => {
                   const amt = typeof sale.amount === "string" ? parseFloat(sale.amount as string) : sale.amount;
+                  const saleProductSummary = aggregateProductLines(sale.product_name)
+                    .map((item) => (item.quantity > 1 ? `${item.name} ×${item.quantity}` : item.name))
+                    .join(", ");
                   return (
                     <div key={sale.id} className="flex items-center justify-between">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{sale.product_name}</p>
+                        <p className="text-sm font-medium truncate">{saleProductSummary}</p>
                         <p className="text-xs text-muted-foreground">{(sale as any).user?.full_name || (sale as any).user?.email || "Customer"}</p>
                       </div>
                       <div className="text-right">
@@ -528,11 +549,11 @@ const InvoicesTab = () => {
         <table>
           <thead><tr><th>Description</th><th>Qty</th><th style="text-align:right">Unit Price</th>${hasDiscount ? '<th style="text-align:right">Discount</th>' : ''}<th style="text-align:right">Amount</th></tr></thead>
            <tbody>
-            ${order.product_name.split(",").map((name: string, i: number, arr: string[]) => {
+            ${aggregateProductLines(order.product_name).map((item, i, arr) => {
               const isLast = i === arr.length - 1;
               return `<tr>
-              <td style="font-weight:500;color:#111827">${name.trim()}</td>
-              <td>1</td>
+              <td style="font-weight:500;color:#111827">${item.name}</td>
+              <td>${item.quantity}</td>
               <td style="text-align:right">${i === 0 ? '$' + originalPrice.toFixed(2) : '—'}</td>
               ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${i === 0 && itemDiscountAmount > 0 ? '-$' + itemDiscountAmount.toFixed(2) : '—'}</td>` : ''}
               <td style="text-align:right;font-weight:600;color:#111827">${isLast ? '$' + amount.toFixed(2) : '—'}</td>
@@ -633,8 +654,10 @@ const InvoicesTab = () => {
                       </td>
                       <td className="px-4 py-3">
                         <div className="space-y-0.5">
-                          {order.product_name.split(",").map((name, i) => (
-                            <div key={i} className="font-medium text-sm">{name.trim()}</div>
+                          {aggregateProductLines(order.product_name).map((item, i) => (
+                            <div key={i} className="font-medium text-sm">
+                              {item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ""}
+                            </div>
                           ))}
                         </div>
                       </td>
@@ -720,11 +743,11 @@ const InvoicesTab = () => {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Product</p>
                   <div className="space-y-2">
-                    {selectedOrder.product_name.split(",").map((name, i) => (
+                    {aggregateProductLines(selectedOrder.product_name).map((item, i) => (
                       <div key={i} className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center"><Package className="w-5 h-5 text-primary" /></div>
-                          <div><p className="font-medium text-sm">{name.trim()}</p><p className="text-xs text-muted-foreground">Qty: 1</p></div>
+                          <div><p className="font-medium text-sm">{item.name}</p><p className="text-xs text-muted-foreground">Qty: {item.quantity}</p></div>
                         </div>
                       </div>
                     ))}
