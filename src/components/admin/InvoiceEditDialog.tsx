@@ -104,34 +104,34 @@ const getLineTotal = (item: EditCartItem) => {
 
 /** Aggregate comma-separated product_name into grouped cart items with correct quantities */
 const buildCartFromOrder = (order: AdminOrder): EditCartItem[] => {
-  const names = order.product_name.split(",").map(n => n.trim()).filter(Boolean);
   const totalOriginal = order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount);
   const totalDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
   const serials = order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [];
 
-  // Group by name to aggregate quantities
-  const grouped = new Map<string, { count: number; firstIndex: number }>();
+  // Parse entries — supports both "Name ×3" and legacy repeated "Name, Name, Name"
+  const grouped = new Map<string, number>();
   const ordered: string[] = [];
-  names.forEach((name, i) => {
-    const existing = grouped.get(name);
-    if (existing) {
-      existing.count++;
-    } else {
-      ordered.push(name);
-      grouped.set(name, { count: 1, firstIndex: i });
-    }
+  let totalUnits = 0;
+
+  order.product_name.split(",").map(s => s.trim()).filter(Boolean).forEach((entry) => {
+    const match = entry.match(/^(.+?)\s*[×x]\s*(\d+)$/i);
+    const name = match ? match[1].trim() : entry;
+    const qty = match ? parseInt(match[2], 10) : 1;
+
+    if (!grouped.has(name)) ordered.push(name);
+    grouped.set(name, (grouped.get(name) || 0) + qty);
+    totalUnits += qty;
   });
 
-  const totalGroups = ordered.length;
-  const perItemPrice = totalGroups > 0 ? totalOriginal / names.length : totalOriginal;
+  const perUnitPrice = totalUnits > 0 ? totalOriginal / totalUnits : totalOriginal;
 
   return ordered.map((name, i) => {
-    const group = grouped.get(name)!;
+    const qty = grouped.get(name) || 1;
     return {
       product_id: i === 0 ? order.product_id : 0,
       product_name: name,
-      quantity: group.count,
-      unit_price: perItemPrice,
+      quantity: qty,
+      unit_price: perUnitPrice,
       stock_quantity: 999,
       discount: i === 0 ? totalDiscount : 0,
       discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
@@ -296,7 +296,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
 
     // For single item, map directly. For multi-item, combine names & totals.
     const firstItem = cart[0];
-    const combinedName = cart.flatMap(c => Array(c.quantity).fill(c.product_name)).join(", ");
+    const combinedName = cart.map(c => c.quantity > 1 ? `${c.product_name} ×${c.quantity}` : c.product_name).join(", ");
     const totalOriginal = cart.reduce((s, c) => s + c.unit_price * c.quantity, 0);
     const totalItemDiscount = totalOriginal - subtotal;
 
