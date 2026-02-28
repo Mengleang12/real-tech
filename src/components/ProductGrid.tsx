@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import { AppCard } from "./AppCard";
+import { ProductCard } from "./ProductCard";
 import { useTranslations } from "@/contexts/LanguageContext";
 import { usePaginatedApps } from "@/hooks/useApps";
 import { useOrders } from "@/hooks/useOrders";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { AppFilters, type FilterOptions } from "./AppFilters";
+import { ProductFilters, type FilterOptions } from "./ProductFilters";
 
-interface AppGridProps {
+interface ProductGridProps {
   title?: string;
   showViewAll?: boolean;
   searchQuery?: string;
@@ -17,7 +17,7 @@ interface AppGridProps {
   showFilters?: boolean;
 }
 
-const AppGridSkeleton = () => (
+const ProductGridSkeleton = () => (
   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
     {Array.from({ length: 8 }).map((_, i) => (
       <div key={i} className="rounded-2xl border border-border/40 overflow-hidden bg-card">
@@ -42,13 +42,13 @@ const EmptyState = ({ message }: { message: string }) => (
   </div>
 );
 
-export const AppGrid = ({ 
+export const ProductGrid = ({ 
   title, 
   showViewAll = true, 
   searchQuery = "", 
   itemsPerPage = 10, 
   showFilters = true 
-}: AppGridProps) => {
+}: ProductGridProps) => {
   const t = useTranslations();
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<FilterOptions>({});
@@ -130,7 +130,7 @@ export const AppGrid = ({
         </div>
         <div className="flex items-center gap-3">
           {showFilters && (
-            <AppFilters filters={filters} onFiltersChange={setFilters} />
+            <ProductFilters filters={filters} onFiltersChange={setFilters} />
           )}
           {showViewAll && !searchQuery && (
             <a href="#" className="section-link">{t.viewAll}</a>
@@ -139,14 +139,14 @@ export const AppGrid = ({
       </div>
 
       {isLoading && !data ? (
-        <AppGridSkeleton />
+        <ProductGridSkeleton />
       ) : error ? (
         <EmptyState message="Failed to load apps. Please try again." />
       ) : apps.length > 0 ? (
         <div className={isFetching ? "opacity-70 transition-opacity" : ""}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {apps.map((app) => (
-              <AppCard key={app.id} app={app} purchased={purchasedAppIds.has(app.id)} />
+              <ProductCard key={app.id} app={app} purchased={purchasedAppIds.has(app.id)} />
             ))}
           </div>
           

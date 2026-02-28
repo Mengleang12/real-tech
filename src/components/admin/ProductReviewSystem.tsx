@@ -23,7 +23,7 @@ const statusConfig: Record<AppStatus, { label: string; color: string; icon: Reac
   suspended: { label: "Suspended", color: "bg-orange-500/20 text-orange-600", icon: XCircle }
 };
 
-export const AppReviewSystem = () => {
+export const ProductReviewSystem = () => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<AppStatus | "all">("all");

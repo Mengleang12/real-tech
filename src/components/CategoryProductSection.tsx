@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { AppCard } from "./AppCard";
+import { ProductCard } from "./ProductCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePaginatedApps } from "@/hooks/useApps";
 import { useOrders } from "@/hooks/useOrders";
@@ -75,7 +75,7 @@ export const CategoryProductSection = ({ category, searchQuery = "", limit = 10 
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {products.map((product) => (
-            <AppCard key={product.id} app={product} purchased={purchasedIds.has(product.id)} />
+            <ProductCard key={product.id} app={product} purchased={purchasedIds.has(product.id)} />
           ))}
         </div>
       )}

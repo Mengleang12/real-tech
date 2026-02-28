@@ -3,7 +3,7 @@ import { ArrowLeft, Heart, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useWishlist } from '@/hooks/useWishlist';
-import { AppCard } from '@/components/AppCard';
+import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { appsApi, type App } from '@/lib/api';
 import { PageTransition } from '@/components/PageTransition';
@@ -79,7 +79,7 @@ const Wishlist = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {apps.map(app => (
                 <div key={app.id} className="relative">
-                  <AppCard app={app} />
+                  <ProductCard app={app} />
                   <button
                     onClick={(e) => { e.stopPropagation(); toggle(app.id); }}
                     className="absolute top-1 left-1 z-10 p-1 rounded-full bg-background/80 backdrop-blur hover:bg-destructive/10 transition-colors"
