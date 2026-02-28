@@ -115,13 +115,16 @@ const AddPurchaseDialog = ({
   onOpenChange,
   editPurchase,
   onSaved,
+  existingSuppliers = [],
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   editPurchase?: Purchase | null;
   onSaved: () => void;
+  existingSuppliers?: string[];
 }) => {
   const [supplierName, setSupplierName] = useState("");
+  const [supplierOpen, setSupplierOpen] = useState(false);
   const [notes, setNotes] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
   const [items, setItems] = useState<PurchaseFormItem[]>([]);
@@ -133,6 +136,10 @@ const AddPurchaseDialog = ({
   const [productSearch, setProductSearch] = useState("");
   const [productResults, setProductResults] = useState<SaleProduct[]>([]);
   const [searchingProducts, setSearchingProducts] = useState(false);
+
+  const filteredSuppliers = existingSuppliers.filter(
+    (s) => s.toLowerCase().includes(supplierName.toLowerCase()) && s.toLowerCase() !== supplierName.toLowerCase()
+  );
 
   useEffect(() => {
     if (open) {
@@ -251,9 +258,29 @@ const AddPurchaseDialog = ({
       <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
         {/* Supplier */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
+          <div className="relative">
             <Label>Supplier Name *</Label>
-            <Input value={supplierName} onChange={(e) => setSupplierName(e.target.value)} placeholder="Enter supplier name" />
+            <Input
+              value={supplierName}
+              onChange={(e) => { setSupplierName(e.target.value); setSupplierOpen(true); }}
+              onFocus={() => setSupplierOpen(true)}
+              onBlur={() => setTimeout(() => setSupplierOpen(false), 200)}
+              placeholder="Type or select supplier"
+            />
+            {supplierOpen && filteredSuppliers.length > 0 && (
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-md max-h-40 overflow-y-auto">
+                {filteredSuppliers.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent truncate"
+                    onMouseDown={(e) => { e.preventDefault(); setSupplierName(s); setSupplierOpen(false); }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <Label>Tracking Number</Label>
@@ -1332,6 +1359,7 @@ export const PurchaseManagement = () => {
         onOpenChange={setAddOpen}
         editPurchase={editPurchase}
         onSaved={loadData}
+        existingSuppliers={[...new Set(purchases.map((p) => p.supplier_name).filter(Boolean))]}
       />
 
       <PurchaseDetailDialog
