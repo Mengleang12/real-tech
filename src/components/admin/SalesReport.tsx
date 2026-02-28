@@ -443,7 +443,10 @@ const CustomerReportTab = ({ from, to }: { from: string; to: string }) => {
                   <td className="px-4 py-3 tabular-nums text-muted-foreground">{fmt(c.avg_order_value)}</td>
                   <td className="px-4 py-3 tabular-nums">{c.unique_products}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {c.last_purchase ? format(new Date(c.last_purchase), "MMM dd, yyyy") : "—"}
+                    {c.last_purchase ? (() => {
+                      const d = new Date(c.last_purchase.replace(/-/g, '/'));
+                      return isNaN(d.getTime()) ? "—" : format(d, "MMM dd, yyyy");
+                    })() : "—"}
                   </td>
                 </tr>
               ))}
