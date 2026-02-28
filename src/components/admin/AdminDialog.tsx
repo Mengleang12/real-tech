@@ -48,8 +48,10 @@ export const AdminDialog = ({
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        {children}
-        {footer && <DialogFooter>{footer}</DialogFooter>}
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
+        {footer && <DialogFooter className="shrink-0 border-t border-border pt-4 px-0">{footer}</DialogFooter>}
       </DialogContent>
     </Dialog>
   );
