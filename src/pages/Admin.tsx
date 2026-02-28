@@ -1093,11 +1093,19 @@ const AdminDashboard = () => {
       )}>
         {/* Sidebar Header */}
         <div className="p-4 border-b border-border flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-            <Package className="w-4 h-4 text-primary-foreground" />
-          </div>
+          {user?.avatar_url ? (
+            <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
+              <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center shrink-0">
+              <span className="text-sm font-semibold text-primary-foreground">
+                {(user?.full_name || user?.email || "A").charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
           <div className="min-w-0">
-            <p className="font-semibold text-sm leading-none">Admin Panel</p>
+            <p className="font-semibold text-sm leading-none truncate">{user?.full_name || user?.email || "Admin"}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {isSuperAdmin ? "Super Admin" : isAdmin ? "Administrator" : "Moderator"}
             </p>
@@ -1147,25 +1155,6 @@ const AdminDashboard = () => {
 
         {/* User Info & Sidebar Footer */}
         <div className="p-3 border-t border-border space-y-1">
-          {user && (
-            <div className="px-3 py-2 mb-1 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-muted shrink-0 overflow-hidden flex items-center justify-center">
-                {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {(user.full_name || user.email || "?").charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{user.full_name || user.email}</p>
-                <Badge variant="outline" className="text-xs px-1.5 py-0 mt-0.5">
-                  {isSuperAdmin ? "Super Admin" : isAdmin ? "Admin" : "Moderator"}
-                </Badge>
-              </div>
-            </div>
-          )}
           <button
             onClick={() => navigate("/")}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
