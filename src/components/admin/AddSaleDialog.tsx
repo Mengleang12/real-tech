@@ -266,54 +266,77 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
       size="2xl"
     >
 
-        <div className="space-y-5">
-          {/* ─── Sale Date ─── */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-semibold">Sale Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("h-9 w-[200px] justify-start text-left text-sm font-normal", !saleDate && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                  {saleDate ? format(saleDate, "MMM dd, yyyy") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={saleDate}
-                  onSelect={(d) => d && setSaleDate(d)}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
+        <div className="space-y-4">
+          {/* ─── Top Row: Date + Customer + Payment ─── */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Sale Date */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground">Sale Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("h-9 w-full justify-start text-left text-sm font-normal", !saleDate && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                    {saleDate ? format(saleDate, "MMM dd, yyyy") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={saleDate}
+                    onSelect={(d) => d && setSaleDate(d)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Payment Status */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground">Payment Status</Label>
+              <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as typeof paymentStatus)}>
+                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="partial">Partial</SelectItem>
+                  <SelectItem value="unpaid">Unpaid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground">Notes</Label>
+              <Input placeholder="Optional notes..." value={notes} onChange={e => setNotes(e.target.value)} className="h-9 text-sm" />
+            </div>
           </div>
 
           {/* ─── Customer Section ─── */}
-          <div className="space-y-3">
-            <Label className="text-sm font-semibold">Customer</Label>
-            <div className="flex gap-2 flex-wrap">
-              <Button size="sm" variant={customerType === "walkin" ? "default" : "outline"} onClick={() => setCustomerType("walkin")} className="text-xs gap-1">
-                <Users className="w-3 h-3" /> Walk-in
-              </Button>
-              <Button size="sm" variant={customerType === "existing" ? "default" : "outline"} onClick={() => setCustomerType("existing")} className="text-xs gap-1">
-                <Search className="w-3 h-3" /> Existing
-              </Button>
-              <Button size="sm" variant={customerType === "new" ? "default" : "outline"} onClick={() => setCustomerType("new")} className="text-xs gap-1">
-                <UserPlus className="w-3 h-3" /> New Customer
-              </Button>
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Customer</Label>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant={customerType === "walkin" ? "default" : "outline"} onClick={() => setCustomerType("walkin")} className="h-7 text-xs gap-1 px-2.5">
+                  <Users className="w-3 h-3" /> Walk-in
+                </Button>
+                <Button size="sm" variant={customerType === "existing" ? "default" : "outline"} onClick={() => setCustomerType("existing")} className="h-7 text-xs gap-1 px-2.5">
+                  <Search className="w-3 h-3" /> Existing
+                </Button>
+                <Button size="sm" variant={customerType === "new" ? "default" : "outline"} onClick={() => setCustomerType("new")} className="h-7 text-xs gap-1 px-2.5">
+                  <UserPlus className="w-3 h-3" /> New
+                </Button>
+              </div>
             </div>
 
             {customerType === "walkin" && (
-              <div className="p-3 rounded-lg border border-border bg-muted/30">
-                <p className="text-sm text-muted-foreground">General walk-in customer — no account will be created</p>
-              </div>
+              <p className="text-xs text-muted-foreground">Walk-in customer — no account created</p>
             )}
 
             {customerType === "existing" && (
-              <div className="space-y-2">
+              <>
                 {selectedCustomer ? (
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+                  <div className="flex items-center justify-between p-2.5 rounded-md border border-border bg-muted/30">
                     <div>
                       <p className="text-sm font-medium">{selectedCustomer.full_name}</p>
                       <p className="text-xs text-muted-foreground">{selectedCustomer.email}{selectedCustomer.phone ? ` · ${selectedCustomer.phone}` : ""}</p>
@@ -333,7 +356,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                     {customers.length > 0 && (
                       <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                         {customers.map(c => (
-                          <button key={c.id} className="w-full text-left px-3 py-2 hover:bg-muted text-sm transition-colors" onClick={() => { setSelectedCustomer(c); setCustomers([]); setCustomerSearch(""); }}>
+                          <button key={c.id} className="w-full text-left px-3 py-2 hover:bg-muted text-sm transition-colors cursor-pointer" onClick={() => { setSelectedCustomer(c); setCustomers([]); setCustomerSearch(""); }}>
                             <p className="font-medium text-foreground">{c.full_name}</p>
                             <p className="text-xs text-muted-foreground">{c.email}{c.phone ? ` · ${c.phone}` : ""}</p>
                           </button>
@@ -342,7 +365,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                     )}
                   </div>
                 )}
-              </div>
+              </>
             )}
 
             {customerType === "new" && (
@@ -354,10 +377,8 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
             )}
           </div>
 
-          <Separator />
-
           {/* ─── Products Section ─── */}
-          <div className="space-y-3">
+          <div className="rounded-lg border border-border p-4 space-y-3">
             <Label className="text-sm font-semibold">Products</Label>
             <div className="relative">
               <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -377,7 +398,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                           const label = Object.values(v.combination).join(" / ");
                           const price = Number(v.price_adjustment || 0);
                           return (
-                            <button key={`${p.id}-${v.id}`} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors" onClick={() => addToCart(p, v.id)}>
+                            <button key={`${p.id}-${v.id}`} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addToCart(p, v.id)}>
                               {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-foreground truncate">{p.name}</p>
@@ -388,7 +409,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                           );
                         })
                       ) : (
-                        <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors" onClick={() => addToCart(p)}>
+                        <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addToCart(p)}>
                           {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-foreground truncate">{p.name}</p>
@@ -403,7 +424,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
               )}
             </div>
 
-            {/* Cart items with per-item discount */}
+            {/* Cart items */}
             {cart.length > 0 && (
               <div className="border border-border rounded-lg overflow-hidden">
                 <div className="grid grid-cols-[1fr_80px_100px_80px_32px] gap-1 px-3 py-2 bg-muted/50 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
@@ -442,7 +463,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                           />
                           <button
                             onClick={() => updateItemDiscount(idx, item.discount, item.discount_type === "amount" ? "percent" : "amount")}
-                            className="h-6 w-6 shrink-0 rounded border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:bg-muted transition-colors"
+                            className="h-6 w-6 shrink-0 rounded border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
                             title={item.discount_type === "amount" ? "Switch to %" : "Switch to $"}
                           >
                             {item.discount_type === "percent" ? "%" : "$"}
@@ -457,7 +478,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                           {item.serial_numbers.map((sn, snIdx) => (
                             <span key={snIdx} className="inline-flex items-center gap-0.5 bg-muted text-foreground text-[11px] px-1.5 py-0.5 rounded font-mono">
                               {sn}
-                              <button type="button" onClick={() => removeSerialNumber(idx, snIdx)} className="hover:text-destructive transition-colors"><X className="w-3 h-3" /></button>
+                              <button type="button" onClick={() => removeSerialNumber(idx, snIdx)} className="hover:text-destructive transition-colors cursor-pointer"><X className="w-3 h-3" /></button>
                             </span>
                           ))}
                           {item.serial_numbers.length < item.quantity && (
@@ -490,12 +511,10 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
             )}
           </div>
 
+          {/* ─── Sale Discount + Grand Total ─── */}
           {cart.length > 0 && (
-            <>
-              <Separator />
-
-              {/* ─── Sale-level Discount ─── */}
-              <div className="space-y-2">
+            <div className="rounded-lg border border-border p-4 space-y-3">
+              <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold flex items-center gap-1.5"><Percent className="w-3.5 h-3.5" /> Sale Discount</Label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -504,59 +523,37 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                     step="0.01"
                     value={saleDiscount || ""}
                     onChange={e => setSaleDiscount(parseFloat(e.target.value) || 0)}
-                    className="h-9 text-sm w-32"
+                    className="h-8 text-sm w-24"
                     placeholder="0"
                   />
                   <Select value={saleDiscountType} onValueChange={(v) => setSaleDiscountType(v as "amount" | "percent")}>
-                    <SelectTrigger className="h-9 text-sm w-24"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-8 text-sm w-24"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="amount">$ Fixed</SelectItem>
                       <SelectItem value="percent">% Percent</SelectItem>
                     </SelectContent>
                   </Select>
                   {saleDiscountAmount > 0 && (
-                    <span className="text-sm text-destructive font-medium">-${saleDiscountAmount.toFixed(2)}</span>
+                    <span className="text-sm text-destructive font-semibold">-${saleDiscountAmount.toFixed(2)}</span>
                   )}
                 </div>
               </div>
-            </>
-          )}
 
-          <Separator />
+              <Separator />
 
-          {/* ─── Payment & Notes ─── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Payment Status</Label>
-              <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as typeof paymentStatus)}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="partial">Partial</SelectItem>
-                  <SelectItem value="unpaid">Unpaid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Notes (optional)</Label>
-              <Input placeholder="Sale notes..." value={notes} onChange={e => setNotes(e.target.value)} className="h-9 text-sm" />
-            </div>
-          </div>
-
-          {/* ─── Grand Total & Actions ─── */}
-          {cart.length > 0 && (
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40 border border-border">
-              <span className="text-sm font-medium text-muted-foreground">Grand Total</span>
-              <span className="text-xl font-bold text-foreground">${grandTotal.toFixed(2)}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-base font-semibold">Grand Total</span>
+                <span className="text-2xl font-bold text-foreground">${grandTotal.toFixed(2)}</span>
+              </div>
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-2">
+          {/* ─── Actions ─── */}
+          <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => { resetForm(); onOpenChange(false); }}>Cancel</Button>
             <Button onClick={handleSubmit} disabled={createMutation.isPending} className="gap-2">
               {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              Create Sale — ${grandTotal.toFixed(2)}
+              Create Sale{cart.length > 0 ? ` — $${grandTotal.toFixed(2)}` : ""}
             </Button>
           </div>
         </div>
