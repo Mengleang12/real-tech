@@ -1282,6 +1282,11 @@ export const PurchaseManagement = () => {
                     autoFocus
                     disabled={scanning}
                   />
+                  {scanning && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-md">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-3">
                   {scannedResults.length > 0 && (
