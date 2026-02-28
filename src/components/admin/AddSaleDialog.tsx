@@ -493,12 +493,12 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
               />
               {productLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
               {productLoading && productSearch.length >= 1 && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <div className="relative z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" /> Searching products...
                 </div>
               )}
               {!productLoading && products.length > 0 && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-72 overflow-y-auto">
+                <div className="relative z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg">
                   {products.map(p => (
                     <div key={p.id}>
                       {p.variants.length > 0 ? (
