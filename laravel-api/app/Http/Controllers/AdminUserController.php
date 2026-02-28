@@ -287,7 +287,7 @@ class AdminUserController extends Controller
     // ─── Edit Order ───────────────────────────────────────────────────────
     public function updateOrder(Request $request, $orderId)
     {
-        $sale = Sale::findOrFail($orderId);
+        $sale = Sale::with('items')->findOrFail($orderId);
         $oldStatus = $sale->status;
 
         $request->validate([
@@ -303,21 +303,129 @@ class AdminUserController extends Controller
             'serial_number' => 'nullable|string|max:255',
             'status' => 'nullable|in:pending,paid,failed,expired,cancelled',
             'bakong_transaction_id' => 'nullable|string|max:100',
+            'items' => 'nullable|array',
+            'items.*.product_id' => 'required_with:items|integer',
+            'items.*.variant_id' => 'nullable|integer',
+            'items.*.quantity' => 'required_with:items|integer|min:1',
+            'items.*.unit_price' => 'required_with:items|numeric|min:0',
+            'items.*.serial_numbers' => 'nullable|string',
+            'items.*.discount' => 'nullable|numeric|min:0',
+            'items.*.discount_type' => 'nullable|in:amount,percent',
         ]);
 
         $newStatus = $request->status ?? $oldStatus;
-
-        // Restore stock when changing to cancelled or failed (stock was deducted on creation)
         $stockRemovedStatuses = ['cancelled', 'failed'];
         $wasStockRemoved = in_array($oldStatus, $stockRemovedStatuses);
         $willStockRemove = in_array($newStatus, $stockRemovedStatuses);
 
-        if (!$wasStockRemoved && $willStockRemove) {
+        // If items are provided, handle stock diff for the item changes
+        if ($request->has('items') && !$wasStockRemoved && !$willStockRemove) {
+            // Restore stock for old items
             SaleController::restoreStock($sale);
-        }
-        // Re-deduct stock when un-cancelling or un-failing
-        if ($wasStockRemoved && !$willStockRemove) {
-            SaleController::deductStock($sale);
+
+            // Delete old sale_items
+            \App\Models\SaleItem::where('sale_id', $sale->id)->delete();
+
+            // Create new sale_items and deduct stock
+            foreach ($request->items as $item) {
+                $product = \App\Models\Product::find($item['product_id']);
+                if (!$product) continue;
+
+                $qty = $item['quantity'];
+                $variant = isset($item['variant_id']) ? \App\Models\ProductVariant::find($item['variant_id']) : null;
+
+                \App\Models\SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $product->id,
+                    'variant_id' => $variant?->id,
+                    'product_name' => $product->name,
+                    'quantity' => $qty,
+                    'unit_price' => $item['unit_price'],
+                    'total_price' => $item['unit_price'] * $qty,
+                    'discount' => $item['discount'] ?? 0,
+                    'discount_type' => $item['discount_type'] ?? null,
+                    'serial_numbers' => $item['serial_numbers'] ?? null,
+                ]);
+
+                // Deduct stock for new items
+                for ($i = 0; $i < $qty; $i++) {
+                    if ($variant) {
+                        if ($variant->stock_quantity > 0) {
+                            $variant->decrement('stock_quantity');
+                        }
+                    } else {
+                        if ($product->stock_quantity > 0) {
+                            $product->decrement('stock_quantity');
+                            $product->refresh();
+                            $product->updateStockStatus();
+                        }
+                    }
+                }
+            }
+        } elseif (!$request->has('items')) {
+            // Status-only changes: handle stock for status transitions
+            if (!$wasStockRemoved && $willStockRemove) {
+                SaleController::restoreStock($sale);
+            }
+            if ($wasStockRemoved && !$willStockRemove) {
+                SaleController::deductStock($sale);
+            }
+        } else {
+            // Items provided but transitioning to/from cancelled/failed
+            if (!$wasStockRemoved && $willStockRemove) {
+                // Restore old stock, replace items, don't deduct (sale is cancelled)
+                SaleController::restoreStock($sale);
+                \App\Models\SaleItem::where('sale_id', $sale->id)->delete();
+                foreach ($request->items as $item) {
+                    $product = \App\Models\Product::find($item['product_id']);
+                    if (!$product) continue;
+                    $variant = isset($item['variant_id']) ? \App\Models\ProductVariant::find($item['variant_id']) : null;
+                    \App\Models\SaleItem::create([
+                        'sale_id' => $sale->id,
+                        'product_id' => $product->id,
+                        'variant_id' => $variant?->id,
+                        'product_name' => $product->name,
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'total_price' => $item['unit_price'] * $item['quantity'],
+                        'discount' => $item['discount'] ?? 0,
+                        'discount_type' => $item['discount_type'] ?? null,
+                        'serial_numbers' => $item['serial_numbers'] ?? null,
+                    ]);
+                }
+            } elseif ($wasStockRemoved && !$willStockRemove) {
+                // Was cancelled, now active with new items — just deduct new items
+                \App\Models\SaleItem::where('sale_id', $sale->id)->delete();
+                foreach ($request->items as $item) {
+                    $product = \App\Models\Product::find($item['product_id']);
+                    if (!$product) continue;
+                    $qty = $item['quantity'];
+                    $variant = isset($item['variant_id']) ? \App\Models\ProductVariant::find($item['variant_id']) : null;
+                    \App\Models\SaleItem::create([
+                        'sale_id' => $sale->id,
+                        'product_id' => $product->id,
+                        'variant_id' => $variant?->id,
+                        'product_name' => $product->name,
+                        'quantity' => $qty,
+                        'unit_price' => $item['unit_price'],
+                        'total_price' => $item['unit_price'] * $qty,
+                        'discount' => $item['discount'] ?? 0,
+                        'discount_type' => $item['discount_type'] ?? null,
+                        'serial_numbers' => $item['serial_numbers'] ?? null,
+                    ]);
+                    for ($i = 0; $i < $qty; $i++) {
+                        if ($variant) {
+                            if ($variant->stock_quantity > 0) $variant->decrement('stock_quantity');
+                        } else {
+                            if ($product->stock_quantity > 0) {
+                                $product->decrement('stock_quantity');
+                                $product->refresh();
+                                $product->updateStockStatus();
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         $sale->update($request->only([
@@ -343,7 +451,7 @@ class AdminUserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order updated successfully',
-            'order' => $sale->load(['user:id,email,full_name,phone', 'attachments', 'payments']),
+            'order' => $sale->load(['user:id,email,full_name,phone', 'items', 'attachments', 'payments']),
         ]);
     }
 
