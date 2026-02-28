@@ -60,6 +60,7 @@ Route::get('/product-attributes', [ProductAttributeController::class, 'index']);
 
 // Public maintenance check
 Route::get('/admin/settings/maintenance', [SystemSettingController::class, 'maintenanceStatus']);
+Route::get('/admin/settings/branding', [SystemSettingController::class, 'branding']);
 
 
 // Protected admin routes (admin + moderator)

@@ -78,6 +78,24 @@ class SystemSettingController extends Controller
     }
 
     /**
+     * Public: get branding info (for invoices, storefront, etc.)
+     */
+    public function branding()
+    {
+        return response()->json([
+            'site_name' => SystemSetting::getValue('site_name', 'Realtech Computer'),
+            'site_tagline' => SystemSetting::getValue('site_tagline', ''),
+            'site_logo_url' => SystemSetting::getValue('site_logo_url', ''),
+            'support_email' => SystemSetting::getValue('support_email', ''),
+            'support_phone' => SystemSetting::getValue('support_phone', ''),
+            'site_address' => SystemSetting::getValue('site_address', ''),
+            'primary_color' => SystemSetting::getValue('primary_color', '#2563eb'),
+            'invoice_footer_text' => SystemSetting::getValue('invoice_footer_text', 'Thank you for your purchase!'),
+            'default_currency' => SystemSetting::getValue('default_currency', 'USD'),
+        ]);
+    }
+
+    /**
      * Update system settings (bulk).
      */
     public function update(Request $request)

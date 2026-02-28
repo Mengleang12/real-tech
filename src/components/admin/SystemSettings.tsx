@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { clearBrandingCache } from '@/lib/invoice-branding';
 import { Settings2, Globe, Shield, Database, Server, Loader2, Palette, ImageIcon, Phone, MapPin, Share2, FileText, Upload, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -181,6 +182,7 @@ export function SystemSettingsPanel() {
         throw new Error(data.error || 'Failed to save settings');
       }
       applyPrimaryColor(settings.primary_color);
+      clearBrandingCache();
       toast.success('Settings saved successfully');
     } catch (err: any) {
       toast.error(err.message || 'Failed to save settings');
