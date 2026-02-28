@@ -198,13 +198,13 @@ const MetadataItem = ({
   );
 };
 
-interface AppDetailDialogProps {
+interface ProductDetailDialogProps {
   app: App | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const AppDetailDialog = ({ app, open, onOpenChange }: AppDetailDialogProps) => {
+export const ProductDetailDialog = ({ app, open, onOpenChange }: ProductDetailDialogProps) => {
   const { t } = useLanguage();
   const translations = useTranslations();
   const [selectedScreenshot, setSelectedScreenshot] = useState(0);

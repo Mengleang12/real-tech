@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import { AppCard } from "./AppCard";
+import { ProductCard } from "./ProductCard";
 import { useTranslations } from "@/contexts/LanguageContext";
 import { usePaginatedApps } from "@/hooks/useApps";
 import { useOrders } from "@/hooks/useOrders";
@@ -119,7 +119,7 @@ export const GamesGrid = ({ searchQuery = "", itemsPerPage = 10 }: GamesGridProp
         <div className={isFetching ? "opacity-70 transition-opacity" : ""}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {games.map((game) => (
-              <AppCard key={game.id} app={game} purchased={purchasedAppIds.has(game.id)} />
+              <ProductCard key={game.id} app={game} purchased={purchasedAppIds.has(game.id)} />
             ))}
           </div>
           

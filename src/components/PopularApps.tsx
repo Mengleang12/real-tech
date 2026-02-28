@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { TrendingUp } from "lucide-react";
-import { AppCard } from "./AppCard";
+import { ProductCard } from "./ProductCard";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
 import { usePaginatedApps } from "@/hooks/useApps";
 import { useOrders } from "@/hooks/useOrders";
@@ -71,7 +71,7 @@ export const PopularApps = () => {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {apps.map((app) => (
-            <AppCard key={app.id} app={app} purchased={purchasedAppIds.has(app.id)} />
+            <ProductCard key={app.id} app={app} purchased={purchasedAppIds.has(app.id)} />
           ))}
         </div>
       )}

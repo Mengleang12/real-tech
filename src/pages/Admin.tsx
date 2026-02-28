@@ -29,7 +29,7 @@ import { FileUpload, ScreenshotUpload } from "@/components/FileUpload";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
-import { AppReviewSystem } from "@/components/admin/AppReviewSystem";
+import { ProductReviewSystem } from "@/components/admin/ProductReviewSystem";
 import { NotificationSystem } from "@/components/admin/NotificationSystem";
 import { RoleManagement } from "@/components/admin/RoleManagement";
 import { ActivityLogs } from "@/components/admin/ActivityLogs";
@@ -49,21 +49,21 @@ import { useAuth } from "@/contexts/AuthContext";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type AppFormData = Omit<Partial<App>, 'screenshots' | 'videos' | 'attribute_values' | 'variants'> & {
+type ProductFormData = Omit<Partial<App>, 'screenshots' | 'videos' | 'attribute_values' | 'variants'> & {
   screenshots?: string[];
   videos?: { title: string; youtube_url: string }[];
   attribute_values?: { attribute_id: number; value: string }[];
   variants?: { combination: Record<string, string>; sku?: string; stock_quantity: number; price_adjustment: number; is_active: boolean }[];
 };
 
-interface AppFormProps {
+interface ProductFormProps {
   app?: App;
-  onSave: (data: AppFormData) => Promise<void>;
+  onSave: (data: ProductFormData) => Promise<void>;
   onCancel: () => void;
 }
 
-// ─── App Form ─────────────────────────────────────────────────────────────────
-const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
+// ─── Product Form ─────────────────────────────────────────────────────────────────
+const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
   const [formData, setFormData] = useState<Partial<App>>({
     name: app?.name || "", name_km: app?.name_km || "",
     description: app?.description || "", description_km: app?.description_km || "",
@@ -707,7 +707,7 @@ const AppsTab = () => {
     setShowAppForm(true);
   };
 
-  const handleSaveApp = async (data: AppFormData) => {
+  const handleSaveApp = async (data: ProductFormData) => {
     try {
       if (editingApp) { await appsApi.update(editingApp.id, data); toast.success("Product updated!"); }
       else { await appsApi.create(data); toast.success("Product created!"); }
@@ -985,7 +985,7 @@ const AppsTab = () => {
       </div>
 
       <AdminDialog open={showAppForm} onOpenChange={setShowAppForm} title={editingApp ? "Edit Product" : "Add New Product"} size="6xl">
-          <AppForm app={editingApp} onSave={handleSaveApp} onCancel={() => { setShowAppForm(false); setEditingApp(undefined); }} />
+          <ProductForm app={editingApp} onSave={handleSaveApp} onCancel={() => { setShowAppForm(false); setEditingApp(undefined); }} />
       </AdminDialog>
 
       {/* Delete Confirmation */}
@@ -1213,7 +1213,7 @@ const AdminDashboard = () => {
           {activeTab === "purchases" && <PurchaseManagement />}
           {activeTab === "profit" && <ProfitAnalysis />}
           {activeTab === "payments" && <PaymentHistoryAdmin />}
-          {activeTab === "reviews" && <AppReviewSystem />}
+          {activeTab === "reviews" && <ProductReviewSystem />}
           {activeTab === "roles" && <RoleManagement />}
           {activeTab === "notifications" && <NotificationSystem />}
           {activeTab === "activity" && <ActivityLogs />}

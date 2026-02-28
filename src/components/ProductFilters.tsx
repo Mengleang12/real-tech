@@ -19,12 +19,12 @@ export interface FilterOptions {
   freeOnly?: boolean;
 }
 
-interface AppFiltersProps {
+interface ProductFiltersProps {
   filters: FilterOptions;
   onFiltersChange: (filters: FilterOptions) => void;
 }
 
-export const AppFilters = ({ filters, onFiltersChange }: AppFiltersProps) => {
+export const ProductFilters = ({ filters, onFiltersChange }: ProductFiltersProps) => {
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState<FilterOptions>(filters);

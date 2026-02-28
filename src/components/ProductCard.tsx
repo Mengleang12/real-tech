@@ -7,7 +7,7 @@ import { useRef } from "react";
 import { toast } from "sonner";
 import type { App } from "@/lib/api";
 
-interface AppCardProps {
+interface ProductCardProps {
   app?: App;
   name?: string;
   name_km?: string;
@@ -31,7 +31,7 @@ const createSlug = (name: string): string => {
     .trim();
 };
 
-export const AppCard = (props: AppCardProps) => {
+export const ProductCard = (props: ProductCardProps) => {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
