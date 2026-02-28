@@ -187,6 +187,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
       toast.success(res.message || "Sale created successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-sales-dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-invoices"] });
       resetForm();
       onOpenChange(false);
     },
