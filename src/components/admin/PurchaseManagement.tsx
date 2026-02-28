@@ -911,6 +911,7 @@ const PurchaseDetailDialog = ({
               No, Not Yet Paid
             </AlertDialogAction>
             <AlertDialogAction
+              className="bg-green-600 text-white hover:bg-green-700"
               onClick={async () => {
                 setOrderConfirmOpen(false);
                 await executeStatusChange('ordered');
