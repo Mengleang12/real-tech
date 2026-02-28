@@ -39,6 +39,7 @@ class SaleController extends Controller
             'sale_discount' => 'nullable|numeric|min:0',
             'sale_discount_type' => 'nullable|in:amount,percent',
             'notes' => 'nullable|string|max:500',
+            'sale_date' => 'nullable|date',
         ]);
 
         DB::beginTransaction();
@@ -151,7 +152,7 @@ class SaleController extends Controller
                         'currency' => 'USD',
                         'status' => $saleStatus,
                         'paid_at' => $saleStatus === 'paid' ? now() : null,
-                        'created_at' => now(),
+                        'created_at' => $request->sale_date ? $request->sale_date . ' ' . now()->format('H:i:s') : now(),
                     ]);
 
                     // Always deduct stock on creation (POS flow)
