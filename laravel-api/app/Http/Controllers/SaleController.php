@@ -226,7 +226,11 @@ class SaleController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('name_km', 'like', "%{$search}%");
+                  ->orWhere('name_km', 'like', "%{$search}%")
+                  ->orWhere('id', $search)
+                  ->orWhereHas('variants', function ($vq) use ($search) {
+                      $vq->where('sku', 'like', "%{$search}%");
+                  });
             });
         }
 
