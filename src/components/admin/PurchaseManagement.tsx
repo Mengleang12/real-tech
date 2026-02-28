@@ -714,7 +714,7 @@ const PurchaseDetailDialog = ({
               <TableBody>
                 {purchase.payments.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell className="text-sm">{format(new Date(p.paid_at), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-sm">{format(new Date(p.paid_at), 'MMM d, yyyy h:mm a')}</TableCell>
                     <TableCell className="text-sm font-medium">${Number(p.amount).toFixed(2)}</TableCell>
                     <TableCell className="text-sm capitalize">{p.method?.replace('_', ' ')}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{p.reference || '—'}</TableCell>
@@ -797,7 +797,7 @@ const PurchaseDetailDialog = ({
                     <TableCell className="text-sm capitalize">{exp.category}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{exp.description || '—'}</TableCell>
                     <TableCell className="text-sm font-medium">${Number(exp.amount).toFixed(2)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{format(new Date(exp.created_at), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{format(new Date(exp.created_at), 'MMM d, yyyy h:mm a')}</TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteExpense(exp.id)}>
                         <Trash2 className="w-3.5 h-3.5 text-destructive" />
@@ -848,7 +848,7 @@ const PurchaseDetailDialog = ({
                 try {
                   await purchasesApi.addPayment(purchase.id, {
                     amount: grandTotal,
-                    method: 'cash',
+                    method: 'bank',
                     note: 'Auto-recorded on order placement',
                   });
                   toast.success('Payment recorded automatically');
@@ -1104,7 +1104,7 @@ export const PurchaseManagement = () => {
                         <Badge className={statusColors[po.status]}>{statusLabels[po.status]}</Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {format(new Date(po.created_at), 'MMM d, yyyy')}
+                        {format(new Date(po.created_at), 'MMM d, yyyy h:mm a')}
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
@@ -1245,10 +1245,10 @@ export const PurchaseManagement = () => {
 
                     {/* Date Info */}
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                      <span>Created: {format(new Date(po.created_at), 'MMM d, yyyy')}</span>
-                      {po.ordered_at && <span>Ordered: {format(new Date(po.ordered_at), 'MMM d, yyyy')}</span>}
-                      {po.received_at && <span>Received: {format(new Date(po.received_at), 'MMM d, yyyy')}</span>}
-                      {po.completed_at && <span>Completed: {format(new Date(po.completed_at), 'MMM d, yyyy')}</span>}
+                      <span>Created: {format(new Date(po.created_at), 'MMM d, yyyy h:mm a')}</span>
+                      {po.ordered_at && <span>Ordered: {format(new Date(po.ordered_at), 'MMM d, yyyy h:mm a')}</span>}
+                      {po.received_at && <span>Received: {format(new Date(po.received_at), 'MMM d, yyyy h:mm a')}</span>}
+                      {po.completed_at && <span>Completed: {format(new Date(po.completed_at), 'MMM d, yyyy h:mm a')}</span>}
                     </div>
 
                     {po.notes && (
@@ -1310,7 +1310,7 @@ export const PurchaseManagement = () => {
                         <div className="flex flex-wrap gap-3">
                           {po.payments.map((pay) => (
                             <Badge key={pay.id} variant="outline" className="text-xs">
-                              ${Number(pay.amount).toFixed(2)} via {pay.method} — {format(new Date(pay.paid_at), 'MMM d')}
+                              ${Number(pay.amount).toFixed(2)} via {pay.method} — {format(new Date(pay.paid_at), 'MMM d, h:mm a')}
                             </Badge>
                           ))}
                         </div>
