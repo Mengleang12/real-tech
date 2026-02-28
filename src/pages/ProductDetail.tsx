@@ -567,9 +567,6 @@ const ProductDetail = () => {
                     <div>
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">{displayName}</h1>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-                        {appData.developer && (
-                          <span className="text-sm font-medium text-primary">{appData.developer}</span>
-                        )}
                         <Link
                           to={`/?category=${appData.category}`}
                           className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"

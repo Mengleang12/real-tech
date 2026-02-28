@@ -115,9 +115,7 @@ export interface Product {
   category: 'programs' | 'games' | 'extensions' | 'os';
   category_id?: number;
   icon_url?: string;
-  developer?: string;
   brand_id?: number;
-  website?: string;
   youtube_url?: string;
   is_featured: boolean;
   is_popular: boolean;

@@ -29,8 +29,7 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('name_km', 'like', "%{$search}%")
-                  ->orWhere('developer', 'like', "%{$search}%");
+                  ->orWhere('name_km', 'like', "%{$search}%");
             });
         }
 
@@ -137,9 +136,7 @@ class ProductController extends Controller
             'category' => $request->category,
             'category_id' => $request->category_id,
             'icon_url' => $request->icon_url,
-            'developer' => $request->developer,
             'brand_id' => $request->brand_id,
-            'website' => $request->website,
             'is_featured' => $request->is_featured ?? false,
             'is_popular' => $request->is_popular ?? false,
             'price' => $request->price,
@@ -227,9 +224,7 @@ class ProductController extends Controller
             'category' => $request->category ?? $product->category,
             'category_id' => $request->has('category_id') ? $request->category_id : $product->category_id,
             'icon_url' => $request->icon_url ?? $product->icon_url,
-            'developer' => $request->developer ?? $product->developer,
             'brand_id' => $request->has('brand_id') ? $request->brand_id : $product->brand_id,
-            'website' => $request->website ?? $product->website,
             'is_featured' => $request->is_featured ?? $product->is_featured,
             'is_popular' => $request->is_popular ?? $product->is_popular,
             'price' => $request->price ?? $product->price,
