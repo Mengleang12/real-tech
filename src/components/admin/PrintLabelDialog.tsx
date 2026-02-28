@@ -235,10 +235,14 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       {/* Label settings */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-1.5">
-          <Label className="text-xs text-muted-foreground whitespace-nowrap">Size (mm):</Label>
-          <Input type="number" min={10} max={200} value={labelWidth} onChange={e => setLabelWidth(Number(e.target.value) || 30)} className="h-8 w-16 text-sm" />
-          <span className="text-xs text-muted-foreground">×</span>
-          <Input type="number" min={10} max={200} value={labelHeight} onChange={e => setLabelHeight(Number(e.target.value) || 20)} className="h-8 w-16 text-sm" />
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">Paper Size:</Label>
+          <Select value={`${labelWidth}x${labelHeight}`} onValueChange={v => { const [w, h] = v.split('x').map(Number); setLabelWidth(w); setLabelHeight(h); }}>
+            <SelectTrigger className="h-8 w-32 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="30x20">30 × 20 mm</SelectItem>
+              <SelectItem value="40x30">40 × 30 mm</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-1.5">
           <Label className="text-xs text-muted-foreground whitespace-nowrap">Columns:</Label>
