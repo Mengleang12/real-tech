@@ -304,6 +304,8 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
       queryClient.invalidateQueries({ queryKey: ["admin-invoices"] });
       queryClient.invalidateQueries({ queryKey: ["admin-all-orders"] });
       queryClient.invalidateQueries({ queryKey: ["admin-sales-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["order-detail", order.id] });
       onClose();
     },
