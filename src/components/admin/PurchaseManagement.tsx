@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Plus, Search, Trash2, X, Save, Loader2, Package, DollarSign,
   ChevronLeft, ChevronRight, MoreHorizontal, Truck, CheckCircle2,
-  ClipboardList, Ban, FileText, CreditCard, Calendar
+  ClipboardList, Ban, FileText, CreditCard, Calendar, ScanBarcode
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -813,6 +813,42 @@ export const PurchaseManagement = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Barcode scan
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanValue, setScanValue] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const scanInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (scanOpen) {
+      setScanValue("");
+      setTimeout(() => scanInputRef.current?.focus(), 100);
+    }
+  }, [scanOpen]);
+
+  const handleScan = async () => {
+    const val = scanValue.trim();
+    if (!val) return;
+    setScanning(true);
+    try {
+      const res = await purchasesApi.getAll(1, 20, 'all', val);
+      if (res.purchases.length === 1) {
+        setViewPurchase(res.purchases[0]);
+        setScanOpen(false);
+      } else if (res.purchases.length > 1) {
+        // Apply as search filter
+        setSearch(val);
+        setScanOpen(false);
+        toast.info(`Found ${res.purchases.length} matching orders`);
+      } else {
+        toast.error("No purchase order found for this tracking number");
+      }
+    } catch {
+      toast.error("Failed to search");
+    }
+    setScanning(false);
+  };
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -862,9 +898,14 @@ export const PurchaseManagement = () => {
           <h2 className="text-xl font-semibold">Purchase Orders</h2>
           <p className="text-sm text-muted-foreground mt-1">Manage supplier purchases and restocking</p>
         </div>
-        <Button onClick={() => { setEditPurchase(null); setAddOpen(true); }} className="gap-2">
-          <Plus className="w-4 h-4" /> New Purchase
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setScanOpen(true)} className="gap-2">
+            <ScanBarcode className="w-4 h-4" /> Scan
+          </Button>
+          <Button onClick={() => { setEditPurchase(null); setAddOpen(true); }} className="gap-2">
+            <Plus className="w-4 h-4" /> New Purchase
+          </Button>
+        </div>
       </div>
 
       {/* Dashboard Stats */}
@@ -1012,6 +1053,40 @@ export const PurchaseManagement = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Barcode Scan Dialog */}
+      <AdminDialog
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        title="Scan Tracking Barcode"
+        description="Scan or type a tracking number to quickly find a purchase order"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="relative">
+            <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              ref={scanInputRef}
+              value={scanValue}
+              onChange={(e) => setScanValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleScan(); }}
+              placeholder="Scan barcode or type tracking number..."
+              className="pl-11 text-lg h-12"
+              autoFocus
+            />
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            Use a barcode scanner or manually enter the tracking number and press Enter
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setScanOpen(false)}>Cancel</Button>
+            <Button onClick={handleScan} disabled={scanning || !scanValue.trim()}>
+              {scanning ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
+              Search
+            </Button>
+          </div>
+        </div>
+      </AdminDialog>
     </div>
   );
 };
