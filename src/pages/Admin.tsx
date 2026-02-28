@@ -68,6 +68,7 @@ interface ProductFormProps {
 const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
   const [formData, setFormData] = useState<Partial<App>>({
     name: app?.name || "", name_km: app?.name_km || "",
+    sku: app?.sku || "",
     description: app?.description || "", description_km: app?.description_km || "",
     category: app?.category || "programs", category_id: app?.category_id || undefined,
     icon_url: app?.icon_url || "",
@@ -201,6 +202,10 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
         <div>
           <Label htmlFor="name_km">ឈ្មោះផលិតផល (ខ្មែរ)</Label>
           <Input id="name_km" value={formData.name_km} onChange={(e) => setFormData({ ...formData, name_km: e.target.value })} className="mt-1.5" />
+        </div>
+        <div>
+          <Label htmlFor="sku">SKU / Product Code</Label>
+          <Input id="sku" value={formData.sku || ""} onChange={(e) => setFormData({ ...formData, sku: e.target.value })} placeholder="e.g. PRD-001" className="mt-1.5" />
         </div>
       </div>
       <div>

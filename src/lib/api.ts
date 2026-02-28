@@ -110,6 +110,7 @@ export interface Product {
   id: number;
   name: string;
   name_km?: string;
+  sku?: string;
   description?: string;
   description_km?: string;
   category: 'programs' | 'games' | 'extensions' | 'os';
@@ -927,6 +928,7 @@ export interface SaleCustomer {
 export interface SaleProduct {
   id: number;
   name: string;
+  sku?: string;
   icon_url?: string;
   price: number;
   purchase_price?: number;

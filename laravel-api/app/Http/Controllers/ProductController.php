@@ -29,7 +29,8 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('name_km', 'like', "%{$search}%");
+                  ->orWhere('name_km', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
             });
         }
 
@@ -131,6 +132,7 @@ class ProductController extends Controller
         $product = Product::create([
             'name' => $request->name,
             'name_km' => $request->name_km,
+            'sku' => $request->sku,
             'description' => $request->description,
             'description_km' => $request->description_km,
             'category' => $request->category,
@@ -219,6 +221,7 @@ class ProductController extends Controller
         $product->update([
             'name' => $request->name ?? $product->name,
             'name_km' => $request->name_km ?? $product->name_km,
+            'sku' => $request->has('sku') ? $request->sku : $product->sku,
             'description' => $request->description ?? $product->description,
             'description_km' => $request->description_km ?? $product->description_km,
             'category' => $request->category ?? $product->category,

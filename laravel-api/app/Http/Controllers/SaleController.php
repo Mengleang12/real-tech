@@ -227,6 +227,7 @@ class SaleController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('name_km', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%")
                   ->orWhere('id', $search)
                   ->orWhereHas('variants', function ($vq) use ($search) {
                       $vq->where('sku', 'like', "%{$search}%");
@@ -234,13 +235,14 @@ class SaleController extends Controller
             });
         }
 
-        $products = $query->select('id', 'name', 'name_km', 'icon_url', 'price', 'purchase_price', 'stock_quantity')
+        $products = $query->select('id', 'name', 'name_km', 'sku', 'icon_url', 'price', 'purchase_price', 'stock_quantity')
             ->limit(20)
             ->get()
             ->map(function ($p) {
                 return [
                     'id' => $p->id,
                     'name' => $p->name,
+                    'sku' => $p->sku,
                     'icon_url' => $p->icon_url,
                     'price' => $p->price,
                     'purchase_price' => $p->purchase_price,
