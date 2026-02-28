@@ -164,7 +164,9 @@ class SaleController extends Controller
             $serialNumberStr = collect($allSerialNumbers)->filter()->implode(',') ?: null;
 
             // Create a single sale record
-            $sale = Sale::create([
+            $saleDate = $request->sale_date ? $request->sale_date . ' ' . now()->format('H:i:s') : now()->toDateTimeString();
+
+            $sale = new Sale([
                 'user_id' => $user->id,
                 'product_id' => $firstProductId,
                 'product_name' => implode(', ', $productNames),
@@ -179,8 +181,10 @@ class SaleController extends Controller
                 'status' => $saleStatus,
                 'paid_at' => $saleStatus === 'paid' ? now() : null,
                 'notes' => $request->notes,
-                'created_at' => $request->sale_date ? $request->sale_date . ' ' . now()->format('H:i:s') : now(),
             ]);
+            $sale->created_at = $saleDate;
+            $sale->updated_at = $saleDate;
+            $sale->save();
 
             $this->logActivity($request, 'admin_sale_created', [
                 'customer_id' => $user->id,
