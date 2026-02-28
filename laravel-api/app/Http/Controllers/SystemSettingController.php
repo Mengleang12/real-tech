@@ -68,8 +68,18 @@ class SystemSettingController extends Controller
             'max_upload_size',
             'auto_approve_apps',
             'site_name',
+            'site_tagline',
             'support_email',
+            'support_phone',
+            'site_address',
+            'site_logo_url',
+            'primary_color',
+            'default_currency',
+            'facebook_url',
+            'telegram_url',
+            'instagram_url',
             'enable_analytics',
+            'invoice_footer_text',
         ];
 
         $settings = $request->only($allowedKeys);
