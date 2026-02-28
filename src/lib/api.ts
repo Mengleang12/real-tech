@@ -982,6 +982,41 @@ export const salesApi = {
   },
 };
 
+// ─── Reports API ──────────────────────────────────────────────────────────────
+export const reportsApi = {
+  productSales: async (from: string, to: string): Promise<{
+    monthly: { product_id: number; product_name: string; month: string; quantity: number; revenue: number }[];
+    summary: { product_id: number; product_name: string; icon_url?: string; total_quantity: number; total_revenue: number; avg_price: number }[];
+    period: { from: string; to: string };
+  }> => {
+    return apiRequest(`admin/reports/product-sales?from=${from}&to=${to}`);
+  },
+
+  revenueTrend: async (from: string, to: string, groupBy = 'monthly'): Promise<{
+    trend: { period: string; orders: number; revenue: number; avg_order_value: number }[];
+    totals: { total_orders: number; total_revenue: number; avg_order_value: number };
+    period: { from: string; to: string; group_by: string };
+  }> => {
+    return apiRequest(`admin/reports/revenue-trend?from=${from}&to=${to}&group_by=${groupBy}`);
+  },
+
+  profitByPeriod: async (from: string, to: string): Promise<{
+    products: { product_id: number; product_name: string; icon_url?: string; total_sold: number; total_revenue: number; cost_of_goods: number; profit: number; margin: number }[];
+    summary: { total_revenue: number; total_cost: number; total_profit: number; overall_margin: number };
+    period: { from: string; to: string };
+  }> => {
+    return apiRequest(`admin/reports/profit-by-period?from=${from}&to=${to}`);
+  },
+
+  customerReport: async (from: string, to: string): Promise<{
+    customers: { user_id: number; full_name: string; email: string; phone?: string; total_orders: number; total_spent: number; avg_order_value: number; first_purchase: string; last_purchase: string; unique_products: number }[];
+    stats: { total_customers: number; repeat_customers: number; repeat_rate: number };
+    period: { from: string; to: string };
+  }> => {
+    return apiRequest(`admin/reports/customer-report?from=${from}&to=${to}`);
+  },
+};
+
 // ─── Purchase Types ───────────────────────────────────────────────────────────
 export interface PurchaseItem {
   id?: number;

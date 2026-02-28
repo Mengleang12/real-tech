@@ -45,6 +45,7 @@ import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/co
 import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
 import { ProfitAnalysis } from "@/components/admin/ProfitAnalysis";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
+import { SalesReport } from "@/components/admin/SalesReport";
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -603,7 +604,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "profit" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "profit" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
 
 interface NavItem {
   id: AdminTab;
@@ -626,6 +627,7 @@ const navGroups: NavGroup[] = [
       { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
       { id: "purchases", label: "Purchase", icon: ShoppingBag, permission: "orders.view" },
       { id: "profit", label: "Profit", icon: DollarSign, permission: "orders.view" },
+      { id: "reports", label: "Reports", icon: TrendingUp, permission: "orders.view" },
       { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
     ],
   },
@@ -1212,6 +1214,7 @@ const AdminDashboard = () => {
           {activeTab === "invoices" && <InvoicesPage />}
           {activeTab === "purchases" && <PurchaseManagement />}
           {activeTab === "profit" && <ProfitAnalysis />}
+          {activeTab === "reports" && <SalesReport />}
           {activeTab === "payments" && <PaymentHistoryAdmin />}
           {activeTab === "reviews" && <ProductReviewSystem />}
           {activeTab === "roles" && <RoleManagement />}
