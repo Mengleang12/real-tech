@@ -353,7 +353,12 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                       className="pl-9 h-9 text-sm"
                     />
                     {customerLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
-                    {customers.length > 0 && (
+                    {customerLoading && customerSearch.length >= 2 && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin" /> Searching customers...
+                      </div>
+                    )}
+                    {!customerLoading && customers.length > 0 && (
                       <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                         {customers.map(c => (
                           <button key={c.id} className="w-full text-left px-3 py-2 hover:bg-muted text-sm transition-colors cursor-pointer" onClick={() => { setSelectedCustomer(c); setCustomers([]); setCustomerSearch(""); }}>
@@ -361,6 +366,11 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                             <p className="text-xs text-muted-foreground">{c.email}{c.phone ? ` · ${c.phone}` : ""}</p>
                           </button>
                         ))}
+                      </div>
+                    )}
+                    {!customerLoading && customers.length === 0 && customerSearch.length >= 2 && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
+                        No customers found
                       </div>
                     )}
                   </div>
@@ -389,7 +399,12 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                 className="pl-9 h-9 text-sm"
               />
               {productLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
-              {products.length > 0 && (
+              {productLoading && productSearch.length >= 1 && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Searching products...
+                </div>
+              )}
+              {!productLoading && products.length > 0 && (
                 <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {products.map(p => (
                     <div key={p.id}>
@@ -420,6 +435,11 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+              {!productLoading && products.length === 0 && productSearch.length >= 1 && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
+                  No products found
                 </div>
               )}
             </div>
