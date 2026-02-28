@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Printer, Search, Plus, Minus, Trash2, Loader2, Package } from "lucide-react";
+import { Printer, Search, Plus, Minus, Trash2, Loader2, Package, Ruler, Columns3 } from "lucide-react";
 import { salesApi, type SaleProduct } from "@/lib/api";
 import JsBarcode from "jsbarcode";
 
@@ -233,19 +233,36 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       </div>
 
       {/* Label settings */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-1.5">
-          <Label className="text-xs text-muted-foreground whitespace-nowrap">Paper Size:</Label>
-          <Select value={`${labelWidth}x${labelHeight}`} onValueChange={v => { const [w, h] = v.split('x').map(Number); setLabelWidth(w); setLabelHeight(h); }}>
-            <SelectTrigger className="h-8 w-32 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="30x20">30 × 20 mm</SelectItem>
-              <SelectItem value="40x30">40 × 30 mm</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Ruler className="w-3.5 h-3.5 text-muted-foreground" />
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">Paper Size</Label>
+          <div className="flex gap-1.5">
+            {[
+              { value: "30x20", label: "30×20", sub: "mm" },
+              { value: "40x30", label: "40×30", sub: "mm" },
+            ].map(opt => {
+              const active = `${labelWidth}x${labelHeight}` === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => { const [w, h] = opt.value.split('x').map(Number); setLabelWidth(w); setLabelHeight(h); }}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer ${
+                    active
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  {opt.label} <span className="text-[10px] opacity-60">{opt.sub}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <Label className="text-xs text-muted-foreground whitespace-nowrap">Columns:</Label>
+        <div className="flex items-center gap-2">
+          <Columns3 className="w-3.5 h-3.5 text-muted-foreground" />
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">Columns</Label>
           <Select value={labelCols.toString()} onValueChange={v => setLabelCols(Number(v))}>
             <SelectTrigger className="h-8 w-20 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
