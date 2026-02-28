@@ -255,6 +255,20 @@ class AdminUserController extends Controller
         if ($request->user_id) {
             $query->where('user_id', $request->user_id);
         }
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                  ->orWhere('id', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%")
+                  ->orWhere('bakong_transaction_id', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($uq) use ($search) {
+                      $uq->where('email', 'like', "%{$search}%")
+                        ->orWhere('full_name', 'like', "%{$search}%");
+                  });
+            });
+        }
         
         $perPage = $request->limit ?? 20;
         $sales = $query->orderBy('created_at', 'desc')->paginate($perPage);

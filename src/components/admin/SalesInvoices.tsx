@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AddSaleDialog } from "./AddSaleDialog";
 import { InvoiceEditDialog } from "./InvoiceEditDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -172,15 +172,25 @@ const StockManagement = () => {
   const queryClient = useQueryClient();
   const [stockFilter, setStockFilter] = useState("all");
   const [stockSearch, setStockSearch] = useState("");
+  const [debouncedStockSearch, setDebouncedStockSearch] = useState("");
   const [stockPage, setStockPage] = useState(1);
   const [editingStock, setEditingStock] = useState<{ productId: number; variantId?: number; qty: number } | null>(null);
   const [stockReason, setStockReason] = useState("");
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedStockSearch(stockSearch);
+      setStockPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [stockSearch]);
+
   const { data: stockData, isLoading: stockLoading } = useQuery({
-    queryKey: ["admin-stock", stockFilter, stockSearch, stockPage],
+    queryKey: ["admin-stock", stockFilter, debouncedStockSearch, stockPage],
     queryFn: () => salesApi.getStockOverview({
       stock_status: stockFilter !== "all" ? stockFilter : undefined,
-      search: stockSearch || undefined,
+      search: debouncedStockSearch || undefined,
       page: stockPage,
       limit: 20,
     }),
@@ -214,7 +224,7 @@ const StockManagement = () => {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search products..." value={stockSearch} onChange={(e) => { setStockSearch(e.target.value); setStockPage(1); }} className="pl-9" />
+          <Input placeholder="Search products..." value={stockSearch} onChange={(e) => setStockSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={stockFilter} onValueChange={(v) => { setStockFilter(v); setStockPage(1); }}>
           <SelectTrigger className="w-[160px]"><SelectValue placeholder="Stock Status" /></SelectTrigger>
@@ -364,11 +374,21 @@ const InvoicesTab = () => {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [editOrder, setEditOrder] = useState<AdminOrder | null>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
   const [markPaidOrderId, setMarkPaidOrderId] = useState<string | null>(null);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const deleteMutation = useMutation({
     mutationFn: (orderId: string) => adminUsersApi.deleteOrder(orderId),
@@ -393,9 +413,10 @@ const InvoicesTab = () => {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-invoices", statusFilter, currentPage],
+    queryKey: ["admin-invoices", statusFilter, currentPage, debouncedSearch],
     queryFn: () => adminUsersApi.getAllOrders({
       status: statusFilter !== "all" ? statusFilter : undefined,
+      search: debouncedSearch || undefined,
       page: currentPage,
       limit: 20,
     }),
@@ -403,16 +424,6 @@ const InvoicesTab = () => {
 
   const orders = data?.orders || [];
   const pagination = data?.pagination;
-
-  const filtered = searchQuery
-    ? orders.filter(o =>
-        o.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        o.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        o.user?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        o.user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        o.bakong_transaction_id?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : orders;
 
   const handlePrint = (order: AdminOrder) => {
     const amount = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount;
@@ -584,7 +595,7 @@ const InvoicesTab = () => {
       {/* Invoices Table */}
       {isLoading ? (
         <div className="space-y-2">{[1,2,3,4,5].map(i => <div key={i} className="border border-border rounded-md bg-card p-4 space-y-2"><Skeleton className="h-4 w-48" /><Skeleton className="h-3 w-64" /></div>)}</div>
-      ) : filtered.length === 0 ? (
+      ) : orders.length === 0 ? (
         <div className="text-center py-12 border border-border rounded-md bg-card">
           <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">No invoices found</p>
@@ -605,7 +616,7 @@ const InvoicesTab = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filtered.map((order) => {
+                {orders.map((order) => {
                   const status = statusConfig[order.status] || statusConfig.pending;
                   const amount = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount;
                   return (

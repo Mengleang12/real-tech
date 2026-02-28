@@ -434,13 +434,14 @@ export const adminUsersApi = {
     return apiRequest(`admin/users/${userId}/revoke-product/${productId}`, { method: 'DELETE' });
   },
   
-  getAllOrders: async (params?: { status?: string; user_id?: number; page?: number; limit?: number }): Promise<{
+  getAllOrders: async (params?: { status?: string; user_id?: number; search?: string; page?: number; limit?: number }): Promise<{
     orders: AdminOrder[];
     pagination: { current_page: number; total_pages: number; total: number; per_page: number }
   }> => {
     const query = new URLSearchParams();
     if (params?.status) query.set('status', params.status);
     if (params?.user_id) query.set('user_id', params.user_id.toString());
+    if (params?.search) query.set('search', params.search);
     if (params?.page) query.set('page', params.page.toString());
     if (params?.limit) query.set('limit', params.limit.toString());
     
