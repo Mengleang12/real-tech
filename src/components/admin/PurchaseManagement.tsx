@@ -534,7 +534,9 @@ const PurchaseDetailDialog = ({
     }
   };
 
-  const grandTotal = Number(purchase.grand_total) || (Number(purchase.total_amount) + Number(purchase.delivery_fee || 0) + Number(purchase.other_expense || 0));
+  const grandTotal = Number(purchase.grand_total) > 0 
+    ? Number(purchase.grand_total) 
+    : (Number(purchase.total_amount) + Number(purchase.delivery_fee || 0) + Number(purchase.other_expense || 0));
   const remaining = grandTotal - Number(purchase.paid_amount);
 
   return (
