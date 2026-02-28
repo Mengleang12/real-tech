@@ -307,12 +307,16 @@ class AdminUserController extends Controller
 
         $newStatus = $request->status ?? $oldStatus;
 
-        // Restore stock when changing to cancelled (stock was deducted on creation)
-        if ($oldStatus !== 'cancelled' && $newStatus === 'cancelled') {
+        // Restore stock when changing to cancelled or failed (stock was deducted on creation)
+        $stockRemovedStatuses = ['cancelled', 'failed'];
+        $wasStockRemoved = in_array($oldStatus, $stockRemovedStatuses);
+        $willStockRemove = in_array($newStatus, $stockRemovedStatuses);
+
+        if (!$wasStockRemoved && $willStockRemove) {
             SaleController::restoreStock($sale);
         }
-        // Re-deduct stock when un-cancelling
-        if ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
+        // Re-deduct stock when un-cancelling or un-failing
+        if ($wasStockRemoved && !$willStockRemove) {
             SaleController::deductStock($sale);
         }
 
