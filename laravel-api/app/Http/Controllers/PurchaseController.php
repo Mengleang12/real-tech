@@ -71,8 +71,7 @@ class PurchaseController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'supplier_name' => 'required|string|max:255',
-            'supplier_id' => 'nullable|integer|exists:suppliers,id',
+            'supplier_id' => 'required|integer|exists:suppliers,id',
             'status' => 'nullable|in:draft,ordered',
             'notes' => 'nullable|string|max:1000',
             'tracking_number' => 'nullable|string|max:100',
@@ -89,6 +88,8 @@ class PurchaseController extends Controller
             'items.*.unit_cost' => 'required|numeric|min:0',
         ]);
 
+        $supplier = \App\Models\Supplier::findOrFail($request->supplier_id);
+
         DB::beginTransaction();
 
         try {
@@ -97,8 +98,8 @@ class PurchaseController extends Controller
             $otherExpense = $request->input('other_expense', 0);
 
             $purchase = Purchase::create([
-                'supplier_id' => $request->supplier_id,
-                'supplier_name' => $request->supplier_name,
+                'supplier_id' => $supplier->id,
+                'supplier_name' => $supplier->name,
                 'status' => $status,
                 'notes' => $request->notes,
                 'tracking_number' => $request->tracking_number,
@@ -171,7 +172,7 @@ class PurchaseController extends Controller
         }
 
         $request->validate([
-            'supplier_name' => 'nullable|string|max:255',
+            'supplier_id' => 'nullable|integer|exists:suppliers,id',
             'notes' => 'nullable|string|max:1000',
             'tracking_number' => 'nullable|string|max:100',
             'carrier' => 'nullable|string|max:100',
@@ -190,8 +191,13 @@ class PurchaseController extends Controller
         DB::beginTransaction();
 
         try {
+            // Resolve supplier name if supplier_id provided
+            if ($request->supplier_id) {
+                $supplier = \App\Models\Supplier::findOrFail($request->supplier_id);
+                $purchase->update(['supplier_id' => $supplier->id, 'supplier_name' => $supplier->name]);
+            }
+
             $updateData = array_filter([
-                'supplier_name' => $request->supplier_name,
                 'notes' => $request->notes,
                 'tracking_number' => $request->tracking_number,
                 'carrier' => $request->carrier,
