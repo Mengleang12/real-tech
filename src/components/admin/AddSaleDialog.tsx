@@ -444,7 +444,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
           </div>
 
           {/* ─── Products Section ─── */}
-          <div className="rounded-lg border border-border p-4 space-y-3">
+          <div className="rounded-lg border border-border p-4 space-y-3 overflow-visible">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold">Products</Label>
               <Button
