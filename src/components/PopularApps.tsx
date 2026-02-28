@@ -57,7 +57,7 @@ export const PopularApps = () => {
           <TrendingUp className="w-4 h-4 text-orange-500" />
         </div>
         <h2 className="text-lg font-bold text-foreground">
-          {language === 'km' ? 'កម្មវិធីពេញនិយម' : 'Popular Apps'}
+          {language === 'km' ? 'ផលិតផលពេញនិយម' : 'Popular Products'}
         </h2>
         {apps.length > 0 && (
           <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
