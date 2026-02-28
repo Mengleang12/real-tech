@@ -498,7 +498,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                 </div>
               )}
               {!productLoading && products.length > 0 && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-72 overflow-y-auto">
                   {products.map(p => (
                     <div key={p.id}>
                       {p.variants.length > 0 ? (
