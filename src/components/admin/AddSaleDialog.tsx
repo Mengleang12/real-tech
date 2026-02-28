@@ -469,6 +469,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                 className="pl-9 h-9 text-sm"
               />
               {(productLoading || scanLoading) && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+            </div>
               {productLoading && productSearch.length >= 1 && (
                 <div className="mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" /> Searching products...
@@ -507,7 +508,6 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                   ))}
                 </div>
               )}
-            </div>
 
             {/* Cart items */}
             {cart.length > 0 && (
