@@ -1048,7 +1048,6 @@ const StockPage = () => (
 // ─── Invoices Page (with New Sale button) ─────────────────────────────────────
 const InvoicesPage = () => {
   const [addSaleOpen, setAddSaleOpen] = useState(false);
-  const [printLabelOpen, setPrintLabelOpen] = useState(false);
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -1056,18 +1055,12 @@ const InvoicesPage = () => {
           <h2 className="text-xl font-semibold">Sales</h2>
           <p className="text-sm text-muted-foreground mt-1">View and manage all sales</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setPrintLabelOpen(true)} className="gap-2">
-            <Tag className="w-4 h-4" /> Print Labels
-          </Button>
-          <Button onClick={() => setAddSaleOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> New Sale
-          </Button>
-        </div>
+        <Button onClick={() => setAddSaleOpen(true)} className="gap-2">
+          <Plus className="w-4 h-4" /> New Sale
+        </Button>
       </div>
       <InvoicesTab />
       <AddSaleDialog open={addSaleOpen} onOpenChange={setAddSaleOpen} />
-      <PrintLabelDialog open={printLabelOpen} onOpenChange={setPrintLabelOpen} />
     </div>
   );
 };
