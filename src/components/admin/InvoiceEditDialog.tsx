@@ -102,6 +102,44 @@ const getLineTotal = (item: EditCartItem) => {
   return Math.max(0, gross - item.discount);
 };
 
+/** Aggregate comma-separated product_name into grouped cart items with correct quantities */
+const buildCartFromOrder = (order: AdminOrder): EditCartItem[] => {
+  const names = order.product_name.split(",").map(n => n.trim()).filter(Boolean);
+  const totalOriginal = order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount);
+  const totalDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
+  const serials = order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [];
+
+  // Group by name to aggregate quantities
+  const grouped = new Map<string, { count: number; firstIndex: number }>();
+  const ordered: string[] = [];
+  names.forEach((name, i) => {
+    const existing = grouped.get(name);
+    if (existing) {
+      existing.count++;
+    } else {
+      ordered.push(name);
+      grouped.set(name, { count: 1, firstIndex: i });
+    }
+  });
+
+  const totalGroups = ordered.length;
+  const perItemPrice = totalGroups > 0 ? totalOriginal / names.length : totalOriginal;
+
+  return ordered.map((name, i) => {
+    const group = grouped.get(name)!;
+    return {
+      product_id: i === 0 ? order.product_id : 0,
+      product_name: name,
+      quantity: group.count,
+      unit_price: perItemPrice,
+      stock_quantity: 999,
+      discount: i === 0 ? totalDiscount : 0,
+      discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
+      serial_numbers: i === 0 ? serials : [],
+    };
+  });
+};
+
 // ─── Edit Tab ─────────────────────────────────────────────────────────────────
 const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void }) => {
   const queryClient = useQueryClient();
@@ -109,25 +147,8 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
   const [status, setStatus] = useState(order.status);
   const [txnId, setTxnId] = useState(order.bakong_transaction_id || "");
 
-  // Cart items - initialize from order (split comma-separated product names into individual items)
-  const [cart, setCart] = useState<EditCartItem[]>(() => {
-    const names = order.product_name.split(",").map(n => n.trim()).filter(Boolean);
-    const totalOriginal = order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount);
-    const perItemPrice = names.length > 1 ? totalOriginal / names.length : totalOriginal;
-    const totalDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
-    const serials = order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [];
-
-    return names.map((name, i) => ({
-      product_id: i === 0 ? order.product_id : 0,
-      product_name: name,
-      quantity: 1,
-      unit_price: names.length === 1 ? totalOriginal : perItemPrice,
-      stock_quantity: 999,
-      discount: i === 0 ? totalDiscount : 0,
-      discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
-      serial_numbers: i === 0 ? serials : [],
-    }));
-  });
+  // Cart items - initialize from order (aggregate duplicate product names)
+  const [cart, setCart] = useState<EditCartItem[]>(() => buildCartFromOrder(order));
 
   // Sale-level discount
   const [saleDiscount, setSaleDiscount] = useState(order.sale_discount ? parseFloat(order.sale_discount) : 0);
@@ -142,22 +163,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
     setNotes(order.notes || "");
     setStatus(order.status);
     setTxnId(order.bakong_transaction_id || "");
-    const names = order.product_name.split(",").map(n => n.trim()).filter(Boolean);
-    const totalOriginal = order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount);
-    const perItemPrice = names.length > 1 ? totalOriginal / names.length : totalOriginal;
-    const totalDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
-    const serials = order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [];
-
-    setCart(names.map((name, i) => ({
-      product_id: i === 0 ? order.product_id : 0,
-      product_name: name,
-      quantity: 1,
-      unit_price: names.length === 1 ? totalOriginal : perItemPrice,
-      stock_quantity: 999,
-      discount: i === 0 ? totalDiscount : 0,
-      discount_type: (order.item_discount_type as "amount" | "percent") || "amount",
-      serial_numbers: i === 0 ? serials : [],
-    })));
+    setCart(buildCartFromOrder(order));
     setSaleDiscount(order.sale_discount ? parseFloat(order.sale_discount) : 0);
     setSaleDiscountType((order.sale_discount_type as "amount" | "percent") || "amount");
   }, [order]);
@@ -290,7 +296,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
 
     // For single item, map directly. For multi-item, combine names & totals.
     const firstItem = cart[0];
-    const combinedName = cart.map(c => c.product_name).join(", ");
+    const combinedName = cart.flatMap(c => Array(c.quantity).fill(c.product_name)).join(", ");
     const totalOriginal = cart.reduce((s, c) => s + c.unit_price * c.quantity, 0);
     const totalItemDiscount = totalOriginal - subtotal;
 
