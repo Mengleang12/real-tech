@@ -186,6 +186,16 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
     e.preventDefault();
     setSaving(true);
     try {
+      // Validate SKU uniqueness if SKU is provided
+      if (formData.sku && formData.sku.trim()) {
+        const { data: existing } = await appsApi.getAll({ search: formData.sku.trim(), limit: 50 });
+        const duplicate = existing.find(p => p.sku?.toLowerCase() === formData.sku!.trim().toLowerCase() && p.id !== app?.id);
+        if (duplicate) {
+          toast.error(`SKU "${formData.sku}" is already used by product "${duplicate.name}" (#${duplicate.id})`);
+          setSaving(false);
+          return;
+        }
+      }
       const attribute_values = Object.entries(attrValues)
         .filter(([id, v]) => v.length > 0 && selectedAttrs.has(parseInt(id)))
         .map(([id, values]) => ({ attribute_id: parseInt(id), value: values.join(',') }));
