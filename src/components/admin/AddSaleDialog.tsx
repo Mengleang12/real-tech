@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { salesApi, type SaleCustomer, type SaleProduct, type CreateSalePayload } from "@/lib/api";
@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Search, Plus, Trash2, UserPlus, Package, Loader2, X, Minus, Users, Percent, CalendarIcon } from "lucide-react";
+import { Search, Plus, Trash2, UserPlus, Package, Loader2, X, Minus, Users, Percent, CalendarIcon, ScanBarcode } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CartItem {
@@ -57,6 +57,13 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   const [saleDate, setSaleDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
 
+  // Barcode scan state
+  const [scanMode, setScanMode] = useState(false);
+  const [scanValue, setScanValue] = useState("");
+  const [scanLoading, setScanLoading] = useState(false);
+  const scanInputRef = useRef<HTMLInputElement>(null);
+  const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Search customers
   const handleSearchCustomers = useCallback(async (q: string) => {
     setCustomerSearch(q);
@@ -80,6 +87,52 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     } catch { /* ignore */ }
     setProductLoading(false);
   }, []);
+
+  // Barcode scan: when user scans (rapid input + Enter), search and auto-add
+  const handleBarcodeScan = useCallback(async (code: string) => {
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    setScanLoading(true);
+    try {
+      const res = await salesApi.searchProducts(trimmed);
+      const products = res.products;
+      if (products.length === 0) {
+        toast.error(`No product found for code "${trimmed}"`);
+        setScanLoading(false);
+        return;
+      }
+      // Exact SKU match first
+      const exactProduct = products.find(p => p.sku === trimmed);
+      const exactVariant = products.flatMap(p => p.variants.map(v => ({ product: p, variant: v }))).find(pv => pv.variant.sku === trimmed);
+
+      if (exactVariant) {
+        addToCart(exactVariant.product, exactVariant.variant.id);
+        toast.success(`Added: ${exactVariant.product.name}`);
+      } else if (exactProduct) {
+        if (exactProduct.variants.length > 0) {
+          addToCart(exactProduct, exactProduct.variants[0].id);
+        } else {
+          addToCart(exactProduct);
+        }
+        toast.success(`Added: ${exactProduct.name}`);
+      } else {
+        // Fallback to first result
+        const first = products[0];
+        if (first.variants.length > 0) {
+          addToCart(first, first.variants[0].id);
+        } else {
+          addToCart(first);
+        }
+        toast.success(`Added: ${first.name}`);
+      }
+    } catch {
+      toast.error("Scan failed");
+    }
+    setScanLoading(false);
+    setScanValue("");
+    // Re-focus scan input
+    setTimeout(() => scanInputRef.current?.focus(), 100);
+  }, [cart]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get available stock for a product/variant
   const getAvailableStock = (product: SaleProduct, variantId?: number) => {
@@ -212,6 +265,8 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setCustomers([]);
     setProducts([]);
     setProductSearch("");
+    setScanMode(false);
+    setScanValue("");
   };
 
   const handleSubmit = () => {
@@ -390,7 +445,44 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
 
           {/* ─── Products Section ─── */}
           <div className="rounded-lg border border-border p-4 space-y-3">
-            <Label className="text-sm font-semibold">Products</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Products</Label>
+              <Button
+                size="sm"
+                variant={scanMode ? "default" : "outline"}
+                onClick={() => {
+                  setScanMode(!scanMode);
+                  if (!scanMode) setTimeout(() => scanInputRef.current?.focus(), 100);
+                }}
+                className="h-7 text-xs gap-1 px-2.5"
+              >
+                <ScanBarcode className="w-3 h-3" />
+                {scanMode ? "Scanning..." : "Scan"}
+              </Button>
+            </div>
+
+            {/* Barcode scan input */}
+            {scanMode && (
+              <div className="relative">
+                <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary" />
+                <Input
+                  ref={scanInputRef}
+                  placeholder="Scan barcode or type SKU and press Enter..."
+                  value={scanValue}
+                  onChange={e => setScanValue(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleBarcodeScan(scanValue);
+                    }
+                  }}
+                  className="pl-9 h-9 text-sm border-primary/50 focus-visible:ring-primary/30 font-mono"
+                  autoFocus
+                />
+                {scanLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-primary" />}
+              </div>
+            )}
+
             <div className="relative">
               <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input
