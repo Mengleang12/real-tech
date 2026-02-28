@@ -929,6 +929,7 @@ export interface CreateSalePayload {
   sale_discount?: number;
   sale_discount_type?: 'amount' | 'percent';
   notes?: string;
+  sale_date?: string;
 }
 
 // Sales API

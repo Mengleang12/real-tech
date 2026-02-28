@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { salesApi, type SaleCustomer, type SaleProduct, type CreateSalePayload } from "@/lib/api";
 import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./AdminDialog";
 import { Button } from "@/components/ui/button";
@@ -7,8 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Search, Plus, Trash2, UserPlus, Package, Loader2, X, Minus, Users, Percent } from "lucide-react";
+import { Search, Plus, Trash2, UserPlus, Package, Loader2, X, Minus, Users, Percent, CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CartItem {
   product: SaleProduct;
@@ -50,6 +54,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
 
   // Payment
   const [paymentStatus, setPaymentStatus] = useState<"paid" | "pending" | "partial" | "unpaid">("pending");
+  const [saleDate, setSaleDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
 
   // Search customers
@@ -201,6 +206,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setSaleDiscount(0);
     setSaleDiscountType("amount");
     setPaymentStatus("pending");
+    setSaleDate(new Date());
     setNotes("");
     setCustomers([]);
     setProducts([]);
@@ -246,6 +252,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
       sale_discount: saleDiscount > 0 ? saleDiscount : undefined,
       sale_discount_type: saleDiscount > 0 ? saleDiscountType : undefined,
       notes: notes || undefined,
+      sale_date: format(saleDate, "yyyy-MM-dd"),
     };
 
     createMutation.mutate(payload);
@@ -497,7 +504,27 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
           <Separator />
 
           {/* ─── Payment & Notes ─── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Sale Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("h-9 w-full justify-start text-left text-sm font-normal", !saleDate && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                    {saleDate ? format(saleDate, "MMM dd, yyyy") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={saleDate}
+                    onSelect={(d) => d && setSaleDate(d)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Payment Status</Label>
               <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as typeof paymentStatus)}>
