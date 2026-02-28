@@ -1202,12 +1202,8 @@ const AdminDashboard = () => {
         <main className="flex-1 p-4 sm:p-6 overflow-auto">
           {activeTab === "analytics" && (
             <div className="space-y-8">
-              <AnalyticsDashboard />
-              <div>
-                <h2 className="text-xl font-semibold">Sales Dashboard</h2>
-                <p className="text-sm text-muted-foreground mt-1">Overview of sales performance</p>
-              </div>
               <SalesOverview />
+              <AnalyticsDashboard />
             </div>
           )}
           {activeTab === "apps" && <AppsTab />}
