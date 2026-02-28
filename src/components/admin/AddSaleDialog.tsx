@@ -268,6 +268,28 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     >
 
         <div className="space-y-5">
+          {/* ─── Sale Date ─── */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Sale Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("h-9 w-[200px] justify-start text-left text-sm font-normal", !saleDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                  {saleDate ? format(saleDate, "MMM dd, yyyy") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={saleDate}
+                  onSelect={(d) => d && setSaleDate(d)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
           {/* ─── Customer Section ─── */}
           <div className="space-y-3">
             <Label className="text-sm font-semibold">Customer</Label>
@@ -504,27 +526,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
           <Separator />
 
           {/* ─── Payment & Notes ─── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Sale Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("h-9 w-full justify-start text-left text-sm font-normal", !saleDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                    {saleDate ? format(saleDate, "MMM dd, yyyy") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={saleDate}
-                    onSelect={(d) => d && setSaleDate(d)}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Payment Status</Label>
               <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as typeof paymentStatus)}>
