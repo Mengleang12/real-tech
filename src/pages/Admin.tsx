@@ -5,7 +5,7 @@ import {
   ChevronLeft, ChevronRight, Users, BarChart3, Bell, Shield, Activity, 
   UserX, Tag, Play, Home, Menu, Download, Star, TrendingUp, Settings2, Loader2, ClipboardPaste, ShieldAlert, DollarSign,
   FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw, FileText, Pencil,
-  ShoppingBag, Truck
+  ShoppingBag, Truck, Wand2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -453,6 +453,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
                   <thead>
                     <tr className="bg-muted/50">
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant</th>
+                      <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">SKU</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant Price</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Quantity</th>
                     </tr>
@@ -463,6 +464,40 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
                       return (
                         <tr key={idx} className="hover:bg-muted/20">
                           <td className="px-3 sm:px-4 py-2.5 text-sm font-medium">{variantName}</td>
+                          <td className="px-3 sm:px-4 py-2.5">
+                            <div className="flex items-center gap-1">
+                              <Input
+                                type="text"
+                                value={variant.sku}
+                                onChange={e => {
+                                  const next = [...variants];
+                                  next[idx] = { ...next[idx], sku: e.target.value };
+                                  setVariants(next);
+                                }}
+                                placeholder="SKU"
+                                className="h-8 w-24 sm:w-32 text-sm"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0"
+                                title="Auto-generate SKU"
+                                onClick={() => {
+                                  const productSku = formData.sku || '';
+                                  const suffix = Object.values(variant.combination)
+                                    .map(v => v.toString().substring(0, 3).toUpperCase())
+                                    .join('-');
+                                  const generated = productSku ? `${productSku}-${suffix}` : suffix;
+                                  const next = [...variants];
+                                  next[idx] = { ...next[idx], sku: generated };
+                                  setVariants(next);
+                                }}
+                              >
+                                <Wand2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </td>
                           <td className="px-3 sm:px-4 py-2.5">
                             <Input
                               type="number"
