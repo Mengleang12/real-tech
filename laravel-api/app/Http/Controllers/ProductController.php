@@ -30,7 +30,9 @@ class ProductController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('name_km', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                  ->orWhereHas('variants', function ($vq) use ($search) {
+                      $vq->where('sku', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -43,16 +45,24 @@ class ProductController extends Controller
         }
 
         if ($request->has('min_price') && is_numeric($request->min_price)) {
-            $query->where('price', '>=', (float) $request->min_price);
+            $minPrice = (float) $request->min_price;
+            $query->whereHas('variants', function ($q) use ($minPrice) {
+                $q->where('is_active', true)->where('price_adjustment', '>=', $minPrice);
+            });
         }
 
         if ($request->has('max_price') && is_numeric($request->max_price)) {
-            $query->where('price', '<=', (float) $request->max_price);
+            $maxPrice = (float) $request->max_price;
+            $query->whereHas('variants', function ($q) use ($maxPrice) {
+                $q->where('is_active', true)->where('price_adjustment', '<=', $maxPrice);
+            });
         }
 
         if ($request->has('free_only') && $request->free_only === 'true') {
-            $query->where(function ($q) {
-                $q->whereNull('price')->orWhere('price', 0);
+            $query->whereHas('variants', function ($q) {
+                $q->where('is_active', true)->where(function ($sq) {
+                    $sq->whereNull('price_adjustment')->orWhere('price_adjustment', 0);
+                });
             });
         }
 
@@ -94,8 +104,14 @@ class ProductController extends Controller
             }
         }
 
-        if (!$canAccessDownloads && (!$product->price || $product->price == 0)) {
-            $canAccessDownloads = true;
+        // Check if all variants are free
+        if (!$canAccessDownloads) {
+            $hasOnlyFreeVariants = $product->variants->every(function ($v) {
+                return !$v->price_adjustment || $v->price_adjustment == 0;
+            });
+            if ($hasOnlyFreeVariants) {
+                $canAccessDownloads = true;
+            }
         }
         
         if (!$canAccessDownloads) {
@@ -127,12 +143,14 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'category' => 'required|in:programs,games,extensions,os',
+            'variants' => 'required|array|min:1',
+            'variants.*.combination' => 'required|array',
+            'variants.*.price_adjustment' => 'required|numeric|min:0',
         ]);
 
         $product = Product::create([
             'name' => $request->name,
             'name_km' => $request->name_km,
-            'sku' => $request->sku,
             'description' => $request->description,
             'description_km' => $request->description_km,
             'category' => $request->category,
@@ -141,13 +159,7 @@ class ProductController extends Controller
             'brand_id' => $request->brand_id,
             'is_featured' => $request->is_featured ?? false,
             'is_popular' => $request->is_popular ?? false,
-            'price' => $request->price,
-            'purchase_price' => $request->purchase_price,
-            'stock_quantity' => $request->stock_quantity ?? 0,
-            'low_stock_threshold' => $request->low_stock_threshold ?? 5,
         ]);
-
-        $product->updateStockStatus();
 
         if ($request->has('screenshots') && is_array($request->screenshots)) {
             foreach ($request->screenshots as $index => $url) {
@@ -182,18 +194,17 @@ class ProductController extends Controller
             }
         }
 
-        if ($request->has('variants') && is_array($request->variants)) {
-            foreach ($request->variants as $variant) {
-                if (!empty($variant['combination'])) {
-                    ProductVariant::create([
-                        'product_id' => $product->id,
-                        'combination' => $variant['combination'],
-                        'sku' => $variant['sku'] ?? null,
-                        'stock_quantity' => $variant['stock_quantity'] ?? 0,
-                        'price_adjustment' => $variant['price_adjustment'] ?? 0,
-                        'is_active' => $variant['is_active'] ?? true,
-                    ]);
-                }
+        foreach ($request->variants as $variant) {
+            if (!empty($variant['combination'])) {
+                ProductVariant::create([
+                    'product_id' => $product->id,
+                    'combination' => $variant['combination'],
+                    'sku' => $variant['sku'] ?? null,
+                    'stock_quantity' => $variant['stock_quantity'] ?? 0,
+                    'price_adjustment' => $variant['price_adjustment'] ?? 0,
+                    'purchase_price' => $variant['purchase_price'] ?? 0,
+                    'is_active' => $variant['is_active'] ?? true,
+                ]);
             }
         }
 
@@ -220,7 +231,6 @@ class ProductController extends Controller
         $product->update([
             'name' => $request->name ?? $product->name,
             'name_km' => $request->name_km ?? $product->name_km,
-            'sku' => $request->has('sku') ? $request->sku : $product->sku,
             'description' => $request->description ?? $product->description,
             'description_km' => $request->description_km ?? $product->description_km,
             'category' => $request->category ?? $product->category,
@@ -229,13 +239,7 @@ class ProductController extends Controller
             'brand_id' => $request->has('brand_id') ? $request->brand_id : $product->brand_id,
             'is_featured' => $request->is_featured ?? $product->is_featured,
             'is_popular' => $request->is_popular ?? $product->is_popular,
-            'price' => $request->price ?? $product->price,
-            'purchase_price' => $request->has('purchase_price') ? $request->purchase_price : $product->purchase_price,
-            'stock_quantity' => $request->has('stock_quantity') ? $request->stock_quantity : $product->stock_quantity,
-            'low_stock_threshold' => $request->has('low_stock_threshold') ? $request->low_stock_threshold : $product->low_stock_threshold,
         ]);
-
-        $product->updateStockStatus();
 
         if ($request->has('screenshots') && is_array($request->screenshots)) {
             $product->screenshots()->delete();
@@ -283,6 +287,7 @@ class ProductController extends Controller
                         'sku' => $variant['sku'] ?? null,
                         'stock_quantity' => $variant['stock_quantity'] ?? 0,
                         'price_adjustment' => $variant['price_adjustment'] ?? 0,
+                        'purchase_price' => $variant['purchase_price'] ?? 0,
                         'is_active' => $variant['is_active'] ?? true,
                     ]);
                 }

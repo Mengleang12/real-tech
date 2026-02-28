@@ -13,7 +13,6 @@ class Product extends Model
     protected $fillable = [
         'name',
         'name_km',
-        'sku',
         'description',
         'description_km',
         'category',
@@ -22,20 +21,11 @@ class Product extends Model
         'brand_id',
         'is_featured',
         'is_popular',
-        'price',
-        'purchase_price',
-        'stock_quantity',
-        'low_stock_threshold',
-        'stock_status',
     ];
 
     protected $casts = [
         'is_featured' => 'boolean',
         'is_popular' => 'boolean',
-        'price' => 'decimal:2',
-        'purchase_price' => 'decimal:2',
-        'stock_quantity' => 'integer',
-        'low_stock_threshold' => 'integer',
     ];
 
     public function screenshots(): HasMany
@@ -66,20 +56,5 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
-    }
-
-    /**
-     * Automatically update stock_status based on quantity and threshold.
-     */
-    public function updateStockStatus(): void
-    {
-        if ($this->stock_quantity <= 0) {
-            $this->stock_status = 'out_of_stock';
-        } elseif ($this->stock_quantity <= $this->low_stock_threshold) {
-            $this->stock_status = 'low_stock';
-        } else {
-            $this->stock_status = 'in_stock';
-        }
-        $this->saveQuietly();
     }
 }

@@ -198,7 +198,7 @@ const AddPurchaseDialog = ({
       variant_id: variantId || null,
       variant_label: variantLabel || null,
       quantity: 1,
-      unit_cost: Number(p.purchase_price ?? p.price) || 0,
+      unit_cost: Number(variantId ? p.variants.find(v => v.id === variantId)?.purchase_price ?? p.variants.find(v => v.id === variantId)?.price_adjustment : (p.variants.length > 0 ? p.variants[0].purchase_price ?? p.variants[0].price_adjustment : 0)) || 0,
     }]);
     setProductSearch("");
     setProductResults([]);
@@ -359,17 +359,17 @@ const AddPurchaseDialog = ({
                           className="w-full text-left px-3 py-2 hover:bg-accent text-sm flex justify-between"
                         >
                           <span>{p.name} <span className="text-muted-foreground">({label})</span></span>
-                          <span className="text-muted-foreground">${Number(v.price_adjustment || p.price).toFixed(2)}</span>
+                          <span className="text-muted-foreground">${Number(v.price_adjustment || 0).toFixed(2)}</span>
                         </button>
                       );
                     })
                   ) : (
                     <button
-                      onClick={() => addProduct(p)}
+                      onClick={() => addProduct(p, p.variants.length > 0 ? p.variants[0].id : undefined)}
                       className="w-full text-left px-3 py-2 hover:bg-accent text-sm flex justify-between"
                     >
                       <span>{p.name}</span>
-                      <span className="text-muted-foreground">${Number(p.price).toFixed(2)}</span>
+                      <span className="text-muted-foreground">${p.variants.length > 0 ? Number(p.variants[0].price_adjustment).toFixed(2) : '0.00'}</span>
                     </button>
                   )}
                 </div>

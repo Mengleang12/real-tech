@@ -46,11 +46,8 @@ export const ProductCard = (props: ProductCardProps) => {
   const iconUrl = props.app?.icon_url || props.icon_url;
   const category = props.app?.category || "programs";
 
-  const basePriceValue = props.app?.price;
-  const basePriceNum = typeof basePriceValue === "string" ? parseFloat(basePriceValue) : basePriceValue || 0;
-  // If product has active variants, use first variant price as default
   const activeVariants = props.app?.variants?.filter(v => v.is_active) || [];
-  const priceNum = activeVariants.length > 0 ? (Number(activeVariants[0].price_adjustment) || 0) : basePriceNum;
+  const priceNum = activeVariants.length > 0 ? (Number(activeVariants[0].price_adjustment) || 0) : 0;
   const isPaidApp = priceNum > 0;
   const displayName = t(nameKm, name);
 
@@ -62,8 +59,8 @@ export const ProductCard = (props: ProductCardProps) => {
     const app = props.app;
     const totalStock = app.variants && app.variants.length > 0
       ? app.variants.filter(v => v.is_active).reduce((sum, v) => sum + v.stock_quantity, 0)
-      : (app.stock_quantity ?? 0);
-    const threshold = app.low_stock_threshold ?? 5;
+      : 0;
+    const threshold = 5;
     if (totalStock <= 0) return { status: 'out', label: language === 'km' ? 'អស់ស្តុក' : 'Out of stock' };
     if (totalStock <= threshold) return { status: 'low', label: language === 'km' ? `នៅសល់ ${totalStock}` : `${totalStock} left` };
     return null; // normal stock, no badge needed

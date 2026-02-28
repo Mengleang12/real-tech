@@ -25,18 +25,19 @@ const Checkout = () => {
   const paidItems = items.filter((i) => paidIds.has(i.app.id));
   const unpaidItems = items.filter((i) => !paidIds.has(i.app.id));
   const freeItems = unpaidItems.filter((i) => {
-    const p = typeof i.app.price === "string" ? parseFloat(i.app.price) : i.app.price || 0;
+    const activeVariants = i.app.variants?.filter(v => v.is_active) || [];
+    const p = i.selectedVariant ? Number(i.selectedVariant.price_adjustment) || 0 : (activeVariants.length > 0 ? Number(activeVariants[0].price_adjustment) || 0 : 0);
     return p <= 0;
   });
   const paidRequired = unpaidItems.filter((i) => {
-    const p = typeof i.app.price === "string" ? parseFloat(i.app.price) : i.app.price || 0;
+    const activeVariants = i.app.variants?.filter(v => v.is_active) || [];
+    const p = i.selectedVariant ? Number(i.selectedVariant.price_adjustment) || 0 : (activeVariants.length > 0 ? Number(activeVariants[0].price_adjustment) || 0 : 0);
     return p > 0;
   });
 
   const getPrice = (item: typeof items[0]) => {
-    const base = typeof item.app.price === "string" ? parseFloat(item.app.price) : item.app.price || 0;
-    const variantAdj = Number(item.selectedVariant?.price_adjustment) || 0;
-    return base + variantAdj;
+    const activeVariants = item.app.variants?.filter(v => v.is_active) || [];
+    return item.selectedVariant ? Number(item.selectedVariant.price_adjustment) || 0 : (activeVariants.length > 0 ? Number(activeVariants[0].price_adjustment) || 0 : 0);
   };
 
   const currentPayingItem = payingIndex !== null ? paidRequired[payingIndex] : null;

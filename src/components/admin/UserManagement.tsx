@@ -490,7 +490,7 @@ export const UserManagement = () => {
                           <CommandItem key={app.id} value={app.id.toString()} onSelect={() => { setSelectedAppId(app.id.toString()); setAppSearchOpen(false); }}>
                             <Check className={cn("mr-2 h-4 w-4", selectedAppId === app.id.toString() ? "opacity-100" : "opacity-0")} />
                             <span>{app.name}</span>
-                            <span className="ml-auto text-xs text-muted-foreground">${typeof app.price === 'string' ? parseFloat(app.price).toFixed(2) : (app.price || 0).toFixed(2)}</span>
+                            <span className="ml-auto text-xs text-muted-foreground">${app.variants?.length ? Number(app.variants[0].price_adjustment || 0).toFixed(2) : '0.00'}</span>
                           </CommandItem>
                         ))}
                       </CommandGroup>
