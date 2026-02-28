@@ -16,7 +16,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\UserStatusController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProductSubmissionController;
-use App\Http\Controllers\AIChatController;
+
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\MailTestController;
 use App\Http\Controllers\CouponController;
@@ -59,8 +59,6 @@ Route::get('/product-attributes', [ProductAttributeController::class, 'index']);
 // Public maintenance check
 Route::get('/admin/settings/maintenance', [SystemSettingController::class, 'maintenanceStatus']);
 
-Route::post('/ai/chat', [AIChatController::class, 'chat']);
-Route::post('/ai/chat/stream', [AIChatController::class, 'streamChat']);
 
 // Protected admin routes (admin + moderator)
 Route::middleware('auth.admin')->group(function () {
