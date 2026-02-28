@@ -817,7 +817,7 @@ export const PurchaseManagement = () => {
   const [mainTab, setMainTab] = useState("orders");
   const [scanValue, setScanValue] = useState("");
   const [scanning, setScanning] = useState(false);
-  const [scannedPurchase, setScannedPurchase] = useState<Purchase | null>(null);
+  const [scannedPurchase, setScannedPurchase] = useState<Purchase | null>(null); // kept for clearScan
   const [scannedResults, setScannedResults] = useState<Purchase[]>([]);
   const scanInputRef = useRef<HTMLInputElement>(null);
 
@@ -834,21 +834,29 @@ export const PurchaseManagement = () => {
     const val = scanValue.trim();
     if (!val) return;
     setScanning(true);
-    setScannedPurchase(null);
-    setScannedResults([]);
     try {
       const res = await purchasesApi.getAll(1, 20, 'all', val);
-      if (res.purchases.length === 1) {
-        setScannedPurchase(res.purchases[0]);
-      } else if (res.purchases.length > 1) {
-        setScannedResults(res.purchases);
+      if (res.purchases.length >= 1) {
+        // Add found purchases to the list, avoiding duplicates
+        setScannedResults((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newItems = res.purchases.filter((p) => !existingIds.has(p.id));
+          return [...prev, ...newItems];
+        });
+        if (res.purchases.length === 1) {
+          toast.success(`Found: ${res.purchases[0].reference_number}`);
+        } else {
+          toast.success(`Found ${res.purchases.length} orders`);
+        }
       } else {
         toast.error("No purchase order found for this tracking number");
       }
     } catch {
       toast.error("Failed to search");
     }
+    setScanValue("");
     setScanning(false);
+    setTimeout(() => scanInputRef.current?.focus(), 50);
   };
 
   const handleClearScan = () => {
@@ -1061,7 +1069,7 @@ export const PurchaseManagement = () => {
                   />
                 </div>
                 <div className="flex gap-3">
-                  {(scannedPurchase || scannedResults.length > 0) && (
+                  {scannedResults.length > 0 && (
                     <Button variant="outline" onClick={handleClearScan}>
                       <X className="w-4 h-4 mr-2" /> Clear
                     </Button>
@@ -1075,127 +1083,10 @@ export const PurchaseManagement = () => {
             </CardContent>
           </Card>
 
-          {/* Scanned Result - Single PO */}
-          {scannedPurchase && (
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <Package className="w-5 h-5 text-primary" />
-                    <div>
-                      <h3 className="font-semibold text-lg">{scannedPurchase.reference_number}</h3>
-                      <p className="text-sm text-muted-foreground">{scannedPurchase.supplier_name}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge className={statusColors[scannedPurchase.status]}>{statusLabels[scannedPurchase.status]}</Badge>
-                    <Button variant="outline" size="sm" onClick={() => setViewPurchase(scannedPurchase)}>
-                      <FileText className="w-4 h-4 mr-2" /> Full Details
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Quick Info Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Grand Total</p>
-                    <p className="font-semibold">${(Number(scannedPurchase.grand_total) || Number(scannedPurchase.total_amount)).toFixed(2)}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Paid</p>
-                    <p className="font-semibold">${Number(scannedPurchase.paid_amount).toFixed(2)}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Tracking</p>
-                    <p className="font-mono text-sm">{scannedPurchase.tracking_number || '—'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Carrier</p>
-                    <p className="text-sm">{scannedPurchase.carrier || '—'}</p>
-                  </div>
-                </div>
-
-                {/* Date Info */}
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                  <span>Created: {format(new Date(scannedPurchase.created_at), 'MMM d, yyyy')}</span>
-                  {scannedPurchase.ordered_at && <span>Ordered: {format(new Date(scannedPurchase.ordered_at), 'MMM d, yyyy')}</span>}
-                  {scannedPurchase.received_at && <span>Received: {format(new Date(scannedPurchase.received_at), 'MMM d, yyyy')}</span>}
-                  {scannedPurchase.completed_at && <span>Completed: {format(new Date(scannedPurchase.completed_at), 'MMM d, yyyy')}</span>}
-                </div>
-
-                {scannedPurchase.notes && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Notes: </span>{scannedPurchase.notes}
-                  </div>
-                )}
-
-                {/* Items Table */}
-                {scannedPurchase.items && scannedPurchase.items.length > 0 && (
-                  <div className="border border-border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Product</TableHead>
-                          <TableHead className="w-20">Qty</TableHead>
-                          <TableHead className="w-24">Received</TableHead>
-                          <TableHead className="w-28">Unit Cost</TableHead>
-                          <TableHead className="w-28 text-right">Total</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {scannedPurchase.items.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="text-sm">{item.product_name}</TableCell>
-                            <TableCell className="text-sm">{item.quantity}</TableCell>
-                            <TableCell className="text-sm">
-                              <Badge variant={item.received_quantity >= item.quantity ? "default" : "secondary"} className="text-xs">
-                                {item.received_quantity || 0} / {item.quantity}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm">${Number(item.unit_cost).toFixed(2)}</TableCell>
-                            <TableCell className="text-sm text-right font-medium">${Number(item.total_cost).toFixed(2)}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-
-                {/* Expenses Summary */}
-                {scannedPurchase.expenses && scannedPurchase.expenses.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Expenses</p>
-                    <div className="flex flex-wrap gap-3">
-                      {scannedPurchase.expenses.map((exp) => (
-                        <Badge key={exp.id} variant="outline" className="text-xs capitalize">
-                          {exp.category}: ${Number(exp.amount).toFixed(2)}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Payments Summary */}
-                {scannedPurchase.payments && scannedPurchase.payments.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Payments</p>
-                    <div className="flex flex-wrap gap-3">
-                      {scannedPurchase.payments.map((pay) => (
-                        <Badge key={pay.id} variant="outline" className="text-xs">
-                          ${Number(pay.amount).toFixed(2)} via {pay.method} — {format(new Date(pay.paid_at), 'MMM d')}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Scanned Results - Multiple POs */}
+          {/* Scanned Results List */}
           {scannedResults.length > 0 && (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">Found {scannedResults.length} matching purchase orders:</p>
+              <p className="text-sm text-muted-foreground">Scanned results: {scannedResults.length} order(s)</p>
               <div className="border border-border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
@@ -1205,7 +1096,7 @@ export const PurchaseManagement = () => {
                       <TableHead>Tracking</TableHead>
                       <TableHead>Grand Total</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="w-20"></TableHead>
+                      <TableHead className="w-24"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1216,9 +1107,12 @@ export const PurchaseManagement = () => {
                         <TableCell className="text-sm font-mono text-muted-foreground">{po.tracking_number || '—'}</TableCell>
                         <TableCell className="text-sm font-medium">${(Number(po.grand_total) || Number(po.total_amount)).toFixed(2)}</TableCell>
                         <TableCell><Badge className={statusColors[po.status]}>{statusLabels[po.status]}</Badge></TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm" onClick={() => { setScannedPurchase(po); setScannedResults([]); }}>
-                            View
+                        <TableCell className="flex gap-1">
+                          <Button variant="outline" size="sm" onClick={() => setViewPurchase(po)}>
+                            <FileText className="w-3.5 h-3.5 mr-1" /> View
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setScannedResults((prev) => prev.filter((p) => p.id !== po.id))}>
+                            <X className="w-3.5 h-3.5" />
                           </Button>
                         </TableCell>
                       </TableRow>
