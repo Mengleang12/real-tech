@@ -304,7 +304,7 @@ const StockManagement = () => {
                     </td>
                     <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{product.category || "—"}</Badge></td>
                     <td className="px-4 py-3 font-semibold tabular-nums">${Number(product.price || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 font-semibold tabular-nums">{product.stock_quantity}</td>
+                    <td className="px-4 py-3 font-semibold tabular-nums">{product.total_variant_stock}</td>
                     <td className="px-4 py-3">{getStockBadge(product.stock_status)}</td>
                     <td className="px-4 py-3">
                       {product.variants.length > 0 ? (
