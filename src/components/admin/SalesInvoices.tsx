@@ -484,7 +484,8 @@ const InvoicesTab = () => {
         .invoice-badge{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#2563eb;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:6px}
         .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:32px;border-bottom:1px solid #e5e7eb}
         .brand{display:flex;align-items:center;gap:14px}
-        .brand-icon{width:44px;height:44px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700}
+        .brand-icon{width:44px;height:44px;border-radius:10px;overflow:hidden}
+        .brand-icon img{width:100%;height:100%;object-fit:contain}
         .brand-name{font-size:20px;font-weight:700;color:#111827}
         .brand-sub{font-size:12px;color:#6b7280;margin-top:2px;font-weight:400}
         .meta{text-align:right}
@@ -523,7 +524,7 @@ const InvoicesTab = () => {
 
       <div class="header">
         <div class="brand">
-          <div class="brand-icon">RC</div>
+          <div class="brand-icon"><img src="${window.location.origin}/realtech-logo.png" alt="Realtech Computer" /></div>
           <div>
             <div class="brand-name">Realtech Computer</div>
             <div class="brand-sub">Software & Digital Products</div>
