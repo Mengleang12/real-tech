@@ -301,6 +301,17 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
     const totalOriginal = cart.reduce((s, c) => s + c.unit_price * c.quantity, 0);
     const totalItemDiscount = totalOriginal - subtotal;
 
+    // Build items array for backend stock management
+    const items = cart.map(c => ({
+      product_id: c.product_id,
+      variant_id: c.variant_id || undefined,
+      quantity: c.quantity,
+      unit_price: c.unit_price,
+      serial_numbers: c.serial_numbers.join(", ") || undefined,
+      discount: c.discount || 0,
+      discount_type: c.discount_type || "amount",
+    }));
+
     updateMutation.mutate({
       product_name: combinedName,
       product_id: firstItem.product_id as any,
@@ -314,6 +325,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
       sale_discount: saleDiscount > 0 ? saleDiscount.toString() as any : "0" as any,
       sale_discount_type: saleDiscountType as any,
       bakong_transaction_id: txnId || undefined,
+      items: items as any,
     });
   };
 
