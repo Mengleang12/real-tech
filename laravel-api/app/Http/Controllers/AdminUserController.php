@@ -246,7 +246,7 @@ class AdminUserController extends Controller
 
     public function allOrders(Request $request)
     {
-        $query = Sale::with(['user:id,email,full_name,phone']);
+        $query = Sale::with(['user:id,email,full_name,phone', 'items']);
         
         if ($request->status) {
             $query->where('status', $request->status);
@@ -350,7 +350,7 @@ class AdminUserController extends Controller
     // ─── Get Order Detail (with attachments & payments) ───────────────────
     public function getOrderDetail($orderId)
     {
-        $sale = Sale::with(['user:id,email,full_name,phone', 'attachments', 'payments'])
+        $sale = Sale::with(['user:id,email,full_name,phone', 'items', 'attachments', 'payments'])
             ->findOrFail($orderId);
 
         return response()->json([

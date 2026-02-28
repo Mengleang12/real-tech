@@ -66,6 +66,11 @@ class Sale extends Model
         return $this->hasMany(PaymentLog::class);
     }
 
+    public function items(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
+    }
+
     public function attachments(): HasMany
     {
         return $this->hasMany(SaleAttachment::class);
