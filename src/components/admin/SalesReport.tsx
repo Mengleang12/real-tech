@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { format, subMonths, startOfMonth } from "date-fns";
 import {
   BarChart3, TrendingUp, TrendingDown, DollarSign, Users, Package,
-  Calendar, ArrowUpDown, ArrowUp, ArrowDown, ShoppingCart, Repeat
+  Calendar, ArrowUpDown, ArrowUp, ArrowDown, ShoppingCart, Repeat, Wallet
 } from "lucide-react";
+import { ProfitAnalysis } from "./ProfitAnalysis";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -497,12 +498,16 @@ export const SalesReport = () => {
           <TabsTrigger value="customers" className="text-xs sm:text-sm gap-1.5">
             <Users className="w-3.5 h-3.5 hidden sm:block" /> Customers
           </TabsTrigger>
+          <TabsTrigger value="profit-analysis" className="text-xs sm:text-sm gap-1.5">
+            <Wallet className="w-3.5 h-3.5 hidden sm:block" /> Profit Analysis
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="products"><ProductSalesTab from={from} to={to} /></TabsContent>
         <TabsContent value="revenue"><RevenueTrendTab from={from} to={to} /></TabsContent>
         <TabsContent value="profit"><ProfitByPeriodTab from={from} to={to} /></TabsContent>
         <TabsContent value="customers"><CustomerReportTab from={from} to={to} /></TabsContent>
+        <TabsContent value="profit-analysis"><ProfitAnalysis /></TabsContent>
       </Tabs>
     </div>
   );
