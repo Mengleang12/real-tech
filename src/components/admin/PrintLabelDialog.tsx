@@ -30,6 +30,8 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<LabelItem[]>([]);
   const [labelCols, setLabelCols] = useState(3);
+  const [labelWidth, setLabelWidth] = useState(30);
+  const [labelHeight, setLabelHeight] = useState(20);
   const printRef = useRef<HTMLDivElement>(null);
 
   const handleSearch = useCallback(async (q: string) => {
@@ -104,14 +106,14 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       <head>
         <style>
           @page {
-            size: 30mm 20mm;
+            size: ${labelWidth}mm ${labelHeight}mm;
             margin: 0;
           }
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; }
           .label {
-            width: 30mm;
-            height: 20mm;
+            width: ${labelWidth}mm;
+            height: ${labelHeight}mm;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -121,7 +123,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
             page-break-after: always;
           }
           .label:last-child { page-break-after: auto; }
-          .label svg { max-width: 28mm; height: 10mm; }
+          .label svg { max-width: ${labelWidth - 2}mm; height: ${Math.floor(labelHeight * 0.5)}mm; }
           .sku-text { font-size: 7pt; font-weight: bold; margin-top: 0.5mm; }
           .price-text { font-size: 8pt; font-weight: bold; margin-top: 0.5mm; }
         </style>
@@ -231,17 +233,25 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       </div>
 
       {/* Label settings */}
-      <div className="flex items-center gap-3">
-        <Label className="text-xs text-muted-foreground whitespace-nowrap">Columns per row:</Label>
-        <Select value={labelCols.toString()} onValueChange={v => setLabelCols(Number(v))}>
-          <SelectTrigger className="h-8 w-20 text-sm"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="3">3</SelectItem>
-            <SelectItem value="4">4</SelectItem>
-            <SelectItem value="5">5</SelectItem>
-            <SelectItem value="6">6</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">Size (mm):</Label>
+          <Input type="number" min={10} max={200} value={labelWidth} onChange={e => setLabelWidth(Number(e.target.value) || 30)} className="h-8 w-16 text-sm" />
+          <span className="text-xs text-muted-foreground">×</span>
+          <Input type="number" min={10} max={200} value={labelHeight} onChange={e => setLabelHeight(Number(e.target.value) || 20)} className="h-8 w-16 text-sm" />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">Columns:</Label>
+          <Select value={labelCols.toString()} onValueChange={v => setLabelCols(Number(v))}>
+            <SelectTrigger className="h-8 w-20 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="3">3</SelectItem>
+              <SelectItem value="4">4</SelectItem>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="6">6</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         {totalLabels > 0 && (
           <Badge variant="secondary" className="text-xs">{totalLabels} label{totalLabels > 1 ? "s" : ""}</Badge>
         )}
@@ -277,10 +287,10 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       {/* Preview */}
       {items.length > 0 && (
         <div className="border border-border rounded-lg p-3 bg-muted/20">
-          <p className="text-xs text-muted-foreground mb-2">Preview (30×20mm each)</p>
+          <p className="text-xs text-muted-foreground mb-2">Preview ({labelWidth}×{labelHeight}mm each)</p>
           <div className="flex flex-wrap gap-2">
             {items.slice(0, 6).map((item, idx) => (
-              <LabelPreview key={idx} sku={item.sku} price={item.price} />
+              <LabelPreview key={idx} sku={item.sku} price={item.price} width={labelWidth} height={labelHeight} />
             ))}
             {totalLabels > 6 && (
               <div className="w-[90px] h-[60px] border border-dashed border-border rounded flex items-center justify-center text-xs text-muted-foreground">
@@ -317,8 +327,10 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
 };
 
 // Single label preview component
-const LabelPreview = ({ sku, price }: { sku: string; price: number }) => {
+const LabelPreview = ({ sku, price, width = 30, height = 20 }: { sku: string; price: number; width?: number; height?: number }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const pxW = Math.round(width * 3);
+  const pxH = Math.round(height * 3);
 
   useEffect(() => {
     if (svgRef.current) {
@@ -337,8 +349,8 @@ const LabelPreview = ({ sku, price }: { sku: string; price: number }) => {
   }, [sku]);
 
   return (
-    <div className="w-[90px] h-[60px] border border-border rounded flex flex-col items-center justify-center bg-background p-1 overflow-hidden">
-      <svg ref={svgRef} className="max-w-[80px] h-[20px]" />
+    <div style={{ width: pxW, height: pxH }} className="border border-border rounded flex flex-col items-center justify-center bg-background p-1 overflow-hidden">
+      <svg ref={svgRef} style={{ maxWidth: pxW - 10 }} className="h-[20px]" />
       <span className="text-[8px] font-bold font-mono mt-0.5 leading-none">{sku}</span>
       <span className="text-[9px] font-bold leading-none mt-0.5">${price.toFixed(2)}</span>
     </div>
