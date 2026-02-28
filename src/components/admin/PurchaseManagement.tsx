@@ -813,33 +813,35 @@ export const PurchaseManagement = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Barcode scan
-  const [scanOpen, setScanOpen] = useState(false);
+  // Barcode scan tab
+  const [mainTab, setMainTab] = useState("orders");
   const [scanValue, setScanValue] = useState("");
   const [scanning, setScanning] = useState(false);
+  const [scannedPurchase, setScannedPurchase] = useState<Purchase | null>(null);
+  const [scannedResults, setScannedResults] = useState<Purchase[]>([]);
   const scanInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (scanOpen) {
+    if (mainTab === 'scan') {
       setScanValue("");
+      setScannedPurchase(null);
+      setScannedResults([]);
       setTimeout(() => scanInputRef.current?.focus(), 100);
     }
-  }, [scanOpen]);
+  }, [mainTab]);
 
   const handleScan = async () => {
     const val = scanValue.trim();
     if (!val) return;
     setScanning(true);
+    setScannedPurchase(null);
+    setScannedResults([]);
     try {
       const res = await purchasesApi.getAll(1, 20, 'all', val);
       if (res.purchases.length === 1) {
-        setViewPurchase(res.purchases[0]);
-        setScanOpen(false);
+        setScannedPurchase(res.purchases[0]);
       } else if (res.purchases.length > 1) {
-        // Apply as search filter
-        setSearch(val);
-        setScanOpen(false);
-        toast.info(`Found ${res.purchases.length} matching orders`);
+        setScannedResults(res.purchases);
       } else {
         toast.error("No purchase order found for this tracking number");
       }
@@ -847,6 +849,13 @@ export const PurchaseManagement = () => {
       toast.error("Failed to search");
     }
     setScanning(false);
+  };
+
+  const handleClearScan = () => {
+    setScanValue("");
+    setScannedPurchase(null);
+    setScannedResults([]);
+    setTimeout(() => scanInputRef.current?.focus(), 50);
   };
 
   const loadData = useCallback(async () => {
@@ -898,128 +907,329 @@ export const PurchaseManagement = () => {
           <h2 className="text-xl font-semibold">Purchase Orders</h2>
           <p className="text-sm text-muted-foreground mt-1">Manage supplier purchases and restocking</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setScanOpen(true)} className="gap-2">
-            <ScanBarcode className="w-4 h-4" /> Scan
-          </Button>
-          <Button onClick={() => { setEditPurchase(null); setAddOpen(true); }} className="gap-2">
-            <Plus className="w-4 h-4" /> New Purchase
-          </Button>
-        </div>
+        <Button onClick={() => { setEditPurchase(null); setAddOpen(true); }} className="gap-2">
+          <Plus className="w-4 h-4" /> New Purchase
+        </Button>
       </div>
 
       {/* Dashboard Stats */}
       <PurchaseDashboard stats={stats} />
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by PO#, supplier, or tracking#..."
-            className="pl-9"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="ordered">Ordered</SelectItem>
-            <SelectItem value="received">Received</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Main Tabs */}
+      <Tabs value={mainTab} onValueChange={setMainTab}>
+        <TabsList>
+          <TabsTrigger value="orders" className="gap-2">
+            <ClipboardList className="w-4 h-4" /> Orders
+          </TabsTrigger>
+          <TabsTrigger value="scan" className="gap-2">
+            <ScanBarcode className="w-4 h-4" /> Scan
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Table */}
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : purchases.length === 0 ? (
-        <div className="text-center py-12">
-          <Package className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
-          <p className="text-muted-foreground">No purchase orders found</p>
-        </div>
-      ) : (
-        <div className="border border-border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Reference</TableHead>
-                <TableHead>Supplier</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Grand Total</TableHead>
-                <TableHead>Paid</TableHead>
-                <TableHead>Tracking</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="w-10">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {purchases.map((po) => (
-                <TableRow key={po.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setViewPurchase(po)}>
-                  <TableCell className="font-mono text-sm">{po.reference_number}</TableCell>
-                  <TableCell className="text-sm">{po.supplier_name}</TableCell>
-                  <TableCell className="text-sm">{po.items?.length || 0}</TableCell>
-                  <TableCell className="text-sm font-medium">${(Number(po.grand_total) || Number(po.total_amount)).toFixed(2)}</TableCell>
-                  <TableCell className="text-sm">${Number(po.paid_amount).toFixed(2)}</TableCell>
-                  <TableCell className="text-sm font-mono text-muted-foreground">{po.tracking_number || '—'}</TableCell>
-                  <TableCell>
-                    <Badge className={statusColors[po.status]}>{statusLabels[po.status]}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {format(new Date(po.created_at), 'MMM d, yyyy')}
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Actions</div>
-                        <DropdownMenuItem onClick={() => setViewPurchase(po)}>
-                          <FileText className="w-4 h-4 mr-2" /> View Details
-                        </DropdownMenuItem>
-                        {po.status === 'draft' && (
-                          <DropdownMenuItem onClick={() => { setEditPurchase(po); setAddOpen(true); }}>
-                            <ClipboardList className="w-4 h-4 mr-2" /> Edit Order
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(po.id)}>
-                          <Trash2 className="w-4 h-4 mr-2" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+        {/* Orders Tab */}
+        <TabsContent value="orders" className="mt-4 space-y-4">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by PO#, supplier, or tracking#..."
+                className="pl-9"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="ordered">Ordered</SelectItem>
+                <SelectItem value="received">Received</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <span className="text-sm text-muted-foreground flex items-center px-3">
-            {page} / {totalPages}
-          </span>
-          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-      )}
+          {/* Table */}
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : purchases.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
+              <p className="text-muted-foreground">No purchase orders found</p>
+            </div>
+          ) : (
+            <div className="border border-border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Reference</TableHead>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead>Grand Total</TableHead>
+                    <TableHead>Paid</TableHead>
+                    <TableHead>Tracking</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="w-10">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {purchases.map((po) => (
+                    <TableRow key={po.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setViewPurchase(po)}>
+                      <TableCell className="font-mono text-sm">{po.reference_number}</TableCell>
+                      <TableCell className="text-sm">{po.supplier_name}</TableCell>
+                      <TableCell className="text-sm">{po.items?.length || 0}</TableCell>
+                      <TableCell className="text-sm font-medium">${(Number(po.grand_total) || Number(po.total_amount)).toFixed(2)}</TableCell>
+                      <TableCell className="text-sm">${Number(po.paid_amount).toFixed(2)}</TableCell>
+                      <TableCell className="text-sm font-mono text-muted-foreground">{po.tracking_number || '—'}</TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[po.status]}>{statusLabels[po.status]}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {format(new Date(po.created_at), 'MMM d, yyyy')}
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Actions</div>
+                            <DropdownMenuItem onClick={() => setViewPurchase(po)}>
+                              <FileText className="w-4 h-4 mr-2" /> View Details
+                            </DropdownMenuItem>
+                            {po.status === 'draft' && (
+                              <DropdownMenuItem onClick={() => { setEditPurchase(po); setAddOpen(true); }}>
+                                <ClipboardList className="w-4 h-4 mr-2" /> Edit Order
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(po.id)}>
+                              <Trash2 className="w-4 h-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground flex items-center px-3">
+                {page} / {totalPages}
+              </span>
+              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Scan Tab */}
+        <TabsContent value="scan" className="mt-4 space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center gap-4 max-w-lg mx-auto">
+                <ScanBarcode className="w-10 h-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground text-center">
+                  Scan a barcode or type a tracking number to quickly find a purchase order
+                </p>
+                <div className="relative w-full">
+                  <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    ref={scanInputRef}
+                    value={scanValue}
+                    onChange={(e) => setScanValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleScan(); }}
+                    placeholder="Scan barcode or type tracking number..."
+                    className="pl-11 text-lg h-12"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex gap-3">
+                  {(scannedPurchase || scannedResults.length > 0) && (
+                    <Button variant="outline" onClick={handleClearScan}>
+                      <X className="w-4 h-4 mr-2" /> Clear
+                    </Button>
+                  )}
+                  <Button onClick={handleScan} disabled={scanning || !scanValue.trim()}>
+                    {scanning ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
+                    Search
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Scanned Result - Single PO */}
+          {scannedPurchase && (
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-3">
+                    <Package className="w-5 h-5 text-primary" />
+                    <div>
+                      <h3 className="font-semibold text-lg">{scannedPurchase.reference_number}</h3>
+                      <p className="text-sm text-muted-foreground">{scannedPurchase.supplier_name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge className={statusColors[scannedPurchase.status]}>{statusLabels[scannedPurchase.status]}</Badge>
+                    <Button variant="outline" size="sm" onClick={() => setViewPurchase(scannedPurchase)}>
+                      <FileText className="w-4 h-4 mr-2" /> Full Details
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Quick Info Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Grand Total</p>
+                    <p className="font-semibold">${(Number(scannedPurchase.grand_total) || Number(scannedPurchase.total_amount)).toFixed(2)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Paid</p>
+                    <p className="font-semibold">${Number(scannedPurchase.paid_amount).toFixed(2)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Tracking</p>
+                    <p className="font-mono text-sm">{scannedPurchase.tracking_number || '—'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Carrier</p>
+                    <p className="text-sm">{scannedPurchase.carrier || '—'}</p>
+                  </div>
+                </div>
+
+                {/* Date Info */}
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  <span>Created: {format(new Date(scannedPurchase.created_at), 'MMM d, yyyy')}</span>
+                  {scannedPurchase.ordered_at && <span>Ordered: {format(new Date(scannedPurchase.ordered_at), 'MMM d, yyyy')}</span>}
+                  {scannedPurchase.received_at && <span>Received: {format(new Date(scannedPurchase.received_at), 'MMM d, yyyy')}</span>}
+                  {scannedPurchase.completed_at && <span>Completed: {format(new Date(scannedPurchase.completed_at), 'MMM d, yyyy')}</span>}
+                </div>
+
+                {scannedPurchase.notes && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Notes: </span>{scannedPurchase.notes}
+                  </div>
+                )}
+
+                {/* Items Table */}
+                {scannedPurchase.items && scannedPurchase.items.length > 0 && (
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Product</TableHead>
+                          <TableHead className="w-20">Qty</TableHead>
+                          <TableHead className="w-24">Received</TableHead>
+                          <TableHead className="w-28">Unit Cost</TableHead>
+                          <TableHead className="w-28 text-right">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {scannedPurchase.items.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="text-sm">{item.product_name}</TableCell>
+                            <TableCell className="text-sm">{item.quantity}</TableCell>
+                            <TableCell className="text-sm">
+                              <Badge variant={item.received_quantity >= item.quantity ? "default" : "secondary"} className="text-xs">
+                                {item.received_quantity || 0} / {item.quantity}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm">${Number(item.unit_cost).toFixed(2)}</TableCell>
+                            <TableCell className="text-sm text-right font-medium">${Number(item.total_cost).toFixed(2)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+
+                {/* Expenses Summary */}
+                {scannedPurchase.expenses && scannedPurchase.expenses.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Expenses</p>
+                    <div className="flex flex-wrap gap-3">
+                      {scannedPurchase.expenses.map((exp) => (
+                        <Badge key={exp.id} variant="outline" className="text-xs capitalize">
+                          {exp.category}: ${Number(exp.amount).toFixed(2)}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Payments Summary */}
+                {scannedPurchase.payments && scannedPurchase.payments.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Payments</p>
+                    <div className="flex flex-wrap gap-3">
+                      {scannedPurchase.payments.map((pay) => (
+                        <Badge key={pay.id} variant="outline" className="text-xs">
+                          ${Number(pay.amount).toFixed(2)} via {pay.method} — {format(new Date(pay.paid_at), 'MMM d')}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Scanned Results - Multiple POs */}
+          {scannedResults.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Found {scannedResults.length} matching purchase orders:</p>
+              <div className="border border-border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Reference</TableHead>
+                      <TableHead>Supplier</TableHead>
+                      <TableHead>Tracking</TableHead>
+                      <TableHead>Grand Total</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="w-20"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {scannedResults.map((po) => (
+                      <TableRow key={po.id}>
+                        <TableCell className="font-mono text-sm">{po.reference_number}</TableCell>
+                        <TableCell className="text-sm">{po.supplier_name}</TableCell>
+                        <TableCell className="text-sm font-mono text-muted-foreground">{po.tracking_number || '—'}</TableCell>
+                        <TableCell className="text-sm font-medium">${(Number(po.grand_total) || Number(po.total_amount)).toFixed(2)}</TableCell>
+                        <TableCell><Badge className={statusColors[po.status]}>{statusLabels[po.status]}</Badge></TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm" onClick={() => { setScannedPurchase(po); setScannedResults([]); }}>
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Dialogs */}
       <AddPurchaseDialog
@@ -1053,40 +1263,6 @@ export const PurchaseManagement = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Barcode Scan Dialog */}
-      <AdminDialog
-        open={scanOpen}
-        onOpenChange={setScanOpen}
-        title="Scan Tracking Barcode"
-        description="Scan or type a tracking number to quickly find a purchase order"
-        size="md"
-      >
-        <div className="space-y-4">
-          <div className="relative">
-            <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              ref={scanInputRef}
-              value={scanValue}
-              onChange={(e) => setScanValue(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleScan(); }}
-              placeholder="Scan barcode or type tracking number..."
-              className="pl-11 text-lg h-12"
-              autoFocus
-            />
-          </div>
-          <p className="text-xs text-muted-foreground text-center">
-            Use a barcode scanner or manually enter the tracking number and press Enter
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setScanOpen(false)}>Cancel</Button>
-            <Button onClick={handleScan} disabled={scanning || !scanValue.trim()}>
-              {scanning ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
-              Search
-            </Button>
-          </div>
-        </div>
-      </AdminDialog>
     </div>
   );
 };
