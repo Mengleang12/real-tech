@@ -446,10 +446,20 @@ const PurchaseDetailDialog = ({
   const [expenseDesc, setExpenseDesc] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("");
   const [addingExpense, setAddingExpense] = useState(false);
+  const [orderConfirmOpen, setOrderConfirmOpen] = useState(false);
 
   if (!purchase) return null;
 
   const handleStatusChange = async (newStatus: string) => {
+    // Intercept draft → ordered with confirmation
+    if (purchase.status === 'draft' && newStatus === 'ordered') {
+      setOrderConfirmOpen(true);
+      return;
+    }
+    await executeStatusChange(newStatus);
+  };
+
+  const executeStatusChange = async (newStatus: string) => {
     setStatusUpdating(true);
     try {
       await purchasesApi.updateStatus(purchase.id, newStatus);
@@ -528,6 +538,7 @@ const PurchaseDetailDialog = ({
   const remaining = grandTotal - Number(purchase.paid_amount);
 
   return (
+    <>
     <AdminDialog
       open={open}
       onOpenChange={onOpenChange}
@@ -807,6 +818,28 @@ const PurchaseDetailDialog = ({
         </TabsContent>
       </Tabs>
     </AdminDialog>
+
+      {/* Confirm Order Dialog */}
+      <AlertDialog open={orderConfirmOpen} onOpenChange={setOrderConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Order Placement</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Have you already paid the supplier for this order?</p>
+              <p className="text-xs text-muted-foreground">
+                You can add delivery fees and other costs later in the Expenses tab.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setOrderConfirmOpen(false); executeStatusChange('ordered'); }}>
+              Yes, Mark as Ordered
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
