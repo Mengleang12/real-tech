@@ -621,6 +621,12 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
+    label: "Overview",
+    items: [
+      { id: "analytics", label: "Analytics", icon: BarChart3, permission: "analytics.view" },
+    ],
+  },
+  {
     label: "Sales",
     items: [
       { id: "sales", label: "Dashboard", icon: BarChart3, permission: "orders.view" },
@@ -629,12 +635,6 @@ const navGroups: NavGroup[] = [
       { id: "profit", label: "Profit", icon: DollarSign, permission: "orders.view" },
       { id: "reports", label: "Reports", icon: TrendingUp, permission: "orders.view" },
       { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
-    ],
-  },
-  {
-    label: "Overview",
-    items: [
-      { id: "analytics", label: "Analytics", icon: BarChart3, permission: "analytics.view" },
     ],
   },
   {
