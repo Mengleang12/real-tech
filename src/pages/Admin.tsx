@@ -69,8 +69,7 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
     description: app?.description || "", description_km: app?.description_km || "",
     category: app?.category || "programs", category_id: app?.category_id || undefined,
     icon_url: app?.icon_url || "",
-    developer: app?.developer || "", brand_id: app?.brand_id || undefined,
-    website: app?.website || "",
+    brand_id: app?.brand_id || undefined,
     is_featured: app?.is_featured || false, is_popular: app?.is_popular || false,
     price: app?.price || 0,
     stock_quantity: app?.stock_quantity ?? 0,
@@ -897,7 +896,7 @@ const AppsTab = () => {
                             )}
                             <div className="min-w-0">
                               <p className="font-medium text-sm truncate">{app.name}</p>
-                              {app.developer && <p className="text-xs text-muted-foreground truncate">{app.developer}</p>}
+                              
                             </div>
                           </div>
                         </td>
