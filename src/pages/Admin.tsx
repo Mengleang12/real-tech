@@ -209,10 +209,8 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
           <div className="flex gap-1.5 mt-1.5">
             <Input id="sku" value={formData.sku || ""} onChange={(e) => setFormData({ ...formData, sku: e.target.value })} placeholder="e.g. PRD-001" />
             <Button type="button" variant="outline" size="sm" className="shrink-0 h-10 px-3 text-xs" onClick={() => {
-              const prefix = "SKU";
-              const timestamp = Date.now().toString(36).toUpperCase();
-              const random = Math.random().toString(36).substring(2, 5).toUpperCase();
-              setFormData({ ...formData, sku: `${prefix}-${timestamp}-${random}` });
+              const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+              setFormData({ ...formData, sku: random });
             }}>Generate</Button>
           </div>
         </div>
