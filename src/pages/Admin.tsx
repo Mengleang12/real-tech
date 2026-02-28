@@ -477,16 +477,6 @@ const AppForm = ({ app, onSave, onCancel }: AppFormProps) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="developer">Brand / Developer Name</Label>
-          <Input id="developer" value={formData.developer} onChange={(e) => setFormData({ ...formData, developer: e.target.value })} className="mt-1.5" />
-        </div>
-        <div>
-          <Label htmlFor="website">Website URL</Label>
-          <Input id="website" type="url" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} className="mt-1.5" />
-        </div>
-      </div>
 
       <div className="border border-border rounded-lg p-4 bg-muted/30 space-y-3">
         <Label className="text-base font-medium">Product Card Image</Label>
