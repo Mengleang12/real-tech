@@ -26,6 +26,7 @@ class Product extends Model
         'is_popular',
         'download_count',
         'price',
+        'purchase_price',
         'stock_quantity',
         'low_stock_threshold',
         'stock_status',
@@ -36,6 +37,7 @@ class Product extends Model
         'is_popular' => 'boolean',
         'download_count' => 'integer',
         'price' => 'decimal:2',
+        'purchase_price' => 'decimal:2',
         'stock_quantity' => 'integer',
         'low_stock_threshold' => 'integer',
     ];

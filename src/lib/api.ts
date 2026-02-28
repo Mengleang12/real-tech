@@ -127,6 +127,7 @@ export interface Product {
   screenshots?: ProductScreenshot[];
   videos?: ProductVideo[];
   price?: number;
+  purchase_price?: number;
   stock_quantity?: number;
   low_stock_threshold?: number;
   stock_status?: 'in_stock' | 'low_stock' | 'out_of_stock';
@@ -912,6 +913,7 @@ export interface SaleProduct {
   name: string;
   icon_url?: string;
   price: number;
+  purchase_price?: number;
   stock_quantity: number;
   variants: {
     id: number;

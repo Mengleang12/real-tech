@@ -163,7 +163,7 @@ const AddPurchaseDialog = ({
       variant_id: variantId || null,
       variant_label: variantLabel || null,
       quantity: 1,
-      unit_cost: Number(p.price) || 0,
+      unit_cost: Number(p.purchase_price ?? p.price) || 0,
     }]);
     setProductSearch("");
     setProductResults([]);
