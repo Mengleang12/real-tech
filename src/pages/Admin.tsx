@@ -5,7 +5,7 @@ import {
   ChevronLeft, ChevronRight, Users, BarChart3, Bell, Shield, Activity, 
   UserX, Tag, Play, Home, Menu, Download, Star, TrendingUp, Settings2, Loader2, ClipboardPaste, ShieldAlert, DollarSign,
   FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw, FileText, Pencil,
-  ShoppingBag
+  ShoppingBag, Truck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 import { SystemSettingsPanel } from "@/components/admin/SystemSettings";
 import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/components/admin/SalesInvoices";
 import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
+import { SupplierManagement } from "@/components/admin/SupplierManagement";
 import { ProfitAnalysis } from "@/components/admin/ProfitAnalysis";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { SalesReport } from "@/components/admin/SalesReport";
@@ -605,7 +606,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "profit" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "profit" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
 
 interface NavItem {
   id: AdminTab;
@@ -632,6 +633,7 @@ const navGroups: NavGroup[] = [
     items: [
       { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
       { id: "purchases", label: "Purchase", icon: ShoppingBag, permission: "orders.view" },
+      { id: "suppliers", label: "Suppliers", icon: Truck, permission: "orders.view" },
       { id: "profit", label: "Profit", icon: DollarSign, permission: "orders.view" },
       { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
       { id: "reports", label: "Reports", icon: TrendingUp, permission: "orders.view" },
@@ -1212,6 +1214,7 @@ const AdminDashboard = () => {
           {activeTab === "stock" && <StockPage />}
           {activeTab === "invoices" && <InvoicesPage />}
           {activeTab === "purchases" && <PurchaseManagement />}
+          {activeTab === "suppliers" && <SupplierManagement />}
           {activeTab === "profit" && <ProfitAnalysis />}
           {activeTab === "reports" && <SalesReport />}
           {activeTab === "payments" && <PaymentHistoryAdmin />}
