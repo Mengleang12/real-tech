@@ -37,11 +37,16 @@ const aggregateProductLines = (rawProductName: string): ProductLineItem[] => {
 
   rawProductName
     .split(",")
-    .map((name) => name.trim())
+    .map((s) => s.trim())
     .filter(Boolean)
-    .forEach((name) => {
+    .forEach((entry) => {
+      // Parse "Product ×3" format or plain name
+      const match = entry.match(/^(.+?)\s*[×x]\s*(\d+)$/i);
+      const name = match ? match[1].trim() : entry;
+      const qty = match ? parseInt(match[2], 10) : 1;
+
       if (!counts.has(name)) ordered.push(name);
-      counts.set(name, (counts.get(name) || 0) + 1);
+      counts.set(name, (counts.get(name) || 0) + qty);
     });
 
   return ordered.map((name) => ({ name, quantity: counts.get(name) || 0 }));

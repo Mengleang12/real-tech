@@ -129,9 +129,9 @@ class SaleController extends Controller
                 $variant = isset($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
                 $originalPrice = $variant ? ($variant->price_adjustment ?? $product->price) : $product->price;
 
-                // Collect product name (repeat for qty > 1)
+                // Collect product name (with quantity indicator)
+                $productNames[] = $qty > 1 ? $product->name . ' ×' . $qty : $product->name;
                 for ($i = 0; $i < $qty; $i++) {
-                    $productNames[] = $product->name;
                     $serialNumbers = $item['serial_numbers'] ?? [];
                     $allSerialNumbers[] = $serialNumbers[$i] ?? null;
                 }
