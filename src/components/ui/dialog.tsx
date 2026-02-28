@@ -132,7 +132,7 @@ const DialogContent = React.forwardRef<
           <TrafficLights mode={mode} onModeChange={setMode} />
         </div>
         {/* Content area */}
-        <div className="overflow-y-auto flex-1 p-6">
+        <div className="flex flex-col flex-1 min-h-0 p-6">
           {children}
         </div>
       </DialogPrimitive.Content>
