@@ -31,6 +31,34 @@ interface SystemSettings {
   invoice_footer_text: string;
 }
 
+function hexToHsl(hex: string): string {
+  let r = 0, g = 0, b = 0;
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  r = parseInt(hex.substring(0, 2), 16) / 255;
+  g = parseInt(hex.substring(2, 4), 16) / 255;
+  b = parseInt(hex.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+function applyPrimaryColor(hex: string) {
+  if (!hex || !/^#[0-9a-fA-F]{3,6}$/.test(hex)) return;
+  const hsl = hexToHsl(hex);
+  document.documentElement.style.setProperty('--primary', hsl);
+  document.documentElement.style.setProperty('--ring', hsl);
+}
+
 const defaultSettings: SystemSettings = {
   maintenance_mode: false,
   maintenance_message: 'We are currently performing scheduled maintenance. Please try again later.',
@@ -87,7 +115,9 @@ export function SystemSettingsPanel() {
       for (const key of Object.keys(defaultSettings) as (keyof SystemSettings)[]) {
         if (key in data) (managed as any)[key] = data[key];
       }
-      setSettings({ ...defaultSettings, ...managed });
+      const merged = { ...defaultSettings, ...managed };
+      setSettings(merged);
+      if (merged.primary_color) applyPrimaryColor(merged.primary_color);
     } catch (err: any) {
       toast.error(err.message || 'Failed to load settings');
     } finally {
@@ -150,6 +180,7 @@ export function SystemSettingsPanel() {
         const data = await res.json();
         throw new Error(data.error || 'Failed to save settings');
       }
+      applyPrimaryColor(settings.primary_color);
       toast.success('Settings saved successfully');
     } catch (err: any) {
       toast.error(err.message || 'Failed to save settings');

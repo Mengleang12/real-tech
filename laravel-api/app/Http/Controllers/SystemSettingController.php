@@ -68,10 +68,12 @@ class SystemSettingController extends Controller
     {
         $mode = SystemSetting::getValue('maintenance_mode', 'false');
         $message = SystemSetting::getValue('maintenance_message', '');
+        $primaryColor = SystemSetting::getValue('primary_color', '');
 
         return response()->json([
             'maintenance_mode' => $mode === 'true',
             'maintenance_message' => $message,
+            'primary_color' => $primaryColor,
         ]);
     }
 
