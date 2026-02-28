@@ -160,6 +160,15 @@ export interface Brand {
   updated_at: string;
 }
 
+export interface Supplier {
+  id: number;
+  name: string;
+  phone?: string | null;
+  address?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ProductAttribute {
   id: number;
   name: string;
@@ -849,6 +858,18 @@ export const brandsApi = {
     apiRequest(`admin/brands/${id}`, { method: 'PUT', body: data }),
   delete: async (id: number): Promise<{ success: boolean; message: string }> =>
     apiRequest(`admin/brands/${id}`, { method: 'DELETE' }),
+};
+
+// Suppliers API
+export const suppliersApi = {
+  getAll: async (q?: string): Promise<{ suppliers: Supplier[] }> =>
+    apiRequest(q ? `admin/suppliers?q=${encodeURIComponent(q)}` : 'admin/suppliers'),
+  create: async (data: Partial<Supplier>): Promise<{ success: boolean; supplier: Supplier }> =>
+    apiRequest('admin/suppliers', { method: 'POST', body: data }),
+  update: async (id: number, data: Partial<Supplier>): Promise<{ success: boolean; supplier: Supplier }> =>
+    apiRequest(`admin/suppliers/${id}`, { method: 'PUT', body: data }),
+  delete: async (id: number): Promise<{ success: boolean }> =>
+    apiRequest(`admin/suppliers/${id}`, { method: 'DELETE' }),
 };
 
 // Product Attributes API

@@ -27,6 +27,7 @@ use App\Http\Controllers\ProductAttributeController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SalesReportController;
+use App\Http\Controllers\SupplierController;
 
 /*
 |--------------------------------------------------------------------------
@@ -182,6 +183,12 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     // System settings
     Route::get('/admin/settings', [SystemSettingController::class, 'index']);
     Route::put('/admin/settings', [SystemSettingController::class, 'update']);
+
+    // Suppliers
+    Route::get('/admin/suppliers', [SupplierController::class, 'index']);
+    Route::post('/admin/suppliers', [SupplierController::class, 'store']);
+    Route::put('/admin/suppliers/{id}', [SupplierController::class, 'update']);
+    Route::delete('/admin/suppliers/{id}', [SupplierController::class, 'destroy']);
 
     // Purchase module (from supplier)
     Route::get('/admin/purchases/dashboard', [PurchaseController::class, 'dashboard']);

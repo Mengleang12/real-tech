@@ -25,7 +25,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { purchasesApi, salesApi, type Purchase, type PurchaseItem, type PurchaseExpense, type PurchaseDashboardStats, type SaleProduct } from "@/lib/api";
+import { purchasesApi, suppliersApi, salesApi, type Purchase, type PurchaseItem, type PurchaseExpense, type PurchaseDashboardStats, type SaleProduct, type Supplier } from "@/lib/api";
 import { format } from "date-fns";
 
 const playScanBeep = (success: boolean) => {
@@ -115,16 +115,16 @@ const AddPurchaseDialog = ({
   onOpenChange,
   editPurchase,
   onSaved,
-  existingSuppliers = [],
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   editPurchase?: Purchase | null;
   onSaved: () => void;
-  existingSuppliers?: string[];
 }) => {
   const [supplierName, setSupplierName] = useState("");
+  const [supplierId, setSupplierId] = useState<number | null>(null);
   const [supplierOpen, setSupplierOpen] = useState(false);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [notes, setNotes] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
   const [items, setItems] = useState<PurchaseFormItem[]>([]);
@@ -137,14 +137,22 @@ const AddPurchaseDialog = ({
   const [productResults, setProductResults] = useState<SaleProduct[]>([]);
   const [searchingProducts, setSearchingProducts] = useState(false);
 
-  const filteredSuppliers = existingSuppliers.filter(
-    (s) => s.toLowerCase().includes(supplierName.toLowerCase()) && s.toLowerCase() !== supplierName.toLowerCase()
+  // Load suppliers on open
+  useEffect(() => {
+    if (open) {
+      suppliersApi.getAll().then((r) => setSuppliers(r.suppliers)).catch(() => {});
+    }
+  }, [open]);
+
+  const filteredSuppliers = suppliers.filter(
+    (s) => s.name.toLowerCase().includes(supplierName.toLowerCase()) && s.name.toLowerCase() !== supplierName.toLowerCase()
   );
 
   useEffect(() => {
     if (open) {
       if (editPurchase) {
         setSupplierName(editPurchase.supplier_name);
+        setSupplierId((editPurchase as any).supplier_id || null);
         setNotes(editPurchase.notes || "");
         setTrackingNumber(editPurchase.tracking_number || "");
         setDeliveryFee(Number(editPurchase.delivery_fee) || 0);
@@ -160,6 +168,7 @@ const AddPurchaseDialog = ({
         })));
       } else {
         setSupplierName("");
+        setSupplierId(null);
         setNotes("");
         setTrackingNumber("");
         setDeliveryFee(0);
@@ -215,8 +224,22 @@ const AddPurchaseDialog = ({
 
     setSaving(true);
     try {
+      // Create supplier if new
+      let finalSupplierId = supplierId;
+      if (!finalSupplierId) {
+        const existing = suppliers.find((s) => s.name.toLowerCase() === supplierName.trim().toLowerCase());
+        if (existing) {
+          finalSupplierId = existing.id;
+        } else {
+          const res = await suppliersApi.create({ name: supplierName.trim() });
+          finalSupplierId = res.supplier.id;
+          setSuppliers((prev) => [...prev, res.supplier]);
+        }
+      }
+
       const payload = {
-        supplier_name: supplierName,
+        supplier_name: supplierName.trim(),
+        supplier_id: finalSupplierId,
         notes,
         tracking_number: trackingNumber || undefined,
         delivery_fee: deliveryFee,
@@ -262,7 +285,7 @@ const AddPurchaseDialog = ({
             <Label>Supplier Name *</Label>
             <Input
               value={supplierName}
-              onChange={(e) => { setSupplierName(e.target.value); setSupplierOpen(true); }}
+              onChange={(e) => { setSupplierName(e.target.value); setSupplierId(null); setSupplierOpen(true); }}
               onFocus={() => setSupplierOpen(true)}
               onBlur={() => setTimeout(() => setSupplierOpen(false), 200)}
               placeholder="Type or select supplier"
@@ -271,12 +294,13 @@ const AddPurchaseDialog = ({
               <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-md max-h-40 overflow-y-auto">
                 {filteredSuppliers.map((s) => (
                   <button
-                    key={s}
+                    key={s.id}
                     type="button"
                     className="w-full text-left px-3 py-2 text-sm hover:bg-accent truncate"
-                    onMouseDown={(e) => { e.preventDefault(); setSupplierName(s); setSupplierOpen(false); }}
+                    onMouseDown={(e) => { e.preventDefault(); setSupplierName(s.name); setSupplierId(s.id); setSupplierOpen(false); }}
                   >
-                    {s}
+                    <span>{s.name}</span>
+                    {s.phone && <span className="text-muted-foreground ml-2 text-xs">{s.phone}</span>}
                   </button>
                 ))}
               </div>
@@ -1359,7 +1383,6 @@ export const PurchaseManagement = () => {
         onOpenChange={setAddOpen}
         editPurchase={editPurchase}
         onSaved={loadData}
-        existingSuppliers={[...new Set(purchases.map((p) => p.supplier_name).filter(Boolean))]}
       />
 
       <PurchaseDetailDialog

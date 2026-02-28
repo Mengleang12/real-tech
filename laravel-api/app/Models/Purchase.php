@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -14,6 +15,7 @@ class Purchase extends Model
     protected $fillable = [
         'id',
         'reference_number',
+        'supplier_id',
         'supplier_name',
         'status',
         'total_amount',
@@ -63,6 +65,11 @@ class Purchase extends Model
         $date = now()->format('Ymd');
         $random = strtoupper(Str::random(4));
         return "{$prefix}-{$date}-{$random}";
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function items(): HasMany
