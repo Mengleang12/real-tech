@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
@@ -14,38 +15,41 @@ class SalesReportController extends Controller
 {
     /**
      * Product Sales Breakdown: units & revenue per product per month
+     * Uses sale_items for accurate per-product attribution
      */
     public function productSales(Request $request)
     {
         $from = $request->input('from', now()->subMonths(6)->startOfMonth()->toDateString());
         $to = $request->input('to', now()->endOfDay()->toDateString());
 
-        // Monthly breakdown per product
-        $monthly = Sale::where('status', 'paid')
-            ->whereBetween('paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+        // Monthly breakdown per product using sale_items
+        $monthly = SaleItem::join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', 'paid')
+            ->whereBetween('sales.paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
             ->select(
-                'product_id',
-                'product_name',
-                DB::raw("DATE_FORMAT(paid_at, '%Y-%m') as month"),
-                DB::raw('COUNT(*) as quantity'),
-                DB::raw('SUM(amount) as revenue')
+                'sale_items.product_id',
+                'sale_items.product_name',
+                DB::raw("DATE_FORMAT(sales.paid_at, '%Y-%m') as month"),
+                DB::raw('SUM(sale_items.quantity) as quantity'),
+                DB::raw('SUM(sale_items.total_price) as revenue')
             )
-            ->groupBy('product_id', 'product_name', DB::raw("DATE_FORMAT(paid_at, '%Y-%m')"))
+            ->groupBy('sale_items.product_id', 'sale_items.product_name', DB::raw("DATE_FORMAT(sales.paid_at, '%Y-%m')"))
             ->orderBy('month')
             ->orderByDesc('revenue')
             ->get();
 
         // Summary per product
-        $summary = Sale::where('status', 'paid')
-            ->whereBetween('paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+        $summary = SaleItem::join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', 'paid')
+            ->whereBetween('sales.paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
             ->select(
-                'product_id',
-                'product_name',
-                DB::raw('COUNT(*) as total_quantity'),
-                DB::raw('SUM(amount) as total_revenue'),
-                DB::raw('AVG(amount) as avg_price')
+                'sale_items.product_id',
+                'sale_items.product_name',
+                DB::raw('SUM(sale_items.quantity) as total_quantity'),
+                DB::raw('SUM(sale_items.total_price) as total_revenue'),
+                DB::raw('AVG(sale_items.unit_price) as avg_price')
             )
-            ->groupBy('product_id', 'product_name')
+            ->groupBy('sale_items.product_id', 'sale_items.product_name')
             ->orderByDesc('total_revenue')
             ->get();
 
@@ -125,22 +129,24 @@ class SalesReportController extends Controller
 
     /**
      * Profit Report by Period
+     * Uses sale_items for accurate per-product revenue and COGS formula
      */
     public function profitByPeriod(Request $request)
     {
         $from = $request->input('from', now()->subMonths(6)->startOfMonth()->toDateString());
         $to = $request->input('to', now()->endOfDay()->toDateString());
 
-        // Revenue per product in period
-        $salesData = Sale::where('status', 'paid')
-            ->whereBetween('paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+        // Revenue per product in period using sale_items
+        $salesData = SaleItem::join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', 'paid')
+            ->whereBetween('sales.paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
             ->select(
-                'product_id',
-                'product_name',
-                DB::raw('COUNT(*) as total_sold'),
-                DB::raw('SUM(amount) as total_revenue')
+                'sale_items.product_id',
+                'sale_items.product_name',
+                DB::raw('SUM(sale_items.quantity) as total_sold'),
+                DB::raw('SUM(sale_items.total_price) as total_revenue')
             )
-            ->groupBy('product_id', 'product_name')
+            ->groupBy('sale_items.product_id', 'sale_items.product_name')
             ->get();
 
         $result = [];
@@ -178,7 +184,7 @@ class SalesReportController extends Controller
 
             $landedCost = $totalPurchaseCost + $totalExpenses;
             $avgCostPerUnit = $totalPurchaseQty > 0 ? $landedCost / $totalPurchaseQty : 0;
-            $costOfGoodsSold = $avgCostPerUnit * $sale->total_sold;
+            $costOfGoodsSold = $avgCostPerUnit * (int) $sale->total_sold;
             $revenue = (float) $sale->total_revenue;
             $profit = $revenue - $costOfGoodsSold;
             $margin = $revenue > 0 ? ($profit / $revenue) * 100 : 0;

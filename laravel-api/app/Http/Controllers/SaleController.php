@@ -340,9 +340,17 @@ class SaleController extends Controller
             ->orderBy('date')
             ->get();
 
-        $topProducts = (clone $query)->where('status', 'paid')
-            ->select('product_id', 'product_name', DB::raw('SUM(amount) as revenue'), DB::raw('COUNT(*) as sales'))
-            ->groupBy('product_id', 'product_name')
+        // Use sale_items for accurate per-product revenue attribution
+        $topProductsQuery = SaleItem::join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', 'paid');
+        if ($from && $to) {
+            $topProductsQuery->whereBetween('sales.created_at', [$from, $to . ' 23:59:59']);
+        } else {
+            $topProductsQuery->where('sales.created_at', '>=', now()->subDays($days));
+        }
+        $topProducts = $topProductsQuery
+            ->select('sale_items.product_id', 'sale_items.product_name', DB::raw('SUM(sale_items.total_price) as revenue'), DB::raw('SUM(sale_items.quantity) as sales'))
+            ->groupBy('sale_items.product_id', 'sale_items.product_name')
             ->orderByDesc('sales')
             ->limit(10)
             ->get();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Purchase;
@@ -14,7 +15,6 @@ class AnalyticsController extends Controller
 {
     public function dashboard(Request $request)
     {
-        // ... keep existing code
         $from = $request->input('from');
         $to = $request->input('to');
         $tzOffset = $request->input('tz_offset');
@@ -79,11 +79,18 @@ class AnalyticsController extends Controller
             ->limit(10)
             ->get();
 
-        $topProducts = Sale::where('status', 'paid')
-            ->where('created_at', '>=', $startDate)
-            ->where('created_at', '<=', $endDate)
-            ->select('product_id', 'product_name', DB::raw('SUM(amount) as revenue'), DB::raw('COUNT(*) as sales'))
-            ->groupBy('product_id', 'product_name')
+        // Use sale_items for accurate per-product revenue attribution
+        $topProducts = SaleItem::join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', 'paid')
+            ->where('sales.created_at', '>=', $startDate)
+            ->where('sales.created_at', '<=', $endDate)
+            ->select(
+                'sale_items.product_id',
+                'sale_items.product_name',
+                DB::raw('SUM(sale_items.total_price) as revenue'),
+                DB::raw('SUM(sale_items.quantity) as sales')
+            )
+            ->groupBy('sale_items.product_id', 'sale_items.product_name')
             ->orderByDesc('revenue')
             ->limit(5)
             ->get();
@@ -100,6 +107,7 @@ class AnalyticsController extends Controller
 
     /**
      * Profit analysis: compare purchase cost vs sale revenue per product
+     * Uses sale_items for accurate per-product revenue and COGS formula for correct profit
      */
     public function profitAnalysis(Request $request)
     {
@@ -149,21 +157,24 @@ class AnalyticsController extends Controller
                 $totalExpenses += $expenseSum * $ratio;
             }
 
-            $totalPurchaseCost = ($purchaseData->total_cost ?? 0) + $totalExpenses;
+            $totalLandedCost = ($purchaseData->total_cost ?? 0) + $totalExpenses;
             $totalPurchaseQty = $purchaseData->total_qty ?? 0;
-            $avgCostPerUnit = $totalPurchaseQty > 0 ? $totalPurchaseCost / $totalPurchaseQty : 0;
+            $avgCostPerUnit = $totalPurchaseQty > 0 ? $totalLandedCost / $totalPurchaseQty : 0;
 
-            // Sale revenue: sum of amount from paid sales
-            $saleData = Sale::where('product_id', $product->id)
-                ->where('status', 'paid')
-                ->selectRaw('SUM(amount) as total_revenue, COUNT(*) as total_sold')
+            // Sale revenue: use sale_items for accurate per-product attribution
+            $saleData = SaleItem::where('sale_items.product_id', $product->id)
+                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                ->where('sales.status', 'paid')
+                ->selectRaw('SUM(sale_items.total_price) as total_revenue, SUM(sale_items.quantity) as total_sold')
                 ->first();
 
-            $totalRevenue = $saleData->total_revenue ?? 0;
-            $totalSold = $saleData->total_sold ?? 0;
-            $avgSalePrice = $totalSold > 0 ? $totalRevenue / $totalSold : $product->price;
+            $totalRevenue = (float) ($saleData->total_revenue ?? 0);
+            $totalSold = (int) ($saleData->total_sold ?? 0);
+            $avgSalePrice = $totalSold > 0 ? $totalRevenue / $totalSold : (float) $product->price;
 
-            $profit = $totalRevenue - $totalPurchaseCost;
+            // COGS = avg cost per unit × units sold (correct profit formula)
+            $cogs = $avgCostPerUnit * $totalSold;
+            $profit = $totalRevenue - $cogs;
             $margin = $totalRevenue > 0 ? ($profit / $totalRevenue) * 100 : 0;
 
             $result[] = [
@@ -172,13 +183,13 @@ class AnalyticsController extends Controller
                 'icon_url' => $product->icon_url,
                 'current_price' => (float) $product->price,
                 'stock_quantity' => $product->stock_quantity,
-                'total_purchase_cost' => round($totalPurchaseCost, 2),
+                'total_purchase_cost' => round($totalLandedCost, 2),
                 'total_purchase_qty' => (int) $totalPurchaseQty,
                 'avg_cost_per_unit' => round($avgCostPerUnit, 2),
                 'total_expenses' => round($totalExpenses, 2),
-                'total_revenue' => round((float) $totalRevenue, 2),
-                'total_sold' => (int) $totalSold,
-                'avg_sale_price' => round((float) $avgSalePrice, 2),
+                'total_revenue' => round($totalRevenue, 2),
+                'total_sold' => $totalSold,
+                'avg_sale_price' => round($avgSalePrice, 2),
                 'profit' => round((float) $profit, 2),
                 'margin' => round((float) $margin, 1),
             ];
@@ -192,15 +203,19 @@ class AnalyticsController extends Controller
         });
 
         // Summary
-        $totalCost = array_sum(array_column($result, 'total_purchase_cost'));
+        $totalCost = array_sum(array_column($result, 'profit')) < 0 ? 0 : array_sum(array_column($result, 'total_purchase_cost'));
         $totalRev = array_sum(array_column($result, 'total_revenue'));
-        $totalProfit = array_sum(array_column($result, 'profit'));
+        $totalCogs = 0;
+        foreach ($result as $r) {
+            $totalCogs += $r['avg_cost_per_unit'] * $r['total_sold'];
+        }
+        $totalProfit = $totalRev - $totalCogs;
 
         return response()->json([
             'success' => true,
             'products' => $result,
             'summary' => [
-                'total_cost' => round($totalCost, 2),
+                'total_cost' => round($totalCogs, 2),
                 'total_revenue' => round($totalRev, 2),
                 'total_profit' => round($totalProfit, 2),
                 'overall_margin' => $totalRev > 0 ? round(($totalProfit / $totalRev) * 100, 1) : 0,
