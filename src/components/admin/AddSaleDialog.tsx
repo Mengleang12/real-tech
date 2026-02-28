@@ -394,7 +394,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
             <div className="relative">
               <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input
-                placeholder="Search products..."
+                placeholder="Search by name, ID, or SKU..."
                 value={productSearch}
                 onChange={(e) => handleSearchProducts(e.target.value)}
                 className="pl-9 h-9 text-sm"
@@ -417,8 +417,8 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                             <button key={`${p.id}-${v.id}`} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addToCart(p, v.id)}>
                               {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-foreground truncate">{p.name}</p>
-                                <p className="text-xs text-muted-foreground">{label} · Stock: {v.stock_quantity}</p>
+                                <p className="font-medium text-foreground truncate">{p.name} <span className="text-muted-foreground font-normal">#{p.id}</span></p>
+                                <p className="text-xs text-muted-foreground">{label}{v.sku ? ` · SKU: ${v.sku}` : ''} · Stock: {v.stock_quantity}</p>
                               </div>
                               <span className="text-xs font-semibold text-foreground">${price.toFixed(2)}</span>
                             </button>
@@ -428,7 +428,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                         <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addToCart(p)}>
                           {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground truncate">{p.name}</p>
+                            <p className="font-medium text-foreground truncate">{p.name} <span className="text-muted-foreground font-normal">#{p.id}</span></p>
                             <p className="text-xs text-muted-foreground">Stock: {p.stock_quantity}</p>
                           </div>
                           <span className="text-xs font-semibold text-foreground">${Number(p.price).toFixed(2)}</span>
