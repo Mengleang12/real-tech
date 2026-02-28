@@ -116,12 +116,8 @@ export interface Product {
   category_id?: number;
   icon_url?: string;
   brand_id?: number;
-  youtube_url?: string;
   is_featured: boolean;
   is_popular: boolean;
-  download_count: number;
-  latest_version?: string;
-  versions?: never[];
   screenshots?: ProductScreenshot[];
   videos?: ProductVideo[];
   price?: number;

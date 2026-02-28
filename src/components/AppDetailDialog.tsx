@@ -285,11 +285,6 @@ export const AppDetailDialog = ({ app, open, onOpenChange }: AppDetailDialogProp
                 <div className="space-y-4">
                   {/* Metadata Grid */}
                   <div className="space-y-4 p-4 bg-muted/30 rounded-xl">
-                    <MetadataItem 
-                      label="Version" 
-                      value={appData.latest_version}
-                    />
-                    
                   </div>
 
                   {/* Security Badge */}
