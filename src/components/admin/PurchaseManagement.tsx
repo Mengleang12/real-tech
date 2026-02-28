@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Plus, Search, Trash2, X, Save, Loader2, Package, DollarSign,
   ChevronLeft, ChevronRight, MoreHorizontal, Truck, CheckCircle2,
@@ -795,6 +795,16 @@ export const PurchaseManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Dialogs
   const [addOpen, setAddOpen] = useState(false);
@@ -807,7 +817,7 @@ export const PurchaseManagement = () => {
     setLoading(true);
     try {
       const [listRes, dashRes] = await Promise.all([
-        purchasesApi.getAll(page, 20, statusFilter, search),
+        purchasesApi.getAll(page, 20, statusFilter, debouncedSearch),
         purchasesApi.dashboard(),
       ]);
       setPurchases(listRes.purchases);
@@ -817,7 +827,7 @@ export const PurchaseManagement = () => {
       toast.error(e.message || "Failed to load purchases");
     }
     setLoading(false);
-  }, [page, statusFilter, search]);
+  }, [page, statusFilter, debouncedSearch]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -866,7 +876,7 @@ export const PurchaseManagement = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by PO#, supplier, or tracking#..."
             className="pl-9"
           />
