@@ -15,7 +15,7 @@ const DialogClose = DialogPrimitive.Close;
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
+>(({ className, onClick, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
@@ -116,13 +116,22 @@ const DialogContent = React.forwardRef<
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
+        {...props}
+        onInteractOutside={(e) => {
+          // Don't close when interacting with portaled elements (Select, Popover, Calendar, etc.)
+          const target = e.target as HTMLElement;
+          if (target?.closest('[role="listbox"]') || target?.closest('[data-radix-popper-content-wrapper]')) {
+            e.preventDefault();
+            return;
+          }
+          props.onInteractOutside?.(e);
+        }}
         className={cn(
           "fixed z-50 flex flex-col w-full max-w-lg border-0 bg-card overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 left-[50%] top-[50%]",
           mode === 'normal' && "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
           className,
         )}
         style={getWindowStyles(mode)}
-        {...props}
       >
         {/* macOS title bar */}
         <div className="flex items-center px-4 py-2.5 bg-muted/60 border-b border-border/50 shrink-0">
