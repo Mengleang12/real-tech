@@ -1201,10 +1201,7 @@ const AdminDashboard = () => {
         {/* Page Content */}
         <main className="flex-1 p-4 sm:p-6 overflow-auto">
           {activeTab === "analytics" && (
-            <div className="space-y-8">
-              <SalesOverview />
-              <AnalyticsDashboard />
-            </div>
+            <AnalyticsDashboard />
           )}
           {activeTab === "apps" && <AppsTab />}
           {activeTab === "categories" && <CategoryManagement />}
