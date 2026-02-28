@@ -269,8 +269,8 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
 
         <div className="space-y-5">
           {/* ─── Sale Date ─── */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Sale Date</Label>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-sm font-semibold">Sale Date</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("h-9 w-[200px] justify-start text-left text-sm font-normal", !saleDate && "text-muted-foreground")}>
