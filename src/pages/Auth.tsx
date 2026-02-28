@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import realtechLogo from '@/assets/realtech-logo.png';
+import realtechLogoFallback from '@/assets/realtech-logo.png';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, KeyRound, ShieldX, Ban, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
+const BRANDING_URL = `${API_BASE_URL}/api/admin/settings/branding`;
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }),
@@ -66,6 +67,19 @@ const Auth = () => {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [banInfo, setBanInfo] = useState<{ status: string; reason?: string; suspendedUntil?: string } | null>(null);
+  const [brandLogo, setBrandLogo] = useState<string>(realtechLogoFallback);
+  const [siteName, setSiteName] = useState<string>('Realtech Computer');
+
+  // Fetch branding from admin settings
+  useEffect(() => {
+    fetch(BRANDING_URL)
+      .then(res => res.json())
+      .then(data => {
+        if (data.site_logo_url) setBrandLogo(data.site_logo_url);
+        if (data.site_name) setSiteName(data.site_name);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -390,10 +404,10 @@ const Auth = () => {
         {/* Logo */}
         <div className="text-center mb-6">
           <div className="w-12 h-12 flex items-center justify-center mx-auto mb-3">
-            <img src={realtechLogo} alt="Realtech Computer" className="w-full h-full object-contain" />
+            <img src={brandLogo} alt={siteName} className="w-full h-full object-contain" />
           </div>
           <h1 className="text-xl font-semibold text-foreground">
-            Realtech <span className="text-primary">Computer</span>
+            {siteName.includes(' ') ? <>{siteName.split(' ').slice(0, -1).join(' ')} <span className="text-primary">{siteName.split(' ').slice(-1)}</span></> : siteName}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {language === 'km' ? 'ចូលគណនីរបស់អ្នក' : 'Sign in to your account'}
