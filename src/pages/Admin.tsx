@@ -1148,10 +1148,19 @@ const AdminDashboard = () => {
         {/* User Info & Sidebar Footer */}
         <div className="p-3 border-t border-border space-y-1">
           {user && (
-            <div className="px-3 py-2 mb-1">
-              <p className="text-sm font-medium truncate">{user.full_name || user.email}</p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <Badge variant="outline" className="text-xs px-1.5 py-0">
+            <div className="px-3 py-2 mb-1 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-muted shrink-0 overflow-hidden flex items-center justify-center">
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-sm font-semibold text-muted-foreground">
+                    {(user.full_name || user.email || "?").charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium truncate">{user.full_name || user.email}</p>
+                <Badge variant="outline" className="text-xs px-1.5 py-0 mt-0.5">
                   {isSuperAdmin ? "Super Admin" : isAdmin ? "Admin" : "Moderator"}
                 </Badge>
               </div>
