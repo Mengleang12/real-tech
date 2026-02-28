@@ -123,6 +123,9 @@ const AddPurchaseDialog = ({
 }) => {
   const [supplierId, setSupplierId] = useState<number | null>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [quickSupplierName, setQuickSupplierName] = useState("");
+  const [addingSupplier, setAddingSupplier] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [notes, setNotes] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
   const [items, setItems] = useState<PurchaseFormItem[]>([]);
@@ -210,6 +213,22 @@ const AddPurchaseDialog = ({
   const subtotal = items.reduce((sum, i) => sum + i.quantity * i.unit_cost, 0);
   const grandTotal = subtotal + deliveryFee + otherExpense;
 
+  const handleQuickAddSupplier = async () => {
+    if (!quickSupplierName.trim()) return;
+    setAddingSupplier(true);
+    try {
+      const res = await suppliersApi.create({ name: quickSupplierName.trim() });
+      setSuppliers((prev) => [...prev, res.supplier]);
+      setSupplierId(res.supplier.id);
+      setQuickSupplierName("");
+      setShowQuickAdd(false);
+      toast.success("Supplier added");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to add supplier");
+    }
+    setAddingSupplier(false);
+  };
+
   const handleSave = async () => {
     if (!supplierId) { toast.error("Please select a supplier"); return; }
     if (items.length === 0) { toast.error("Add at least one item"); return; }
@@ -261,18 +280,47 @@ const AddPurchaseDialog = ({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <Label>Supplier *</Label>
-            <Select value={supplierId ? String(supplierId) : ""} onValueChange={(v) => setSupplierId(Number(v))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select supplier" />
-              </SelectTrigger>
-              <SelectContent>
-                {suppliers.map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)}>
-                    {s.name}{s.phone ? ` (${s.phone})` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={supplierId ? String(supplierId) : ""} onValueChange={(v) => setSupplierId(Number(v))}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select supplier" />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.name}{s.phone ? ` (${s.phone})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button type="button" size="icon" variant="outline" onClick={() => setShowQuickAdd(true)} title="Add new supplier">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            {showQuickAdd && (
+              <div className="flex gap-2 mt-2">
+                <Input
+                  value={quickSupplierName}
+                  onChange={(e) => setQuickSupplierName(e.target.value)}
+                  placeholder="New supplier name"
+                  className="flex-1"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleQuickAddSupplier();
+                    }
+                    if (e.key === 'Escape') { setShowQuickAdd(false); setQuickSupplierName(""); }
+                  }}
+                />
+                <Button type="button" size="sm" disabled={addingSupplier || !quickSupplierName.trim()} onClick={handleQuickAddSupplier}>
+                  {addingSupplier ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => { setShowQuickAdd(false); setQuickSupplierName(""); }}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
           <div>
             <Label>Tracking Number</Label>
