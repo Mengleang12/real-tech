@@ -72,6 +72,7 @@ class PurchaseController extends Controller
     {
         $request->validate([
             'supplier_name' => 'required|string|max:255',
+            'supplier_id' => 'nullable|integer|exists:suppliers,id',
             'status' => 'nullable|in:draft,ordered',
             'notes' => 'nullable|string|max:1000',
             'tracking_number' => 'nullable|string|max:100',
@@ -96,6 +97,7 @@ class PurchaseController extends Controller
             $otherExpense = $request->input('other_expense', 0);
 
             $purchase = Purchase::create([
+                'supplier_id' => $request->supplier_id,
                 'supplier_name' => $request->supplier_name,
                 'status' => $status,
                 'notes' => $request->notes,
