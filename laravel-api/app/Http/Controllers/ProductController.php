@@ -177,7 +177,6 @@ class ProductController extends Controller
                         'product_id' => $product->id,
                         'attribute_id' => $av['attribute_id'],
                         'value' => $av['value'],
-                        'stock_quantity' => $av['stock_quantity'] ?? 0,
                     ]);
                 }
             }
@@ -269,7 +268,6 @@ class ProductController extends Controller
                         'product_id' => $product->id,
                         'attribute_id' => $av['attribute_id'],
                         'value' => $av['value'],
-                        'stock_quantity' => $av['stock_quantity'] ?? 0,
                     ]);
                 }
             }
