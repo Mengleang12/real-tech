@@ -320,19 +320,17 @@ class PurchaseController extends Controller
                         if ($variant) {
                             $variant->increment('stock_quantity', $qty);
                         }
-                    }
-
-                    // Always update main product stock
-                    $product = Product::find($item->product_id);
-                    if ($product) {
-                        $product->increment('stock_quantity', $qty);
-                        $product->refresh();
-                        // Update stock status
-                        $newQty = $product->stock_quantity;
-                        $lowThreshold = $product->low_stock_threshold ?? 5;
-                        $product->update([
-                            'stock_status' => $newQty <= 0 ? 'out_of_stock' : ($newQty <= $lowThreshold ? 'low_stock' : 'in_stock'),
-                        ]);
+                    } else {
+                        // Only update main product stock when no variant
+                        $product = Product::find($item->product_id);
+                        if ($product) {
+                            $product->increment('stock_quantity', $qty);
+                            $product->refresh();
+                            $lowThreshold = $product->low_stock_threshold ?? 5;
+                            $product->update([
+                                'stock_status' => $product->stock_quantity <= 0 ? 'out_of_stock' : ($product->stock_quantity <= $lowThreshold ? 'low_stock' : 'in_stock'),
+                            ]);
+                        }
                     }
 
                     // Mark items as received
@@ -350,16 +348,16 @@ class PurchaseController extends Controller
                         if ($variant) {
                             $variant->decrement('stock_quantity', $qty);
                         }
-                    }
-
-                    $product = Product::find($item->product_id);
-                    if ($product) {
-                        $product->decrement('stock_quantity', $qty);
-                        $newQty = max(0, $product->stock_quantity - $qty);
-                        $lowThreshold = $product->low_stock_threshold ?? 5;
-                        $product->update([
-                            'stock_status' => $newQty <= 0 ? 'out_of_stock' : ($newQty <= $lowThreshold ? 'low_stock' : 'in_stock'),
-                        ]);
+                    } else {
+                        $product = Product::find($item->product_id);
+                        if ($product) {
+                            $product->decrement('stock_quantity', $qty);
+                            $product->refresh();
+                            $lowThreshold = $product->low_stock_threshold ?? 5;
+                            $product->update([
+                                'stock_status' => $product->stock_quantity <= 0 ? 'out_of_stock' : ($product->stock_quantity <= $lowThreshold ? 'low_stock' : 'in_stock'),
+                            ]);
+                        }
                     }
 
                     $item->update(['received_quantity' => 0]);
@@ -466,15 +464,16 @@ class PurchaseController extends Controller
             foreach ($purchase->items as $item) {
                 if ($item->variant_id) {
                     ProductVariant::where('id', $item->variant_id)->decrement('stock_quantity', $item->quantity);
-                }
-                $product = Product::find($item->product_id);
-                if ($product) {
-                    $product->decrement('stock_quantity', $item->quantity);
-                    $newQty = max(0, $product->stock_quantity - $item->quantity);
-                    $lowThreshold = $product->low_stock_threshold ?? 5;
-                    $product->update([
-                        'stock_status' => $newQty <= 0 ? 'out_of_stock' : ($newQty <= $lowThreshold ? 'low_stock' : 'in_stock'),
-                    ]);
+                } else {
+                    $product = Product::find($item->product_id);
+                    if ($product) {
+                        $product->decrement('stock_quantity', $item->quantity);
+                        $product->refresh();
+                        $lowThreshold = $product->low_stock_threshold ?? 5;
+                        $product->update([
+                            'stock_status' => $product->stock_quantity <= 0 ? 'out_of_stock' : ($product->stock_quantity <= $lowThreshold ? 'low_stock' : 'in_stock'),
+                        ]);
+                    }
                 }
             }
         }
