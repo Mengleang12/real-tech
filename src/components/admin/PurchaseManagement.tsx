@@ -1083,43 +1083,128 @@ export const PurchaseManagement = () => {
             </CardContent>
           </Card>
 
-          {/* Scanned Results List */}
+          {/* Scanned Results List - Card View */}
           {scannedResults.length > 0 && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <p className="text-sm text-muted-foreground">Scanned results: {scannedResults.length} order(s)</p>
-              <div className="border border-border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Reference</TableHead>
-                      <TableHead>Supplier</TableHead>
-                      <TableHead>Tracking</TableHead>
-                      <TableHead>Grand Total</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-24"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {scannedResults.map((po) => (
-                      <TableRow key={po.id}>
-                        <TableCell className="font-mono text-sm">{po.reference_number}</TableCell>
-                        <TableCell className="text-sm">{po.supplier_name}</TableCell>
-                        <TableCell className="text-sm font-mono text-muted-foreground">{po.tracking_number || '—'}</TableCell>
-                        <TableCell className="text-sm font-medium">${(Number(po.grand_total) || Number(po.total_amount)).toFixed(2)}</TableCell>
-                        <TableCell><Badge className={statusColors[po.status]}>{statusLabels[po.status]}</Badge></TableCell>
-                        <TableCell className="flex gap-1">
-                          <Button variant="outline" size="sm" onClick={() => setViewPurchase(po)}>
-                            <FileText className="w-3.5 h-3.5 mr-1" /> View
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setScannedResults((prev) => prev.filter((p) => p.id !== po.id))}>
-                            <X className="w-3.5 h-3.5" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              {scannedResults.map((po) => (
+                <Card key={po.id}>
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-3">
+                        <Package className="w-5 h-5 text-primary" />
+                        <div>
+                          <h3 className="font-semibold text-lg">{po.reference_number}</h3>
+                          <p className="text-sm text-muted-foreground">{po.supplier_name}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={statusColors[po.status]}>{statusLabels[po.status]}</Badge>
+                        <Button variant="outline" size="sm" onClick={() => setViewPurchase(po)}>
+                          <FileText className="w-4 h-4 mr-2" /> Full Details
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setScannedResults((prev) => prev.filter((p) => p.id !== po.id))}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Quick Info Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Grand Total</p>
+                        <p className="font-semibold">${(Number(po.grand_total) || Number(po.total_amount)).toFixed(2)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Paid</p>
+                        <p className="font-semibold">${Number(po.paid_amount).toFixed(2)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Tracking</p>
+                        <p className="font-mono text-sm">{po.tracking_number || '—'}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Carrier</p>
+                        <p className="text-sm">{po.carrier || '—'}</p>
+                      </div>
+                    </div>
+
+                    {/* Date Info */}
+                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                      <span>Created: {format(new Date(po.created_at), 'MMM d, yyyy')}</span>
+                      {po.ordered_at && <span>Ordered: {format(new Date(po.ordered_at), 'MMM d, yyyy')}</span>}
+                      {po.received_at && <span>Received: {format(new Date(po.received_at), 'MMM d, yyyy')}</span>}
+                      {po.completed_at && <span>Completed: {format(new Date(po.completed_at), 'MMM d, yyyy')}</span>}
+                    </div>
+
+                    {po.notes && (
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Notes: </span>{po.notes}
+                      </div>
+                    )}
+
+                    {/* Items Table */}
+                    {po.items && po.items.length > 0 && (
+                      <div className="border border-border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Product</TableHead>
+                              <TableHead className="w-20">Qty</TableHead>
+                              <TableHead className="w-24">Received</TableHead>
+                              <TableHead className="w-28">Unit Cost</TableHead>
+                              <TableHead className="w-28 text-right">Total</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {po.items.map((item) => (
+                              <TableRow key={item.id}>
+                                <TableCell className="text-sm">{item.product_name}</TableCell>
+                                <TableCell className="text-sm">{item.quantity}</TableCell>
+                                <TableCell className="text-sm">
+                                  <Badge variant={item.received_quantity >= item.quantity ? "default" : "secondary"} className="text-xs">
+                                    {item.received_quantity || 0} / {item.quantity}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm">${Number(item.unit_cost).toFixed(2)}</TableCell>
+                                <TableCell className="text-sm text-right font-medium">${Number(item.total_cost).toFixed(2)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+
+                    {/* Expenses Summary */}
+                    {po.expenses && po.expenses.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Expenses</p>
+                        <div className="flex flex-wrap gap-3">
+                          {po.expenses.map((exp) => (
+                            <Badge key={exp.id} variant="outline" className="text-xs capitalize">
+                              {exp.category}: ${Number(exp.amount).toFixed(2)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payments Summary */}
+                    {po.payments && po.payments.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Payments</p>
+                        <div className="flex flex-wrap gap-3">
+                          {po.payments.map((pay) => (
+                            <Badge key={pay.id} variant="outline" className="text-xs">
+                              ${Number(pay.amount).toFixed(2)} via {pay.method} — {format(new Date(pay.paid_at), 'MMM d')}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
         </TabsContent>
