@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Printer, Search, Plus, Minus, Trash2, Loader2, Package, Ruler, Columns3 } from "lucide-react";
+import { Printer, Plus, Minus, Trash2, Loader2, Package, Ruler, Columns3 } from "lucide-react";
 import { salesApi, type SaleProduct } from "@/lib/api";
 import JsBarcode from "jsbarcode";
 
