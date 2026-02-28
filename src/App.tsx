@@ -25,6 +25,27 @@ import Install from "./pages/Install";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
 
+function hexToHsl(hex: string): string {
+  let r = 0, g = 0, b = 0;
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  r = parseInt(hex.substring(0, 2), 16) / 255;
+  g = parseInt(hex.substring(2, 4), 16) / 255;
+  b = parseInt(hex.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
 const queryClient = new QueryClient();
 
 function AppRoutes() {
@@ -37,6 +58,12 @@ function AppRoutes() {
       .then(res => res.ok ? res.json() : { maintenance_mode: false })
       .then(data => {
         setMaintenance({ enabled: !!data.maintenance_mode, message: data.maintenance_message || '' });
+        // Apply saved primary color globally
+        if (data.primary_color && /^#[0-9a-fA-F]{3,6}$/.test(data.primary_color)) {
+          const hsl = hexToHsl(data.primary_color);
+          document.documentElement.style.setProperty('--primary', hsl);
+          document.documentElement.style.setProperty('--ring', hsl);
+        }
       })
       .catch(() => setMaintenance({ enabled: false, message: '' }))
       .finally(() => setCheckingMaintenance(false));
