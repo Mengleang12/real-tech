@@ -1042,8 +1042,8 @@ const InvoicesPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Invoices</h2>
-          <p className="text-sm text-muted-foreground mt-1">View and manage all invoices</p>
+          <h2 className="text-xl font-semibold">Sales</h2>
+          <p className="text-sm text-muted-foreground mt-1">View and manage all sales</p>
         </div>
         <Button onClick={() => setAddSaleOpen(true)} className="gap-2">
           <Plus className="w-4 h-4" /> New Sale
