@@ -20,8 +20,8 @@ interface LabelItem {
 }
 
 interface PrintLabelDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) => {
@@ -179,6 +179,133 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
     }, 300);
   };
 
+  const content = (
+    <div className="space-y-4">
+      {/* Search */}
+      <div className="relative">
+        <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+        <Input
+          placeholder="Search product by name, SKU, or ID..."
+          value={search}
+          onChange={e => handleSearch(e.target.value)}
+          className="pl-9 h-9 text-sm"
+        />
+        {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+        {loading && search.length >= 1 && (
+          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" /> Searching...
+          </div>
+        )}
+        {!loading && products.length > 0 && (
+          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+            {products.map(p => (
+              <div key={p.id}>
+                {p.variants.length > 0 ? (
+                  p.variants.map(v => (
+                    <button key={`${p.id}-${v.id}`} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addItem(p, v.id)}>
+                      {p.icon_url && <img src={p.icon_url} className="w-7 h-7 rounded object-cover shrink-0" alt="" />}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">{p.name} <span className="text-muted-foreground font-normal">#{p.id}</span></p>
+                        <p className="text-xs text-muted-foreground">{Object.values(v.combination).join(" / ")}{v.sku ? ` · SKU: ${v.sku}` : ''}</p>
+                      </div>
+                      <span className="text-xs font-semibold">${Number(v.price_adjustment || 0).toFixed(2)}</span>
+                    </button>
+                  ))
+                ) : (
+                  <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addItem(p)}>
+                    {p.icon_url && <img src={p.icon_url} className="w-7 h-7 rounded object-cover shrink-0" alt="" />}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{p.name} <span className="text-muted-foreground font-normal">#{p.id}</span></p>
+                      <p className="text-xs text-muted-foreground">{p.sku ? `SKU: ${p.sku}` : `ID: ${p.id}`}</p>
+                    </div>
+                    <span className="text-xs font-semibold">${Number(p.price).toFixed(2)}</span>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        {!loading && products.length === 0 && search.length >= 1 && (
+          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
+            No products found
+          </div>
+        )}
+      </div>
+
+      {/* Label settings */}
+      <div className="flex items-center gap-3">
+        <Label className="text-xs text-muted-foreground whitespace-nowrap">Columns per row:</Label>
+        <Select value={labelCols.toString()} onValueChange={v => setLabelCols(Number(v))}>
+          <SelectTrigger className="h-8 w-20 text-sm"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="3">3</SelectItem>
+            <SelectItem value="4">4</SelectItem>
+            <SelectItem value="5">5</SelectItem>
+            <SelectItem value="6">6</SelectItem>
+          </SelectContent>
+        </Select>
+        {totalLabels > 0 && (
+          <Badge variant="secondary" className="text-xs">{totalLabels} label{totalLabels > 1 ? "s" : ""}</Badge>
+        )}
+      </div>
+
+      {/* Items list */}
+      {items.length > 0 && (
+        <div className="border border-border rounded-lg overflow-hidden">
+          <div className="grid grid-cols-[1fr_100px_80px_32px] gap-1 px-3 py-2 bg-muted/50 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+            <span>Product / SKU</span>
+            <span className="text-center">Labels</span>
+            <span className="text-right">Price</span>
+            <span />
+          </div>
+          {items.map((item, idx) => (
+            <div key={idx} className="grid grid-cols-[1fr_100px_80px_32px] gap-1 px-3 py-2 items-center border-t border-border/50">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
+                <p className="text-[10px] text-muted-foreground font-mono">{item.sku}</p>
+              </div>
+              <div className="flex items-center gap-0.5 justify-center">
+                <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, -1)}><Minus className="w-2.5 h-2.5" /></Button>
+                <span className="text-xs font-medium w-6 text-center">{item.quantity}</span>
+                <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, 1)}><Plus className="w-2.5 h-2.5" /></Button>
+              </div>
+              <span className="text-sm font-medium text-right">${item.price.toFixed(2)}</span>
+              <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => removeItem(idx)}><Trash2 className="w-3 h-3" /></Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Preview */}
+      {items.length > 0 && (
+        <div className="border border-border rounded-lg p-3 bg-muted/20">
+          <p className="text-xs text-muted-foreground mb-2">Preview (30×20mm each)</p>
+          <div className="flex flex-wrap gap-2">
+            {items.slice(0, 6).map((item, idx) => (
+              <LabelPreview key={idx} sku={item.sku} price={item.price} />
+            ))}
+            {totalLabels > 6 && (
+              <div className="w-[90px] h-[60px] border border-dashed border-border rounded flex items-center justify-center text-xs text-muted-foreground">
+                +{totalLabels - 6} more
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex justify-end gap-2">
+        {onOpenChange && <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>}
+        <Button onClick={handlePrint} disabled={items.length === 0} className="gap-2">
+          <Printer className="w-4 h-4" />
+          Print {totalLabels} Label{totalLabels !== 1 ? "s" : ""}
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (!onOpenChange) return content;
+
   return (
     <AdminDialog
       open={open}
@@ -186,128 +313,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       title={<span className="flex items-center gap-2"><Printer className="w-5 h-5" /> Print Product Labels</span>}
       size="xl"
     >
-      <div className="space-y-4">
-        {/* Search */}
-        <div className="relative">
-          <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input
-            placeholder="Search product by name, SKU, or ID..."
-            value={search}
-            onChange={e => handleSearch(e.target.value)}
-            className="pl-9 h-9 text-sm"
-          />
-          {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
-          {loading && search.length >= 1 && (
-            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> Searching...
-            </div>
-          )}
-          {!loading && products.length > 0 && (
-            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-              {products.map(p => (
-                <div key={p.id}>
-                  {p.variants.length > 0 ? (
-                    p.variants.map(v => (
-                      <button key={`${p.id}-${v.id}`} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addItem(p, v.id)}>
-                        {p.icon_url && <img src={p.icon_url} className="w-7 h-7 rounded object-cover shrink-0" alt="" />}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground truncate">{p.name} <span className="text-muted-foreground font-normal">#{p.id}</span></p>
-                          <p className="text-xs text-muted-foreground">{Object.values(v.combination).join(" / ")}{v.sku ? ` · SKU: ${v.sku}` : ''}</p>
-                        </div>
-                        <span className="text-xs font-semibold">${Number(v.price_adjustment || 0).toFixed(2)}</span>
-                      </button>
-                    ))
-                  ) : (
-                    <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addItem(p)}>
-                      {p.icon_url && <img src={p.icon_url} className="w-7 h-7 rounded object-cover shrink-0" alt="" />}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground truncate">{p.name} <span className="text-muted-foreground font-normal">#{p.id}</span></p>
-                        <p className="text-xs text-muted-foreground">{p.sku ? `SKU: ${p.sku}` : `ID: ${p.id}`}</p>
-                      </div>
-                      <span className="text-xs font-semibold">${Number(p.price).toFixed(2)}</span>
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-          {!loading && products.length === 0 && search.length >= 1 && (
-            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
-              No products found
-            </div>
-          )}
-        </div>
-
-        {/* Label settings */}
-        <div className="flex items-center gap-3">
-          <Label className="text-xs text-muted-foreground whitespace-nowrap">Columns per row:</Label>
-          <Select value={labelCols.toString()} onValueChange={v => setLabelCols(Number(v))}>
-            <SelectTrigger className="h-8 w-20 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="3">3</SelectItem>
-              <SelectItem value="4">4</SelectItem>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="6">6</SelectItem>
-            </SelectContent>
-          </Select>
-          {totalLabels > 0 && (
-            <Badge variant="secondary" className="text-xs">{totalLabels} label{totalLabels > 1 ? "s" : ""}</Badge>
-          )}
-        </div>
-
-        {/* Items list */}
-        {items.length > 0 && (
-          <div className="border border-border rounded-lg overflow-hidden">
-            <div className="grid grid-cols-[1fr_100px_80px_32px] gap-1 px-3 py-2 bg-muted/50 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
-              <span>Product / SKU</span>
-              <span className="text-center">Labels</span>
-              <span className="text-right">Price</span>
-              <span />
-            </div>
-            {items.map((item, idx) => (
-              <div key={idx} className="grid grid-cols-[1fr_100px_80px_32px] gap-1 px-3 py-2 items-center border-t border-border/50">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
-                  <p className="text-[10px] text-muted-foreground font-mono">{item.sku}</p>
-                </div>
-                <div className="flex items-center gap-0.5 justify-center">
-                  <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, -1)}><Minus className="w-2.5 h-2.5" /></Button>
-                  <span className="text-xs font-medium w-6 text-center">{item.quantity}</span>
-                  <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, 1)}><Plus className="w-2.5 h-2.5" /></Button>
-                </div>
-                <span className="text-sm font-medium text-right">${item.price.toFixed(2)}</span>
-                <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => removeItem(idx)}><Trash2 className="w-3 h-3" /></Button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Preview */}
-        {items.length > 0 && (
-          <div className="border border-border rounded-lg p-3 bg-muted/20">
-            <p className="text-xs text-muted-foreground mb-2">Preview (30×20mm each)</p>
-            <div className="flex flex-wrap gap-2">
-              {items.slice(0, 6).map((item, idx) => (
-                <LabelPreview key={idx} sku={item.sku} price={item.price} />
-              ))}
-              {totalLabels > 6 && (
-                <div className="w-[90px] h-[60px] border border-dashed border-border rounded flex items-center justify-center text-xs text-muted-foreground">
-                  +{totalLabels - 6} more
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handlePrint} disabled={items.length === 0} className="gap-2">
-            <Printer className="w-4 h-4" />
-            Print {totalLabels} Label{totalLabels !== 1 ? "s" : ""}
-          </Button>
-        </div>
-      </div>
+      {content}
     </AdminDialog>
   );
 };
@@ -337,6 +343,19 @@ const LabelPreview = ({ sku, price }: { sku: string; price: number }) => {
       <svg ref={svgRef} className="max-w-[80px] h-[20px]" />
       <span className="text-[8px] font-bold font-mono mt-0.5 leading-none">{sku}</span>
       <span className="text-[9px] font-bold leading-none mt-0.5">${price.toFixed(2)}</span>
+    </div>
+  );
+};
+
+// Standalone page version for admin tab
+export const PrintLabelsPage = () => {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold">Print Labels</h2>
+        <p className="text-sm text-muted-foreground mt-1">Generate and print barcode labels for products</p>
+      </div>
+      <PrintLabelDialog />
     </div>
   );
 };

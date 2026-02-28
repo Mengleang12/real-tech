@@ -46,7 +46,7 @@ import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
 import { SupplierManagement } from "@/components/admin/SupplierManagement";
 import { ProfitAnalysis } from "@/components/admin/ProfitAnalysis";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
-import { PrintLabelDialog } from "@/components/admin/PrintLabelDialog";
+import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabelDialog";
 import { SalesReport } from "@/components/admin/SalesReport";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -612,7 +612,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "profit" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "profit" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
 
 interface NavItem {
   id: AdminTab;
@@ -652,6 +652,7 @@ const navGroups: NavGroup[] = [
       { id: "categories", label: "Categories", icon: FolderTree, permission: "apps.view" },
       { id: "brands", label: "Brands", icon: Bookmark, permission: "apps.view" },
       { id: "attributes", label: "Attributes", icon: SlidersHorizontal, permission: "apps.view" },
+      { id: "print_labels", label: "Print Labels", icon: Tag, permission: "apps.view" },
     ],
   },
   {
@@ -1223,6 +1224,7 @@ const AdminDashboard = () => {
           {activeTab === "categories" && <CategoryManagement />}
           {activeTab === "brands" && <BrandManagement />}
           {activeTab === "attributes" && <AttributeManagement />}
+          {activeTab === "print_labels" && <PrintLabelsPage />}
           {activeTab === "users" && <UserManagement />}
           {activeTab === "stock" && <StockPage />}
           {activeTab === "invoices" && <InvoicesPage />}
