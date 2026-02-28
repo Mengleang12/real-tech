@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getInvoiceBranding } from "@/lib/invoice-branding";
 import { AddSaleDialog } from "./AddSaleDialog";
 import { InvoiceEditDialog } from "./InvoiceEditDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -451,7 +452,8 @@ const InvoicesTab = () => {
   const orders = data?.orders || [];
   const pagination = data?.pagination;
 
-  const handlePrint = (order: AdminOrder) => {
+  const handlePrint = async (order: AdminOrder) => {
+    const branding = await getInvoiceBranding();
     const amount = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount;
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
@@ -480,8 +482,8 @@ const InvoicesTab = () => {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Inter',system-ui,-apple-system,sans-serif;max-width:760px;margin:0 auto;padding:48px 40px;color:#111827;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-        .accent{color:#2563eb}
-        .invoice-badge{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#2563eb;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:6px}
+        .accent{color:${branding.primary_color}}
+        .invoice-badge{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:${branding.primary_color};font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:6px}
         .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:32px;border-bottom:1px solid #e5e7eb}
         .brand{display:flex;align-items:center;gap:14px}
         .brand-icon{width:44px;height:44px;border-radius:10px;overflow:hidden}
@@ -516,7 +518,7 @@ const InvoicesTab = () => {
         .footer{text-align:center;padding:24px 0}
         .footer-thanks{font-size:15px;font-weight:600;color:#111827;margin-bottom:4px}
         .footer-brand{font-size:12px;color:#9ca3af;margin-top:8px}
-        .footer-brand a{color:#2563eb;text-decoration:none}
+        .footer-brand a{color:${branding.primary_color};text-decoration:none}
         body{transform:scale(0.85);transform-origin:top left;width:117.6%}
         @media print{body{padding:24px 20px}
         .table-wrap{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
@@ -524,10 +526,15 @@ const InvoicesTab = () => {
 
       <div class="header">
         <div class="brand">
-          <div class="brand-icon"><img src="${window.location.origin}/realtech-logo.png" alt="Realtech Computer" /></div>
+          ${branding.site_logo_url
+            ? `<div class="brand-icon"><img src="${branding.site_logo_url}" alt="${branding.site_name}" /></div>`
+            : `<div class="brand-icon" style="background:linear-gradient(135deg,${branding.primary_color},#1d4ed8);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center">${branding.site_name.charAt(0)}</div>`
+          }
           <div>
-            <div class="brand-name">Realtech Computer</div>
-            <div class="brand-sub">Software & Digital Products</div>
+            <div class="brand-name">${branding.site_name}</div>
+            <div class="brand-sub">${branding.site_tagline || ''}</div>
+            ${branding.support_phone ? `<div class="brand-sub">${branding.support_phone}</div>` : ''}
+            ${branding.site_address ? `<div class="brand-sub">${branding.site_address}</div>` : ''}
           </div>
         </div>
         <div class="meta">
@@ -579,7 +586,7 @@ const InvoicesTab = () => {
         </div>
       </div>
 
-      ${order.notes ? `<div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid #2563eb">
+      ${order.notes ? `<div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}">
         <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div>
         <div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div>
       </div>` : ''}
@@ -587,8 +594,8 @@ const InvoicesTab = () => {
       <div class="divider"></div>
 
       <div class="footer">
-        <div class="footer-thanks">Thank you for your purchase!</div>
-        <div class="footer-brand">Realtech Computer — <a href="https://realtechcomputer.com">realtechcomputer.com</a></div>
+        <div class="footer-thanks">${branding.invoice_footer_text}</div>
+        <div class="footer-brand">${branding.site_name}${branding.support_email ? ` — ${branding.support_email}` : ''}</div>
       </div>
 
       </body></html>`);

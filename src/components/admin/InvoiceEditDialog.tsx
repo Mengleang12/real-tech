@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { getInvoiceBranding } from "@/lib/invoice-branding";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminUsersApi, salesApi, type AdminOrder, type OrderAttachment, type OrderPayment, type SaleProduct } from "@/lib/api";
 import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle } from "./AdminDialog";
@@ -930,7 +931,8 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
     onError: (e: Error) => toast.error(e.message || "Failed to delete"),
   });
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    const branding = await getInvoiceBranding();
     const amount = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount;
     const iframe = document.createElement("iframe");
     iframe.style.cssText = "position:fixed;width:0;height:0;border:none;left:-9999px";
@@ -951,11 +953,12 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
         body{font-family:'Inter',system-ui,sans-serif;max-width:760px;margin:0 auto;padding:48px 40px;color:#111827;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
         .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:32px;border-bottom:1px solid #e5e7eb}
         .brand{display:flex;align-items:center;gap:14px}
-        .brand-icon{width:44px;height:44px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700}
+        .brand-icon{width:44px;height:44px;border-radius:10px;overflow:hidden}
+        .brand-icon img{width:100%;height:100%;object-fit:contain}
         .brand-name{font-size:20px;font-weight:700;color:#111827}
         .brand-sub{font-size:12px;color:#6b7280;margin-top:2px}
         .meta{text-align:right}
-        .invoice-badge{display:inline-flex;background:#eff6ff;color:#2563eb;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:6px}
+        .invoice-badge{display:inline-flex;background:#eff6ff;color:${branding.primary_color};font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:6px}
         .invoice-number{font-size:22px;font-weight:700;margin-top:8px;font-variant-numeric:tabular-nums}
         .invoice-date{font-size:13px;color:#6b7280;margin-top:4px}
         .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin:32px 0}
@@ -982,12 +985,23 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
         .footer{text-align:center;padding:24px 0}
         .footer-thanks{font-size:15px;font-weight:600;margin-bottom:4px}
         .footer-brand{font-size:12px;color:#9ca3af;margin-top:8px}
-        .footer-brand a{color:#2563eb;text-decoration:none}
+        .footer-brand a{color:${branding.primary_color};text-decoration:none}
         body{transform:scale(0.85);transform-origin:top left;width:117.6%}
         @media print{body{padding:24px 20px}}
       </style></head><body>
       <div class="header">
-        <div class="brand"><div class="brand-icon">RC</div><div><div class="brand-name">Realtech Computer</div><div class="brand-sub">Software & Digital Products</div></div></div>
+        <div class="brand">
+          ${branding.site_logo_url
+            ? `<div class="brand-icon"><img src="${branding.site_logo_url}" alt="${branding.site_name}" /></div>`
+            : `<div class="brand-icon" style="background:linear-gradient(135deg,${branding.primary_color},#1d4ed8);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center">${branding.site_name.charAt(0)}</div>`
+          }
+          <div>
+            <div class="brand-name">${branding.site_name}</div>
+            <div class="brand-sub">${branding.site_tagline || ''}</div>
+            ${branding.support_phone ? `<div class="brand-sub">${branding.support_phone}</div>` : ''}
+            ${branding.site_address ? `<div class="brand-sub">${branding.site_address}</div>` : ''}
+          </div>
+        </div>
         <div class="meta"><div class="invoice-badge">Invoice</div><div class="invoice-number">#${order.id.slice(0, 8).toUpperCase()}</div>
         <div class="invoice-date">${order.created_at ? new Date(order.created_at).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</div></div>
       </div>
@@ -1007,9 +1021,9 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
         ${saleDiscountVal > 0 ? `<div class="summary-row discount"><span>Sale Discount (${saleDiscountLabel})</span><span>-$${saleDiscountVal.toFixed(2)}</span></div>` : ''}
         <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
       </div></div>
-      ${order.notes ? `<div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid #2563eb"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div><div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div></div>` : ''}
+      ${order.notes ? `<div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div><div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div></div>` : ''}
       <div class="divider"></div>
-      <div class="footer"><div class="footer-thanks">Thank you for your purchase!</div><div class="footer-brand">Realtech Computer — <a href="https://realtechcomputer.com">realtechcomputer.com</a></div></div>
+      <div class="footer"><div class="footer-thanks">${branding.invoice_footer_text}</div><div class="footer-brand">${branding.site_name}${branding.support_email ? ` — ${branding.support_email}` : ''}</div></div>
       </body></html>`);
     doc.close();
     iframe.onload = () => {
