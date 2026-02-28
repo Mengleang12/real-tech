@@ -143,6 +143,7 @@ class ProductController extends Controller
             'is_featured' => $request->is_featured ?? false,
             'is_popular' => $request->is_popular ?? false,
             'price' => $request->price,
+            'purchase_price' => $request->purchase_price,
             'stock_quantity' => $request->stock_quantity ?? 0,
             'low_stock_threshold' => $request->low_stock_threshold ?? 5,
         ]);
@@ -232,6 +233,7 @@ class ProductController extends Controller
             'is_featured' => $request->is_featured ?? $product->is_featured,
             'is_popular' => $request->is_popular ?? $product->is_popular,
             'price' => $request->price ?? $product->price,
+            'purchase_price' => $request->has('purchase_price') ? $request->purchase_price : $product->purchase_price,
             'stock_quantity' => $request->has('stock_quantity') ? $request->stock_quantity : $product->stock_quantity,
             'low_stock_threshold' => $request->has('low_stock_threshold') ? $request->low_stock_threshold : $product->low_stock_threshold,
         ]);

@@ -229,7 +229,7 @@ class SaleController extends Controller
             });
         }
 
-        $products = $query->select('id', 'name', 'name_km', 'icon_url', 'price', 'stock_quantity')
+        $products = $query->select('id', 'name', 'name_km', 'icon_url', 'price', 'purchase_price', 'stock_quantity')
             ->limit(20)
             ->get()
             ->map(function ($p) {
@@ -238,6 +238,7 @@ class SaleController extends Controller
                     'name' => $p->name,
                     'icon_url' => $p->icon_url,
                     'price' => $p->price,
+                    'purchase_price' => $p->purchase_price,
                     'stock_quantity' => $p->stock_quantity,
                     'variants' => $p->variants->where('is_active', true)->map(function ($v) {
                         return [
