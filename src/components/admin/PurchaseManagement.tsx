@@ -917,7 +917,7 @@ export const PurchaseManagement = () => {
                 <TableHead>Tracking</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead className="w-10"></TableHead>
+                <TableHead className="w-10">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
