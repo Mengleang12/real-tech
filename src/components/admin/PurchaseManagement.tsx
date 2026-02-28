@@ -943,11 +943,18 @@ export const PurchaseManagement = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setViewPurchase(po)}>View</DropdownMenuItem>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Actions</div>
+                        <DropdownMenuItem onClick={() => setViewPurchase(po)}>
+                          <FileText className="w-4 h-4 mr-2" /> View Details
+                        </DropdownMenuItem>
                         {po.status === 'draft' && (
-                          <DropdownMenuItem onClick={() => { setEditPurchase(po); setAddOpen(true); }}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setEditPurchase(po); setAddOpen(true); }}>
+                            <ClipboardList className="w-4 h-4 mr-2" /> Edit Order
+                          </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(po.id)}>Delete</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(po.id)}>
+                          <Trash2 className="w-4 h-4 mr-2" /> Delete
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
