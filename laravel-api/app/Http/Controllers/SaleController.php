@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -185,6 +186,30 @@ class SaleController extends Controller
             $sale->created_at = $saleDate;
             $sale->updated_at = $saleDate;
             $sale->save();
+
+            // Create sale_items for each item in the cart
+            foreach ($request->items as $item) {
+                $product = Product::find($item['product_id']);
+                if (!$product) continue;
+
+                $qty = $item['quantity'];
+                $variant = isset($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
+                $unitPrice = $item['price'];
+                $itemSerials = $item['serial_numbers'] ?? [];
+
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $product->id,
+                    'variant_id' => $variant?->id,
+                    'product_name' => $product->name,
+                    'quantity' => $qty,
+                    'unit_price' => $unitPrice,
+                    'total_price' => $unitPrice * $qty,
+                    'discount' => $item['discount'] ?? 0,
+                    'discount_type' => $item['discount_type'] ?? null,
+                    'serial_numbers' => !empty($itemSerials) ? implode(',', array_filter($itemSerials)) : null,
+                ]);
+            }
 
             $this->logActivity($request, 'admin_sale_created', [
                 'customer_id' => $user->id,
@@ -566,27 +591,48 @@ class SaleController extends Controller
     }
 
     /**
-     * Restore stock when sale status changes from paid to non-paid
+     * Restore stock from sale_items when sale is deleted or cancelled
      */
     public static function restoreStock(Sale $sale): void
     {
-        $product = Product::find($sale->product_id);
-        if (!$product) return;
+        $saleItems = SaleItem::where('sale_id', $sale->id)->get();
 
-        // Try to find matching variant (check if product has variants)
-        $variants = ProductVariant::where('product_id', $sale->product_id)->where('is_active', true)->get();
+        if ($saleItems->isEmpty()) {
+            // Fallback for old sales without sale_items
+            $product = Product::find($sale->product_id);
+            if (!$product) return;
 
-        if ($variants->count() > 0) {
-            // If the sale has a variant reference, restore to that variant
-            // Otherwise restore to the first active variant
-            $variant = $variants->first();
-            if ($variant) {
-                $variant->increment('stock_quantity');
+            $variants = ProductVariant::where('product_id', $sale->product_id)->where('is_active', true)->get();
+            if ($variants->count() > 0) {
+                $variant = $variants->first();
+                if ($variant) {
+                    $variant->increment('stock_quantity');
+                }
+            } else {
+                $product->increment('stock_quantity');
+                $product->refresh();
+                $product->updateStockStatus();
             }
-        } else {
-            $product->increment('stock_quantity');
-            $product->refresh();
-            $product->updateStockStatus();
+            return;
+        }
+
+        // Restore stock for each sale item
+        foreach ($saleItems as $saleItem) {
+            $product = Product::find($saleItem->product_id);
+            if (!$product) continue;
+
+            if ($saleItem->variant_id) {
+                $variant = ProductVariant::where('id', $saleItem->variant_id)
+                    ->where('product_id', $saleItem->product_id)
+                    ->first();
+                if ($variant) {
+                    $variant->increment('stock_quantity', $saleItem->quantity);
+                }
+            } else {
+                $product->increment('stock_quantity', $saleItem->quantity);
+                $product->refresh();
+                $product->updateStockStatus();
+            }
         }
     }
 }

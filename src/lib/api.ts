@@ -406,12 +406,27 @@ export interface AdminOrder {
   notes?: string;
   attachments?: OrderAttachment[];
   payments?: OrderPayment[];
+  items?: SaleItemRecord[];
   user?: {
     id: number;
     email: string;
     full_name?: string;
     phone?: string;
   };
+}
+
+export interface SaleItemRecord {
+  id: number;
+  sale_id: string;
+  product_id: number;
+  variant_id?: number | null;
+  product_name: string;
+  quantity: number;
+  unit_price: string;
+  total_price: string;
+  discount: string;
+  discount_type?: string | null;
+  serial_numbers?: string | null;
 }
 
 // Admin User Management API
