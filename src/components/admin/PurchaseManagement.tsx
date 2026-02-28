@@ -121,9 +121,7 @@ const AddPurchaseDialog = ({
   editPurchase?: Purchase | null;
   onSaved: () => void;
 }) => {
-  const [supplierName, setSupplierName] = useState("");
   const [supplierId, setSupplierId] = useState<number | null>(null);
-  const [supplierOpen, setSupplierOpen] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [notes, setNotes] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
@@ -144,14 +142,9 @@ const AddPurchaseDialog = ({
     }
   }, [open]);
 
-  const filteredSuppliers = suppliers.filter(
-    (s) => s.name.toLowerCase().includes(supplierName.toLowerCase()) && s.name.toLowerCase() !== supplierName.toLowerCase()
-  );
-
   useEffect(() => {
     if (open) {
       if (editPurchase) {
-        setSupplierName(editPurchase.supplier_name);
         setSupplierId((editPurchase as any).supplier_id || null);
         setNotes(editPurchase.notes || "");
         setTrackingNumber(editPurchase.tracking_number || "");
@@ -167,7 +160,6 @@ const AddPurchaseDialog = ({
           unit_cost: Number(i.unit_cost),
         })));
       } else {
-        setSupplierName("");
         setSupplierId(null);
         setNotes("");
         setTrackingNumber("");
@@ -219,27 +211,13 @@ const AddPurchaseDialog = ({
   const grandTotal = subtotal + deliveryFee + otherExpense;
 
   const handleSave = async () => {
-    if (!supplierName.trim()) { toast.error("Supplier name is required"); return; }
+    if (!supplierId) { toast.error("Please select a supplier"); return; }
     if (items.length === 0) { toast.error("Add at least one item"); return; }
 
     setSaving(true);
     try {
-      // Create supplier if new
-      let finalSupplierId = supplierId;
-      if (!finalSupplierId) {
-        const existing = suppliers.find((s) => s.name.toLowerCase() === supplierName.trim().toLowerCase());
-        if (existing) {
-          finalSupplierId = existing.id;
-        } else {
-          const res = await suppliersApi.create({ name: supplierName.trim() });
-          finalSupplierId = res.supplier.id;
-          setSuppliers((prev) => [...prev, res.supplier]);
-        }
-      }
-
       const payload = {
-        supplier_name: supplierName.trim(),
-        supplier_id: finalSupplierId,
+        supplier_id: supplierId,
         notes,
         tracking_number: trackingNumber || undefined,
         delivery_fee: deliveryFee,
@@ -281,30 +259,20 @@ const AddPurchaseDialog = ({
       <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
         {/* Supplier */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="relative">
-            <Label>Supplier Name *</Label>
-            <Input
-              value={supplierName}
-              onChange={(e) => { setSupplierName(e.target.value); setSupplierId(null); setSupplierOpen(true); }}
-              onFocus={() => setSupplierOpen(true)}
-              onBlur={() => setTimeout(() => setSupplierOpen(false), 200)}
-              placeholder="Type or select supplier"
-            />
-            {supplierOpen && filteredSuppliers.length > 0 && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-md max-h-40 overflow-y-auto">
-                {filteredSuppliers.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent truncate"
-                    onMouseDown={(e) => { e.preventDefault(); setSupplierName(s.name); setSupplierId(s.id); setSupplierOpen(false); }}
-                  >
-                    <span>{s.name}</span>
-                    {s.phone && <span className="text-muted-foreground ml-2 text-xs">{s.phone}</span>}
-                  </button>
+          <div>
+            <Label>Supplier *</Label>
+            <Select value={supplierId ? String(supplierId) : ""} onValueChange={(v) => setSupplierId(Number(v))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>
+                    {s.name}{s.phone ? ` (${s.phone})` : ''}
+                  </SelectItem>
                 ))}
-              </div>
-            )}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>Tracking Number</Label>
