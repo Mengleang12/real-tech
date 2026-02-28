@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Search, Plus, Trash2, UserPlus, Package, Loader2, X, Minus, Users, Percent, CalendarIcon, ScanBarcode } from "lucide-react";
+import { Search, Plus, Trash2, UserPlus, Loader2, X, Minus, Users, Percent, CalendarIcon, ScanBarcode } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CartItem {
@@ -57,12 +57,9 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   const [saleDate, setSaleDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
 
-  // Barcode scan state
-  const [scanMode, setScanMode] = useState(false);
-  const [scanValue, setScanValue] = useState("");
+  // Scan loading state
   const [scanLoading, setScanLoading] = useState(false);
-  const scanInputRef = useRef<HTMLInputElement>(null);
-  const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Search customers
   const handleSearchCustomers = useCallback(async (q: string) => {
@@ -88,22 +85,22 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setProductLoading(false);
   }, []);
 
-  // Barcode scan: when user scans (rapid input + Enter), search and auto-add
-  const handleBarcodeScan = useCallback(async (code: string) => {
+  // Handle Enter key on search input: auto-add first matching product (scan behavior)
+  const handleQuickAdd = useCallback(async (code: string) => {
     const trimmed = code.trim();
     if (!trimmed) return;
     setScanLoading(true);
     try {
       const res = await salesApi.searchProducts(trimmed);
-      const products = res.products;
-      if (products.length === 0) {
-        toast.error(`No product found for code "${trimmed}"`);
+      const found = res.products;
+      if (found.length === 0) {
+        // Silently do nothing - no alert
         setScanLoading(false);
         return;
       }
       // Exact SKU match first
-      const exactProduct = products.find(p => p.sku === trimmed);
-      const exactVariant = products.flatMap(p => p.variants.map(v => ({ product: p, variant: v }))).find(pv => pv.variant.sku === trimmed);
+      const exactProduct = found.find(p => p.sku === trimmed);
+      const exactVariant = found.flatMap(p => p.variants.map(v => ({ product: p, variant: v }))).find(pv => pv.variant.sku === trimmed);
 
       if (exactVariant) {
         addToCart(exactVariant.product, exactVariant.variant.id);
@@ -116,8 +113,8 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
         }
         toast.success(`Added: ${exactProduct.name}`);
       } else {
-        // Fallback to first result
-        const first = products[0];
+        // Auto-select first result
+        const first = found[0];
         if (first.variants.length > 0) {
           addToCart(first, first.variants[0].id);
         } else {
@@ -126,13 +123,14 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
         toast.success(`Added: ${first.name}`);
       }
     } catch {
-      toast.error("Scan failed");
+      toast.error("Search failed");
     }
     setScanLoading(false);
-    setScanValue("");
-    // Re-focus scan input
-    setTimeout(() => scanInputRef.current?.focus(), 100);
+    setProductSearch("");
+    setProducts([]);
+    setTimeout(() => searchInputRef.current?.focus(), 100);
   }, [cart]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   // Get available stock for a product/variant
   const getAvailableStock = (product: SaleProduct, variantId?: number) => {
@@ -265,8 +263,6 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setCustomers([]);
     setProducts([]);
     setProductSearch("");
-    setScanMode(false);
-    setScanValue("");
   };
 
   const handleSubmit = () => {
@@ -445,60 +441,31 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
 
           {/* ─── Products Section ─── */}
           <div className="rounded-lg border border-border p-4 space-y-3 overflow-visible">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-semibold">Products</Label>
-              <Button
-                size="sm"
-                variant={scanMode ? "default" : "outline"}
-                onClick={() => {
-                  setScanMode(!scanMode);
-                  if (!scanMode) setTimeout(() => scanInputRef.current?.focus(), 100);
-                }}
-                className="h-7 text-xs gap-1 px-2.5"
-              >
-                <ScanBarcode className="w-3 h-3" />
-                {scanMode ? "Scanning..." : "Scan"}
-              </Button>
-            </div>
-
-            {/* Barcode scan input */}
-            {scanMode && (
-              <div className="relative">
-                <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary" />
-                <Input
-                  ref={scanInputRef}
-                  placeholder="Scan barcode or type SKU and press Enter..."
-                  value={scanValue}
-                  onChange={e => setScanValue(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleBarcodeScan(scanValue);
-                    }
-                  }}
-                  className="pl-9 h-9 text-sm border-primary/50 focus-visible:ring-primary/30 font-mono"
-                  autoFocus
-                />
-                {scanLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-primary" />}
-              </div>
-            )}
+            <Label className="text-sm font-semibold">Products</Label>
 
             <div className="relative">
-              <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input
-                placeholder="Search by name, SKU, or ID..."
+                ref={searchInputRef}
+                placeholder="Search or scan barcode... (Enter to quick-add)"
                 value={productSearch}
                 onChange={(e) => handleSearchProducts(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleQuickAdd(productSearch);
+                  }
+                }}
                 className="pl-9 h-9 text-sm"
               />
-              {productLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+              {(productLoading || scanLoading) && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
               {productLoading && productSearch.length >= 1 && (
-                <div className="relative z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <div className="mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" /> Searching products...
                 </div>
               )}
               {!productLoading && products.length > 0 && (
-                <div className="relative z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg">
+                <div className="mt-1 bg-popover border border-border rounded-lg shadow-lg">
                   {products.map(p => (
                     <div key={p.id}>
                       {p.variants.length > 0 ? (
@@ -528,11 +495,6 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                       )}
                     </div>
                   ))}
-                </div>
-              )}
-              {!productLoading && products.length === 0 && productSearch.length >= 1 && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
-                  No products found
                 </div>
               )}
             </div>
