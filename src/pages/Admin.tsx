@@ -629,7 +629,6 @@ const navGroups: NavGroup[] = [
   {
     label: "Sales",
     items: [
-      { id: "sales", label: "Dashboard", icon: BarChart3, permission: "orders.view" },
       { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
       { id: "purchases", label: "Purchase", icon: ShoppingBag, permission: "orders.view" },
       { id: "profit", label: "Profit", icon: DollarSign, permission: "orders.view" },
@@ -1201,13 +1200,21 @@ const AdminDashboard = () => {
 
         {/* Page Content */}
         <main className="flex-1 p-4 sm:p-6 overflow-auto">
-          {activeTab === "analytics" && <AnalyticsDashboard />}
+          {activeTab === "analytics" && (
+            <div className="space-y-8">
+              <AnalyticsDashboard />
+              <div>
+                <h2 className="text-xl font-semibold">Sales Dashboard</h2>
+                <p className="text-sm text-muted-foreground mt-1">Overview of sales performance</p>
+              </div>
+              <SalesOverview />
+            </div>
+          )}
           {activeTab === "apps" && <AppsTab />}
           {activeTab === "categories" && <CategoryManagement />}
           {activeTab === "brands" && <BrandManagement />}
           {activeTab === "attributes" && <AttributeManagement />}
           {activeTab === "users" && <UserManagement />}
-          {activeTab === "sales" && <SalesDashboardPage />}
           {activeTab === "stock" && <StockPage />}
           {activeTab === "invoices" && <InvoicesPage />}
           {activeTab === "purchases" && <PurchaseManagement />}
