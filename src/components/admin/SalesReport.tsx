@@ -492,22 +492,18 @@ export const SalesReport = () => {
           <TabsTrigger value="revenue" className="text-xs sm:text-sm gap-1.5">
             <BarChart3 className="w-3.5 h-3.5 hidden sm:block" /> Revenue
           </TabsTrigger>
-          <TabsTrigger value="profit" className="text-xs sm:text-sm gap-1.5">
-            <DollarSign className="w-3.5 h-3.5 hidden sm:block" /> Profit
+          <TabsTrigger value="profit-analysis" className="text-xs sm:text-sm gap-1.5">
+            <Wallet className="w-3.5 h-3.5 hidden sm:block" /> Profit Analysis
           </TabsTrigger>
           <TabsTrigger value="customers" className="text-xs sm:text-sm gap-1.5">
             <Users className="w-3.5 h-3.5 hidden sm:block" /> Customers
-          </TabsTrigger>
-          <TabsTrigger value="profit-analysis" className="text-xs sm:text-sm gap-1.5">
-            <Wallet className="w-3.5 h-3.5 hidden sm:block" /> Profit Analysis
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="products"><ProductSalesTab from={from} to={to} /></TabsContent>
         <TabsContent value="revenue"><RevenueTrendTab from={from} to={to} /></TabsContent>
-        <TabsContent value="profit"><ProfitByPeriodTab from={from} to={to} /></TabsContent>
-        <TabsContent value="customers"><CustomerReportTab from={from} to={to} /></TabsContent>
         <TabsContent value="profit-analysis"><ProfitAnalysis /></TabsContent>
+        <TabsContent value="customers"><CustomerReportTab from={from} to={to} /></TabsContent>
       </Tabs>
     </div>
   );
