@@ -827,14 +827,38 @@ const PurchaseDetailDialog = ({
             <AlertDialogDescription className="space-y-2">
               <p>Have you already paid the supplier for this order?</p>
               <p className="text-xs text-muted-foreground">
-                You can add delivery fees and other costs later in the Expenses tab.
+                If yes, a payment of <span className="font-semibold">${grandTotal.toFixed(2)}</span> will be recorded automatically. You can add extra fees later in the Expenses tab.
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex gap-2 sm:gap-0">
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { setOrderConfirmOpen(false); executeStatusChange('ordered'); }}>
-              Yes, Mark as Ordered
+            <AlertDialogAction
+              onClick={async () => {
+                setOrderConfirmOpen(false);
+                await executeStatusChange('ordered');
+              }}
+            >
+              No, Not Yet Paid
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={async () => {
+                setOrderConfirmOpen(false);
+                await executeStatusChange('ordered');
+                try {
+                  await purchasesApi.addPayment(purchase.id, {
+                    amount: grandTotal,
+                    method: 'cash',
+                    note: 'Auto-recorded on order placement',
+                  });
+                  toast.success('Payment recorded automatically');
+                  onRefresh();
+                } catch {
+                  toast.error('Order placed but failed to record payment');
+                }
+              }}
+            >
+              Yes, Already Paid
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
