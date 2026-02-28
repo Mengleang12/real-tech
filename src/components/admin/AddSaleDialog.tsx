@@ -317,6 +317,15 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
       title={<span className="flex items-center gap-2"><Plus className="w-5 h-5" /> New Sale</span>}
       size="3xl"
       className="h-[85vh]"
+      footer={
+        <div className="flex justify-end gap-2 w-full">
+          <Button variant="outline" onClick={() => { resetForm(); onOpenChange(false); }}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={createMutation.isPending} className="gap-2">
+            {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            Create Sale{cart.length > 0 ? ` — $${grandTotal.toFixed(2)}` : ""}
+          </Button>
+        </div>
+      }
     >
 
         <div className="space-y-4">
@@ -624,14 +633,6 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
             </div>
           )}
 
-          {/* ─── Actions ─── */}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => { resetForm(); onOpenChange(false); }}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={createMutation.isPending} className="gap-2">
-              {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              Create Sale{cart.length > 0 ? ` — $${grandTotal.toFixed(2)}` : ""}
-            </Button>
-          </div>
         </div>
     </AdminDialog>
   );
