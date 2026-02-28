@@ -28,6 +28,29 @@ import { toast } from "sonner";
 import { purchasesApi, salesApi, type Purchase, type PurchaseItem, type PurchaseExpense, type PurchaseDashboardStats, type SaleProduct } from "@/lib/api";
 import { format } from "date-fns";
 
+const playScanBeep = (success: boolean) => {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    if (success) {
+      osc.frequency.value = 1200;
+      osc.type = 'sine';
+      gain.gain.value = 0.3;
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } else {
+      osc.frequency.value = 400;
+      osc.type = 'square';
+      gain.gain.value = 0.2;
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+    }
+  } catch { /* audio not available */ }
+};
+
 const statusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   ordered: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
@@ -858,10 +881,11 @@ export const PurchaseManagement = () => {
               try {
                 await purchasesApi.updateStatus(po.id, 'received');
                 toast.success(`${po.reference_number} marked as received`);
-                // Update the scanned result in place
+                playScanBeep(true);
                 setScannedResults((prev) => prev.map((p) => p.id === po.id ? { ...p, status: 'received' } : p));
               } catch {
                 toast.error(`Failed to receive ${po.reference_number}`);
+                playScanBeep(false);
               }
             }
           }
@@ -869,6 +893,7 @@ export const PurchaseManagement = () => {
         }
       } else {
         toast.error("No purchase order found for this tracking number");
+        playScanBeep(false);
       }
     } catch {
       toast.error("Failed to search");
