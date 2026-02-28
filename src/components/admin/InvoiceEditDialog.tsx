@@ -103,13 +103,31 @@ const getLineTotal = (item: EditCartItem) => {
   return Math.max(0, gross - item.discount);
 };
 
-/** Aggregate comma-separated product_name into grouped cart items with correct quantities */
+/** Build editable cart from order items (preferred), with legacy fallback */
 const buildCartFromOrder = (order: AdminOrder): EditCartItem[] => {
+  // Use authoritative sale_items data when available
+  if (order.items && order.items.length > 0) {
+    return order.items.map((item) => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      variant_id: item.variant_id ?? undefined,
+      variant_label: item.variant_id ? `Variant #${item.variant_id}` : undefined,
+      quantity: Number(item.quantity) || 1,
+      unit_price: Number(item.unit_price) || 0,
+      stock_quantity: 999,
+      discount: Number(item.discount) || 0,
+      discount_type: (item.discount_type as "amount" | "percent") || "amount",
+      serial_numbers: item.serial_numbers
+        ? String(item.serial_numbers).split(",").map(s => s.trim()).filter(Boolean)
+        : [],
+    }));
+  }
+
+  // Legacy fallback for old records without sale_items
   const totalOriginal = order.original_price ? parseFloat(order.original_price) : (typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount);
   const totalDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
   const serials = order.serial_number ? order.serial_number.split(",").map(s => s.trim()).filter(Boolean) : [];
 
-  // Parse entries — supports both "Name ×3" and legacy repeated "Name, Name, Name"
   const grouped = new Map<string, number>();
   const ordered: string[] = [];
   let totalUnits = 0;
