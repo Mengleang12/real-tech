@@ -27,7 +27,6 @@ return new class extends Migration
             $table->unsignedBigInteger('app_id');
             $table->unsignedBigInteger('attribute_id');
             $table->text('value');
-            $table->integer('stock_quantity')->default(0);
             $table->timestamps();
 
             $table->foreign('app_id')->references('id')->on('apps')->onDelete('cascade');
