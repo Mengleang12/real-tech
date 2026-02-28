@@ -209,7 +209,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
   // Add product to cart
   const addToCart = (product: SaleProduct, variantId?: number) => {
     const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
-    const stock = variant ? (variant.stock_quantity ?? 0) : (product.stock_quantity ?? 0);
+    const stock = variant ? (variant.stock_quantity ?? 0) : (product.variants.reduce((s, v) => s + v.stock_quantity, 0));
     const existing = cart.find(c => c.product_id === product.id && c.variant_id === variantId);
     const currentQty = existing ? existing.quantity : 0;
 
@@ -229,7 +229,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
           : c
       ));
     } else {
-      const price = variant ? Number(variant.price_adjustment || 0) : Number(product.price);
+      const price = variant ? Number(variant.price_adjustment || 0) : (product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0) : 0);
       const variantLabel = variant ? Object.values(variant.combination).join(" / ") : undefined;
       setCart([...cart, {
         product_id: product.id,
@@ -432,13 +432,13 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
                       );
                     })
                   ) : (
-                    <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors" onClick={() => addToCart(p)}>
+                          <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors" onClick={() => addToCart(p, p.variants.length > 0 ? p.variants[0].id : undefined)}>
                       {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground truncate">{p.name}</p>
-                        <p className="text-xs text-muted-foreground">Stock: {p.stock_quantity}</p>
+                        <p className="text-xs text-muted-foreground">Stock: {p.variants.reduce((s, v) => s + v.stock_quantity, 0)}</p>
                       </div>
-                      <span className="text-xs font-semibold text-foreground">${Number(p.price).toFixed(2)}</span>
+                      <span className="text-xs font-semibold text-foreground">${p.variants.length > 0 ? Number(p.variants[0].price_adjustment).toFixed(2) : '0.00'}</span>
                     </button>
                   )}
                 </div>

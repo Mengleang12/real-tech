@@ -610,7 +610,8 @@ const ProductDetail = () => {
 
                   {/* YouTube Tutorial Videos */}
                   {(() => {
-                    const priceNum = typeof appData.price === 'string' ? parseFloat(appData.price) : (appData.price || 0);
+                    const activeVars = appData.variants?.filter(v => v.is_active) || [];
+                    const priceNum = activeVars.length > 0 ? Number(activeVars[0].price_adjustment || 0) : 0;
                     const isPaidApp = priceNum > 0;
                     const canViewVideos = !isPaidApp || hasPurchased === true;
                     const videos = appData.videos || [];
@@ -678,24 +679,24 @@ const ProductDetail = () => {
                   <div className="bg-card rounded-2xl border border-border/50 p-5 space-y-4">
                     {/* Variant selector */}
                     {(() => {
-                      const priceNum = typeof appData.price === 'string' ? parseFloat(appData.price) : (appData.price || 0);
+                      const activeVariants2 = appData.variants?.filter(v => v.is_active) || [];
+                      const priceNum = activeVariants2.length > 0 ? Number(activeVariants2[0].price_adjustment || 0) : 0;
                       const isPaidApp = priceNum > 0;
                       const inCart = items.some(i => i.app.id === appData.id);
-                      const hasVariants = appData.variants && appData.variants.length > 0;
-                      const activeVariants = hasVariants ? appData.variants!.filter(v => v.is_active) : [];
+                      const hasVariants = activeVariants2.length > 0;
+                      const activeVariants = activeVariants2;
                       const selectedVariant = selectedVariantIdx !== null ? activeVariants[selectedVariantIdx] : null;
-                      // Use first variant price as default if variants exist
-                      const defaultVariantPrice = activeVariants.length > 0 ? (Number(activeVariants[0].price_adjustment) || 0) : priceNum;
+                      const defaultVariantPrice = activeVariants.length > 0 ? (Number(activeVariants[0].price_adjustment) || 0) : 0;
                       const finalPrice = selectedVariant ? Number(selectedVariant.price_adjustment) || 0 : defaultVariantPrice;
                       const priceDisplay = finalPrice > 0 ? `$${finalPrice.toFixed(2)}` : '';
 
                       // Stock calculation
                       const totalStock = hasVariants
                         ? activeVariants.reduce((s, v) => s + v.stock_quantity, 0)
-                        : (appData.stock_quantity ?? 0);
+                        : 0;
                       const selectedStock = selectedVariant ? selectedVariant.stock_quantity : totalStock;
                       const isOOS = selectedStock <= 0;
-                      const isLowStock = selectedStock > 0 && selectedStock <= (appData.low_stock_threshold ?? 5);
+                      const isLowStock = selectedStock > 0 && selectedStock <= 5;
 
                       return (
                         <div className="space-y-3">
@@ -918,16 +919,20 @@ const ProductDetail = () => {
       </main>
       
       {/* Payment Dialog */}
-      {appData && appData.price && appData.price > 0 && (
+      {appData && (() => {
+        const av = appData.variants?.filter(v => v.is_active) || [];
+        const p = av.length > 0 ? Number(av[0].price_adjustment || 0) : 0;
+        return p > 0;
+      })() && (
         <PaymentDialog
           open={showPaymentDialog}
           onOpenChange={(open) => {
             setShowPaymentDialog(open);
-            if (!open) setSelectedCoupon(null); // Reset coupon when closing
+            if (!open) setSelectedCoupon(null);
           }}
           appId={appData.id}
           appName={displayName}
-          price={appData.price}
+          price={appData.variants?.filter(v => v.is_active)?.[0]?.price_adjustment || 0}
           downloadUrl={undefined}
           coupon={selectedCoupon}
           onPaymentSuccess={() => {

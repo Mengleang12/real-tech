@@ -303,9 +303,9 @@ const StockManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{product.category || "—"}</Badge></td>
-                    <td className="px-4 py-3 font-semibold tabular-nums">${Number(product.price || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 font-semibold tabular-nums">{product.stock_quantity}</td>
-                    <td className="px-4 py-3">{getStockBadge(product.stock_status)}</td>
+                    <td className="px-4 py-3 font-semibold tabular-nums">${product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0).toFixed(2) : '0.00'}</td>
+                    <td className="px-4 py-3 font-semibold tabular-nums">{product.variants.reduce((s, v) => s + v.stock_quantity, 0)}</td>
+                    <td className="px-4 py-3">{getStockBadge(product.variants.reduce((s, v) => s + v.stock_quantity, 0) <= 0 ? 'out_of_stock' : product.variants.reduce((s, v) => s + v.stock_quantity, 0) <= 5 ? 'low_stock' : 'in_stock')}</td>
                     <td className="px-4 py-3">
                       {product.variants.length > 0 ? (
                         <div className="space-y-1">
@@ -332,16 +332,7 @@ const StockManagement = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {product.variants.length === 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs gap-1"
-                          onClick={() => setEditingStock({ productId: product.id, qty: product.stock_quantity ?? 0 })}
-                        >
-                          <Save className="w-3 h-3" /> Update
-                        </Button>
-                      )}
+                      {/* All stock is managed at variant level now */}
                     </td>
                   </tr>
                 ))}

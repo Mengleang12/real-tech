@@ -110,7 +110,6 @@ export interface Product {
   id: number;
   name: string;
   name_km?: string;
-  sku?: string;
   description?: string;
   description_km?: string;
   category: 'programs' | 'games' | 'extensions' | 'os';
@@ -121,11 +120,6 @@ export interface Product {
   is_popular: boolean;
   screenshots?: ProductScreenshot[];
   videos?: ProductVideo[];
-  price?: number;
-  purchase_price?: number;
-  stock_quantity?: number;
-  low_stock_threshold?: number;
-  stock_status?: 'in_stock' | 'low_stock' | 'out_of_stock';
   category_relation?: Category;
   brand?: Brand;
   attribute_values?: ProductAttributeValue[];
@@ -200,6 +194,7 @@ export interface ProductVariant {
   sku?: string;
   stock_quantity: number;
   price_adjustment: number;
+  purchase_price?: number;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -917,19 +912,15 @@ export interface StockProduct {
   id: number;
   name: string;
   icon_url?: string;
-  price: number;
   category?: string;
   brand?: string;
-  stock_quantity: number;
-  low_stock_threshold: number;
-  stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
-  total_variant_stock: number;
   variants: {
     id: number;
     combination: Record<string, string>;
     sku?: string;
     stock_quantity: number;
     price_adjustment: number;
+    purchase_price?: number;
     is_active: boolean;
   }[];
 }
@@ -944,17 +935,15 @@ export interface SaleCustomer {
 export interface SaleProduct {
   id: number;
   name: string;
-  sku?: string;
   icon_url?: string;
-  price: number;
-  purchase_price?: number;
-  stock_quantity: number;
   variants: {
     id: number;
     combination: Record<string, string>;
     sku?: string;
     stock_quantity: number;
     price_adjustment: number;
+    purchase_price?: number;
+    is_active: boolean;
   }[];
 }
 

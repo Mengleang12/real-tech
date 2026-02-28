@@ -29,9 +29,8 @@ export const CartSheet = () => {
           <>
             <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
               {items.map((item, i) => {
-                const basePrice = typeof item.app.price === "string" ? parseFloat(item.app.price) : item.app.price || 0;
                 const activeVariants = item.app.variants?.filter(v => v.is_active) || [];
-                const defaultPrice = activeVariants.length > 0 ? (Number(activeVariants[0].price_adjustment) || 0) : basePrice;
+                const defaultPrice = activeVariants.length > 0 ? (Number(activeVariants[0].price_adjustment) || 0) : 0;
                 const finalPrice = item.selectedVariant ? Number(item.selectedVariant.price_adjustment) || 0 : defaultPrice;
                 const variantLabel = item.selectedVariant 
                   ? Object.values(item.selectedVariant.combination).join(' / ')

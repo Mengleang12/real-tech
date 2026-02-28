@@ -99,7 +99,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
         return;
       }
       // Exact SKU match first
-      const exactProduct = found.find(p => p.sku === trimmed);
+      const exactProduct = found.find(p => p.variants.some(v => v.sku === trimmed));
       const exactVariant = found.flatMap(p => p.variants.map(v => ({ product: p, variant: v }))).find(pv => pv.variant.sku === trimmed);
 
       if (exactVariant) {
@@ -135,7 +135,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   // Get available stock for a product/variant
   const getAvailableStock = (product: SaleProduct, variantId?: number) => {
     const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
-    return variant ? (variant.stock_quantity ?? 0) : (product.stock_quantity ?? 0);
+    return variant ? (variant.stock_quantity ?? 0) : (product.variants.reduce((s, v) => s + v.stock_quantity, 0));
   };
 
   // Add product to cart
@@ -161,7 +161,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
       ));
     } else {
       const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
-      const price = variant ? Number(variant.price_adjustment || 0) : Number(product.price);
+      const price = variant ? Number(variant.price_adjustment || 0) : (product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0) : 0);
       setCart([...cart, { product, variant_id: variantId, quantity: 1, unit_price: price, discount: 0, discount_type: "amount", serial_numbers: [] }]);
     }
     setProductSearch("");
@@ -495,13 +495,13 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                           );
                         })
                       ) : (
-                        <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addToCart(p)}>
+                        <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addToCart(p, p.variants.length > 0 ? p.variants[0].id : undefined)}>
                           {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-foreground truncate">{p.name} <span className="text-muted-foreground font-normal">#{p.id}</span></p>
-                            <p className="text-xs text-muted-foreground">{p.sku ? `SKU: ${p.sku} · ` : ''}Stock: {p.stock_quantity}</p>
+                            <p className="text-xs text-muted-foreground">Stock: {p.variants.reduce((s, v) => s + v.stock_quantity, 0)}</p>
                           </div>
-                          <span className="text-xs font-semibold text-foreground">${Number(p.price).toFixed(2)}</span>
+                          <span className="text-xs font-semibold text-foreground">${p.variants.length > 0 ? Number(p.variants[0].price_adjustment).toFixed(2) : '0.00'}</span>
                         </button>
                       )}
                     </div>

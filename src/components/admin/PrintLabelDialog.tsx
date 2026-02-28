@@ -47,8 +47,8 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
 
   const addItem = (product: SaleProduct, variantId?: number) => {
     const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
-    const sku = variant?.sku || product.sku || `P${product.id}`;
-    const price = variant ? Number(variant.price_adjustment || 0) : Number(product.price);
+    const sku = variant?.sku || `P${product.id}`;
+    const price = variant ? Number(variant.price_adjustment || 0) : (product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0) : 0);
     const label = variant
       ? `${product.name} (${Object.values(variant.combination).join("/")})`
       : product.name;
@@ -212,13 +212,13 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
                     </button>
                   ))
                 ) : (
-                  <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addItem(p)}>
+                  <button className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addItem(p, p.variants.length > 0 ? p.variants[0].id : undefined)}>
                     {p.icon_url && <img src={p.icon_url} className="w-7 h-7 rounded object-cover shrink-0" alt="" />}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground truncate">{p.name} <span className="text-muted-foreground font-normal">#{p.id}</span></p>
-                      <p className="text-xs text-muted-foreground">{p.sku ? `SKU: ${p.sku}` : `ID: ${p.id}`}</p>
+                      <p className="text-xs text-muted-foreground">{p.variants[0]?.sku ? `SKU: ${p.variants[0].sku}` : `ID: ${p.id}`}</p>
                     </div>
-                    <span className="text-xs font-semibold">${Number(p.price).toFixed(2)}</span>
+                    <span className="text-xs font-semibold">${p.variants.length > 0 ? Number(p.variants[0].price_adjustment).toFixed(2) : '0.00'}</span>
                   </button>
                 )}
               </div>

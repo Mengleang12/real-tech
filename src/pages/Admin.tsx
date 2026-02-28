@@ -69,16 +69,11 @@ interface ProductFormProps {
 const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
   const [formData, setFormData] = useState<Partial<App>>({
     name: app?.name || "", name_km: app?.name_km || "",
-    sku: app?.sku || "",
     description: app?.description || "", description_km: app?.description_km || "",
     category: app?.category || "programs", category_id: app?.category_id || undefined,
     icon_url: app?.icon_url || "",
     brand_id: app?.brand_id || undefined,
     is_featured: app?.is_featured || false, is_popular: app?.is_popular || false,
-    price: app?.price || 0,
-    purchase_price: app?.purchase_price ?? undefined,
-    stock_quantity: app?.stock_quantity ?? 0,
-    low_stock_threshold: app?.low_stock_threshold ?? 5,
   });
   const [screenshots, setScreenshots] = useState<string[]>(app?.screenshots?.map(s => s.image_url) || []);
   const [videos, setVideos] = useState<{ title: string; youtube_url: string }[]>(
@@ -95,8 +90,8 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
   const [selectedAttrs, setSelectedAttrs] = useState<Set<number>>(new Set());
   const [attrSearch, setAttrSearch] = useState("");
   const [attrDropdownOpen, setAttrDropdownOpen] = useState(false);
-  const [variants, setVariants] = useState<{ combination: Record<string, string>; sku: string; stock_quantity: number; price_adjustment: number; is_active: boolean }[]>(
-    app?.variants?.map(v => ({ combination: v.combination, sku: v.sku || '', stock_quantity: v.stock_quantity, price_adjustment: v.price_adjustment, is_active: v.is_active })) || []
+  const [variants, setVariants] = useState<{ combination: Record<string, string>; sku: string; stock_quantity: number; price_adjustment: number; purchase_price: number; is_active: boolean }[]>(
+    app?.variants?.map(v => ({ combination: v.combination, sku: v.sku || '', stock_quantity: v.stock_quantity, price_adjustment: v.price_adjustment, purchase_price: v.purchase_price || 0, is_active: v.is_active })) || []
   );
   const isInitialVariantLoad = useRef(!!app?.variants?.length);
 
@@ -150,6 +145,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
         sku: existing?.sku || '',
         stock_quantity: existing?.stock_quantity ?? 0,
         price_adjustment: existing?.price_adjustment ?? 0,
+        purchase_price: existing?.purchase_price ?? 0,
         is_active: existing?.is_active ?? true,
       };
     });
@@ -186,15 +182,10 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
     e.preventDefault();
     setSaving(true);
     try {
-      // Validate SKU uniqueness if SKU is provided
-      if (formData.sku && formData.sku.trim()) {
-        const { data: existing } = await appsApi.getAll({ search: formData.sku.trim(), limit: 50 });
-        const duplicate = existing.find(p => p.sku?.toLowerCase() === formData.sku!.trim().toLowerCase() && p.id !== app?.id);
-        if (duplicate) {
-          toast.error(`SKU "${formData.sku}" is already used by product "${duplicate.name}" (#${duplicate.id})`);
-          setSaving(false);
-          return;
-        }
+      if (variants.length === 0) {
+        toast.error("At least one variant is required");
+        setSaving(false);
+        return;
       }
       const attribute_values = Object.entries(attrValues)
         .filter(([id, v]) => v.length > 0 && selectedAttrs.has(parseInt(id)))
@@ -213,16 +204,6 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
         <div>
           <Label htmlFor="name_km">ឈ្មោះផលិតផល (ខ្មែរ)</Label>
           <Input id="name_km" value={formData.name_km} onChange={(e) => setFormData({ ...formData, name_km: e.target.value })} className="mt-1.5" />
-        </div>
-        <div>
-          <Label htmlFor="sku">SKU / Product Code</Label>
-          <div className="flex gap-1.5 mt-1.5">
-            <Input id="sku" value={formData.sku || ""} onChange={(e) => setFormData({ ...formData, sku: e.target.value })} placeholder="e.g. PRD-001" />
-            <Button type="button" variant="outline" size="sm" className="shrink-0 h-10 px-3 text-xs" onClick={() => {
-              const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-              setFormData({ ...formData, sku: random });
-            }}>Generate</Button>
-          </div>
         </div>
       </div>
       <div>
@@ -260,20 +241,6 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div>
-          <Label htmlFor="price">Price (USD)</Label>
-          <div className="relative mt-1.5">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-            <Input id="price" type="number" min="0" step="0.01" value={formData.price || ""} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })} placeholder="0.00" className="pl-7" />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="purchase_price">Purchase Price (USD)</Label>
-          <div className="relative mt-1.5">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-            <Input id="purchase_price" type="number" min="0" step="0.01" value={formData.purchase_price || ""} onChange={(e) => setFormData({ ...formData, purchase_price: parseFloat(e.target.value) || 0 })} placeholder="0.00" className="pl-7" />
-          </div>
         </div>
       </div>
 
@@ -484,11 +451,10 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
                                 className="h-8 w-8 shrink-0"
                                 title="Auto-generate SKU"
                                 onClick={() => {
-                                  const productSku = formData.sku || '';
-                                  const suffix = Object.values(variant.combination)
+                                   const suffix = Object.values(variant.combination)
                                     .map(v => v.toString().substring(0, 3).toUpperCase())
                                     .join('-');
-                                  const generated = productSku ? `${productSku}-${suffix}` : suffix;
+                                   const generated = suffix;
                                   const next = [...variants];
                                   next[idx] = { ...next[idx], sku: generated };
                                   setVariants(next);
@@ -793,8 +759,8 @@ const AppsTab = () => {
   const getStockBadge = (app: App) => {
     const totalStock = app.variants && app.variants.length > 0
       ? app.variants.filter(v => v.is_active).reduce((sum, v) => sum + v.stock_quantity, 0)
-      : (app.stock_quantity ?? 0);
-    const threshold = app.low_stock_threshold ?? 5;
+      : 0;
+    const threshold = 5;
     const maxDisplay = Math.max(totalStock, threshold * 3, 20);
     const percent = Math.min((totalStock / maxDisplay) * 100, 100);
 
@@ -883,9 +849,9 @@ const AppsTab = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground mb-1">Low Stock</p>
-                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{apps.filter(a => {
-                    const total = a.variants?.length ? a.variants.filter(v => v.is_active).reduce((s, v) => s + v.stock_quantity, 0) : (a.stock_quantity ?? 0);
-                    return total > 0 && total <= (a.low_stock_threshold ?? 5);
+                   <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{apps.filter(a => {
+                    const total = a.variants?.length ? a.variants.filter(v => v.is_active).reduce((s, v) => s + v.stock_quantity, 0) : 0;
+                    return total > 0 && total <= 5;
                   }).length}</p>
                 </div>
                 <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
@@ -900,7 +866,7 @@ const AppsTab = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground mb-1">Out of Stock</p>
                   <p className="text-2xl font-bold text-destructive">{apps.filter(a => {
-                    const total = a.variants?.length ? a.variants.filter(v => v.is_active).reduce((s, v) => s + v.stock_quantity, 0) : (a.stock_quantity ?? 0);
+                    const total = a.variants?.length ? a.variants.filter(v => v.is_active).reduce((s, v) => s + v.stock_quantity, 0) : 0;
                     return total <= 0;
                   }).length}</p>
                 </div>
@@ -944,7 +910,7 @@ const AppsTab = () => {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {apps.map((app) => {
-                    const price = app.price ? (typeof app.price === 'string' ? parseFloat(app.price) : app.price) : 0;
+                    const price = app.variants?.length ? Number(app.variants[0].price_adjustment || 0) : 0;
                     return (
                       <tr key={app.id} className="hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3">
