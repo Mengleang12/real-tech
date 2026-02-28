@@ -103,32 +103,30 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       <html>
       <head>
         <style>
-          @page { margin: 2mm; }
+          @page {
+            size: 30mm 20mm;
+            margin: 0;
+          }
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; }
-          .labels-grid {
-            display: grid;
-            grid-template-columns: repeat(${labelCols}, 30mm);
-            gap: 1mm;
-          }
           .label {
             width: 30mm;
             height: 20mm;
-            border: 0.3mm dashed #ccc;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 1mm;
             overflow: hidden;
+            page-break-after: always;
           }
+          .label:last-child { page-break-after: auto; }
           .label svg { max-width: 28mm; height: 10mm; }
-          .sku-text { font-size: 6pt; font-weight: bold; margin-top: 0.5mm; }
-          .price-text { font-size: 7pt; font-weight: bold; margin-top: 0.5mm; }
+          .sku-text { font-size: 7pt; font-weight: bold; margin-top: 0.5mm; }
+          .price-text { font-size: 8pt; font-weight: bold; margin-top: 0.5mm; }
         </style>
       </head>
-      <body>
-        <div class="labels-grid" id="grid"></div>
+      <body id="grid">
       </body>
       </html>
     `);
