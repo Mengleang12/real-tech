@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { AdminDialog } from "@/components/admin/AdminDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -819,6 +820,7 @@ export const PurchaseManagement = () => {
   const [scanning, setScanning] = useState(false);
   const [scannedPurchase, setScannedPurchase] = useState<Purchase | null>(null); // kept for clearScan
   const [scannedResults, setScannedResults] = useState<Purchase[]>([]);
+  const [autoReceive, setAutoReceive] = useState(false);
   const scanInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -837,16 +839,33 @@ export const PurchaseManagement = () => {
     try {
       const res = await purchasesApi.getAll(1, 20, 'all', val);
       if (res.purchases.length >= 1) {
+        const newPurchases = res.purchases;
         // Add found purchases to the list, avoiding duplicates
         setScannedResults((prev) => {
           const existingIds = new Set(prev.map((p) => p.id));
-          const newItems = res.purchases.filter((p) => !existingIds.has(p.id));
+          const newItems = newPurchases.filter((p) => !existingIds.has(p.id));
           return [...prev, ...newItems];
         });
-        if (res.purchases.length === 1) {
-          toast.success(`Found: ${res.purchases[0].reference_number}`);
+        if (newPurchases.length === 1) {
+          toast.success(`Found: ${newPurchases[0].reference_number}`);
         } else {
-          toast.success(`Found ${res.purchases.length} orders`);
+          toast.success(`Found ${newPurchases.length} orders`);
+        }
+        // Auto-receive: update status to 'received' for eligible POs
+        if (autoReceive) {
+          for (const po of newPurchases) {
+            if (['draft', 'ordered', 'partial'].includes(po.status)) {
+              try {
+                await purchasesApi.updateStatus(po.id, 'received');
+                toast.success(`${po.reference_number} marked as received`);
+                // Update the scanned result in place
+                setScannedResults((prev) => prev.map((p) => p.id === po.id ? { ...p, status: 'received' } : p));
+              } catch {
+                toast.error(`Failed to receive ${po.reference_number}`);
+              }
+            }
+          }
+          loadData(); // refresh stats
         }
       } else {
         toast.error("No purchase order found for this tracking number");
@@ -1056,6 +1075,15 @@ export const PurchaseManagement = () => {
                 <p className="text-sm text-muted-foreground text-center">
                   Scan a barcode or type a tracking number to quickly find a purchase order
                 </p>
+                <div className="flex items-center gap-3 bg-muted/50 rounded-lg px-4 py-2.5 w-full">
+                  <Switch id="auto-receive" checked={autoReceive} onCheckedChange={setAutoReceive} />
+                  <Label htmlFor="auto-receive" className="text-sm cursor-pointer flex-1">
+                    Auto-receive stock on scan
+                  </Label>
+                  {autoReceive && (
+                    <Badge variant="default" className="text-xs">Active</Badge>
+                  )}
+                </div>
                 <div className="relative w-full">
                   <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
