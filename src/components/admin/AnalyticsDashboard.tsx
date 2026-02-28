@@ -225,7 +225,7 @@ export const AnalyticsDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}><CardContent className="p-5"><div className="h-20 bg-muted animate-pulse rounded" /></CardContent></Card>
@@ -233,8 +233,6 @@ export const AnalyticsDashboard = () => {
         ) : (
           <>
             <StatCard title="Total Users" value={stats?.total_users?.toLocaleString() ?? "0"} icon={Users} change={12} trend="up" subtitle="Registered accounts" />
-            <StatCard title="Total Orders" value={stats?.total_orders?.toLocaleString() ?? "0"} icon={ShoppingCart} change={8} trend="up" subtitle="All time" />
-            <StatCard title="Total Revenue" value={`$${stats?.total_revenue?.toFixed(2) ?? "0.00"}`} icon={DollarSign} change={15} trend="up" subtitle="USD collected" />
             <StatCard title="Conversion" value={`${stats?.conversion_rate?.toFixed(1) ?? "0"}%`} icon={TrendingUp} change={-2} trend="down" subtitle="Orders / Users" />
           </>
         )}
@@ -298,70 +296,31 @@ export const AnalyticsDashboard = () => {
         </Card>
       </div>
 
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold">Orders Volume</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[220px]">
-              {isLoading ? (
-                <div className="h-full bg-muted animate-pulse rounded-lg" />
-              ) : downloadsData.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">No data</div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={downloadsData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="orders" name="Orders" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} opacity={0.85} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold">Recent Orders</CardTitle>
-              <Activity className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-[220px] overflow-y-auto">
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />)
-              ) : data?.recent_orders?.length ? (
-                data.recent_orders.slice(0, 8).map((order: any) => (
-                  <div key={order.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">{order.app_name}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-2">
-                      <span className="text-sm font-semibold">${parseFloat(String(order.amount)).toFixed(2)}</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                        order.status === "paid" ? "bg-green-500/15 text-green-600" :
-                        order.status === "pending" ? "bg-amber-500/15 text-amber-600" :
-                        "bg-muted text-muted-foreground"
-                      }`}>
-                        {order.status}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="flex items-center justify-center h-[180px] text-muted-foreground text-sm">No orders yet</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Orders Volume Chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold">Orders Volume</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[220px]">
+            {isLoading ? (
+              <div className="h-full bg-muted animate-pulse rounded-lg" />
+            ) : downloadsData.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">No data</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={downloadsData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="orders" name="Orders" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} opacity={0.85} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
