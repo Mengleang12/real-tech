@@ -400,7 +400,7 @@ export interface AdminOrder {
   status: 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
   bakong_transaction_id?: string;
   payment_md5?: string;
-  created_at: string | null;
+  created_at: string;
   paid_at?: string;
   expires_at?: string;
   notes?: string;
