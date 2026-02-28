@@ -82,7 +82,12 @@ export function SystemSettingsPanel() {
       });
       if (!res.ok) throw new Error('Failed to load settings');
       const data = await res.json();
-      setSettings({ ...defaultSettings, ...data });
+      // Only pick keys we manage to avoid storing sensitive data
+      const managed: Partial<SystemSettings> = {};
+      for (const key of Object.keys(defaultSettings) as (keyof SystemSettings)[]) {
+        if (key in data) (managed as any)[key] = data[key];
+      }
+      setSettings({ ...defaultSettings, ...managed });
     } catch (err: any) {
       toast.error(err.message || 'Failed to load settings');
     } finally {
@@ -120,7 +125,26 @@ export function SystemSettingsPanel() {
       const res = await fetch(`${API_BASE_URL}/api/admin/settings`, {
         method: 'PUT',
         headers: getAuthHeaders(),
-        body: JSON.stringify(settings),
+        body: JSON.stringify({
+          maintenance_mode: settings.maintenance_mode,
+          maintenance_message: settings.maintenance_message,
+          allow_new_registrations: settings.allow_new_registrations,
+          max_upload_size: settings.max_upload_size,
+          auto_approve_apps: settings.auto_approve_apps,
+          site_name: settings.site_name,
+          site_tagline: settings.site_tagline,
+          support_email: settings.support_email,
+          support_phone: settings.support_phone,
+          site_address: settings.site_address,
+          site_logo_url: settings.site_logo_url,
+          primary_color: settings.primary_color,
+          default_currency: settings.default_currency,
+          facebook_url: settings.facebook_url,
+          telegram_url: settings.telegram_url,
+          instagram_url: settings.instagram_url,
+          enable_analytics: settings.enable_analytics,
+          invoice_footer_text: settings.invoice_footer_text,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
