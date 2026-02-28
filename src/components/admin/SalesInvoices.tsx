@@ -532,7 +532,7 @@ const InvoicesTab = () => {
         <div class="meta">
           <div class="invoice-badge">Invoice</div>
           <div class="invoice-number">#${order.id.slice(0, 8).toUpperCase()}</div>
-          <div class="invoice-date">${new Date(order.created_at).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+          <div class="invoice-date">${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</div>
         </div>
       </div>
 
@@ -541,6 +541,7 @@ const InvoicesTab = () => {
           <div class="detail-label">Bill To</div>
           <div class="detail-name">${order.user?.full_name || "Walk-in Customer"}</div>
           <div class="detail-sub">${order.user?.email || "—"}</div>
+          ${order.user?.phone ? `<div class="detail-sub">${order.user.phone}</div>` : ""}
         </div>
         <div class="detail-block">
           <div class="detail-label">Payment Info</div>
@@ -656,6 +657,7 @@ const InvoicesTab = () => {
                       <td className="px-4 py-3">
                         <div className="font-medium text-xs">{order.user?.full_name || "—"}</div>
                         <div className="text-xs text-muted-foreground">{order.user?.email}</div>
+                        {order.user?.phone && <div className="text-xs text-muted-foreground">{order.user.phone}</div>}
                       </td>
                       <td className="px-4 py-3">
                         <div className="space-y-0.5">
@@ -669,8 +671,12 @@ const InvoicesTab = () => {
                       <td className="px-4 py-3 font-semibold tabular-nums">${amount.toFixed(2)}</td>
                       <td className="px-4 py-3"><Badge variant={status.variant} className="text-xs">{status.label}</Badge></td>
                       <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(order.created_at).toLocaleDateString()}{" "}
-                        {new Date(order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {order.created_at ? (
+                          <>
+                            {new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString()}{" "}
+                            {new Date(order.created_at.replace(/-/g, '/')).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </>
+                        ) : "—"}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -736,13 +742,14 @@ const InvoicesTab = () => {
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
                   <Badge variant={status.variant} className="text-sm px-3 py-1">{status.label}</Badge>
-                  <span className="text-sm text-muted-foreground">{selectedOrder.created_at ? new Date(selectedOrder.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}</span>
+                  <span className="text-sm text-muted-foreground">{selectedOrder.created_at ? new Date(selectedOrder.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}</span>
                 </div>
                 <Separator />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Customer</p>
                   <p className="font-medium">{selectedOrder.user?.full_name || "—"}</p>
                   <p className="text-sm text-muted-foreground">{selectedOrder.user?.email || "—"}</p>
+                  {selectedOrder.user?.phone && <p className="text-sm text-muted-foreground">{selectedOrder.user.phone}</p>}
                 </div>
                 <Separator />
                 <div>
