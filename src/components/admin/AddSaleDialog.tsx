@@ -262,8 +262,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     <AdminDialog 
       open={open} 
       onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }} 
-      title={<span className="flex items-center gap-2"><Plus className="w-5 h-5" /> New Sale</span>} 
-      description="Create a sale for walk-in or existing customer" 
+      title={<span className="flex items-center gap-2"><Plus className="w-5 h-5" /> New Sale</span>}
       size="2xl"
     >
 
