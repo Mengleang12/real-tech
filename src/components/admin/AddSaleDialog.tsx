@@ -319,7 +319,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
       open={open} 
       onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }} 
       title={<span className="flex items-center gap-2"><Plus className="w-5 h-5" /> New Sale</span>}
-      size="2xl"
+      size="3xl"
     >
 
         <div className="space-y-4">
