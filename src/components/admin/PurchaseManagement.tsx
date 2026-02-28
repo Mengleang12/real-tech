@@ -1005,7 +1005,7 @@ export const PurchaseManagement = () => {
                             <DropdownMenuItem onClick={() => setViewPurchase(po)}>
                               <FileText className="w-4 h-4 mr-2" /> View Details
                             </DropdownMenuItem>
-                            {po.status === 'draft' && (
+                            {['draft', 'ordered'].includes(po.status) && (
                               <DropdownMenuItem onClick={() => { setEditPurchase(po); setAddOpen(true); }}>
                                 <ClipboardList className="w-4 h-4 mr-2" /> Edit Order
                               </DropdownMenuItem>
