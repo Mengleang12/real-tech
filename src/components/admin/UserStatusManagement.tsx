@@ -59,7 +59,7 @@ export const UserStatusManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div><h2 className="text-2xl font-bold">User Status Management</h2><p className="text-muted-foreground">Suspend or ban users</p></div>
+      <div><h2 className="text-2xl font-bold">Customer Status Management</h2><p className="text-muted-foreground">Suspend or ban customers</p></div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card><CardContent className="pt-4 flex items-center gap-4"><div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center"><UserCheck className="w-5 h-5 text-green-600" /></div><div><div className="text-2xl font-bold">{stats.active}</div><p className="text-sm text-muted-foreground">Active</p></div></CardContent></Card>
@@ -73,7 +73,7 @@ export const UserStatusManagement = () => {
       </div>
 
       <div className="space-y-3">
-        {isLoading ? <Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card> : filteredUsers.length === 0 ? <Card><CardContent className="py-8 text-center text-muted-foreground">No users</CardContent></Card> : filteredUsers.map((user) => {
+        {isLoading ? <Card><CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent></Card> : filteredUsers.length === 0 ? <Card><CardContent className="py-8 text-center text-muted-foreground">No customers</CardContent></Card> : filteredUsers.map((user) => {
           const userStatus = getUserStatus(user);
           const statusInfo = statusConfig[userStatus];
           return (
