@@ -1106,6 +1106,21 @@ export interface Purchase {
   items: PurchaseItem[];
   payments: PurchasePayment[];
   expenses: PurchaseExpense[];
+  receive_logs?: PurchaseReceiveLog[];
+}
+
+export interface PurchaseReceiveLog {
+  id: number;
+  purchase_id: string;
+  purchase_item_id: number;
+  product_name: string;
+  variant_label?: string;
+  quantity_received: number;
+  previous_received: number;
+  new_total_received: number;
+  received_by?: number;
+  received_at: string;
+  created_at: string;
 }
 
 export interface PurchaseDashboardStats {
