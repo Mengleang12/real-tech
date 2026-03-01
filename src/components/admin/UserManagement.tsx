@@ -1,26 +1,22 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   Users, Search, Package, Plus, Trash2, ChevronLeft, ChevronRight,
-  Mail, DollarSign, CheckCircle, Clock, XCircle, ShoppingBag, Check, ChevronsUpDown, Loader2, Eye
+  Mail, DollarSign, CheckCircle, ShoppingBag, Check, ChevronsUpDown, Loader2, Eye, Phone, Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./AdminDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./AdminDialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { adminUsersApi, appsApi, type AdminUser, type AdminOrder, type App } from "@/lib/api";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
   paid:      { variant: "default",     label: "Paid" },
@@ -31,7 +27,6 @@ const statusConfig: Record<string, { variant: "default" | "secondary" | "destruc
 };
 
 export const UserManagement = () => {
-  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const perPage = 20;
@@ -67,20 +62,18 @@ export const UserManagement = () => {
   const users = data?.users || [];
   const pagination = data?.pagination;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery]);
 
   useEffect(() => {
-    if (showGrantDialog) loadApps();
+    if (showGrantDialog) loadProducts();
   }, [showGrantDialog, appSearchQuery]);
 
-  const loadApps = async () => {
+  const loadProducts = async () => {
     try {
       const response = await appsApi.getAll({ search: appSearchQuery || undefined, limit: 30 });
       setApps(response.data);
     } catch (error) {
-      console.error("Failed to load apps:", error);
+      console.error("Failed to load products:", error);
     }
   };
 
@@ -91,37 +84,37 @@ export const UserManagement = () => {
       const response = await adminUsersApi.getOrders(user.id);
       setUserOrders(response.orders);
     } catch (error) {
-      toast.error("Failed to load user orders");
+      toast.error("Failed to load purchase history");
       setUserOrders([]);
     } finally {
       setLoadingOrders(false);
     }
   };
 
-  const handleGrantApp = async () => {
+  const handleGrantProduct = async () => {
     if (!selectedUser || !selectedAppId) return;
-    const app = apps.find(a => a.id.toString() === selectedAppId);
-    if (!app) return;
+    const product = apps.find(a => a.id.toString() === selectedAppId);
+    if (!product) return;
     setGranting(true);
     try {
       await adminUsersApi.grantProduct(selectedUser.id, {
-        product_id: app.id,
-        product_name: app.name,
+        product_id: product.id,
+        product_name: product.name,
         amount: parseFloat(grantAmount) || 0,
       });
-      toast.success(`Granted "${app.name}" to ${selectedUser.email}`);
+      toast.success(`Granted "${product.name}" to ${selectedUser.full_name || selectedUser.email}`);
       setShowGrantDialog(false);
       setSelectedAppId("");
       setGrantAmount("0");
       handleSelectUser(selectedUser);
     } catch (error: any) {
-      toast.error(error.message || "Failed to grant app");
+      toast.error(error.message || "Failed to grant product");
     } finally {
       setGranting(false);
     }
   };
 
-  const handleRevokeApp = async (order: AdminOrder) => {
+  const handleRevokeProduct = async (order: AdminOrder) => {
     if (!selectedUser) return;
     setRevokingOrderId(order.id);
     try {
@@ -129,7 +122,7 @@ export const UserManagement = () => {
       toast.success(`Revoked "${order.product_name}"`);
       handleSelectUser(selectedUser);
     } catch (error: any) {
-      toast.error(error.message || "Failed to revoke app");
+      toast.error(error.message || "Failed to revoke product");
     } finally {
       setRevokingOrderId(null);
     }
@@ -139,7 +132,7 @@ export const UserManagement = () => {
     setApprovingOrderId(order.id);
     try {
       await adminUsersApi.approveOrder(order.id);
-      toast.success(`Order approved`);
+      toast.success("Order approved");
       if (selectedUser) handleSelectUser(selectedUser);
     } catch (error: any) {
       toast.error(error.message || "Failed to approve order");
@@ -152,7 +145,7 @@ export const UserManagement = () => {
     setDeletingOrderId(order.id);
     try {
       await adminUsersApi.deleteOrder(order.id);
-      toast.success(`Order deleted`);
+      toast.success("Order deleted");
       if (selectedUser) handleSelectUser(selectedUser);
     } catch (error: any) {
       toast.error(error.message || "Failed to delete order");
@@ -163,71 +156,70 @@ export const UserManagement = () => {
 
   const paidOrders = userOrders.filter(o => o.status === 'paid');
   const otherOrders = userOrders.filter(o => o.status !== 'paid');
+  const totalSpent = paidOrders.reduce((sum, o) => sum + (typeof o.amount === 'string' ? parseFloat(o.amount) : o.amount), 0);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold">User Management</h2>
-          <p className="text-sm text-muted-foreground mt-1">View and manage all registered users</p>
+          <h2 className="text-xl font-semibold">Customers</h2>
+          <p className="text-sm text-muted-foreground mt-1">Manage registered customers and their purchases</p>
         </div>
       </div>
 
       {/* Search */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by email, name, or phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by email, name, or phone..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
-      {/* Summary */}
+      {/* Summary Cards */}
       {pagination && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <Card className="overflow-hidden">
+          <Card>
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground mb-1">Total Users</p>
-                  <p className="text-2xl font-bold text-foreground">{pagination.total}</p>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Total Customers</p>
+                  <p className="text-2xl font-bold">{pagination.total}</p>
                   <p className="text-xs text-muted-foreground mt-1">All accounts</p>
                 </div>
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Users className="w-4.5 h-4.5 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="overflow-hidden">
+          <Card>
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
+                <div>
                   <p className="text-xs text-muted-foreground mb-1">This Page</p>
-                  <p className="text-2xl font-bold text-foreground">{users.length}</p>
+                  <p className="text-2xl font-bold">{users.length}</p>
                   <p className="text-xs text-muted-foreground mt-1">Showing now</p>
                 </div>
-                <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-4.5 h-4.5 text-violet-600 dark:text-violet-400" />
+                <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
+                  <Mail className="w-4.5 h-4.5 text-accent-foreground" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="overflow-hidden">
+          <Card>
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
+                <div>
                   <p className="text-xs text-muted-foreground mb-1">With Purchases</p>
-                  <p className="text-2xl font-bold text-foreground">{users.filter(u => (u.paid_orders_count || 0) > 0).length}</p>
+                  <p className="text-2xl font-bold">{users.filter(u => (u.paid_orders_count || 0) > 0).length}</p>
                   <p className="text-xs text-muted-foreground mt-1">On this page</p>
                 </div>
-                <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                  <ShoppingBag className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <ShoppingBag className="w-4.5 h-4.5 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -248,7 +240,7 @@ export const UserManagement = () => {
       ) : users.length === 0 ? (
         <div className="text-center py-12 border border-border rounded-md bg-card">
           <Users className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">No users found</p>
+          <p className="text-sm text-muted-foreground">No customers found</p>
         </div>
       ) : (
         <div className="border border-border rounded-lg overflow-hidden">
@@ -256,7 +248,7 @@ export const UserManagement = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">User</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Customer</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Phone</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Purchases</th>
@@ -266,17 +258,17 @@ export const UserManagement = () => {
               </thead>
               <tbody className="divide-y divide-border">
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                  <tr key={user.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => handleSelectUser(user)}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {user.avatar_url ? (
-                          <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                          <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0 border border-border" />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xs font-semibold text-primary">
                             {(user.full_name || user.email).charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <span className="text-xs font-medium">{user.email}</span>
+                        <span className="text-xs font-medium truncate max-w-[180px]">{user.email}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-xs">{user.full_name || "—"}</td>
@@ -294,7 +286,7 @@ export const UserManagement = () => {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
-                        onClick={() => handleSelectUser(user)}
+                        onClick={(e) => { e.stopPropagation(); handleSelectUser(user); }}
                         title="View details"
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -312,7 +304,7 @@ export const UserManagement = () => {
       {pagination && pagination.total_pages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            Page {pagination.current_page} of {pagination.total_pages} ({pagination.total} users)
+            Page {pagination.current_page} of {pagination.total_pages} ({pagination.total} customers)
           </p>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
@@ -325,7 +317,7 @@ export const UserManagement = () => {
         </div>
       )}
 
-      {/* User Detail Dialog */}
+      {/* Customer Detail Dialog */}
       <Dialog open={!!selectedUser} onOpenChange={(open) => { if (!open) setSelectedUser(null); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           {selectedUser && (
@@ -333,36 +325,63 @@ export const UserManagement = () => {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-3">
                   {selectedUser.avatar_url ? (
-                    <img src={selectedUser.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    <img src={selectedUser.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border border-border" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
                       {(selectedUser.full_name || selectedUser.email).charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <div>
-                    <div>{selectedUser.email}</div>
-                    {selectedUser.full_name && <p className="text-sm font-normal text-muted-foreground">{selectedUser.full_name}</p>}
+                  <div className="min-w-0">
+                    <div className="truncate">{selectedUser.full_name || selectedUser.email}</div>
+                    {selectedUser.full_name && <p className="text-sm font-normal text-muted-foreground truncate">{selectedUser.email}</p>}
                   </div>
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="space-y-5 mt-2">
-                {/* Grant button */}
-                <div className="flex justify-end">
-                  <Button onClick={() => setShowGrantDialog(true)} size="sm" className="gap-1">
-                    <Plus className="w-4 h-4" /> Grant App
+              {/* Customer Info Cards */}
+              <div className="grid grid-cols-3 gap-3 mt-2">
+                <div className="bg-muted/50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Total Spent</p>
+                  <p className="text-lg font-bold">${totalSpent.toFixed(2)}</p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Purchases</p>
+                  <p className="text-lg font-bold">{paidOrders.length}</p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Joined</p>
+                  <p className="text-sm font-semibold mt-1">{selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : "—"}</p>
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" />{selectedUser.email}</span>
+                {selectedUser.phone && <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{selectedUser.phone}</span>}
+              </div>
+
+              {/* Tabbed Content */}
+              <Tabs defaultValue="purchases" className="mt-2">
+                <div className="flex items-center justify-between">
+                  <TabsList>
+                    <TabsTrigger value="purchases" className="text-xs gap-1.5"><Package className="w-3.5 h-3.5" />Purchases ({paidOrders.length})</TabsTrigger>
+                    {otherOrders.length > 0 && (
+                      <TabsTrigger value="history" className="text-xs gap-1.5"><DollarSign className="w-3.5 h-3.5" />History ({otherOrders.length})</TabsTrigger>
+                    )}
+                  </TabsList>
+                  <Button onClick={() => setShowGrantDialog(true)} size="sm" className="gap-1.5 h-8 text-xs">
+                    <Plus className="w-3.5 h-3.5" /> Grant Product
                   </Button>
                 </div>
 
-                {/* Purchased Apps */}
-                <div>
-                  <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
-                    <Package className="w-4 h-4" /> Purchased Apps ({paidOrders.length})
-                  </h3>
+                <TabsContent value="purchases" className="mt-3">
                   {loadingOrders ? (
                     <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}</div>
                   ) : paidOrders.length === 0 ? (
-                    <p className="text-muted-foreground text-sm py-4 text-center bg-muted/50 rounded-lg">No purchased apps</p>
+                    <div className="text-center py-8 bg-muted/30 rounded-lg border border-dashed border-border">
+                      <ShoppingBag className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No purchases yet</p>
+                    </div>
                   ) : (
                     <div className="border border-border rounded-lg overflow-hidden">
                       <table className="w-full text-sm">
@@ -393,7 +412,7 @@ export const UserManagement = () => {
                                   variant="ghost"
                                   size="icon"
                                   className="h-7 w-7 text-destructive hover:text-destructive"
-                                  onClick={() => handleRevokeApp(order)}
+                                  onClick={() => handleRevokeProduct(order)}
                                   disabled={revokingOrderId === order.id}
                                 >
                                   {revokingOrderId === order.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
@@ -405,14 +424,10 @@ export const UserManagement = () => {
                       </table>
                     </div>
                   )}
-                </div>
+                </TabsContent>
 
-                {/* Other Orders */}
                 {otherOrders.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
-                      <DollarSign className="w-4 h-4" /> Payment History ({otherOrders.length})
-                    </h3>
+                  <TabsContent value="history" className="mt-3">
                     <div className="border border-border rounded-lg overflow-hidden">
                       <table className="w-full text-sm">
                         <thead>
@@ -454,37 +469,37 @@ export const UserManagement = () => {
                         </tbody>
                       </table>
                     </div>
-                  </div>
+                  </TabsContent>
                 )}
-              </div>
+              </Tabs>
             </>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Grant App Dialog */}
+      {/* Grant Product Dialog */}
       <Dialog open={showGrantDialog} onOpenChange={setShowGrantDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5" /> Grant App Access
+              <Plus className="w-5 h-5" /> Grant Product
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Select App</Label>
+              <Label>Select Product</Label>
               <Popover open={appSearchOpen} onOpenChange={setAppSearchOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" role="combobox" aria-expanded={appSearchOpen} className="w-full justify-between mt-1.5">
-                    {selectedAppId ? apps.find(a => a.id.toString() === selectedAppId)?.name || "Select app..." : "Select app..."}
+                    {selectedAppId ? apps.find(a => a.id.toString() === selectedAppId)?.name || "Select product..." : "Select product..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0" align="start">
                   <Command shouldFilter={false}>
-                    <CommandInput placeholder="Search apps..." value={appSearchQuery} onValueChange={setAppSearchQuery} />
+                    <CommandInput placeholder="Search products..." value={appSearchQuery} onValueChange={setAppSearchQuery} />
                     <CommandList>
-                      <CommandEmpty>No apps found.</CommandEmpty>
+                      <CommandEmpty>No products found.</CommandEmpty>
                       <CommandGroup>
                         {apps.map((app) => (
                           <CommandItem key={app.id} value={app.id.toString()} onSelect={() => { setSelectedAppId(app.id.toString()); setAppSearchOpen(false); }}>
@@ -507,9 +522,9 @@ export const UserManagement = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowGrantDialog(false)} disabled={granting}>Cancel</Button>
-            <Button onClick={handleGrantApp} disabled={!selectedAppId || granting}>
+            <Button onClick={handleGrantProduct} disabled={!selectedAppId || granting}>
               {granting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-              {granting ? "Granting..." : "Grant Access"}
+              {granting ? "Granting..." : "Grant Product"}
             </Button>
           </DialogFooter>
         </DialogContent>
