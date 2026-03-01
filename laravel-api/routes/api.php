@@ -198,6 +198,7 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::post('/admin/purchases', [PurchaseController::class, 'store']);
     Route::put('/admin/purchases/{id}', [PurchaseController::class, 'update']);
     Route::put('/admin/purchases/{id}/status', [PurchaseController::class, 'updateStatus']);
+    Route::post('/admin/purchases/{id}/receive-items', [PurchaseController::class, 'receiveItems']);
     Route::delete('/admin/purchases/{id}', [PurchaseController::class, 'destroy']);
     Route::post('/admin/purchases/{id}/payments', [PurchaseController::class, 'addPayment']);
     Route::delete('/admin/purchases/{id}/payments/{paymentId}', [PurchaseController::class, 'deletePayment']);

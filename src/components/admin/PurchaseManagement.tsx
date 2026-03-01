@@ -515,8 +515,38 @@ const PurchaseDetailDialog = ({
   const [addingExpense, setAddingExpense] = useState(false);
   const [orderConfirmOpen, setOrderConfirmOpen] = useState(false);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  // Partial receive
+  const [receiveMode, setReceiveMode] = useState(false);
+  const [receivedQtys, setReceivedQtys] = useState<Record<number, number>>({});
+  const [receivingItems, setReceivingItems] = useState(false);
 
   if (!purchase) return null;
+
+  const initReceiveMode = () => {
+    const qtys: Record<number, number> = {};
+    purchase.items.forEach((item) => {
+      qtys[item.id] = item.received_quantity || 0;
+    });
+    setReceivedQtys(qtys);
+    setReceiveMode(true);
+  };
+
+  const handleReceiveItems = async () => {
+    setReceivingItems(true);
+    try {
+      const items = purchase.items.map((item) => ({
+        item_id: item.id,
+        received_quantity: receivedQtys[item.id] ?? (item.received_quantity || 0),
+      }));
+      await purchasesApi.receiveItems(purchase.id, items);
+      toast.success("Items received successfully");
+      setReceiveMode(false);
+      onRefresh();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to receive items");
+    }
+    setReceivingItems(false);
+  };
 
   const handleStatusChange = async (newStatus: string) => {
     // Intercept draft → ordered with confirmation
@@ -677,9 +707,14 @@ const PurchaseDetailDialog = ({
                 </Button>
               )}
               {(purchase.status === 'ordered' || purchase.status === 'partial') && (
-                <Button size="sm" variant="outline" onClick={() => handleStatusChange('received')} disabled={statusUpdating}>
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Mark as Received
-                </Button>
+                <>
+                  <Button size="sm" variant="outline" onClick={initReceiveMode} disabled={statusUpdating || receiveMode}>
+                    <Package className="w-3.5 h-3.5 mr-1.5" /> Receive Items
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleStatusChange('received')} disabled={statusUpdating}>
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Mark All Received
+                  </Button>
+                </>
               )}
               {purchase.status === 'received' && (
                 <Button size="sm" onClick={() => handleStatusChange('completed')} disabled={statusUpdating}>
@@ -706,15 +741,55 @@ const PurchaseDetailDialog = ({
             <TableBody>
               {purchase.items.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="text-sm">{item.product_name}</TableCell>
+                  <TableCell className="text-sm">
+                    {item.product_name}
+                    {item.variant_label && <span className="text-xs text-muted-foreground ml-1">({item.variant_label})</span>}
+                  </TableCell>
                   <TableCell className="text-sm">{item.quantity}</TableCell>
-                  <TableCell className="text-sm">{item.received_quantity || 0}</TableCell>
+                  <TableCell className="text-sm">
+                    {receiveMode ? (
+                      <Input
+                        type="number"
+                        min={0}
+                        max={item.quantity}
+                        className="w-20 h-8 text-sm"
+                        value={receivedQtys[item.id] ?? 0}
+                        onChange={(e) => setReceivedQtys((prev) => ({
+                          ...prev,
+                          [item.id]: Math.min(Math.max(0, parseInt(e.target.value) || 0), item.quantity),
+                        }))}
+                      />
+                    ) : (
+                      <Badge variant={((item.received_quantity || 0) >= item.quantity) ? "default" : "secondary"} className="text-xs">
+                        {item.received_quantity || 0} / {item.quantity}
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-sm">${Number(item.unit_cost).toFixed(2)}</TableCell>
                   <TableCell className="text-right text-sm font-medium">${Number(item.total_cost).toFixed(2)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          {receiveMode && (
+            <div className="flex gap-2 justify-end">
+              <Button size="sm" variant="outline" onClick={() => setReceiveMode(false)} disabled={receivingItems}>
+                Cancel
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => {
+                const qtys: Record<number, number> = {};
+                purchase.items.forEach((item) => { qtys[item.id] = item.quantity; });
+                setReceivedQtys(qtys);
+              }}>
+                Receive All
+              </Button>
+              <Button size="sm" onClick={handleReceiveItems} disabled={receivingItems}>
+                {receivingItems && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Confirm Receive
+              </Button>
+            </div>
+          )}
 
           {purchase.notes && (
             <div className="text-sm">

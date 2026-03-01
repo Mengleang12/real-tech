@@ -487,6 +487,110 @@ class PurchaseController extends Controller
     }
 
     /**
+     * Receive items partially – update received_quantity per item and adjust stock
+     */
+    public function receiveItems(Request $request, $id)
+    {
+        $purchase = Purchase::with('items')->find($id);
+        if (!$purchase) {
+            return response()->json(['error' => 'Purchase not found'], 404);
+        }
+
+        if (in_array($purchase->status, ['completed', 'cancelled'])) {
+            return response()->json(['error' => 'Cannot receive items for a ' . $purchase->status . ' purchase'], 422);
+        }
+
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.item_id' => 'required|integer',
+            'items.*.received_quantity' => 'required|integer|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($request->items as $incoming) {
+                $item = $purchase->items->firstWhere('id', $incoming['item_id']);
+                if (!$item) continue;
+
+                $newReceived = min((int) $incoming['received_quantity'], $item->quantity);
+                $oldReceived = (int) $item->received_quantity;
+                $delta = $newReceived - $oldReceived;
+
+                if ($delta === 0) continue;
+
+                // Update item received_quantity
+                $item->update(['received_quantity' => $newReceived]);
+
+                // Adjust stock by delta
+                if ($delta > 0) {
+                    if ($item->variant_id) {
+                        $variant = ProductVariant::find($item->variant_id);
+                        if ($variant) $variant->increment('stock_quantity', $delta);
+                    } else {
+                        $product = Product::find($item->product_id);
+                        if ($product) {
+                            $product->increment('stock_quantity', $delta);
+                            $product->refresh();
+                            $lowThreshold = $product->low_stock_threshold ?? 5;
+                            $product->update([
+                                'stock_status' => $product->stock_quantity <= 0 ? 'out_of_stock' : ($product->stock_quantity <= $lowThreshold ? 'low_stock' : 'in_stock'),
+                            ]);
+                        }
+                    }
+                } elseif ($delta < 0) {
+                    $absDelta = abs($delta);
+                    if ($item->variant_id) {
+                        $variant = ProductVariant::find($item->variant_id);
+                        if ($variant) $variant->decrement('stock_quantity', $absDelta);
+                    } else {
+                        $product = Product::find($item->product_id);
+                        if ($product) {
+                            $product->decrement('stock_quantity', $absDelta);
+                            $product->refresh();
+                            $lowThreshold = $product->low_stock_threshold ?? 5;
+                            $product->update([
+                                'stock_status' => $product->stock_quantity <= 0 ? 'out_of_stock' : ($product->stock_quantity <= $lowThreshold ? 'low_stock' : 'in_stock'),
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Determine new status based on received quantities
+            $purchase->refresh();
+            $purchase->load('items');
+            $totalOrdered = $purchase->items->sum('quantity');
+            $totalReceived = $purchase->items->sum('received_quantity');
+
+            if ($totalReceived <= 0) {
+                // Keep current status if nothing received
+            } elseif ($totalReceived >= $totalOrdered) {
+                $purchase->update([
+                    'status' => 'received',
+                    'received_at' => $purchase->received_at ?? now(),
+                ]);
+            } else {
+                $purchase->update(['status' => 'partial']);
+            }
+
+            DB::commit();
+
+            $this->logActivity($request, 'purchase_partial_receive', [
+                'details' => "Received items for PO {$purchase->reference_number} ({$totalReceived}/{$totalOrdered})"
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'purchase' => $purchase->load(['items', 'payments', 'expenses']),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to receive items: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Dashboard summary for purchases
      */
     public function dashboard(Request $request)
