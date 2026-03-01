@@ -622,63 +622,84 @@ const InvoicesTab = () => {
       {isLoading ? (
         <div className="space-y-2">{[1,2,3,4,5].map(i => <div key={i} className="border border-border rounded-md bg-card p-4 space-y-2"><Skeleton className="h-4 w-48" /><Skeleton className="h-3 w-64" /></div>)}</div>
       ) : orders.length === 0 ? (
-        <div className="text-center py-12 border border-border rounded-md bg-card">
-          <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">No invoices found</p>
+        <div className="text-center py-16 border border-border rounded-xl bg-card">
+          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-6 h-6 text-muted-foreground/50" />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground">No invoices found</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Try adjusting your filters</p>
         </div>
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden">
+        <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Invoice</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Customer</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Amount</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Invoice</th>
+                  <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Customer</th>
+                  <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Items</th>
+                  <th className="text-right px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Amount</th>
+                  <th className="text-center px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
+                  <th className="text-right px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
-                {orders.map((order) => {
+              <tbody>
+                {orders.map((order, idx) => {
                   const status = statusConfig[order.status] || statusConfig.pending;
                   const amount = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount;
+                  const productLines = aggregateProductLines(order.product_name);
                   return (
-                    <tr key={order.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center"><FileText className="w-3.5 h-3.5 text-primary" /></div>
-                          <span className="font-mono text-xs font-medium">#{order.id.slice(0, 8).toUpperCase()}</span>
+                    <tr key={order.id} className={`group transition-colors hover:bg-muted/40 ${idx !== orders.length - 1 ? 'border-b border-border/50' : ''}`}>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <span className="font-mono text-xs font-semibold text-foreground">#{order.id.slice(0, 8).toUpperCase()}</span>
+                            {order.serial_number && (
+                              <p className="text-[10px] text-muted-foreground/70 mt-0.5">SN: {order.serial_number}</p>
+                            )}
+                          </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-xs">{order.user?.full_name || "—"}</div>
-                        <div className="text-xs text-muted-foreground">{order.user?.email}</div>
-                        {order.user?.phone && <div className="text-xs text-muted-foreground">{order.user.phone}</div>}
+                      <td className="px-4 py-3.5">
+                        <p className="font-medium text-sm text-foreground">{order.user?.full_name || "Walk-in"}</p>
+                        {order.user?.phone && <p className="text-xs text-muted-foreground mt-0.5">{order.user.phone}</p>}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="space-y-0.5">
-                          {aggregateProductLines(order.product_name).map((item, i) => (
-                            <div key={i} className="font-medium text-sm">
-                              {item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ""}
-                            </div>
+                      <td className="px-4 py-3.5">
+                        <div className="space-y-0.5 max-w-[200px]">
+                          {productLines.slice(0, 2).map((item, i) => (
+                            <p key={i} className="text-sm text-foreground truncate">
+                              {item.name}
+                              {item.quantity > 1 && <span className="text-muted-foreground ml-1">×{item.quantity}</span>}
+                            </p>
                           ))}
+                          {productLines.length > 2 && (
+                            <p className="text-xs text-muted-foreground">+{productLines.length - 2} more</p>
+                          )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-semibold tabular-nums">${amount.toFixed(2)}</td>
-                      <td className="px-4 py-3"><Badge variant={status.variant} className="text-xs">{status.label}</Badge></td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {order.created_at ? (
-                          <>
-                            {new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString()}{" "}
-                            {new Date(order.created_at.replace(/-/g, '/')).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </>
-                        ) : "—"}
+                      <td className="px-4 py-3.5 text-right">
+                        <span className="text-sm font-bold tabular-nums text-foreground">${amount.toFixed(2)}</span>
+                        {order.original_price && parseFloat(order.original_price) > amount && (
+                          <p className="text-[10px] text-muted-foreground line-through mt-0.5">${parseFloat(order.original_price).toFixed(2)}</p>
+                        )}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
+                      <td className="px-4 py-3.5 text-center">
+                        <Badge variant={status.variant} className="text-[10px] font-semibold px-2.5 py-0.5">{status.label}</Badge>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        {order.created_at ? (
+                          <div>
+                            <p className="text-xs text-foreground">{new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{new Date(order.created_at.replace(/-/g, '/')).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+                          </div>
+                        ) : <span className="text-xs text-muted-foreground">—</span>}
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-0.5 opacity-70 group-hover:opacity-100 transition-opacity">
                           {order.status !== 'paid' && order.status !== 'cancelled' && (
                             <Button
                               variant="ghost"
@@ -697,10 +718,10 @@ const InvoicesTab = () => {
                               <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setSelectedOrder(order)}><Eye className="w-3.5 h-3.5 mr-2" /> View</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setEditOrder(order)}><Pencil className="w-3.5 h-3.5 mr-2" /> Edit</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setSelectedOrder(order)} className="cursor-pointer"><Eye className="w-3.5 h-3.5 mr-2" /> View</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setEditOrder(order)} className="cursor-pointer"><Pencil className="w-3.5 h-3.5 mr-2" /> Edit</DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteOrderId(order.id)}><Trash2 className="w-3.5 h-3.5 mr-2" /> Delete</DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer" onClick={() => setDeleteOrderId(order.id)}><Trash2 className="w-3.5 h-3.5 mr-2" /> Delete</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -711,7 +732,7 @@ const InvoicesTab = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Pagination */}
@@ -774,32 +795,48 @@ const InvoicesTab = () => {
                 </div>
                 <Separator />
                 {/* Discount & Grand Total breakdown */}
-                {(() => {
-                  const origPrice = selectedOrder.original_price ? parseFloat(selectedOrder.original_price) : amount;
-                  const itemDisc = selectedOrder.item_discount ? parseFloat(selectedOrder.item_discount) : 0;
-                  const saleDisc = selectedOrder.sale_discount ? parseFloat(selectedOrder.sale_discount) : 0;
-                  const hasDisc = itemDisc > 0 || saleDisc > 0;
-                  return hasDisc ? (
-                    <div className="space-y-1.5 text-sm">
-                      <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>${origPrice.toFixed(2)}</span></div>
-                      {itemDisc > 0 && (
-                        <div className="flex justify-between text-destructive">
-                          <span>Item Discount ({selectedOrder.item_discount_type === 'percent' ? `${itemDisc}%` : `$${itemDisc.toFixed(2)}`})</span>
-                          <span>-${(origPrice - amount + saleDisc).toFixed(2)}</span>
+                <div className="rounded-xl border border-border overflow-hidden">
+                  {(() => {
+                    const origPrice = selectedOrder.original_price ? parseFloat(selectedOrder.original_price) : amount;
+                    const itemDisc = selectedOrder.item_discount ? parseFloat(selectedOrder.item_discount) : 0;
+                    const saleDisc = selectedOrder.sale_discount ? parseFloat(selectedOrder.sale_discount) : 0;
+                    const hasDisc = itemDisc > 0 || saleDisc > 0;
+                    return (
+                      <div className="px-4 py-3 space-y-2 bg-muted/30">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Subtotal</span>
+                          <span className="tabular-nums font-medium">${origPrice.toFixed(2)}</span>
                         </div>
-                      )}
-                      {saleDisc > 0 && (
-                        <div className="flex justify-between text-destructive">
-                          <span>Sale Discount ({selectedOrder.sale_discount_type === 'percent' ? `${saleDisc}%` : `$${saleDisc.toFixed(2)}`})</span>
-                          <span>-${saleDisc.toFixed(2)}</span>
-                        </div>
-                      )}
+                        {itemDisc > 0 && (
+                          <div className="flex justify-between text-sm text-destructive">
+                            <span>Item Discount ({selectedOrder.item_discount_type === 'percent' ? `${itemDisc}%` : `$${itemDisc.toFixed(2)}`})</span>
+                            <span className="tabular-nums">-${(origPrice - amount + saleDisc).toFixed(2)}</span>
+                          </div>
+                        )}
+                        {saleDisc > 0 && (
+                          <div className="flex justify-between text-sm text-destructive">
+                            <span>Sale Discount ({selectedOrder.sale_discount_type === 'percent' ? `${saleDisc}%` : `$${saleDisc.toFixed(2)}`})</span>
+                            <span className="tabular-nums">-${saleDisc.toFixed(2)}</span>
+                          </div>
+                        )}
+                        {!hasDisc && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Discount</span>
+                            <span className="tabular-nums text-muted-foreground">$0.00</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  <div className="flex items-center justify-between px-4 py-4 bg-foreground dark:bg-card border-t border-border">
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-background/60 dark:text-muted-foreground">Grand Total</span>
                     </div>
-                  ) : null;
-                })()}
-                <div className="flex items-center justify-between bg-primary/5 rounded-lg p-4">
-                  <span className="text-sm font-semibold">Grand Total</span>
-                  <span className="text-2xl font-bold">${amount.toFixed(2)} <span className="text-sm font-normal text-muted-foreground">{selectedOrder.currency}</span></span>
+                    <div className="text-right">
+                      <span className="text-2xl font-extrabold tabular-nums text-background dark:text-foreground">${amount.toFixed(2)}</span>
+                      <span className="text-xs font-medium text-background/50 dark:text-muted-foreground ml-1.5">{selectedOrder.currency}</span>
+                    </div>
+                  </div>
                 </div>
                 {selectedOrder.notes && (
                   <div className="rounded-lg border-l-2 border-primary bg-muted/40 p-3">
