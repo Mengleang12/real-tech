@@ -1121,7 +1121,7 @@ const AdminDashboard = () => {
         <div className="p-4 border-b border-border flex items-center gap-3">
           {user?.avatar_url ? (
             <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
-              <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+              <img src={user.avatar_url} alt="" className="w-full h-full object-cover border-2 border-border rounded-full" />
             </div>
           ) : (
             <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center shrink-0">
