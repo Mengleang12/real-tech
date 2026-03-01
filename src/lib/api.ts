@@ -1144,6 +1144,10 @@ export const purchasesApi = {
     return apiRequest(`admin/purchases/${id}/status`, { method: 'PUT', body: { status } });
   },
 
+  receiveItems: async (id: string, items: { item_id: number; received_quantity: number }[]): Promise<{ success: boolean; purchase: Purchase }> => {
+    return apiRequest(`admin/purchases/${id}/receive-items`, { method: 'POST', body: { items } });
+  },
+
   delete: async (id: string): Promise<{ success: boolean }> => {
     return apiRequest(`admin/purchases/${id}`, { method: 'DELETE' });
   },
