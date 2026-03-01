@@ -927,12 +927,14 @@ export const SalesInvoices = () => {
 
       <AddSaleDialog open={addSaleOpen} onOpenChange={setAddSaleOpen} />
 
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs defaultValue="invoices" className="space-y-6">
         <TabsList>
+          <TabsTrigger value="invoices" className="gap-1.5"><FileText className="w-3.5 h-3.5" /> Invoices</TabsTrigger>
           <TabsTrigger value="overview" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" /> Overview</TabsTrigger>
           <TabsTrigger value="stock" className="gap-1.5"><Boxes className="w-3.5 h-3.5" /> Stock</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="invoices"><InvoicesTab /></TabsContent>
         <TabsContent value="overview"><SalesOverview /></TabsContent>
         <TabsContent value="stock"><StockManagement /></TabsContent>
       </Tabs>
