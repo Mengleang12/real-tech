@@ -25,7 +25,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { purchasesApi, suppliersApi, salesApi, type Purchase, type PurchaseItem, type PurchaseExpense, type PurchaseDashboardStats, type SaleProduct, type Supplier } from "@/lib/api";
+import { purchasesApi, suppliersApi, salesApi, type Purchase, type PurchaseItem, type PurchaseReceiveLog, type PurchaseExpense, type PurchaseDashboardStats, type SaleProduct, type Supplier } from "@/lib/api";
 import { format } from "date-fns";
 
 const playScanBeep = (success: boolean) => {
@@ -654,6 +654,9 @@ const PurchaseDetailDialog = ({
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full justify-start">
           <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="receive-history">
+            Receive Log ({purchase.receive_logs?.length || 0})
+          </TabsTrigger>
           <TabsTrigger value="payments">
             Payments ({purchase.payments?.length || 0})
           </TabsTrigger>
@@ -965,6 +968,42 @@ const PurchaseDetailDialog = ({
           <div className="flex justify-end text-sm border-t border-border pt-3">
             <span>Total Expenses: <strong>${(purchase.expenses?.reduce((s, e) => s + Number(e.amount), 0) || 0).toFixed(2)}</strong></span>
           </div>
+        </TabsContent>
+
+        <TabsContent value="receive-history" className="space-y-4 mt-4">
+          {purchase.receive_logs && purchase.receive_logs.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="w-24">Qty Received</TableHead>
+                  <TableHead className="w-28">Running Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {purchase.receive_logs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="text-sm">{format(new Date(log.received_at), 'MMM d, yyyy h:mm a')}</TableCell>
+                    <TableCell className="text-sm">
+                      {log.product_name}
+                      {log.variant_label && <span className="text-xs text-muted-foreground ml-1">({log.variant_label})</span>}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <Badge variant={log.quantity_received > 0 ? "default" : "secondary"} className="text-xs">
+                        {log.quantity_received > 0 ? `+${log.quantity_received}` : log.quantity_received}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {log.previous_received} → {log.new_total_received}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">No receive events recorded yet</p>
+          )}
         </TabsContent>
       </Tabs>
     </AdminDialog>

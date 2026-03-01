@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Purchase;
+use App\Models\PurchaseReceiveLog;
 use App\Models\PurchaseItem;
 use App\Models\PurchasePayment;
 use App\Models\PurchaseExpense;
@@ -56,7 +57,7 @@ class PurchaseController extends Controller
      */
     public function show($id)
     {
-        $purchase = Purchase::with(['items', 'payments', 'expenses'])->find($id);
+        $purchase = Purchase::with(['items', 'payments', 'expenses', 'receiveLogs'])->find($id);
 
         if (!$purchase) {
             return response()->json(['error' => 'Purchase not found'], 404);
@@ -522,6 +523,19 @@ class PurchaseController extends Controller
                 // Update item received_quantity
                 $item->update(['received_quantity' => $newReceived]);
 
+                // Log the receive event
+                PurchaseReceiveLog::create([
+                    'purchase_id' => $purchase->id,
+                    'purchase_item_id' => $item->id,
+                    'product_name' => $item->product_name,
+                    'variant_label' => $item->variant_label,
+                    'quantity_received' => $delta,
+                    'previous_received' => $oldReceived,
+                    'new_total_received' => $newReceived,
+                    'received_by' => $request->user()->id ?? null,
+                    'received_at' => now(),
+                ]);
+
                 // Adjust stock by delta
                 if ($delta > 0) {
                     if ($item->variant_id) {
@@ -582,7 +596,7 @@ class PurchaseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'purchase' => $purchase->load(['items', 'payments', 'expenses']),
+                'purchase' => $purchase->load(['items', 'payments', 'expenses', 'receiveLogs']),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
