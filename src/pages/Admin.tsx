@@ -673,10 +673,10 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Orders & Users",
+    label: "Orders & Customers",
     items: [
       { id: "payments", label: "Payments", icon: TrendingUp, permission: "orders.view" },
-      { id: "users", label: "Users", icon: Users, permission: "users.view" },
+      { id: "users", label: "Customers", icon: Users, permission: "users.view" },
       { id: "coupons", label: "Coupons", icon: Tag, permission: "coupons.manage" },
       { id: "reviews", label: "Reviews", icon: Star, permission: "reviews.manage" },
     ],
