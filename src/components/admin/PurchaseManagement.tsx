@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Plus, Search, Trash2, X, Save, Loader2, Package, DollarSign,
+  Plus, Minus, Search, Trash2, X, Save, Loader2, Package, DollarSign,
   ChevronLeft, ChevronRight, MoreHorizontal, Truck, CheckCircle2,
   ClipboardList, Ban, FileText, CreditCard, Calendar, ScanBarcode
 } from "lucide-react";
@@ -395,13 +395,11 @@ const AddPurchaseDialog = ({
                 <TableRow key={idx}>
                   <TableCell className="text-sm">{item.product_name}</TableCell>
                   <TableCell>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={item.quantity}
-                      onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
-                      className="h-8 text-sm"
-                    />
+                    <div className="flex items-center gap-0.5 justify-center">
+                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateItem(idx, 'quantity', Math.max(1, item.quantity - 1))}><Minus className="w-3 h-3" /></Button>
+                      <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
+                      <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateItem(idx, 'quantity', item.quantity + 1)}><Plus className="w-3 h-3" /></Button>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Input
