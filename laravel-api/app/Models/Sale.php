@@ -33,6 +33,7 @@ class Sale extends Model
         'paid_at',
         'expires_at',
         'notes',
+        'warranty_period',
         'created_at',
     ];
 
