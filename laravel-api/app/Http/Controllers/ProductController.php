@@ -204,6 +204,7 @@ class ProductController extends Controller
                     'price_adjustment' => $variant['price_adjustment'] ?? 0,
                     'purchase_price' => $variant['purchase_price'] ?? 0,
                     'is_active' => $variant['is_active'] ?? true,
+                    'is_default' => $variant['is_default'] ?? false,
                 ]);
             }
         }
@@ -289,6 +290,7 @@ class ProductController extends Controller
                         'price_adjustment' => $variant['price_adjustment'] ?? 0,
                         'purchase_price' => $variant['purchase_price'] ?? 0,
                         'is_active' => $variant['is_active'] ?? true,
+                        'is_default' => $variant['is_default'] ?? false,
                     ]);
                 }
             }

@@ -196,6 +196,7 @@ export interface ProductVariant {
   price_adjustment: number;
   purchase_price?: number;
   is_active: boolean;
+  is_default?: boolean;
   created_at?: string;
   updated_at?: string;
 }
