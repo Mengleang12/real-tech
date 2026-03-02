@@ -491,6 +491,18 @@ export const adminUsersApi = {
     return apiRequest(`admin/orders/${orderId}`, { method: 'PUT', body: data });
   },
 
+  createCustomer: async (data: { email: string; full_name?: string; phone?: string; password: string }): Promise<{ success: boolean; user: AdminUser }> => {
+    return apiRequest('admin/users', { method: 'POST', body: data });
+  },
+
+  updateCustomer: async (id: number, data: { email?: string; full_name?: string; phone?: string; password?: string }): Promise<{ success: boolean; user: AdminUser }> => {
+    return apiRequest(`admin/users/${id}`, { method: 'PUT', body: data });
+  },
+
+  deleteCustomer: async (id: number): Promise<{ success: boolean; message: string }> => {
+    return apiRequest(`admin/users/${id}`, { method: 'DELETE' });
+  },
+
   uploadAttachment: async (orderId: string, file: File): Promise<{ success: boolean; attachment: OrderAttachment }> => {
     const formData = new FormData();
     formData.append('file', file);

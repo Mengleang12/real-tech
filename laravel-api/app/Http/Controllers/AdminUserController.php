@@ -650,4 +650,83 @@ class AdminUserController extends Controller
             'message' => 'Payment deleted',
         ]);
     }
+
+    // ─── Customer CRUD ────────────────────────────────────────────────────
+
+    public function storeCustomer(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|unique:users,email',
+            'full_name' => 'nullable|string|max:100',
+            'phone' => 'nullable|string|max:20',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $user = User::create([
+            'email' => $request->email,
+            'full_name' => $request->full_name,
+            'phone' => $request->phone,
+            'password_hash' => bcrypt($request->password),
+        ]);
+
+        $this->logActivity($request, 'admin_create_customer', [
+            'customer_id' => $user->id,
+            'email' => $user->email,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer created successfully',
+            'user' => $user,
+        ], 201);
+    }
+
+    public function updateCustomer(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'email' => 'nullable|email|unique:users,email,' . $id,
+            'full_name' => 'nullable|string|max:100',
+            'phone' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        $data = [];
+        if ($request->has('email')) $data['email'] = $request->email;
+        if ($request->has('full_name')) $data['full_name'] = $request->full_name;
+        if ($request->has('phone')) $data['phone'] = $request->phone;
+        if ($request->filled('password')) $data['password_hash'] = bcrypt($request->password);
+
+        $user->update($data);
+
+        $this->logActivity($request, 'admin_update_customer', [
+            'customer_id' => $id,
+            'email' => $user->email,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer updated successfully',
+            'user' => $user,
+        ]);
+    }
+
+    public function destroyCustomer(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $email = $user->email;
+
+        $user->delete();
+
+        $this->logActivity($request, 'admin_delete_customer', [
+            'customer_id' => $id,
+            'email' => $email,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer deleted successfully',
+        ]);
+    }
 }

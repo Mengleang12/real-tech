@@ -185,6 +185,11 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::get('/admin/settings', [SystemSettingController::class, 'index']);
     Route::put('/admin/settings', [SystemSettingController::class, 'update']);
 
+    // Customer CRUD
+    Route::post('/admin/users', [AdminUserController::class, 'storeCustomer']);
+    Route::put('/admin/users/{id}', [AdminUserController::class, 'updateCustomer']);
+    Route::delete('/admin/users/{id}', [AdminUserController::class, 'destroyCustomer']);
+
     // Suppliers
     Route::get('/admin/suppliers', [SupplierController::class, 'index']);
     Route::post('/admin/suppliers', [SupplierController::class, 'store']);

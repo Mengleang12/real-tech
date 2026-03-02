@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Users, Search, Package, Plus, Trash2, ChevronLeft, ChevronRight,
-  Mail, DollarSign, CheckCircle, ShoppingBag, Check, ChevronsUpDown, Loader2, Eye, Phone, Calendar
+  Mail, DollarSign, CheckCircle, ShoppingBag, Check, ChevronsUpDown, Loader2, Eye, Phone, Calendar, Edit, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,10 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
   paid:      { variant: "default",     label: "Paid" },
@@ -27,6 +31,7 @@ const statusConfig: Record<string, { variant: "default" | "secondary" | "destruc
 };
 
 export const UserManagement = () => {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const perPage = 20;
@@ -49,6 +54,13 @@ export const UserManagement = () => {
   const [revokingOrderId, setRevokingOrderId] = useState<string | null>(null);
   const [approvingOrderId, setApprovingOrderId] = useState<string | null>(null);
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
+
+  // Customer CRUD
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<AdminUser | null>(null);
+  const [deletingCustomer, setDeletingCustomer] = useState<AdminUser | null>(null);
+  const [savingCustomer, setSavingCustomer] = useState(false);
+  const [customerForm, setCustomerForm] = useState({ email: "", full_name: "", phone: "", password: "" });
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users", searchQuery, currentPage],
@@ -158,6 +170,52 @@ export const UserManagement = () => {
   const otherOrders = userOrders.filter(o => o.status !== 'paid');
   const totalSpent = paidOrders.reduce((sum, o) => sum + (typeof o.amount === 'string' ? parseFloat(o.amount) : o.amount), 0);
 
+  const openCustomerForm = (user?: AdminUser) => {
+    if (user) {
+      setEditingCustomer(user);
+      setCustomerForm({ email: user.email, full_name: user.full_name || "", phone: user.phone || "", password: "" });
+    } else {
+      setEditingCustomer(null);
+      setCustomerForm({ email: "", full_name: "", phone: "", password: "" });
+    }
+    setShowCustomerForm(true);
+  };
+
+  const handleSaveCustomer = async () => {
+    if (!customerForm.email.trim()) { toast.error("Email is required"); return; }
+    if (!editingCustomer && !customerForm.password.trim()) { toast.error("Password is required"); return; }
+    setSavingCustomer(true);
+    try {
+      if (editingCustomer) {
+        const updateData: any = { email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone };
+        if (customerForm.password.trim()) updateData.password = customerForm.password;
+        await adminUsersApi.updateCustomer(editingCustomer.id, updateData);
+        toast.success("Customer updated");
+      } else {
+        await adminUsersApi.createCustomer({ email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone, password: customerForm.password });
+        toast.success("Customer created");
+      }
+      setShowCustomerForm(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save customer");
+    } finally {
+      setSavingCustomer(false);
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (!deletingCustomer) return;
+    try {
+      await adminUsersApi.deleteCustomer(deletingCustomer.id);
+      toast.success("Customer deleted");
+      setDeletingCustomer(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete customer");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -166,6 +224,9 @@ export const UserManagement = () => {
           <h2 className="text-xl font-semibold">Customers</h2>
           <p className="text-sm text-muted-foreground mt-1">Manage registered customers and their purchases</p>
         </div>
+        <Button size="sm" onClick={() => openCustomerForm()} className="gap-1.5">
+          <Plus className="w-3.5 h-3.5" /> New Customer
+        </Button>
       </div>
 
       {/* Search */}
@@ -282,15 +343,17 @@ export const UserManagement = () => {
                       {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={(e) => { e.stopPropagation(); handleSelectUser(user); }}
-                        title="View details"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleSelectUser(user); }} title="View details">
+                          <Eye className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); openCustomerForm(user); }} title="Edit">
+                          <Edit className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setDeletingCustomer(user); }} title="Delete">
+                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -529,6 +592,53 @@ export const UserManagement = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Customer Form Dialog */}
+      <Dialog open={showCustomerForm} onOpenChange={setShowCustomerForm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingCustomer ? "Edit Customer" : "New Customer"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Email *</Label>
+              <Input value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} className="mt-1.5" placeholder="customer@email.com" />
+            </div>
+            <div>
+              <Label>Full Name</Label>
+              <Input value={customerForm.full_name} onChange={e => setCustomerForm({ ...customerForm, full_name: e.target.value })} className="mt-1.5" placeholder="Full name" />
+            </div>
+            <div>
+              <Label>Phone</Label>
+              <Input value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} className="mt-1.5" placeholder="Phone number" />
+            </div>
+            <div>
+              <Label>{editingCustomer ? "New Password (leave blank to keep)" : "Password *"}</Label>
+              <Input type="password" value={customerForm.password} onChange={e => setCustomerForm({ ...customerForm, password: e.target.value })} className="mt-1.5" placeholder={editingCustomer ? "••••••••" : "Min 6 characters"} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCustomerForm(false)}>Cancel</Button>
+            <Button onClick={handleSaveCustomer} disabled={savingCustomer}>
+              {savingCustomer ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {savingCustomer ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Customer Confirm */}
+      <AlertDialog open={!!deletingCustomer} onOpenChange={open => { if (!open) setDeletingCustomer(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{deletingCustomer?.full_name || deletingCustomer?.email}"?</AlertDialogTitle>
+            <AlertDialogDescription>This will permanently remove this customer and all their data. This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCustomer} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
