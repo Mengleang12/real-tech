@@ -40,6 +40,7 @@ class SaleController extends Controller
             'sale_discount' => 'nullable|numeric|min:0',
             'sale_discount_type' => 'nullable|in:amount,percent',
             'notes' => 'nullable|string|max:500',
+            'warranty_period' => 'nullable|string|max:100',
             'sale_date' => 'nullable|date',
         ]);
 
@@ -176,6 +177,7 @@ class SaleController extends Controller
                 'status' => $saleStatus,
                 'paid_at' => $saleStatus === 'paid' ? now() : null,
                 'notes' => $request->notes,
+                'warranty_period' => $request->warranty_period,
             ]);
             $sale->created_at = $saleDate;
             $sale->updated_at = $saleDate;

@@ -56,6 +56,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   const [paymentStatus, setPaymentStatus] = useState<"paid" | "pending" | "partial" | "unpaid">("pending");
   const [saleDate, setSaleDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
+  const [warrantyPeriod, setWarrantyPeriod] = useState("");
 
   // Scan loading state
   const [scanLoading, setScanLoading] = useState(false);
@@ -260,6 +261,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setPaymentStatus("pending");
     setSaleDate(new Date());
     setNotes("");
+    setWarrantyPeriod("");
     setCustomers([]);
     setProducts([]);
     setProductSearch("");
@@ -304,6 +306,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
       sale_discount: saleDiscount > 0 ? saleDiscount : undefined,
       sale_discount_type: saleDiscount > 0 ? saleDiscountType : undefined,
       notes: notes || undefined,
+      warranty_period: warrantyPeriod || undefined,
       sale_date: format(saleDate, "yyyy-MM-dd"),
     };
 
@@ -330,7 +333,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
 
         <div className="space-y-4">
           {/* ─── Top Row: Date + Customer + Payment ─── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             {/* Sale Date */}
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">Sale Date</Label>
@@ -365,6 +368,12 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                   <SelectItem value="unpaid">Unpaid</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Warranty Period */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground">Warranty</Label>
+              <Input placeholder="e.g. 6 months, 1 year" value={warrantyPeriod} onChange={e => setWarrantyPeriod(e.target.value)} className="h-9 text-sm" />
             </div>
 
             {/* Notes */}

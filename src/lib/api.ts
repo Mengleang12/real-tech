@@ -400,6 +400,7 @@ export interface AdminOrder {
   paid_at?: string;
   expires_at?: string;
   notes?: string;
+  warranty_period?: string;
   attachments?: OrderAttachment[];
   payments?: OrderPayment[];
   items?: SaleItemRecord[];
@@ -971,6 +972,7 @@ export interface CreateSalePayload {
   sale_discount?: number;
   sale_discount_type?: 'amount' | 'percent';
   notes?: string;
+  warranty_period?: string;
   sale_date?: string;
 }
 
