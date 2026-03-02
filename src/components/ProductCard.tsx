@@ -47,7 +47,8 @@ export const ProductCard = (props: ProductCardProps) => {
   const category = props.app?.category || "programs";
 
   const activeVariants = props.app?.variants?.filter(v => v.is_active) || [];
-  const priceNum = activeVariants.length > 0 ? (Number(activeVariants[0].price_adjustment) || 0) : 0;
+  const defaultVariant = activeVariants.find(v => v.is_default) || activeVariants[0];
+  const priceNum = defaultVariant ? (Number(defaultVariant.price_adjustment) || 0) : 0;
   const isPaidApp = priceNum > 0;
   const displayName = t(nameKm, name);
 

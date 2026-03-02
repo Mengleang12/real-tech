@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductVariant extends Model
 {
-    protected $fillable = ['product_id', 'combination', 'sku', 'stock_quantity', 'price_adjustment', 'purchase_price', 'is_active'];
+    protected $fillable = ['product_id', 'combination', 'sku', 'stock_quantity', 'price_adjustment', 'purchase_price', 'is_active', 'is_default'];
 
     protected $casts = [
         'combination' => 'array',
@@ -15,6 +15,7 @@ class ProductVariant extends Model
         'price_adjustment' => 'decimal:2',
         'purchase_price' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_default' => 'boolean',
     ];
 
     public function product(): BelongsTo
