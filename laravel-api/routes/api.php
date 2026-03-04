@@ -28,6 +28,7 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SalesReportController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\WarrantyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -134,6 +135,12 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     // Analytics
     Route::get('/admin/analytics', [AnalyticsController::class, 'dashboard']);
     Route::get('/admin/analytics/profit', [AnalyticsController::class, 'profitAnalysis']);
+
+    // Warranties
+    Route::get('/admin/warranties', [WarrantyController::class, 'index']);
+    Route::post('/admin/warranties', [WarrantyController::class, 'store']);
+    Route::put('/admin/warranties/{id}', [WarrantyController::class, 'update']);
+    Route::delete('/admin/warranties/{id}', [WarrantyController::class, 'destroy']);
     
     // Roles management
     Route::get('/admin/roles', [RoleController::class, 'index']);

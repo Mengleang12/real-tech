@@ -1198,3 +1198,31 @@ export const purchasesApi = {
     return apiRequest(`admin/purchases/${id}/expenses/${expenseId}`, { method: 'DELETE' });
   },
 };
+
+// ─── Warranty Types & API ──────────────────────────────────────────────────────
+export interface WarrantyOption {
+  id: number;
+  name: string;
+  duration_days: number;
+  policy: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const warrantyApi = {
+  getAll: async (): Promise<{ warranties: WarrantyOption[] }> => {
+    return apiRequest('admin/warranties');
+  },
+
+  create: async (data: { name: string; duration_days: number; policy?: string }): Promise<{ warranty: WarrantyOption }> => {
+    return apiRequest('admin/warranties', { method: 'POST', body: data });
+  },
+
+  update: async (id: number, data: { name: string; duration_days: number; policy?: string }): Promise<{ warranty: WarrantyOption }> => {
+    return apiRequest(`admin/warranties/${id}`, { method: 'PUT', body: data });
+  },
+
+  delete: async (id: number): Promise<{ success: boolean }> => {
+    return apiRequest(`admin/warranties/${id}`, { method: 'DELETE' });
+  },
+};

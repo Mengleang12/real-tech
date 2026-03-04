@@ -942,6 +942,12 @@ export { InvoicesTab, StockManagement, SalesOverview };
 export const SalesInvoices = () => {
   const [addSaleOpen, setAddSaleOpen] = useState(false);
 
+  // Lazy import WarrantyManagement to avoid circular deps
+  const [WarrantyMgmt, setWarrantyMgmt] = useState<React.ComponentType | null>(null);
+  useEffect(() => {
+    import('./WarrantyManagement').then(m => setWarrantyMgmt(() => m.WarrantyManagement));
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -961,11 +967,13 @@ export const SalesInvoices = () => {
           <TabsTrigger value="invoices" className="gap-1.5"><FileText className="w-3.5 h-3.5" /> Invoices</TabsTrigger>
           <TabsTrigger value="overview" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" /> Overview</TabsTrigger>
           <TabsTrigger value="stock" className="gap-1.5"><Boxes className="w-3.5 h-3.5" /> Stock</TabsTrigger>
+          <TabsTrigger value="warranty" className="gap-1.5"><Shield className="w-3.5 h-3.5" /> Warranty</TabsTrigger>
         </TabsList>
 
         <TabsContent value="invoices"><InvoicesTab /></TabsContent>
         <TabsContent value="overview"><SalesOverview /></TabsContent>
         <TabsContent value="stock"><StockManagement /></TabsContent>
+        <TabsContent value="warranty">{WarrantyMgmt ? <WarrantyMgmt /> : null}</TabsContent>
       </Tabs>
     </div>
   );

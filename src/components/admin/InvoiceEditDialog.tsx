@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { getInvoiceBranding } from "@/lib/invoice-branding";
 import { getWarrantyStatus, getWarrantyBadgeVariant, getWarrantyHtml } from "@/lib/warranty-utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { adminUsersApi, salesApi, type AdminOrder, type OrderAttachment, type OrderPayment, type SaleProduct } from "@/lib/api";
+import { adminUsersApi, salesApi, warrantyApi, type AdminOrder, type OrderAttachment, type OrderPayment, type SaleProduct } from "@/lib/api";
 import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle } from "./AdminDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -612,7 +612,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
             ) : null;
           })()}
         </div>
-        <Input value={warrantyPeriod} onChange={(e) => setWarrantyPeriod(e.target.value)} className="mt-1.5" placeholder="e.g. 6 months, 1 year" />
+        <WarrantySelectEdit value={warrantyPeriod} onChange={setWarrantyPeriod} />
       </div>
 
       {/* Notes */}
@@ -1120,5 +1120,27 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
         </Button>
       </div>
     </div>
+  );
+};
+
+// ─── Warranty Select for Edit ─────────────────────────────────────────────────
+const WarrantySelectEdit = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+  const { data } = useQuery({
+    queryKey: ["warranties"],
+    queryFn: () => warrantyApi.getAll(),
+  });
+
+  const warranties = data?.warranties || [];
+
+  return (
+    <Select value={value || "__none__"} onValueChange={(v) => onChange(v === "__none__" ? "" : v)}>
+      <SelectTrigger className="mt-1.5"><SelectValue placeholder="No warranty" /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__none__">No warranty</SelectItem>
+        {warranties.map((w) => (
+          <SelectItem key={w.id} value={w.name}>{w.name} ({w.duration_days} days)</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };
