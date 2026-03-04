@@ -298,6 +298,7 @@ class AdminUserController extends Controller
             'product_name' => 'nullable|string|max:500',
             'product_id' => 'nullable|integer',
             'notes' => 'nullable|string|max:2000',
+            'warranty_period' => 'nullable|string|max:100',
             'amount' => 'nullable|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',
             'item_discount' => 'nullable|numeric|min:0',
@@ -511,7 +512,7 @@ class AdminUserController extends Controller
 
             $sale->update($request->only([
                 'product_name', 'product_id',
-                'notes', 'amount', 'original_price',
+                'notes', 'warranty_period', 'amount', 'original_price',
                 'item_discount', 'item_discount_type',
                 'sale_discount', 'sale_discount_type',
                 'serial_number',
