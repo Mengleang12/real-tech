@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { getInvoiceBranding } from "@/lib/invoice-branding";
+import { getWarrantyStatus, getWarrantyBadgeVariant, getWarrantyHtml } from "@/lib/warranty-utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminUsersApi, salesApi, type AdminOrder, type OrderAttachment, type OrderPayment, type SaleProduct } from "@/lib/api";
 import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle } from "./AdminDialog";
@@ -600,7 +601,17 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
 
       {/* Warranty Period */}
       <div>
-        <label className="text-xs font-medium text-muted-foreground">Warranty Period</label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium text-muted-foreground">Warranty Period</label>
+          {order.warranty_period && (() => {
+            const ws = getWarrantyStatus(order.warranty_period, order.created_at);
+            return ws ? (
+              <Badge variant={getWarrantyBadgeVariant(ws)} className="text-[10px] px-1.5 py-0">
+                {ws.label}{ws.expiryDate ? ` · Exp ${ws.expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+              </Badge>
+            ) : null;
+          })()}
+        </div>
         <Input value={warrantyPeriod} onChange={(e) => setWarrantyPeriod(e.target.value)} className="mt-1.5" placeholder="e.g. 6 months, 1 year" />
       </div>
 
@@ -1062,7 +1073,7 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
         ${saleDiscountVal > 0 ? `<div class="summary-row discount"><span>Sale Discount (${saleDiscountLabel})</span><span>-$${saleDiscountVal.toFixed(2)}</span></div>` : ''}
         <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
       </div></div>
-      ${order.warranty_period ? `<div style="margin-top:24px;padding:16px 20px;background:#f0fdf4;border-radius:10px;border-left:3px solid #16a34a"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Warranty</div><div style="font-size:13px;color:#374151;line-height:1.6">${order.warranty_period}</div></div>` : ''}
+      ${getWarrantyHtml(order.warranty_period, order.created_at)}
       ${order.notes ? `<div style="margin-top:${order.warranty_period ? '12' : '24'}px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div><div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div></div>` : ''}
       <div class="divider"></div>
       <div class="footer"><div class="footer-thanks">${branding.invoice_footer_text}</div><div class="footer-brand">${branding.site_name}${branding.support_email ? ` — ${branding.support_email}` : ''}</div></div>

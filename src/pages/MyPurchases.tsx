@@ -5,11 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrders, Order } from "@/hooks/useOrders";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { getWarrantyStatus, getWarrantyBadgeVariant } from "@/lib/warranty-utils";
 import {
   Package, ShoppingBag, ArrowLeft,
   Calendar, DollarSign, CheckCircle, Clock, XCircle,
-  ExternalLink
+  ExternalLink, Shield
 } from "lucide-react";
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; dotClass: string; label: string; labelKm: string }> = {
@@ -65,6 +67,21 @@ const PurchasedAppCard = ({ order, language }: PurchasedAppCardProps) => {
                 {new Date(order.paid_at || order.created_at).toLocaleDateString()}
               </span>
             </div>
+            {/* Warranty Status */}
+            {order.warranty_period && (() => {
+              const ws = getWarrantyStatus(order.warranty_period, order.created_at);
+              return (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Shield className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{order.warranty_period}</span>
+                  {ws && (
+                    <Badge variant={getWarrantyBadgeVariant(ws)} className="text-[10px] px-1.5 py-0">
+                      {ws.label}
+                    </Badge>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           <Link to={`/${order.product_id}`}>
