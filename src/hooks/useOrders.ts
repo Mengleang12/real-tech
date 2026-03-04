@@ -17,6 +17,7 @@ export interface Order {
   created_at: string;
   paid_at?: string;
   expires_at?: string;
+  warranty_period?: string;
 }
 
 export const useOrders = () => {

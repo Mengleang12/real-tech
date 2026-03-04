@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getInvoiceBranding } from "@/lib/invoice-branding";
+import { getWarrantyStatus, getWarrantyBadgeVariant, getWarrantyHtml } from "@/lib/warranty-utils";
 import { AddSaleDialog } from "./AddSaleDialog";
 import { InvoiceEditDialog } from "./InvoiceEditDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -19,7 +20,7 @@ import { toast } from "sonner";
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, ShoppingCart,
   FileText, Eye, Package, CheckCircle, Clock, Printer, Pencil,
-  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal
+  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield
 } from "lucide-react";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
@@ -577,7 +578,9 @@ const InvoicesTab = () => {
         </div>
       </div>
 
-      ${order.notes ? `<div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}">
+      ${order.warranty_period ? getWarrantyHtml(order.warranty_period, order.created_at) : ''}
+
+      ${order.notes ? `<div style="margin-top:${order.warranty_period ? '12' : '24'}px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}">
         <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div>
         <div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div>
       </div>` : ''}
@@ -639,8 +642,9 @@ const InvoicesTab = () => {
                   <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Customer</th>
                   <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Items</th>
                   <th className="text-right px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Amount</th>
-                  <th className="text-center px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                  <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
+                   <th className="text-center px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                   <th className="text-center px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Warranty</th>
+                   <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
                   <th className="text-right px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                 </tr>
               </thead>
@@ -687,9 +691,22 @@ const InvoicesTab = () => {
                           <p className="text-[10px] text-muted-foreground line-through mt-0.5">${parseFloat(order.original_price).toFixed(2)}</p>
                         )}
                       </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <Badge variant={status.variant} className="text-[10px] font-semibold px-2.5 py-0.5">{status.label}</Badge>
-                      </td>
+                       <td className="px-4 py-3.5 text-center">
+                         <Badge variant={status.variant} className="text-[10px] font-semibold px-2.5 py-0.5">{status.label}</Badge>
+                       </td>
+                       <td className="px-4 py-3.5 text-center">
+                         {order.warranty_period ? (() => {
+                           const ws = getWarrantyStatus(order.warranty_period, order.created_at);
+                           return ws ? (
+                             <div className="flex flex-col items-center gap-0.5">
+                               <span className="text-[10px] text-muted-foreground">{order.warranty_period}</span>
+                               <Badge variant={getWarrantyBadgeVariant(ws)} className="text-[10px] px-1.5 py-0">{ws.label}</Badge>
+                             </div>
+                           ) : (
+                             <span className="text-xs text-muted-foreground">{order.warranty_period}</span>
+                           );
+                         })() : <span className="text-xs text-muted-foreground">—</span>}
+                       </td>
                       <td className="px-4 py-3.5">
                         {order.created_at ? (
                           <div>
@@ -838,6 +855,18 @@ const InvoicesTab = () => {
                     </div>
                   </div>
                 </div>
+                {selectedOrder.warranty_period && (() => {
+                  const ws = getWarrantyStatus(selectedOrder.warranty_period, selectedOrder.created_at);
+                  return (
+                    <div className="rounded-lg border-l-2 border-emerald-500 bg-emerald-500/5 p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1"><Shield className="w-3 h-3" /> Warranty</p>
+                      <p className="text-sm text-foreground">{selectedOrder.warranty_period}
+                        {ws && <Badge variant={getWarrantyBadgeVariant(ws)} className="ml-2 text-[10px] px-1.5 py-0">{ws.label}</Badge>}
+                      </p>
+                      {ws?.expiryDate && <p className="text-xs text-muted-foreground mt-1">Expires: {ws.expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
+                    </div>
+                  );
+                })()}
                 {selectedOrder.notes && (
                   <div className="rounded-lg border-l-2 border-primary bg-muted/40 p-3">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Note</p>
