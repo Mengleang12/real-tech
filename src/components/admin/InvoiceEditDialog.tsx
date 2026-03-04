@@ -163,6 +163,7 @@ const buildCartFromOrder = (order: AdminOrder): EditCartItem[] => {
 const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void }) => {
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState(order.notes || "");
+  const [warrantyPeriod, setWarrantyPeriod] = useState(order.warranty_period || "");
   const [status, setStatus] = useState(order.status);
   const [txnId, setTxnId] = useState(order.bakong_transaction_id || "");
 
@@ -180,6 +181,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
 
   useEffect(() => {
     setNotes(order.notes || "");
+    setWarrantyPeriod(order.warranty_period || "");
     setStatus(order.status);
     setTxnId(order.bakong_transaction_id || "");
     setCart(buildCartFromOrder(order));
@@ -337,6 +339,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
       product_id: firstItem.product_id as any,
       serial_number: firstItem.serial_numbers.join(", ") || undefined,
       notes: notes || undefined,
+      warranty_period: warrantyPeriod || undefined,
       status,
       amount: grandTotal as any,
       original_price: totalOriginal.toFixed(2) as any,
@@ -593,6 +596,12 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
       <div>
         <label className="text-xs font-medium text-muted-foreground">Transaction ID</label>
         <Input value={txnId} onChange={(e) => setTxnId(e.target.value)} className="mt-1.5" placeholder="Optional" />
+      </div>
+
+      {/* Warranty Period */}
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">Warranty Period</label>
+        <Input value={warrantyPeriod} onChange={(e) => setWarrantyPeriod(e.target.value)} className="mt-1.5" placeholder="e.g. 6 months, 1 year" />
       </div>
 
       {/* Notes */}
@@ -1053,7 +1062,8 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
         ${saleDiscountVal > 0 ? `<div class="summary-row discount"><span>Sale Discount (${saleDiscountLabel})</span><span>-$${saleDiscountVal.toFixed(2)}</span></div>` : ''}
         <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
       </div></div>
-      ${order.notes ? `<div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div><div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div></div>` : ''}
+      ${order.warranty_period ? `<div style="margin-top:24px;padding:16px 20px;background:#f0fdf4;border-radius:10px;border-left:3px solid #16a34a"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Warranty</div><div style="font-size:13px;color:#374151;line-height:1.6">${order.warranty_period}</div></div>` : ''}
+      ${order.notes ? `<div style="margin-top:${order.warranty_period ? '12' : '24'}px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div><div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div></div>` : ''}
       <div class="divider"></div>
       <div class="footer"><div class="footer-thanks">${branding.invoice_footer_text}</div><div class="footer-brand">${branding.site_name}${branding.support_email ? ` — ${branding.support_email}` : ''}</div></div>
       </body></html>`);
