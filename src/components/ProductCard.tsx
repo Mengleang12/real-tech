@@ -38,6 +38,7 @@ export const ProductCard = (props: ProductCardProps) => {
   const location = useLocation();
   const { toggle, isWishlisted } = useWishlist();
   const { addToCart, isOutOfStock } = useCart();
+  const queryClient = useQueryClient();
   const imgRef = useRef<HTMLImageElement>(null);
   const placeholderRef = useRef<HTMLDivElement>(null);
 
