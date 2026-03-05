@@ -517,6 +517,19 @@ const PurchaseDetailDialog = ({
   const [receiveMode, setReceiveMode] = useState(false);
   const [receivedQtys, setReceivedQtys] = useState<Record<number, number>>({});
   const [receivingItems, setReceivingItems] = useState(false);
+  const [initialLoaded, setInitialLoaded] = useState(false);
+
+  // Auto-fetch full purchase details on open (list data is incomplete)
+  useEffect(() => {
+    if (open && purchase && !initialLoaded) {
+      setInitialLoaded(true);
+      onRefresh();
+    }
+    if (!open) {
+      setInitialLoaded(false);
+      setReceiveMode(false);
+    }
+  }, [open, purchase?.id]);
 
   if (!purchase) return null;
 
@@ -718,9 +731,14 @@ const PurchaseDetailDialog = ({
                 </>
               )}
               {purchase.status === 'received' && (
-                <Button size="sm" onClick={() => handleStatusChange('completed')} disabled={statusUpdating}>
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Complete
-                </Button>
+                <>
+                  <Button size="sm" variant="outline" onClick={initReceiveMode} disabled={statusUpdating || receiveMode}>
+                    <Package className="w-3.5 h-3.5 mr-1.5" /> Adjust Received Qty
+                  </Button>
+                  <Button size="sm" onClick={() => handleStatusChange('completed')} disabled={statusUpdating}>
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Complete
+                  </Button>
+                </>
               )}
               <Button size="sm" variant="destructive" onClick={() => handleStatusChange('cancelled')} disabled={statusUpdating}>
                 <Ban className="w-3.5 h-3.5 mr-1.5" /> Cancel
@@ -749,17 +767,30 @@ const PurchaseDetailDialog = ({
                   <TableCell className="text-sm">{item.quantity}</TableCell>
                   <TableCell className="text-sm">
                     {receiveMode ? (
-                      <Input
-                        type="number"
-                        min={0}
-                        max={item.quantity}
-                        className="w-20 h-8 text-sm"
-                        value={receivedQtys[item.id] ?? 0}
-                        onChange={(e) => setReceivedQtys((prev) => ({
-                          ...prev,
-                          [item.id]: Math.min(Math.max(0, parseInt(e.target.value) || 0), item.quantity),
-                        }))}
-                      />
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={item.quantity}
+                          className="w-20 h-8 text-sm"
+                          value={receivedQtys[item.id] ?? 0}
+                          onChange={(e) => setReceivedQtys((prev) => ({
+                            ...prev,
+                            [item.id]: Math.min(Math.max(0, parseInt(e.target.value) || 0), item.quantity),
+                          }))}
+                        />
+                        {(receivedQtys[item.id] ?? 0) > 0 && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive"
+                            title="Reset to 0"
+                            onClick={() => setReceivedQtys((prev) => ({ ...prev, [item.id]: 0 }))}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
                     ) : (
                       <Badge variant={((item.received_quantity || 0) >= item.quantity) ? "default" : "secondary"} className="text-xs">
                         {item.received_quantity || 0} / {item.quantity}
@@ -774,9 +805,16 @@ const PurchaseDetailDialog = ({
           </Table>
 
           {receiveMode && (
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-2 justify-end flex-wrap">
               <Button size="sm" variant="outline" onClick={() => setReceiveMode(false)} disabled={receivingItems}>
                 Cancel
+              </Button>
+              <Button size="sm" variant="outline" className="text-destructive" onClick={() => {
+                const qtys: Record<number, number> = {};
+                purchase.items.forEach((item) => { qtys[item.id] = 0; });
+                setReceivedQtys(qtys);
+              }}>
+                Reset All to 0
               </Button>
               <Button size="sm" variant="outline" onClick={() => {
                 const qtys: Record<number, number> = {};
