@@ -229,6 +229,40 @@ export function SystemSettingsPanel() {
     }
   };
 
+  const handleQrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return; }
+    if ((settings.payment_qr_urls || []).length >= 3) { toast.error('Maximum 3 QR images allowed'); return; }
+    try {
+      setUploadingQr(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'icons');
+      const token = localStorage.getItem('admin_api_key') || localStorage.getItem('auth_token') || '';
+      const res = await fetch(`${API_BASE_URL}/api/upload`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      update('payment_qr_urls', [...(settings.payment_qr_urls || []), data.url]);
+      toast.success('QR image uploaded');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to upload QR image');
+    } finally {
+      setUploadingQr(false);
+      if (qrInputRef.current) qrInputRef.current.value = '';
+    }
+  };
+
+  const removeQrImage = (index: number) => {
+    const updated = [...(settings.payment_qr_urls || [])];
+    updated.splice(index, 1);
+    update('payment_qr_urls', updated);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
