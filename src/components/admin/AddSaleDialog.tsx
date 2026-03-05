@@ -317,6 +317,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
       })),
       payment_status: paymentStatus,
       paid_amount: paymentStatus === "partial" && paidAmount > 0 ? paidAmount : undefined,
+      paid_method: paymentStatus === "partial" && paidAmount > 0 ? paidMethod : undefined,
       sale_discount: saleDiscount > 0 ? saleDiscount : undefined,
       sale_discount_type: saleDiscount > 0 ? saleDiscountType : undefined,
       notes: notes || undefined,
