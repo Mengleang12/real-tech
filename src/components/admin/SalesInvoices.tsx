@@ -595,7 +595,11 @@ const InvoicesTab = () => {
         </div>
       </div>
 
-      ${order.warranty_period ? `<div class="warranty-box"><div class="wlabel">Warranty</div><span>${order.warranty_period}</span></div>` : ''}
+      ${order.warranty_period ? (() => {
+        const matchedWarranty = warrantiesList.find((w: any) => w.name === order.warranty_period);
+        const policyText = matchedWarranty?.policy ? matchedWarranty.policy.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+        return `<div class="warranty-box"><div class="wlabel">Warranty — ${order.warranty_period}</div>${policyText ? `<p style="margin-top:2px;line-height:1.4">${policyText}</p>` : `<span>${order.warranty_period}</span>`}</div>`;
+      })() : ''}
 
       ${order.notes ? `<div class="note-box"><div class="nlabel">Note</div><p>${order.notes}</p></div>` : ''}
 
@@ -930,13 +934,14 @@ const InvoicesTab = () => {
                 </div>
                 {selectedOrder.warranty_period && (() => {
                   const ws = getWarrantyStatus(selectedOrder.warranty_period, selectedOrder.created_at);
+                  const matchedWarranty = warrantiesList.find(w => w.name === selectedOrder.warranty_period);
+                  const policyText = matchedWarranty?.policy ? matchedWarranty.policy.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
                   return (
                     <div className="rounded-lg border-l-2 border-emerald-500 bg-emerald-500/5 p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1"><Shield className="w-3 h-3" /> Warranty</p>
-                      <p className="text-sm text-foreground">{selectedOrder.warranty_period}
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1"><Shield className="w-3 h-3" /> Warranty — {selectedOrder.warranty_period}
                         {ws && <Badge variant={getWarrantyBadgeVariant(ws)} className="ml-2 text-[10px] px-1.5 py-0">{ws.label}</Badge>}
                       </p>
-                      {ws?.expiryDate && <p className="text-xs text-muted-foreground mt-1">Expires: {ws.expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
+                      {policyText && <p className="text-xs text-foreground leading-relaxed">{policyText}</p>}
                     </div>
                   );
                 })()}
