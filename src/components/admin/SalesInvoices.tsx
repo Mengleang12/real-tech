@@ -607,6 +607,8 @@ const InvoicesTab = () => {
 
       ${order.notes ? `<div class="note-box"><div class="nlabel">Note</div><p>${order.notes}</p></div>` : ''}
 
+      ${(branding.payment_qr_urls || []).length > 0 ? `<div class="qr-section">${branding.payment_qr_urls.map((url: string) => `<img src="${url}" alt="Payment QR" />`).join('')}</div>` : ''}
+
       <div class="footer">
         <div class="footer-thanks">${branding.invoice_footer_text}</div>
         <div class="footer-brand">${branding.site_name}${branding.support_email ? ` · ${branding.support_email}` : ''}</div>
