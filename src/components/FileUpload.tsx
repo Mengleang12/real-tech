@@ -10,7 +10,7 @@ const getAuthToken = () => {
 };
 
 interface FileUploadProps {
-  type: 'icons' | 'screenshots' | 'versions';
+  type: 'icons' | 'screenshots' | 'versions' | 'general';
   onUpload: (url: string) => void;
   currentUrl?: string;
   accept?: string;
