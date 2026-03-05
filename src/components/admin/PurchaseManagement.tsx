@@ -767,17 +767,30 @@ const PurchaseDetailDialog = ({
                   <TableCell className="text-sm">{item.quantity}</TableCell>
                   <TableCell className="text-sm">
                     {receiveMode ? (
-                      <Input
-                        type="number"
-                        min={0}
-                        max={item.quantity}
-                        className="w-20 h-8 text-sm"
-                        value={receivedQtys[item.id] ?? 0}
-                        onChange={(e) => setReceivedQtys((prev) => ({
-                          ...prev,
-                          [item.id]: Math.min(Math.max(0, parseInt(e.target.value) || 0), item.quantity),
-                        }))}
-                      />
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={item.quantity}
+                          className="w-20 h-8 text-sm"
+                          value={receivedQtys[item.id] ?? 0}
+                          onChange={(e) => setReceivedQtys((prev) => ({
+                            ...prev,
+                            [item.id]: Math.min(Math.max(0, parseInt(e.target.value) || 0), item.quantity),
+                          }))}
+                        />
+                        {(receivedQtys[item.id] ?? 0) > 0 && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive"
+                            title="Reset to 0"
+                            onClick={() => setReceivedQtys((prev) => ({ ...prev, [item.id]: 0 }))}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
                     ) : (
                       <Badge variant={((item.received_quantity || 0) >= item.quantity) ? "default" : "secondary"} className="text-xs">
                         {item.received_quantity || 0} / {item.quantity}
