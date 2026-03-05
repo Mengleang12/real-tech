@@ -1239,6 +1239,7 @@ const AdminDashboard = () => {
           {activeTab === "brands" && <BrandManagement />}
           {activeTab === "attributes" && <AttributeManagement />}
           {activeTab === "print_labels" && <PrintLabelsPage />}
+          {activeTab === "sliders" && <SliderManagement />}
           {activeTab === "users" && <UserManagement />}
           {activeTab === "stock" && <StockPage />}
           {activeTab === "invoices" && <InvoicesPage />}
