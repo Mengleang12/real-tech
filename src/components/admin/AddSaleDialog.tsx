@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Search, Plus, Trash2, UserPlus, Loader2, X, Minus, Users, Percent, CalendarIcon, ScanBarcode, Truck } from "lucide-react";
+import { Search, Plus, Trash2, UserPlus, Loader2, X, Minus, Users, Percent, CalendarIcon, ScanBarcode, Truck, ClipboardPaste } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CartItem {
@@ -524,11 +524,65 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
             )}
 
             {customerType === "new" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <Input placeholder="Name *" value={newCustomerName} onChange={e => setNewCustomerName(e.target.value)} className="h-9 text-sm" />
-                <Input placeholder="Phone" value={newCustomerPhone} onChange={e => setNewCustomerPhone(e.target.value)} className="h-9 text-sm" />
-                <Input placeholder="Email" value={newCustomerEmail} onChange={e => setNewCustomerEmail(e.target.value)} className="h-9 text-sm" />
-                <Input placeholder="Address" value={newCustomerAddress} onChange={e => setNewCustomerAddress(e.target.value)} className="h-9 text-sm" />
+              <div className="space-y-2">
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs gap-1.5 px-2.5"
+                    onClick={async () => {
+                      try {
+                        const text = await navigator.clipboard.readText();
+                        if (!text.trim()) { toast.error("Clipboard is empty"); return; }
+                        const lines = text.split(/[\n,;]+/).map(l => l.trim()).filter(Boolean);
+                        // Try to parse structured "Key: Value" format
+                        const parsed: Record<string, string> = {};
+                        const plainLines: string[] = [];
+                        for (const line of lines) {
+                          const kv = line.match(/^(name|phone|tel|email|address|addr)[:\s]+(.+)$/i);
+                          if (kv) {
+                            const key = kv[1].toLowerCase();
+                            if (key === 'tel') parsed['phone'] = kv[2].trim();
+                            else if (key === 'addr') parsed['address'] = kv[2].trim();
+                            else parsed[key] = kv[2].trim();
+                          } else {
+                            plainLines.push(line);
+                          }
+                        }
+                        // If structured keys found
+                        if (Object.keys(parsed).length > 0) {
+                          if (parsed.name) setNewCustomerName(parsed.name);
+                          if (parsed.phone) setNewCustomerPhone(parsed.phone);
+                          if (parsed.email) setNewCustomerEmail(parsed.email);
+                          if (parsed.address) setNewCustomerAddress(parsed.address);
+                          toast.success("Customer info pasted");
+                          return;
+                        }
+                        // Fallback: smart parse plain lines
+                        for (const line of plainLines) {
+                          const phoneMatch = line.match(/^[\d\s\-+()]{7,}$/);
+                          const emailMatch = line.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+                          if (emailMatch) { setNewCustomerEmail(line); }
+                          else if (phoneMatch) { setNewCustomerPhone(line); }
+                          else if (!newCustomerName || plainLines.indexOf(line) === 0) { setNewCustomerName(line); }
+                          else { setNewCustomerAddress(prev => prev === "Cambodia" ? line : prev); }
+                        }
+                        toast.success("Customer info pasted");
+                      } catch {
+                        toast.error("Cannot access clipboard");
+                      }
+                    }}
+                  >
+                    <ClipboardPaste className="w-3 h-3" /> Paste Info
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input placeholder="Name *" value={newCustomerName} onChange={e => setNewCustomerName(e.target.value)} className="h-9 text-sm" />
+                  <Input placeholder="Phone" value={newCustomerPhone} onChange={e => setNewCustomerPhone(e.target.value)} className="h-9 text-sm" />
+                  <Input placeholder="Email" value={newCustomerEmail} onChange={e => setNewCustomerEmail(e.target.value)} className="h-9 text-sm" />
+                  <Input placeholder="Address" value={newCustomerAddress} onChange={e => setNewCustomerAddress(e.target.value)} className="h-9 text-sm" />
+                </div>
               </div>
             )}
           </div>
