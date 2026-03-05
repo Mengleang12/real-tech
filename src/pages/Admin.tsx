@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { SEOHead } from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 import { 
   Plus, Minus, Edit, Trash2, LogOut, Package, Search, X, Save, ArrowLeft, 
@@ -1110,6 +1111,8 @@ const AdminDashboard = () => {
   const activeItem = visibleNavItems.find(n => n.id === activeTab);
 
   return (
+    <>
+    <SEOHead title="Admin Dashboard" noindex />
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
       <aside className={cn(
@@ -1253,6 +1256,7 @@ const AdminDashboard = () => {
         </main>
       </div>
     </div>
+    </>
   );
 };
 

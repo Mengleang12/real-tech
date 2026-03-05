@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEOHead } from "@/components/SEOHead";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -126,6 +127,8 @@ const Checkout = () => {
   };
 
   return (
+    <>
+    <SEOHead title="Checkout" noindex />
     <div className={`min-h-screen bg-background ${language === "km" ? "font-khmer" : ""}`}>
       {/* Header */}
       <header className="sticky top-0 z-40 glass border-b border-border/40">
@@ -346,6 +349,7 @@ const Checkout = () => {
         onSelectGuest={handleCheckoutAsGuest}
       />
     </div>
+    </>
   );
 };
 

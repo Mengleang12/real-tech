@@ -29,7 +29,7 @@ import { RichContent } from "@/components/RichTextEditor";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { FloatingCartButton } from "@/components/FloatingCartButton";
-import { SEOHead } from "@/components/SEOHead";
+import { SEOHead, type BreadcrumbItem } from "@/components/SEOHead";
 const getGradientFromName = (name: string | undefined): string => {
   const gradients = [
     "bg-gradient-to-br from-blue-500 to-cyan-500",
@@ -323,6 +323,17 @@ const ProductDetail = () => {
     };
   }, [appData, defaultVariant, totalStock]);
 
+  const seoBreadcrumbs: BreadcrumbItem[] = useMemo(() => {
+    const crumbs: BreadcrumbItem[] = [{ name: "Home", url: "/" }];
+    if (appData?.category_relation?.name) {
+      crumbs.push({ name: appData.category_relation.name, url: `/?category=${appData.category_relation.slug || appData.category}` });
+    }
+    if (displayName) {
+      crumbs.push({ name: displayName, url: `/${appId}` });
+    }
+    return crumbs;
+  }, [appData, displayName, appId]);
+
   if (!appId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -350,6 +361,7 @@ const ProductDetail = () => {
       url={`/${appId}`}
       type="product"
       product={seoProduct}
+      breadcrumbs={seoBreadcrumbs}
     />
     <div className="min-h-screen bg-background">
       {/* Sidebar - matching home page */}
