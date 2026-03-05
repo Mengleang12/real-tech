@@ -142,7 +142,14 @@ export const WarrantyManagement = () => {
                   <Shield className="w-4 h-4 text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-sm truncate">{w.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm truncate">{w.name}</p>
+                    {w.is_default && (
+                      <Badge className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/10 gap-0.5">
+                        <Star className="w-2.5 h-2.5 fill-current" /> Default
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> {formatDuration(w.duration_days)}
