@@ -15,4 +15,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://mxxudtpxrjakbtopgupd.supabase.co/functions/v1/sitemap
+Sitemap: https://api.realtechcomputer.com/api/sitemap.xml

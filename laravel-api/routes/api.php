@@ -29,6 +29,7 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SalesReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WarrantyController;
+use App\Http\Controllers\SitemapController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +54,8 @@ Route::post('/otp/resend', [OtpController::class, 'resendOtp']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
+// Sitemap (public)
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 
 // Public: categories & brands for filtering
 Route::get('/categories', [CategoryController::class, 'index']);
