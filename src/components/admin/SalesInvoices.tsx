@@ -873,6 +873,15 @@ const InvoicesTab = () => {
                             <span className="tabular-nums">-${saleDisc.toFixed(2)}</span>
                           </div>
                         )}
+                        {(() => {
+                          const delFee = selectedOrder.delivery_fee ? parseFloat(selectedOrder.delivery_fee) : 0;
+                          return delFee > 0 ? (
+                            <div className="flex justify-between text-sm text-muted-foreground">
+                              <span>Delivery Fee</span>
+                              <span className="tabular-nums">+${delFee.toFixed(2)}</span>
+                            </div>
+                          ) : null;
+                        })()}
                         {!hasDisc && (
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Discount</span>
