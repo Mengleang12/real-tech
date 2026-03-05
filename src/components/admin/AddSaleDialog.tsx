@@ -450,7 +450,8 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                     {((Math.min(paidAmount, grandTotal) / grandTotal) * 100).toFixed(0)}% paid
                   </p>
                 </div>
-              )}
+            </div>
+          )}
 
           {/* ─── Customer Section ─── */}
           <div className="rounded-lg border border-border p-4 space-y-3">
