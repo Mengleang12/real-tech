@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { SEOHead } from "@/components/SEOHead";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -247,6 +248,8 @@ const PaymentHistory = () => {
 
 
   return (
+    <>
+    <SEOHead title="Payment History" noindex />
     <div className="min-h-screen bg-background">
       {/* Notion-style top bar */}
       <header className="sticky top-0 z-40 glass px-4 sm:px-8 py-2.5">
@@ -408,6 +411,7 @@ const PaymentHistory = () => {
       </main>
 
     </div>
+    </>
   );
 };
 

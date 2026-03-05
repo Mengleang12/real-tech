@@ -1,5 +1,10 @@
 import { useEffect } from "react";
 
+export interface BreadcrumbItem {
+  name: string;
+  url: string;
+}
+
 interface SEOHeadProps {
   title?: string;
   description?: string;
@@ -17,6 +22,7 @@ interface SEOHeadProps {
     category?: string;
     availability?: "InStock" | "OutOfStock" | "LimitedAvailability";
   };
+  breadcrumbs?: BreadcrumbItem[];
   noindex?: boolean;
 }
 
@@ -32,6 +38,7 @@ export const SEOHead = ({
   url,
   type = "website",
   product,
+  breadcrumbs,
   noindex = false,
 }: SEOHeadProps) => {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} - MacBook & Portable Monitor Store`;
@@ -74,11 +81,14 @@ export const SEOHead = ({
     } else {
       addJsonLd(buildWebsiteJsonLd());
     }
+    if (breadcrumbs && breadcrumbs.length > 0) {
+      addJsonLd(buildBreadcrumbJsonLd(breadcrumbs));
+    }
 
     return () => {
       removeJsonLd();
     };
-  }, [fullTitle, description, image, pageUrl, type, product, noindex]);
+  }, [fullTitle, description, image, pageUrl, type, product, breadcrumbs, noindex]);
 
   return null;
 };
@@ -129,6 +139,19 @@ function buildWebsiteJsonLd() {
       "target": `${SITE_URL}/?search={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
+  };
+}
+
+function buildBreadcrumbJsonLd(breadcrumbs: BreadcrumbItem[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": breadcrumbs.map((item, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": item.name,
+      "item": `${SITE_URL}${item.url}`,
+    })),
   };
 }
 

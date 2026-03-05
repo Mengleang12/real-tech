@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEOHead } from "@/components/SEOHead";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -119,6 +120,8 @@ const MyPurchases = () => {
   const paidOrders = orders?.filter(order => order.status === 'paid') || [];
 
   return (
+    <>
+    <SEOHead title="My Purchases" noindex />
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 glass px-4 sm:px-8 py-2.5">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
@@ -195,6 +198,7 @@ const MyPurchases = () => {
         )}
       </main>
     </div>
+    </>
   );
 };
 

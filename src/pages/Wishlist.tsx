@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SEOHead } from '@/components/SEOHead';
 import { ArrowLeft, Heart, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -38,6 +39,8 @@ const Wishlist = () => {
   }, [wishlist]);
 
   return (
+    <>
+    <SEOHead title="Wishlist" noindex />
     <div className={`min-h-screen bg-background ${language === 'km' ? 'font-khmer' : ''}`}>
       {/* Header */}
       <div className="sticky top-0 z-40 glass border-b border-border/50">
@@ -93,6 +96,7 @@ const Wishlist = () => {
         </div>
       </PageTransition>
     </div>
+    </>
   );
 };
 

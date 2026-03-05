@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { SEOHead } from '@/components/SEOHead';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Camera, User, Lock, Loader2, ChevronRight, Mail, Phone, Shield, Palette, Bell, Info } from 'lucide-react';
@@ -253,6 +254,8 @@ export default function Profile() {
   );
 
   return (
+    <>
+    <SEOHead title="Profile" noindex />
     <div className={`min-h-screen bg-secondary/50 ${language === 'km' ? 'font-khmer' : ''}`}>
       {/* macOS title bar */}
       <header className="sticky top-0 z-40 glass px-4 py-2">
@@ -361,5 +364,6 @@ export default function Profile() {
 
       <ImageCropper isOpen={cropperOpen} onClose={() => setCropperOpen(false)} imageSrc={selectedImage} onCropComplete={handleCropComplete} />
     </div>
+    </>
   );
 }
