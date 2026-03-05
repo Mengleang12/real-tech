@@ -3,9 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/contexts/CartContext";
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { App } from "@/lib/api";
+import { appsApi, type App } from "@/lib/api";
 
 interface ProductCardProps {
   app?: App;
