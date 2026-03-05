@@ -583,6 +583,13 @@ const InvoicesTab = () => {
           ${saleDiscountAmount > 0 ? `<div class="summary-row discount"><span>Sale Discount</span><span>-$${saleDiscountAmount.toFixed(2)}</span></div>` : ''}
           ${order.delivery_fee && parseFloat(order.delivery_fee) > 0 ? `<div class="summary-row"><span>Delivery Fee</span><span>+$${parseFloat(order.delivery_fee).toFixed(2)}</span></div>` : ''}
           <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
+          ${(() => {
+            const totalPaid = (order.payments || []).reduce((s: number, p: any) => s + (typeof p.amount === "string" ? parseFloat(p.amount) : p.amount), 0);
+            const remaining = amount - totalPaid;
+            if (totalPaid <= 0) return '';
+            return `<div class="summary-row" style="color:#059669"><span>Paid</span><span>$${totalPaid.toFixed(2)}</span></div>` +
+              (remaining > 0.005 ? `<div class="summary-row" style="color:#dc2626"><span>Remaining</span><span>$${remaining.toFixed(2)}</span></div>` : '');
+          })()}
         </div>
       </div>
 
