@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Plus, Minus, Search, Trash2, X, Save, Loader2, Package, DollarSign,
   ChevronLeft, ChevronRight, MoreHorizontal, Truck, CheckCircle2,
-  ClipboardList, Ban, FileText, CreditCard, Calendar, ScanBarcode
+  ClipboardList, Ban, FileText, CreditCard, Calendar, ScanBarcode,
+  PackageCheck, PackageX, RotateCcw, ArrowDownToLine
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
 import { AdminDialog } from "@/components/admin/AdminDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -25,7 +27,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { purchasesApi, suppliersApi, salesApi, type Purchase, type PurchaseItem, type PurchaseReceiveLog, type PurchaseExpense, type PurchaseDashboardStats, type SaleProduct, type Supplier } from "@/lib/api";
+import { purchasesApi, suppliersApi, salesApi, type Purchase, type PurchaseItem, type PurchaseExpense, type PurchaseDashboardStats, type SaleProduct, type Supplier } from "@/lib/api";
 import { format } from "date-fns";
 
 const playScanBeep = (success: boolean) => {
@@ -688,207 +690,282 @@ const PurchaseDetailDialog = ({
     >
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full justify-start">
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="receive-history">
-            Receive Log ({purchase.receive_logs?.length || 0})
+          <TabsTrigger value="details">
+            <Package className="w-3.5 h-3.5 mr-1.5" /> Items & Receive
           </TabsTrigger>
           <TabsTrigger value="payments">
-            Payments ({purchase.payments?.length || 0})
+            <CreditCard className="w-3.5 h-3.5 mr-1.5" /> Payments ({purchase.payments?.length || 0})
           </TabsTrigger>
           <TabsTrigger value="expenses">
-            Expenses ({purchase.expenses?.length || 0})
+            <DollarSign className="w-3.5 h-3.5 mr-1.5" /> Expenses ({purchase.expenses?.length || 0})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="details" className="space-y-4 mt-4">
-          {/* Status + Summary */}
-          <div className="flex flex-wrap gap-3 items-center">
-            <Badge className={statusColors[purchase.status]}>{statusLabels[purchase.status]}</Badge>
-            <span className="text-sm text-muted-foreground">
-              Items: <strong>${Number(purchase.total_amount).toFixed(2)}</strong>
-            </span>
-            {Number(purchase.delivery_fee) > 0 && (
-              <span className="text-sm text-muted-foreground">
-                Delivery: <strong>${Number(purchase.delivery_fee).toFixed(2)}</strong>
-              </span>
-            )}
-            {Number(purchase.other_expense) > 0 && (
-              <span className="text-sm text-muted-foreground">
-                Other: <strong>${Number(purchase.other_expense).toFixed(2)}</strong>
-                {purchase.other_expense_note && <span className="text-xs ml-1">({purchase.other_expense_note})</span>}
-              </span>
-            )}
-            {purchase.expenses && purchase.expenses.length > 0 && (
-              <span className="text-sm text-muted-foreground">
-                Expenses: <strong>${purchase.expenses.reduce((s, e) => s + Number(e.amount), 0).toFixed(2)}</strong>
-              </span>
-            )}
-            <span className="text-sm font-medium">
-              Grand Total: <strong>${grandTotal.toFixed(2)}</strong>
-            </span>
-            <span className="text-sm text-muted-foreground">
-              Paid: <strong>${Number(purchase.paid_amount).toFixed(2)}</strong>
-            </span>
-            {remaining > 0 && (
-              <span className="text-sm text-destructive">
-                Owed: <strong>${remaining.toFixed(2)}</strong>
-              </span>
-            )}
+        <TabsContent value="details" className="space-y-5 mt-4">
+          {/* ── Summary Bar ── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Card>
+              <CardContent className="p-3 text-center">
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Items Total</p>
+                <p className="text-lg font-bold">${Number(purchase.total_amount).toFixed(2)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3 text-center">
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Grand Total</p>
+                <p className="text-lg font-bold">${grandTotal.toFixed(2)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3 text-center">
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Paid</p>
+                <p className="text-lg font-bold text-green-600 dark:text-green-400">${Number(purchase.paid_amount).toFixed(2)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3 text-center">
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Outstanding</p>
+                <p className={`text-lg font-bold ${remaining > 0 ? 'text-destructive' : 'text-green-600 dark:text-green-400'}`}>
+                  ${remaining.toFixed(2)}
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Status Actions */}
+          {/* ── Overall Receive Progress ── */}
+          {(() => {
+            const totalOrdered = purchase.items.reduce((s, i) => s + i.quantity, 0);
+            const totalRecvd = purchase.items.reduce((s, i) => s + (i.received_quantity || 0), 0);
+            const pct = totalOrdered > 0 ? Math.round((totalRecvd / totalOrdered) * 100) : 0;
+            return (
+              <Card className={`border-2 ${pct === 100 ? 'border-green-500/30 bg-green-500/5' : pct > 0 ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-border'}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {pct === 100 ? (
+                        <PackageCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <ArrowDownToLine className="w-5 h-5 text-muted-foreground" />
+                      )}
+                      <span className="font-semibold text-sm">
+                        {pct === 100 ? 'All Items Received' : pct > 0 ? 'Partially Received' : 'Not Yet Received'}
+                      </span>
+                    </div>
+                    <span className="text-sm font-mono font-bold">{totalRecvd} / {totalOrdered} items ({pct}%)</span>
+                  </div>
+                  <Progress value={pct} className="h-2.5" />
+                </CardContent>
+              </Card>
+            );
+          })()}
+
+          {/* ── Status Actions ── */}
           {purchase.status !== 'cancelled' && purchase.status !== 'completed' && (
             <div className="flex flex-wrap gap-2">
               {purchase.status === 'draft' && (
-                <Button size="sm" variant="outline" onClick={() => handleStatusChange('ordered')} disabled={statusUpdating}>
+                <Button size="sm" onClick={() => handleStatusChange('ordered')} disabled={statusUpdating}>
                   <Truck className="w-3.5 h-3.5 mr-1.5" /> Mark as Ordered
                 </Button>
               )}
-              {(purchase.status === 'ordered' || purchase.status === 'partial') && (
-                <>
-                  <Button size="sm" variant="outline" onClick={initReceiveMode} disabled={statusUpdating || receiveMode}>
-                    <Package className="w-3.5 h-3.5 mr-1.5" /> Receive Items
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleStatusChange('received')} disabled={statusUpdating}>
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Mark All Received
-                  </Button>
-                </>
+              {(purchase.status === 'ordered' || purchase.status === 'partial') && !receiveMode && (
+                <Button size="sm" onClick={initReceiveMode} disabled={statusUpdating}>
+                  <ArrowDownToLine className="w-3.5 h-3.5 mr-1.5" /> Receive Items
+                </Button>
               )}
-              {purchase.status === 'received' && (
+              {(purchase.status === 'ordered' || purchase.status === 'partial') && !receiveMode && (
+                <Button size="sm" variant="outline" onClick={() => handleStatusChange('received')} disabled={statusUpdating}>
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Mark All Received
+                </Button>
+              )}
+              {purchase.status === 'received' && !receiveMode && (
                 <>
-                  <Button size="sm" variant="outline" onClick={initReceiveMode} disabled={statusUpdating || receiveMode}>
-                    <Package className="w-3.5 h-3.5 mr-1.5" /> Adjust Received Qty
+                  <Button size="sm" variant="outline" onClick={initReceiveMode} disabled={statusUpdating}>
+                    <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Adjust Quantities
                   </Button>
                   <Button size="sm" onClick={() => handleStatusChange('completed')} disabled={statusUpdating}>
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Complete
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Complete Order
                   </Button>
                 </>
               )}
-              <Button size="sm" variant="destructive" onClick={() => handleStatusChange('cancelled')} disabled={statusUpdating}>
+              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleStatusChange('cancelled')} disabled={statusUpdating}>
                 <Ban className="w-3.5 h-3.5 mr-1.5" /> Cancel
               </Button>
             </div>
           )}
 
-          {/* Items */}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead className="w-20">Qty</TableHead>
-                <TableHead className="w-24">Received</TableHead>
-                <TableHead className="w-28">Unit Cost</TableHead>
-                <TableHead className="w-28 text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {purchase.items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="text-sm">
-                    {item.product_name}
-                    {item.variant_label && <span className="text-xs text-muted-foreground ml-1">({item.variant_label})</span>}
-                  </TableCell>
-                  <TableCell className="text-sm">{item.quantity}</TableCell>
-                  <TableCell className="text-sm">
-                    {receiveMode ? (
-                      <div className="flex items-center gap-1">
-                        <Input
-                          type="number"
-                          min={0}
-                          max={item.quantity}
-                          className="w-20 h-8 text-sm"
-                          value={receivedQtys[item.id] ?? 0}
-                          onChange={(e) => setReceivedQtys((prev) => ({
-                            ...prev,
-                            [item.id]: Math.min(Math.max(0, parseInt(e.target.value) || 0), item.quantity),
-                          }))}
-                        />
-                        {(receivedQtys[item.id] ?? 0) > 0 && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7 text-destructive"
-                            title="Reset to 0"
-                            onClick={() => setReceivedQtys((prev) => ({ ...prev, [item.id]: 0 }))}
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </Button>
+          {/* ── Receive Mode Banner ── */}
+          {receiveMode && (
+            <Card className="border-2 border-primary/30 bg-primary/5">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <ArrowDownToLine className="w-5 h-5 text-primary" />
+                  <span className="font-semibold text-primary">Receive Mode Active</span>
+                  <span className="text-xs text-muted-foreground ml-auto">Enter quantities received for each item</span>
+                </div>
+                <div className="flex gap-2 justify-end flex-wrap">
+                  <Button size="sm" variant="ghost" onClick={() => setReceiveMode(false)} disabled={receivingItems}>
+                    <X className="w-3.5 h-3.5 mr-1.5" /> Cancel
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => {
+                    const qtys: Record<number, number> = {};
+                    purchase.items.forEach((item) => { qtys[item.id] = 0; });
+                    setReceivedQtys(qtys);
+                  }}>
+                    <PackageX className="w-3.5 h-3.5 mr-1.5" /> Reset All
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => {
+                    const qtys: Record<number, number> = {};
+                    purchase.items.forEach((item) => { qtys[item.id] = item.quantity; });
+                    setReceivedQtys(qtys);
+                  }}>
+                    <PackageCheck className="w-3.5 h-3.5 mr-1.5" /> Receive All
+                  </Button>
+                  <Button size="sm" onClick={handleReceiveItems} disabled={receivingItems}>
+                    {receivingItems && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Confirm
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* ── Items List ── */}
+          <div className="space-y-2">
+            {purchase.items.map((item) => {
+              const rcv = receiveMode ? (receivedQtys[item.id] ?? 0) : (item.received_quantity || 0);
+              const pct = item.quantity > 0 ? Math.round((rcv / item.quantity) * 100) : 0;
+              const isComplete = rcv >= item.quantity;
+
+              return (
+                <Card key={item.id} className={`transition-all ${receiveMode ? 'border-primary/20' : ''} ${isComplete && !receiveMode ? 'bg-green-500/5 border-green-500/20' : ''}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      {/* Icon */}
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                        isComplete ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {isComplete ? <PackageCheck className="w-5 h-5" /> : <Package className="w-5 h-5" />}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">{item.product_name}</p>
+                            {item.variant_label && (
+                              <p className="text-xs text-muted-foreground">Variant: {item.variant_label}</p>
+                            )}
+                          </div>
+                          <span className="text-sm font-medium whitespace-nowrap">${Number(item.total_cost).toFixed(2)}</span>
+                        </div>
+
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+                          <span>Ordered: <strong className="text-foreground">{item.quantity}</strong></span>
+                          <span>×</span>
+                          <span>${Number(item.unit_cost).toFixed(2)}</span>
+                        </div>
+
+                        {/* Progress bar */}
+                        {!receiveMode && (
+                          <div className="flex items-center gap-3">
+                            <Progress value={pct} className="h-2 flex-1" />
+                            <Badge
+                              variant={isComplete ? "default" : "secondary"}
+                              className={`text-[11px] px-2 py-0.5 ${isComplete ? 'bg-green-600 hover:bg-green-600' : ''}`}
+                            >
+                              {rcv} / {item.quantity}
+                            </Badge>
+                          </div>
+                        )}
+
+                        {/* Receive mode input */}
+                        {receiveMode && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">Received:</span>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-8 w-8"
+                                onClick={() => setReceivedQtys((prev) => ({
+                                  ...prev,
+                                  [item.id]: Math.max(0, (prev[item.id] ?? 0) - 1),
+                                }))}
+                              >
+                                <Minus className="w-3.5 h-3.5" />
+                              </Button>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={item.quantity}
+                                className="w-16 h-8 text-center text-sm font-semibold"
+                                value={receivedQtys[item.id] ?? 0}
+                                onChange={(e) => setReceivedQtys((prev) => ({
+                                  ...prev,
+                                  [item.id]: Math.min(Math.max(0, parseInt(e.target.value) || 0), item.quantity),
+                                }))}
+                              />
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-8 w-8"
+                                onClick={() => setReceivedQtys((prev) => ({
+                                  ...prev,
+                                  [item.id]: Math.min((prev[item.id] ?? 0) + 1, item.quantity),
+                                }))}
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                            <span className="text-xs text-muted-foreground">/ {item.quantity}</span>
+                            <Progress value={Math.round(((receivedQtys[item.id] ?? 0) / item.quantity) * 100)} className="h-1.5 flex-1 max-w-[100px]" />
+                          </div>
                         )}
                       </div>
-                    ) : (
-                      <Badge variant={((item.received_quantity || 0) >= item.quantity) ? "default" : "secondary"} className="text-xs">
-                        {item.received_quantity || 0} / {item.quantity}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">${Number(item.unit_cost).toFixed(2)}</TableCell>
-                  <TableCell className="text-right text-sm font-medium">${Number(item.total_cost).toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-          {receiveMode && (
-            <div className="flex gap-2 justify-end flex-wrap">
-              <Button size="sm" variant="outline" onClick={() => setReceiveMode(false)} disabled={receivingItems}>
-                Cancel
-              </Button>
-              <Button size="sm" variant="outline" className="text-destructive" onClick={() => {
-                const qtys: Record<number, number> = {};
-                purchase.items.forEach((item) => { qtys[item.id] = 0; });
-                setReceivedQtys(qtys);
-              }}>
-                Reset All to 0
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => {
-                const qtys: Record<number, number> = {};
-                purchase.items.forEach((item) => { qtys[item.id] = item.quantity; });
-                setReceivedQtys(qtys);
-              }}>
-                Receive All
-              </Button>
-              <Button size="sm" onClick={handleReceiveItems} disabled={receivingItems}>
-                {receivingItems && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
-                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Confirm Receive
-              </Button>
+          {/* ── Notes & Tracking ── */}
+          {(purchase.notes || purchase.tracking_number) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {purchase.notes && (
+                <Card>
+                  <CardContent className="p-3">
+                    <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Notes</p>
+                    <p className="text-sm">{purchase.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
+              {purchase.tracking_number && (
+                <Card>
+                  <CardContent className="p-3">
+                    <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Tracking</p>
+                    <p className="text-sm font-mono">{purchase.tracking_number} {purchase.carrier && `(${purchase.carrier})`}</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
 
-          {purchase.notes && (
-            <div className="text-sm">
-              <Label className="text-muted-foreground">Notes</Label>
-              <p className="mt-1">{purchase.notes}</p>
-            </div>
-          )}
-
-          {purchase.tracking_number && (
-            <div className="text-sm">
-              <Label className="text-muted-foreground">Tracking Number</Label>
-              <p className="mt-1 font-mono">{purchase.tracking_number}</p>
-            </div>
-          )}
-
-          <div className="text-xs text-muted-foreground space-y-0.5">
-            <p>Created: {format(new Date(purchase.created_at), 'MMM d, yyyy h:mm a')}</p>
-            {purchase.ordered_at && <p>Ordered: {format(new Date(purchase.ordered_at), 'MMM d, yyyy h:mm a')}</p>}
-            {purchase.received_at && <p>Received: {format(new Date(purchase.received_at), 'MMM d, yyyy h:mm a')}</p>}
-            {purchase.completed_at && <p>Completed: {format(new Date(purchase.completed_at), 'MMM d, yyyy h:mm a')}</p>}
+          {/* ── Timeline ── */}
+          <div className="text-xs text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 pt-2 border-t border-border">
+            <span>Created: {format(new Date(purchase.created_at), 'MMM d, yyyy h:mm a')}</span>
+            {purchase.ordered_at && <span>Ordered: {format(new Date(purchase.ordered_at), 'MMM d, yyyy h:mm a')}</span>}
+            {purchase.received_at && <span>Received: {format(new Date(purchase.received_at), 'MMM d, yyyy h:mm a')}</span>}
+            {purchase.completed_at && <span>Completed: {format(new Date(purchase.completed_at), 'MMM d, yyyy h:mm a')}</span>}
           </div>
         </TabsContent>
 
+        {/* ── Payments Tab ── */}
         <TabsContent value="payments" className="space-y-4 mt-4">
-          {/* Add Payment Form */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
             <div>
               <Label>Amount *</Label>
-              <Input
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                placeholder="0.00"
-              />
+              <Input type="number" min="0" step="0.01" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="0.00" />
             </div>
             <div>
               <Label>Method</Label>
@@ -896,7 +973,8 @@ const PurchaseDetailDialog = ({
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="bank">Bank Transfer</SelectItem>
+                  <SelectItem value="wing">Wing</SelectItem>
                   <SelectItem value="aba">ABA</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
@@ -906,24 +984,17 @@ const PurchaseDetailDialog = ({
               <Label>Reference</Label>
               <Input value={paymentRef} onChange={(e) => setPaymentRef(e.target.value)} placeholder="Ref #" />
             </div>
+            <div>
+              <Label>Note</Label>
+              <Input value={paymentNote} onChange={(e) => setPaymentNote(e.target.value)} placeholder="Optional" />
+            </div>
             <Button onClick={handleAddPayment} disabled={addingPayment}>
-              {addingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
-              Add Payment
+              {addingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />} Add Payment
             </Button>
           </div>
-
-          {/* Payment History */}
           {purchase.payments && purchase.payments.length > 0 ? (
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Reference</TableHead>
-                  <TableHead className="w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
+              <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount</TableHead><TableHead>Method</TableHead><TableHead>Reference</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
               <TableBody>
                 {purchase.payments.map((p) => (
                   <TableRow key={p.id}>
@@ -931,11 +1002,7 @@ const PurchaseDetailDialog = ({
                     <TableCell className="text-sm font-medium">${Number(p.amount).toFixed(2)}</TableCell>
                     <TableCell className="text-sm capitalize">{p.method?.replace('_', ' ')}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{p.reference || '—'}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeletePayment(p.id)}>
-                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                      </Button>
-                    </TableCell>
+                    <TableCell><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeletePayment(p.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -943,8 +1010,6 @@ const PurchaseDetailDialog = ({
           ) : (
             <p className="text-sm text-muted-foreground text-center py-6">No payments recorded yet</p>
           )}
-
-          {/* Summary */}
           <div className="flex justify-end gap-6 text-sm border-t border-border pt-3">
             <span>Grand Total: <strong>${grandTotal.toFixed(2)}</strong></span>
             <span>Paid: <strong className="text-green-600">${Number(purchase.paid_amount).toFixed(2)}</strong></span>
@@ -952,8 +1017,8 @@ const PurchaseDetailDialog = ({
           </div>
         </TabsContent>
 
+        {/* ── Expenses Tab ── */}
         <TabsContent value="expenses" className="space-y-4 mt-4">
-          {/* Add Expense Form */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
             <div>
               <Label>Category *</Label>
@@ -973,37 +1038,19 @@ const PurchaseDetailDialog = ({
             </div>
             <div>
               <Label>Amount *</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={expenseAmount}
-                onChange={(e) => setExpenseAmount(e.target.value)}
-                placeholder="0.00"
-              />
+              <Input type="number" min="0" step="0.01" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} placeholder="0.00" />
             </div>
             <div>
               <Label>Description</Label>
               <Input value={expenseDesc} onChange={(e) => setExpenseDesc(e.target.value)} placeholder="Optional note" />
             </div>
             <Button onClick={handleAddExpense} disabled={addingExpense}>
-              {addingExpense ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
-              Add Expense
+              {addingExpense ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />} Add Expense
             </Button>
           </div>
-
-          {/* Expenses List */}
           {purchase.expenses && purchase.expenses.length > 0 ? (
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
+              <TableHeader><TableRow><TableHead>Category</TableHead><TableHead>Description</TableHead><TableHead>Amount</TableHead><TableHead>Date</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
               <TableBody>
                 {purchase.expenses.map((exp) => (
                   <TableRow key={exp.id}>
@@ -1011,11 +1058,7 @@ const PurchaseDetailDialog = ({
                     <TableCell className="text-sm text-muted-foreground">{exp.description || '—'}</TableCell>
                     <TableCell className="text-sm font-medium">${Number(exp.amount).toFixed(2)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{format(new Date(exp.created_at), 'MMM d, yyyy h:mm a')}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteExpense(exp.id)}>
-                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                      </Button>
-                    </TableCell>
+                    <TableCell><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteExpense(exp.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -1023,47 +1066,9 @@ const PurchaseDetailDialog = ({
           ) : (
             <p className="text-sm text-muted-foreground text-center py-6">No expenses recorded yet</p>
           )}
-
-          {/* Expenses Total */}
           <div className="flex justify-end text-sm border-t border-border pt-3">
             <span>Total Expenses: <strong>${(purchase.expenses?.reduce((s, e) => s + Number(e.amount), 0) || 0).toFixed(2)}</strong></span>
           </div>
-        </TabsContent>
-
-        <TabsContent value="receive-history" className="space-y-4 mt-4">
-          {purchase.receive_logs && purchase.receive_logs.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead className="w-24">Qty Received</TableHead>
-                  <TableHead className="w-28">Running Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {purchase.receive_logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="text-sm">{format(new Date(log.received_at), 'MMM d, yyyy h:mm a')}</TableCell>
-                    <TableCell className="text-sm">
-                      {log.product_name}
-                      {log.variant_label && <span className="text-xs text-muted-foreground ml-1">({log.variant_label})</span>}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      <Badge variant={log.quantity_received > 0 ? "default" : "secondary"} className="text-xs">
-                        {log.quantity_received > 0 ? `+${log.quantity_received}` : log.quantity_received}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {log.previous_received} → {log.new_total_received}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-6">No receive events recorded yet</p>
-          )}
         </TabsContent>
       </Tabs>
     </AdminDialog>
