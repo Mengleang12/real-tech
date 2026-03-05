@@ -54,6 +54,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
 
   // Payment
   const [paymentStatus, setPaymentStatus] = useState<"paid" | "pending" | "partial" | "unpaid">("pending");
+  const [paidAmount, setPaidAmount] = useState<number>(0);
   const [saleDate, setSaleDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
   const [warrantyPeriod, setWarrantyPeriod] = useState("");
@@ -233,6 +234,14 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
 
   const grandTotal = Math.max(0, subtotal - saleDiscountAmount) + deliveryFee;
 
+  // Auto-switch partial → paid when paid amount covers grand total
+  useEffect(() => {
+    if (paymentStatus === "partial" && paidAmount >= grandTotal && grandTotal > 0) {
+      setPaymentStatus("paid");
+      setPaidAmount(0);
+    }
+  }, [paidAmount, grandTotal, paymentStatus]);
+
   // Submit
   const createMutation = useMutation({
     mutationFn: (data: CreateSalePayload) => salesApi.createSale(data),
@@ -260,6 +269,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setSaleDiscount(0);
     setSaleDiscountType("amount");
     setPaymentStatus("pending");
+    setPaidAmount(0);
     setSaleDate(new Date());
     setNotes("");
     setWarrantyPeriod("");
@@ -305,6 +315,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
         serial_numbers: c.serial_numbers.some(s => s.trim()) ? c.serial_numbers : undefined,
       })),
       payment_status: paymentStatus,
+      paid_amount: paymentStatus === "partial" && paidAmount > 0 ? paidAmount : undefined,
       sale_discount: saleDiscount > 0 ? saleDiscount : undefined,
       sale_discount_type: saleDiscount > 0 ? saleDiscountType : undefined,
       notes: notes || undefined,
@@ -371,6 +382,17 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                   <SelectItem value="unpaid">Unpaid</SelectItem>
                 </SelectContent>
               </Select>
+              {paymentStatus === "partial" && (
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={paidAmount || ""}
+                  onChange={e => setPaidAmount(parseFloat(e.target.value) || 0)}
+                  className="h-9 text-sm mt-1"
+                  placeholder="Paid amount"
+                />
+              )}
             </div>
 
             {/* Warranty Period */}

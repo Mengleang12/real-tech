@@ -973,6 +973,7 @@ export interface CreateSalePayload {
   sale_discount?: number;
   sale_discount_type?: 'amount' | 'percent';
   delivery_fee?: number;
+  paid_amount?: number;
   notes?: string;
   warranty_period?: string;
   sale_date?: string;
