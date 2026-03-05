@@ -269,6 +269,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setSaleDiscount(0);
     setSaleDiscountType("amount");
     setPaymentStatus("pending");
+    setPaidAmount(0);
     setSaleDate(new Date());
     setNotes("");
     setWarrantyPeriod("");
