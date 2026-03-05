@@ -234,6 +234,14 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
 
   const grandTotal = Math.max(0, subtotal - saleDiscountAmount) + deliveryFee;
 
+  // Auto-switch partial → paid when paid amount covers grand total
+  useEffect(() => {
+    if (paymentStatus === "partial" && paidAmount >= grandTotal && grandTotal > 0) {
+      setPaymentStatus("paid");
+      setPaidAmount(0);
+    }
+  }, [paidAmount, grandTotal, paymentStatus]);
+
   // Submit
   const createMutation = useMutation({
     mutationFn: (data: CreateSalePayload) => salesApi.createSale(data),
