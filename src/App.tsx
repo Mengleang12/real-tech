@@ -77,11 +77,13 @@ function AppRoutes() {
   // Show maintenance page to non-admin users, but allow /auth and /admin access
   if (maintenance.enabled && !isAdminOrModerator) {
     return (
-      <Routes>
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="*" element={<MaintenancePage message={maintenance.message} />} />
-      </Routes>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<MaintenancePage message={maintenance.message} />} />
+        </Routes>
+      </Suspense>
     );
   }
 
