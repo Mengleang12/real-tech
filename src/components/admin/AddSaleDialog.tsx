@@ -421,6 +421,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                       </SelectContent>
                     </Select>
                   </div>
+                  {grandTotal > 0 && (
                     <div className="space-y-1">
                       <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                         <div 
