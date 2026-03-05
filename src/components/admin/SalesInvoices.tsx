@@ -453,7 +453,12 @@ const InvoicesTab = () => {
     onError: () => toast.error("Failed to record payment"),
   });
 
-  const handlePrintCustomerLabel = (order: AdminOrder) => {
+  const [labelOrder, setLabelOrder] = useState<AdminOrder | null>(null);
+  const [labelAddress, setLabelAddress] = useState("Cambodia");
+
+  const handlePrintCustomerLabel = () => {
+    if (!labelOrder) return;
+    const order = labelOrder;
     const w = window.open("", "_blank", "width=400,height=300");
     if (!w) return;
     w.document.write(`<!DOCTYPE html><html><head><title>Customer Label</title>
@@ -468,11 +473,13 @@ const InvoicesTab = () => {
       <div class="info">
         ${order.user?.phone ? `<div>📞 ${order.user.phone}</div>` : ''}
         ${order.user?.email ? `<div>✉ ${order.user.email}</div>` : ''}
+        ${labelAddress ? `<div>📍 ${labelAddress}</div>` : ''}
       </div>
       <div class="inv">INV #${order.id.slice(0, 8).toUpperCase()} — ${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}</div>
     </body></html>`);
     w.document.close();
     setTimeout(() => { w.print(); }, 300);
+    setLabelOrder(null);
   };
 
   const { data, isLoading } = useQuery({
@@ -838,7 +845,7 @@ const InvoicesTab = () => {
                               {order.status !== 'paid' && order.status !== 'cancelled' && (
                                 <DropdownMenuItem onClick={() => { const totalAmt = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount; const paid = (order.payments || []).reduce((s: number, p: any) => s + (typeof p.amount === "string" ? parseFloat(p.amount) : p.amount), 0); setPaymentAmount(Math.max(0, totalAmt - paid).toFixed(2)); setPaymentOrder(order); }} className="cursor-pointer"><CreditCard className="w-3.5 h-3.5 mr-2" /> Add Payment</DropdownMenuItem>
                               )}
-                              <DropdownMenuItem onClick={() => handlePrintCustomerLabel(order)} className="cursor-pointer"><Tag className="w-3.5 h-3.5 mr-2" /> Print Label</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setLabelAddress("Cambodia"); setLabelOrder(order); }} className="cursor-pointer"><Tag className="w-3.5 h-3.5 mr-2" /> Print Label</DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer" onClick={() => setDeleteOrderId(order.id)}><Trash2 className="w-3.5 h-3.5 mr-2" /> Delete</DropdownMenuItem>
                             </DropdownMenuContent>
@@ -1131,6 +1138,34 @@ const InvoicesTab = () => {
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Print Customer Label Dialog */}
+      <Dialog open={!!labelOrder} onOpenChange={(open) => { if (!open) setLabelOrder(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Tag className="w-5 h-5 text-primary" />
+              Print Customer Label
+            </DialogTitle>
+          </DialogHeader>
+          {labelOrder && (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                <p className="font-semibold text-sm">{labelOrder.user?.full_name || "Walk-in Customer"}</p>
+                {labelOrder.user?.phone && <p className="text-xs text-muted-foreground">📞 {labelOrder.user.phone}</p>}
+                {labelOrder.user?.email && <p className="text-xs text-muted-foreground">✉ {labelOrder.user.email}</p>}
+              </div>
+              <div>
+                <label className="text-sm font-medium">Address</label>
+                <Input value={labelAddress} onChange={(e) => setLabelAddress(e.target.value)} placeholder="Enter address..." className="mt-1" />
+              </div>
+              <Button className="w-full gap-2" onClick={handlePrintCustomerLabel}>
+                <Printer className="w-4 h-4" /> Print Label
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
