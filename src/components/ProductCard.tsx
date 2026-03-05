@@ -3,9 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/contexts/CartContext";
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { App } from "@/lib/api";
+import { appsApi, type App } from "@/lib/api";
 
 interface ProductCardProps {
   app?: App;
@@ -37,6 +38,7 @@ export const ProductCard = (props: ProductCardProps) => {
   const location = useLocation();
   const { toggle, isWishlisted } = useWishlist();
   const { addToCart, isOutOfStock } = useCart();
+  const queryClient = useQueryClient();
   const imgRef = useRef<HTMLImageElement>(null);
   const placeholderRef = useRef<HTMLDivElement>(null);
 
@@ -67,6 +69,19 @@ export const ProductCard = (props: ProductCardProps) => {
     return null; // normal stock, no badge needed
   };
   const stockInfo = getStockInfo();
+
+  // Prefetch product data + JS chunk on hover
+  const handlePrefetch = useCallback(() => {
+    if (!props.app) return;
+    // Prefetch product data
+    queryClient.prefetchQuery({
+      queryKey: ["app", props.app.id],
+      queryFn: () => appsApi.getById(props.app!.id),
+      staleTime: 1000 * 60 * 5,
+    });
+    // Preload ProductDetail chunk
+    import("@/pages/ProductDetail");
+  }, [props.app, queryClient]);
 
   const handleClick = () => {
     if (props.app) {
@@ -103,6 +118,7 @@ export const ProductCard = (props: ProductCardProps) => {
     <article
       className={`group relative rounded-2xl bg-card border border-border/40 overflow-hidden transition-all duration-300 ease-out hover:shadow-[0_8px_30px_-8px_hsl(var(--foreground)/0.1)] ${props.app ? "cursor-pointer" : ""} ${outOfStock ? 'opacity-75' : ''}`}
       onClick={handleClick}
+      onMouseEnter={handlePrefetch}
       itemScope
       itemType="https://schema.org/Product"
     >
