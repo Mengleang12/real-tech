@@ -24,6 +24,7 @@ export const WarrantyManagement = () => {
   const [name, setName] = useState("");
   const [durationDays, setDurationDays] = useState<number>(30);
   const [policy, setPolicy] = useState("");
+  const [isDefault, setIsDefault] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["warranties"],
@@ -36,6 +37,7 @@ export const WarrantyManagement = () => {
     setName("");
     setDurationDays(30);
     setPolicy("");
+    setIsDefault(false);
     setEditing(null);
   };
 
@@ -49,6 +51,7 @@ export const WarrantyManagement = () => {
     setName(w.name);
     setDurationDays(w.duration_days);
     setPolicy(w.policy || "");
+    setIsDefault(w.is_default || false);
     setDialogOpen(true);
   };
 
@@ -90,7 +93,7 @@ export const WarrantyManagement = () => {
     if (!name.trim()) { toast.error("Name is required"); return; }
     if (durationDays < 1) { toast.error("Duration must be at least 1 day"); return; }
 
-    const payload = { name: name.trim(), duration_days: durationDays, policy: policy || undefined };
+    const payload = { name: name.trim(), duration_days: durationDays, policy: policy || undefined, is_default: isDefault };
 
     if (editing) {
       updateMutation.mutate({ id: editing.id, data: payload });
