@@ -100,9 +100,11 @@ export const ProductCard = (props: ProductCardProps) => {
   };
 
   return (
-    <div
+    <article
       className={`group relative rounded-2xl bg-card border border-border/40 overflow-hidden transition-all duration-300 ease-out hover:shadow-[0_8px_30px_-8px_hsl(var(--foreground)/0.1)] ${props.app ? "cursor-pointer" : ""} ${outOfStock ? 'opacity-75' : ''}`}
       onClick={handleClick}
+      itemScope
+      itemType="https://schema.org/Product"
     >
       {/* Image */}
       <div className="relative w-full aspect-square bg-muted/30 overflow-hidden">
@@ -110,7 +112,8 @@ export const ProductCard = (props: ProductCardProps) => {
           <img
             ref={imgRef}
             src={iconUrl}
-            alt={displayName}
+            alt={`${displayName} - Buy at Realtech Computer`}
+            itemProp="image"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
@@ -155,7 +158,7 @@ export const ProductCard = (props: ProductCardProps) => {
       {/* Info */}
       <div className="p-3.5 space-y-2">
         {/* Name */}
-        <h3 className="text-sm font-semibold text-foreground line-clamp-1 leading-snug">
+        <h3 className="text-sm font-semibold text-foreground line-clamp-1 leading-snug" itemProp="name">
           {displayName}
         </h3>
 
@@ -212,6 +215,6 @@ export const ProductCard = (props: ProductCardProps) => {
           )}
         </div>
       </div>
-    </div>
+    </article>
   );
 };

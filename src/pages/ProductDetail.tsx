@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useMemo } from "react";
 import { toast } from "sonner";
 import realtechLogo from "@/assets/realtech-logo.png";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
@@ -29,6 +29,7 @@ import { RichContent } from "@/components/RichTextEditor";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { FloatingCartButton } from "@/components/FloatingCartButton";
+import { SEOHead } from "@/components/SEOHead";
 const getGradientFromName = (name: string | undefined): string => {
   const gradients = [
     "bg-gradient-to-br from-blue-500 to-cyan-500",
@@ -300,6 +301,27 @@ const ProductDetail = () => {
     enabled: !!appId,
   });
 
+  const displayName = appData ? t(appData.name_km, appData.name) : '';
+  const displayDescription = appData ? t(appData.description_km, appData.description) : '';
+
+  const activeVariants = appData?.variants?.filter(v => v.is_active) || [];
+  const defaultVariant = activeVariants.find(v => v.is_default) || activeVariants[0];
+  const totalStock = activeVariants.reduce((sum, v) => sum + v.stock_quantity, 0);
+
+  const seoProduct = useMemo(() => {
+    if (!appData) return undefined;
+    return {
+      name: appData.name,
+      description: appData.description || `Buy ${appData.name} at Realtech Computer Cambodia`,
+      image: appData.icon_url || undefined,
+      price: defaultVariant?.price_adjustment || 0,
+      currency: "USD",
+      sku: defaultVariant?.sku || `RT-${appData.id}`,
+      brand: appData.brand?.name,
+      category: appData.category_relation?.name || appData.category,
+      availability: (totalStock <= 0 ? "OutOfStock" : totalStock <= 5 ? "LimitedAvailability" : "InStock") as "InStock" | "OutOfStock" | "LimitedAvailability",
+    };
+  }, [appData, defaultVariant, totalStock]);
 
   if (!appId) {
     return (
@@ -312,9 +334,6 @@ const ProductDetail = () => {
     );
   }
 
-  const displayName = appData ? t(appData.name_km, appData.name) : '';
-  const displayDescription = appData ? t(appData.description_km, appData.description) : '';
-  
   const categoryLabels: Record<string, string> = {
     programs: translations.programs,
     games: translations.games,
@@ -323,6 +342,15 @@ const ProductDetail = () => {
   };
 
   return (
+    <>
+    <SEOHead
+      title={displayName || undefined}
+      description={displayDescription ? displayDescription.replace(/<[^>]*>/g, '').slice(0, 155) : undefined}
+      image={appData?.icon_url || undefined}
+      url={`/${appId}`}
+      type="product"
+      product={seoProduct}
+    />
     <div className="min-h-screen bg-background">
       {/* Sidebar - matching home page */}
       <aside className="fixed inset-y-0 left-0 z-50 w-[220px] bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex-col hidden lg:flex">
@@ -944,6 +972,7 @@ const ProductDetail = () => {
 
       <FloatingCartButton />
     </div>
+    </>
   );
 };
 
