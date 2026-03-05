@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Shield, Loader2, Calendar } from "lucide-react";
+import { Plus, Pencil, Trash2, Shield, Loader2, Calendar, Star } from "lucide-react";
 
 export const WarrantyManagement = () => {
   const queryClient = useQueryClient();
@@ -22,6 +24,7 @@ export const WarrantyManagement = () => {
   const [name, setName] = useState("");
   const [durationDays, setDurationDays] = useState<number>(30);
   const [policy, setPolicy] = useState("");
+  const [isDefault, setIsDefault] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["warranties"],
@@ -34,6 +37,7 @@ export const WarrantyManagement = () => {
     setName("");
     setDurationDays(30);
     setPolicy("");
+    setIsDefault(false);
     setEditing(null);
   };
 
@@ -47,6 +51,7 @@ export const WarrantyManagement = () => {
     setName(w.name);
     setDurationDays(w.duration_days);
     setPolicy(w.policy || "");
+    setIsDefault(w.is_default || false);
     setDialogOpen(true);
   };
 
@@ -88,7 +93,7 @@ export const WarrantyManagement = () => {
     if (!name.trim()) { toast.error("Name is required"); return; }
     if (durationDays < 1) { toast.error("Duration must be at least 1 day"); return; }
 
-    const payload = { name: name.trim(), duration_days: durationDays, policy: policy || undefined };
+    const payload = { name: name.trim(), duration_days: durationDays, policy: policy || undefined, is_default: isDefault };
 
     if (editing) {
       updateMutation.mutate({ id: editing.id, data: payload });
@@ -137,7 +142,14 @@ export const WarrantyManagement = () => {
                   <Shield className="w-4 h-4 text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-sm truncate">{w.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm truncate">{w.name}</p>
+                    {w.is_default && (
+                      <Badge className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/10 gap-0.5">
+                        <Star className="w-2.5 h-2.5 fill-current" /> Default
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> {formatDuration(w.duration_days)}
@@ -191,6 +203,11 @@ export const WarrantyManagement = () => {
                 <p className="text-[10px] text-muted-foreground">≈ {formatDuration(durationDays)}</p>
               )}
             </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Switch checked={isDefault} onCheckedChange={setIsDefault} />
+            <Label className="text-sm">Set as default warranty (auto-selected in new sales)</Label>
           </div>
 
           <div className="space-y-1.5">

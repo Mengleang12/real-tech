@@ -1209,6 +1209,7 @@ export interface WarrantyOption {
   name: string;
   duration_days: number;
   policy: string | null;
+  is_default: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -1218,11 +1219,11 @@ export const warrantyApi = {
     return apiRequest('admin/warranties');
   },
 
-  create: async (data: { name: string; duration_days: number; policy?: string }): Promise<{ warranty: WarrantyOption }> => {
+  create: async (data: { name: string; duration_days: number; policy?: string; is_default?: boolean }): Promise<{ warranty: WarrantyOption }> => {
     return apiRequest('admin/warranties', { method: 'POST', body: data });
   },
 
-  update: async (id: number, data: { name: string; duration_days: number; policy?: string }): Promise<{ warranty: WarrantyOption }> => {
+  update: async (id: number, data: { name: string; duration_days: number; policy?: string; is_default?: boolean }): Promise<{ warranty: WarrantyOption }> => {
     return apiRequest(`admin/warranties/${id}`, { method: 'PUT', body: data });
   },
 

@@ -22,9 +22,15 @@ class WarrantyController extends Controller
             'name' => 'required|string|max:100',
             'duration_days' => 'required|integer|min:1|max:36500',
             'policy' => 'nullable|string|max:10000',
+            'is_default' => 'nullable|boolean',
         ]);
 
-        $warranty = Warranty::create($request->only(['name', 'duration_days', 'policy']));
+        // If setting as default, unset others
+        if ($request->boolean('is_default')) {
+            Warranty::where('is_default', true)->update(['is_default' => false]);
+        }
+
+        $warranty = Warranty::create($request->only(['name', 'duration_days', 'policy', 'is_default']));
 
         $this->logActivity($request, 'admin_warranty_created', [
             'warranty_id' => $warranty->id,
@@ -42,9 +48,15 @@ class WarrantyController extends Controller
             'name' => 'required|string|max:100',
             'duration_days' => 'required|integer|min:1|max:36500',
             'policy' => 'nullable|string|max:10000',
+            'is_default' => 'nullable|boolean',
         ]);
 
-        $warranty->update($request->only(['name', 'duration_days', 'policy']));
+        // If setting as default, unset others
+        if ($request->boolean('is_default')) {
+            Warranty::where('is_default', true)->where('id', '!=', $id)->update(['is_default' => false]);
+        }
+
+        $warranty->update($request->only(['name', 'duration_days', 'policy', 'is_default']));
 
         $this->logActivity($request, 'admin_warranty_updated', [
             'warranty_id' => $warranty->id,
