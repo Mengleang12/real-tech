@@ -46,6 +46,7 @@ import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/co
 import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
 import { SupplierManagement } from "@/components/admin/SupplierManagement";
 import { SliderManagement } from "@/components/admin/SliderManagement";
+import { WarrantyManagement } from "@/components/admin/WarrantyManagement";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabelDialog";
 import { SalesReport } from "@/components/admin/SalesReport";
@@ -630,7 +631,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "sliders" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "sliders" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties";
 
 interface NavItem {
   id: AdminTab;
@@ -660,6 +661,7 @@ const navGroups: NavGroup[] = [
       { id: "suppliers", label: "Suppliers", icon: Truck, permission: "orders.view" },
       
       { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
+      { id: "warranties", label: "Warranty", icon: Shield, permission: "orders.view" },
       { id: "reports", label: "Reports", icon: TrendingUp, permission: "orders.view" },
     ],
   },
@@ -1254,6 +1256,7 @@ const AdminDashboard = () => {
           {activeTab === "activity" && <ActivityLogs />}
           {activeTab === "status" && <UserStatusManagement />}
           {activeTab === "coupons" && <CouponManagement />}
+          {activeTab === "warranties" && <WarrantyManagement />}
           {activeTab === "settings" && <SystemSettingsPanel />}
         </main>
       </div>
