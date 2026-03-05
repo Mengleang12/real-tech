@@ -205,6 +205,11 @@ export const WarrantyManagement = () => {
             </div>
           </div>
 
+          <div className="flex items-center gap-3">
+            <Switch checked={isDefault} onCheckedChange={setIsDefault} />
+            <Label className="text-sm">Set as default warranty (auto-selected in new sales)</Label>
+          </div>
+
           <div className="space-y-1.5">
             <Label className="text-xs font-medium text-muted-foreground">Warranty Policy</Label>
             <RichTextEditor value={policy} onChange={setPolicy} />
