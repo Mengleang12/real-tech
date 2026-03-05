@@ -46,6 +46,7 @@ import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/co
 import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
 import { SupplierManagement } from "@/components/admin/SupplierManagement";
 import { SliderManagement } from "@/components/admin/SliderManagement";
+import { WarrantyManagement } from "@/components/admin/WarrantyManagement";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabelDialog";
 import { SalesReport } from "@/components/admin/SalesReport";
