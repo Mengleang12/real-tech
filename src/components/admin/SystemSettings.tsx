@@ -427,9 +427,38 @@ export function SystemSettingsPanel() {
               <FileText className="w-4 h-4 text-muted-foreground" />
               <h3 className="text-sm font-medium">Invoice</h3>
             </div>
-            <div className="p-4">
-              <Label className="text-xs">Invoice Footer Text</Label>
-              <Input value={settings.invoice_footer_text} onChange={e => update('invoice_footer_text', e.target.value)} className="mt-1" placeholder="Thank you for your business!" />
+            <div className="p-4 space-y-4">
+              <div>
+                <Label className="text-xs">Invoice Footer Text</Label>
+                <Input value={settings.invoice_footer_text} onChange={e => update('invoice_footer_text', e.target.value)} className="mt-1" placeholder="Thank you for your business!" />
+              </div>
+              <div>
+                <Label className="text-xs">Payment QR Images</Label>
+                <p className="text-[11px] text-muted-foreground mb-2">Upload up to 3 QR code images for payment methods. These will appear at the bottom of printed invoices.</p>
+                <div className="flex items-start gap-3 flex-wrap">
+                  {(settings.payment_qr_urls || []).map((url, i) => (
+                    <div key={i} className="relative group">
+                      <img src={url} alt={`Payment QR ${i + 1}`} className="w-20 h-20 object-contain rounded-lg border border-border bg-muted/20 p-1" />
+                      <button
+                        onClick={() => removeQrImage(i)}
+                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {(settings.payment_qr_urls || []).length < 3 && (
+                    <div
+                      onClick={() => qrInputRef.current?.click()}
+                      className="w-20 h-20 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                    >
+                      {uploadingQr ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> : <Upload className="w-5 h-5 text-muted-foreground" />}
+                      <span className="text-[10px] text-muted-foreground">Add QR</span>
+                    </div>
+                  )}
+                </div>
+                <input ref={qrInputRef} type="file" accept="image/*" className="hidden" onChange={handleQrUpload} />
+              </div>
             </div>
           </div>
         </TabsContent>
