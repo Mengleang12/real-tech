@@ -693,6 +693,9 @@ const PurchaseDetailDialog = ({
           <TabsTrigger value="details">
             <Package className="w-3.5 h-3.5 mr-1.5" /> Items & Receive
           </TabsTrigger>
+          <TabsTrigger value="receive-log">
+            <ClipboardList className="w-3.5 h-3.5 mr-1.5" /> Receive Log ({purchase.receive_logs?.length || 0})
+          </TabsTrigger>
           <TabsTrigger value="payments">
             <CreditCard className="w-3.5 h-3.5 mr-1.5" /> Payments ({purchase.payments?.length || 0})
           </TabsTrigger>
@@ -1069,6 +1072,65 @@ const PurchaseDetailDialog = ({
           <div className="flex justify-end text-sm border-t border-border pt-3">
             <span>Total Expenses: <strong>${(purchase.expenses?.reduce((s, e) => s + Number(e.amount), 0) || 0).toFixed(2)}</strong></span>
           </div>
+        </TabsContent>
+
+        {/* ── Receive Log Tab ── */}
+        <TabsContent value="receive-log" className="space-y-4 mt-4">
+          {purchase.receive_logs && purchase.receive_logs.length > 0 ? (
+            <div className="space-y-2">
+              {purchase.receive_logs.map((log) => (
+                <Card key={log.id} className={`${log.quantity_received > 0 ? 'border-green-500/20' : 'border-destructive/20'}`}>
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                      log.quantity_received > 0 ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-destructive/10 text-destructive'
+                    }`}>
+                      {log.quantity_received > 0 ? <ArrowDownToLine className="w-4 h-4" /> : <RotateCcw className="w-4 h-4" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium truncate">{log.product_name}</span>
+                        {log.variant_label && <span className="text-xs text-muted-foreground">({log.variant_label})</span>}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                        <span>{format(new Date(log.received_at), 'MMM d, yyyy h:mm a')}</span>
+                        <span>{log.previous_received} → {log.new_total_received}</span>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={log.quantity_received > 0 ? "default" : "destructive"}
+                      className={`text-xs font-mono ${log.quantity_received > 0 ? 'bg-green-600 hover:bg-green-600' : ''}`}
+                    >
+                      {log.quantity_received > 0 ? `+${log.quantity_received}` : log.quantity_received}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      title="Delete this log entry and reverse stock"
+                      onClick={async () => {
+                        if (!confirm(`Delete this receive log? This will reverse the stock change of ${log.quantity_received > 0 ? '+' : ''}${log.quantity_received} for "${log.product_name}".`)) return;
+                        try {
+                          await purchasesApi.deleteReceiveLog(purchase.id, log.id);
+                          toast.success("Receive log deleted & stock reversed");
+                          onRefresh();
+                        } catch (e: any) {
+                          toast.error(e.message || "Failed to delete");
+                        }
+                      }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <ClipboardList className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">No receive events recorded yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Use "Receive Items" to start tracking</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </AdminDialog>
