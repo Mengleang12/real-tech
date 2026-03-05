@@ -27,7 +27,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { purchasesApi, suppliersApi, salesApi, type Purchase, type PurchaseItem, type PurchaseExpense, type PurchaseDashboardStats, type SaleProduct, type Supplier } from "@/lib/api";
+import { purchasesApi, suppliersApi, salesApi, type Purchase, type PurchaseItem, type PurchaseReceiveLog, type PurchaseExpense, type PurchaseDashboardStats, type SaleProduct, type Supplier } from "@/lib/api";
 import { format } from "date-fns";
 
 const playScanBeep = (success: boolean) => {
