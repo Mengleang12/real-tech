@@ -519,8 +519,8 @@ const InvoicesTab = () => {
         .s-row{display:flex;justify-content:space-between;padding:4px 10px;font-size:12px;color:#6b7280}
         .s-row.disc{color:#dc2626}
         .s-row.total{background:#111827;color:#fff;border-radius:4px;padding:8px 10px;font-size:14px;font-weight:700;margin-top:3px}
-        .warranty-box{margin-top:8px;padding:6px 10px;background:#f0fdf4;border-left:2px solid #22c55e;border-radius:4px;font-size:10px}
-        .warranty-box .wlabel{font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;font-size:9px;margin-bottom:1px}
+        .warranty-box{margin-top:8px;padding:8px 12px;background:#f8fafc;border-radius:6px;font-size:10px}
+        .warranty-box .wlabel{font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#9ca3af;font-size:9px;margin-bottom:2px}
         .note-box{margin-top:6px;padding:6px 10px;background:#f8fafc;border-left:2px solid ${branding.primary_color};border-radius:4px}
         .note-box .nlabel{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:1px}
         .note-box p{font-size:10px;color:#374151;line-height:1.4}
@@ -598,7 +598,7 @@ const InvoicesTab = () => {
       ${order.warranty_period ? (() => {
         const matchedWarranty = warrantiesList.find((w: any) => w.name === order.warranty_period);
         const policyText = matchedWarranty?.policy ? matchedWarranty.policy.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
-        return `<div class="warranty-box"><div class="wlabel">Warranty — ${order.warranty_period}</div>${policyText ? `<p style="margin-top:2px;line-height:1.4">${policyText}</p>` : `<span>${order.warranty_period}</span>`}</div>`;
+        return policyText ? `<div class="warranty-box"><div class="wlabel">Warranty</div><p style="margin-top:2px;line-height:1.4">${policyText}</p></div>` : '';
       })() : ''}
 
       ${order.notes ? `<div class="note-box"><div class="nlabel">Note</div><p>${order.notes}</p></div>` : ''}
@@ -933,15 +933,13 @@ const InvoicesTab = () => {
                   </div>
                 </div>
                 {selectedOrder.warranty_period && (() => {
-                  const ws = getWarrantyStatus(selectedOrder.warranty_period, selectedOrder.created_at);
                   const matchedWarranty = warrantiesList.find(w => w.name === selectedOrder.warranty_period);
                   const policyText = matchedWarranty?.policy ? matchedWarranty.policy.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+                  if (!policyText) return null;
                   return (
-                    <div className="rounded-lg border-l-2 border-emerald-500 bg-emerald-500/5 p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1"><Shield className="w-3 h-3" /> Warranty — {selectedOrder.warranty_period}
-                        {ws && <Badge variant={getWarrantyBadgeVariant(ws)} className="ml-2 text-[10px] px-1.5 py-0">{ws.label}</Badge>}
-                      </p>
-                      {policyText && <p className="text-xs text-foreground leading-relaxed">{policyText}</p>}
+                    <div className="rounded-lg bg-muted/30 p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1"><Shield className="w-3 h-3" /> Warranty</p>
+                      <p className="text-xs text-foreground leading-relaxed">{policyText}</p>
                     </div>
                   );
                 })()}
