@@ -731,9 +731,14 @@ const PurchaseDetailDialog = ({
                 </>
               )}
               {purchase.status === 'received' && (
-                <Button size="sm" onClick={() => handleStatusChange('completed')} disabled={statusUpdating}>
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Complete
-                </Button>
+                <>
+                  <Button size="sm" variant="outline" onClick={initReceiveMode} disabled={statusUpdating || receiveMode}>
+                    <Package className="w-3.5 h-3.5 mr-1.5" /> Adjust Received Qty
+                  </Button>
+                  <Button size="sm" onClick={() => handleStatusChange('completed')} disabled={statusUpdating}>
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Complete
+                  </Button>
+                </>
               )}
               <Button size="sm" variant="destructive" onClick={() => handleStatusChange('cancelled')} disabled={statusUpdating}>
                 <Ban className="w-3.5 h-3.5 mr-1.5" /> Cancel
