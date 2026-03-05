@@ -385,7 +385,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                 </SelectContent>
               </Select>
               {paymentStatus === "partial" && (
-                <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-muted-foreground">Paid Amount</span>
                     {grandTotal > 0 && (
