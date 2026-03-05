@@ -40,6 +40,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   const [newCustomerName, setNewCustomerName] = useState("");
   const [newCustomerPhone, setNewCustomerPhone] = useState("");
   const [newCustomerEmail, setNewCustomerEmail] = useState("");
+  const [newCustomerAddress, setNewCustomerAddress] = useState("Cambodia");
   const [customerLoading, setCustomerLoading] = useState(false);
 
   // Product state
@@ -266,6 +267,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setNewCustomerName("");
     setNewCustomerPhone("");
     setNewCustomerEmail("");
+    setNewCustomerAddress("Cambodia");
     setCart([]);
     setSaleDiscount(0);
     setSaleDiscountType("amount");
@@ -300,11 +302,12 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     const payload: CreateSalePayload = {
       customer_type: effectiveType,
       ...(customerType === "existing" && { customer_id: selectedCustomer!.id }),
-      ...(customerType === "walkin" && { customer_name: "Walk-in Customer" }),
+      ...(customerType === "walkin" && { customer_name: "Walk-in Customer", customer_address: newCustomerAddress || undefined }),
       ...(customerType === "new" && {
         customer_name: newCustomerName,
         customer_phone: newCustomerPhone || undefined,
         customer_email: newCustomerEmail || undefined,
+        customer_address: newCustomerAddress || undefined,
       }),
       items: cart.map(c => ({
         product_id: c.product.id,
@@ -472,7 +475,10 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
             </div>
 
             {customerType === "walkin" && (
-              <p className="text-xs text-muted-foreground">Walk-in customer — no account created</p>
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">Walk-in customer — no account created</p>
+                <Input placeholder="Address" value={newCustomerAddress} onChange={e => setNewCustomerAddress(e.target.value)} className="h-9 text-sm" />
+              </div>
             )}
 
             {customerType === "existing" && (
@@ -521,10 +527,11 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
             )}
 
             {customerType === "new" && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Input placeholder="Name *" value={newCustomerName} onChange={e => setNewCustomerName(e.target.value)} className="h-9 text-sm" />
                 <Input placeholder="Phone" value={newCustomerPhone} onChange={e => setNewCustomerPhone(e.target.value)} className="h-9 text-sm" />
                 <Input placeholder="Email" value={newCustomerEmail} onChange={e => setNewCustomerEmail(e.target.value)} className="h-9 text-sm" />
+                <Input placeholder="Address" value={newCustomerAddress} onChange={e => setNewCustomerAddress(e.target.value)} className="h-9 text-sm" />
               </div>
             )}
           </div>
