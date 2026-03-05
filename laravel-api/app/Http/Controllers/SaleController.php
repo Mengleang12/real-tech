@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\SalePayment;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -42,6 +43,7 @@ class SaleController extends Controller
             'notes' => 'nullable|string|max:500',
             'warranty_period' => 'nullable|string|max:100',
             'delivery_fee' => 'nullable|numeric|min:0',
+            'paid_amount' => 'nullable|numeric|min:0',
             'sale_date' => 'nullable|date',
         ]);
 
@@ -209,6 +211,19 @@ class SaleController extends Controller
                     'serial_numbers' => !empty($itemSerials) ? implode(',', array_filter($itemSerials)) : null,
                 ]);
             }
+
+            // Create initial payment record for partial payments
+            $paidAmount = $request->paid_amount ?? 0;
+            if ($paidAmount > 0 && in_array($request->payment_status, ['partial', 'paid'])) {
+                SalePayment::create([
+                    'sale_id' => $sale->id,
+                    'amount' => round($paidAmount, 2),
+                    'method' => 'cash',
+                    'note' => 'Initial payment',
+                    'paid_at' => now(),
+                ]);
+            }
+
 
             $this->logActivity($request, 'admin_sale_created', [
                 'customer_id' => $user->id,
