@@ -70,6 +70,19 @@ export const ProductCard = (props: ProductCardProps) => {
   };
   const stockInfo = getStockInfo();
 
+  // Prefetch product data + JS chunk on hover
+  const handlePrefetch = useCallback(() => {
+    if (!props.app) return;
+    // Prefetch product data
+    queryClient.prefetchQuery({
+      queryKey: ["app", props.app.id],
+      queryFn: () => appsApi.getById(props.app!.id),
+      staleTime: 1000 * 60 * 5,
+    });
+    // Preload ProductDetail chunk
+    import("@/pages/ProductDetail");
+  }, [props.app, queryClient]);
+
   const handleClick = () => {
     if (props.app) {
       navigate(`/${props.app.id}`, {
