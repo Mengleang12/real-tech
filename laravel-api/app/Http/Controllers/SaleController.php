@@ -212,6 +212,19 @@ class SaleController extends Controller
                 ]);
             }
 
+            // Create initial payment record for partial payments
+            $paidAmount = $request->paid_amount ?? 0;
+            if ($paidAmount > 0 && in_array($request->payment_status, ['partial', 'paid'])) {
+                SalePayment::create([
+                    'sale_id' => $sale->id,
+                    'amount' => round($paidAmount, 2),
+                    'method' => 'cash',
+                    'note' => 'Initial payment',
+                    'paid_at' => now(),
+                ]);
+            }
+
+
             $this->logActivity($request, 'admin_sale_created', [
                 'customer_id' => $user->id,
                 'customer_name' => $user->full_name,
