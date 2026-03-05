@@ -315,6 +315,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
         serial_numbers: c.serial_numbers.some(s => s.trim()) ? c.serial_numbers : undefined,
       })),
       payment_status: paymentStatus,
+      paid_amount: paymentStatus === "partial" && paidAmount > 0 ? paidAmount : undefined,
       sale_discount: saleDiscount > 0 ? saleDiscount : undefined,
       sale_discount_type: saleDiscount > 0 ? saleDiscountType : undefined,
       notes: notes || undefined,
