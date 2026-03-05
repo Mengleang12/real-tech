@@ -580,6 +580,7 @@ const InvoicesTab = () => {
           <div class="summary-row"><span>Subtotal</span><span>$${originalPrice.toFixed(2)}</span></div>
           ${itemDiscountAmount > 0 ? `<div class="summary-row discount"><span>Item Discount</span><span>-$${itemDiscountAmount.toFixed(2)}</span></div>` : ''}
           ${saleDiscountAmount > 0 ? `<div class="summary-row discount"><span>Sale Discount</span><span>-$${saleDiscountAmount.toFixed(2)}</span></div>` : ''}
+          ${order.delivery_fee && parseFloat(order.delivery_fee) > 0 ? `<div class="summary-row"><span>Delivery Fee</span><span>+$${parseFloat(order.delivery_fee).toFixed(2)}</span></div>` : ''}
           <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
         </div>
       </div>
@@ -872,6 +873,15 @@ const InvoicesTab = () => {
                             <span className="tabular-nums">-${saleDisc.toFixed(2)}</span>
                           </div>
                         )}
+                        {(() => {
+                          const delFee = selectedOrder.delivery_fee ? parseFloat(selectedOrder.delivery_fee) : 0;
+                          return delFee > 0 ? (
+                            <div className="flex justify-between text-sm text-muted-foreground">
+                              <span>Delivery Fee</span>
+                              <span className="tabular-nums">+${delFee.toFixed(2)}</span>
+                            </div>
+                          ) : null;
+                        })()}
                         {!hasDisc && (
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Discount</span>

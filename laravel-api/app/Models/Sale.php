@@ -34,6 +34,7 @@ class Sale extends Model
         'expires_at',
         'notes',
         'warranty_period',
+        'delivery_fee',
         'created_at',
     ];
 
@@ -42,6 +43,7 @@ class Sale extends Model
         'original_price' => 'decimal:2',
         'item_discount' => 'decimal:2',
         'sale_discount' => 'decimal:2',
+        'delivery_fee' => 'decimal:2',
         'paid_at' => 'datetime',
         'expires_at' => 'datetime',
     ];

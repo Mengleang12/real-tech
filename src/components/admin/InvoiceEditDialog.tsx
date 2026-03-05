@@ -174,6 +174,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
   // Sale-level discount
   const [saleDiscount, setSaleDiscount] = useState(order.sale_discount ? parseFloat(order.sale_discount) : 0);
   const [saleDiscountType, setSaleDiscountType] = useState<"amount" | "percent">((order.sale_discount_type as "amount" | "percent") || "amount");
+  const [deliveryFee, setDeliveryFee] = useState(order.delivery_fee ? parseFloat(order.delivery_fee) : 0);
 
   // Product search
   const [productSearch, setProductSearch] = useState("");
@@ -188,6 +189,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
     setCart(buildCartFromOrder(order));
     setSaleDiscount(order.sale_discount ? parseFloat(order.sale_discount) : 0);
     setSaleDiscountType((order.sale_discount_type as "amount" | "percent") || "amount");
+    setDeliveryFee(order.delivery_fee ? parseFloat(order.delivery_fee) : 0);
   }, [order]);
 
   // Calculations
@@ -195,7 +197,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
   const saleDiscountAmount = saleDiscountType === "percent"
     ? subtotal * Math.min(saleDiscount, 100) / 100
     : Math.min(saleDiscount, subtotal);
-  const grandTotal = Math.max(0, subtotal - saleDiscountAmount);
+  const grandTotal = Math.max(0, subtotal - saleDiscountAmount) + deliveryFee;
 
   // Search products
   const handleSearchProducts = useCallback(async (q: string) => {
@@ -348,6 +350,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
       item_discount_type: "amount" as any,
       sale_discount: saleDiscount > 0 ? saleDiscount.toString() as any : "0" as any,
       sale_discount_type: saleDiscountType as any,
+      delivery_fee: deliveryFee > 0 ? deliveryFee.toString() as any : "0" as any,
       bakong_transaction_id: txnId || undefined,
       items: items as any,
     });
@@ -570,6 +573,22 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
         </div>
       </div>
 
+      {/* Delivery Fee */}
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">Delivery Fee</label>
+        <div className="flex items-center gap-2 mt-1">
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={deliveryFee || ""}
+            onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
+            className="h-9 text-sm flex-1"
+            placeholder="0"
+          />
+        </div>
+      </div>
+
       {/* Price Summary */}
       <Card>
         <CardContent className="p-4 space-y-1.5">
@@ -581,6 +600,12 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
             <div className="flex justify-between text-sm text-destructive">
               <span>Sale Discount ({saleDiscountType === "percent" ? `${saleDiscount}%` : `$${saleDiscount.toFixed(2)}`})</span>
               <span className="tabular-nums">-${saleDiscountAmount.toFixed(2)}</span>
+            </div>
+          )}
+          {deliveryFee > 0 && (
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Delivery Fee</span>
+              <span className="tabular-nums">+${deliveryFee.toFixed(2)}</span>
             </div>
           )}
           <Separator />
@@ -1074,8 +1099,9 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
       </table></div>
       <div class="summary-section"><div class="summary-table">
         <div class="summary-row"><span>Subtotal</span><span>$${originalPrice.toFixed(2)}</span></div>
-        ${itemDiscount > 0 ? `<div class="summary-row discount"><span>Item Discount (${itemDiscountLabel})</span><span>-$${(originalPrice - amount + saleDiscountVal).toFixed(2)}</span></div>` : ''}
+        ${itemDiscount > 0 ? `<div class="summary-row discount"><span>Item Discount (${itemDiscountLabel})</span><span>-$${(originalPrice - amount + saleDiscountVal + (order.delivery_fee ? parseFloat(order.delivery_fee) : 0)).toFixed(2)}</span></div>` : ''}
         ${saleDiscountVal > 0 ? `<div class="summary-row discount"><span>Sale Discount (${saleDiscountLabel})</span><span>-$${saleDiscountVal.toFixed(2)}</span></div>` : ''}
+        ${order.delivery_fee && parseFloat(order.delivery_fee) > 0 ? `<div class="summary-row"><span>Delivery Fee</span><span>+$${parseFloat(order.delivery_fee).toFixed(2)}</span></div>` : ''}
         <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
       </div></div>
       ${getWarrantyHtml(order.warranty_period, order.created_at, warrantiesList.find(w => w.name === order.warranty_period)?.policy)}

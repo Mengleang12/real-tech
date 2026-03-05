@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Search, Plus, Trash2, UserPlus, Loader2, X, Minus, Users, Percent, CalendarIcon, ScanBarcode } from "lucide-react";
+import { Search, Plus, Trash2, UserPlus, Loader2, X, Minus, Users, Percent, CalendarIcon, ScanBarcode, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CartItem {
@@ -57,6 +57,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   const [saleDate, setSaleDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
   const [warrantyPeriod, setWarrantyPeriod] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState<number>(0);
 
   // Scan loading state
   const [scanLoading, setScanLoading] = useState(false);
@@ -230,7 +231,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     ? subtotal * Math.min(saleDiscount, 100) / 100
     : Math.min(saleDiscount, subtotal);
 
-  const grandTotal = Math.max(0, subtotal - saleDiscountAmount);
+  const grandTotal = Math.max(0, subtotal - saleDiscountAmount) + deliveryFee;
 
   // Submit
   const createMutation = useMutation({
@@ -262,6 +263,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setSaleDate(new Date());
     setNotes("");
     setWarrantyPeriod("");
+    setDeliveryFee(0);
     setCustomers([]);
     setProducts([]);
     setProductSearch("");
@@ -307,6 +309,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
       sale_discount_type: saleDiscount > 0 ? saleDiscountType : undefined,
       notes: notes || undefined,
       warranty_period: warrantyPeriod || undefined,
+      delivery_fee: deliveryFee > 0 ? deliveryFee : undefined,
       sale_date: format(saleDate, "yyyy-MM-dd"),
     };
 
@@ -629,6 +632,24 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                   </Select>
                   {saleDiscountAmount > 0 && (
                     <span className="text-sm text-destructive font-semibold">-${saleDiscountAmount.toFixed(2)}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Delivery Fee</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={deliveryFee || ""}
+                    onChange={e => setDeliveryFee(parseFloat(e.target.value) || 0)}
+                    className="h-8 text-sm w-24"
+                    placeholder="0"
+                  />
+                  {deliveryFee > 0 && (
+                    <span className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold">+${deliveryFee.toFixed(2)}</span>
                   )}
                 </div>
               </div>
