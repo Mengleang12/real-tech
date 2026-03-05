@@ -41,6 +41,7 @@ class SaleController extends Controller
             'sale_discount_type' => 'nullable|in:amount,percent',
             'notes' => 'nullable|string|max:500',
             'warranty_period' => 'nullable|string|max:100',
+            'delivery_fee' => 'nullable|numeric|min:0',
             'sale_date' => 'nullable|date',
         ]);
 
@@ -117,7 +118,8 @@ class SaleController extends Controller
             // Collect all product names, serial numbers, and compute total
             $productNames = [];
             $allSerialNumbers = [];
-            $totalAmount = $subtotal - $saleDiscountAmount;
+            $deliveryFee = $request->delivery_fee ?? 0;
+            $totalAmount = $subtotal - $saleDiscountAmount + $deliveryFee;
             $firstItemDiscount = 0;
             $firstItemDiscountType = null;
             $firstOriginalPrice = 0;
@@ -178,6 +180,7 @@ class SaleController extends Controller
                 'paid_at' => $saleStatus === 'paid' ? now() : null,
                 'notes' => $request->notes,
                 'warranty_period' => $request->warranty_period,
+                'delivery_fee' => $deliveryFee > 0 ? round($deliveryFee, 2) : 0,
             ]);
             $sale->created_at = $saleDate;
             $sale->updated_at = $saleDate;
