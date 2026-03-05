@@ -476,137 +476,133 @@ const InvoicesTab = () => {
     const saleDiscountAmount = Math.min(saleDiscountRaw, totalDiscount);
     const itemDiscountAmount = totalDiscount - saleDiscountAmount;
 
+    const totalPaid = (order.payments || []).reduce((s: number, p: any) => s + (typeof p.amount === "string" ? parseFloat(p.amount) : p.amount), 0);
+    const remaining = amount - totalPaid;
+
     doc.write(`<!DOCTYPE html><html><head><title>Invoice #${order.id.slice(0, 8).toUpperCase()}</title>
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Inter',system-ui,-apple-system,sans-serif;max-width:760px;margin:0 auto;padding:48px 40px;color:#111827;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-        .accent{color:${branding.primary_color}}
-        .invoice-badge{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:${branding.primary_color};font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:6px}
-        .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:32px;border-bottom:1px solid #e5e7eb}
-        .brand{display:flex;align-items:center;gap:14px}
-        .brand-icon{width:44px;height:44px;border-radius:10px;overflow:hidden}
+        @page{size:A5;margin:8mm 10mm}
+        body{font-family:'Inter',system-ui,sans-serif;width:100%;color:#1f2937;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:11px;line-height:1.4}
+        .page{max-width:128mm;margin:0 auto;padding:6mm 0}
+        .header{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:2px solid #111827}
+        .brand{display:flex;align-items:center;gap:8px}
+        .brand-icon{width:28px;height:28px;border-radius:6px;overflow:hidden;flex-shrink:0}
         .brand-icon img{width:100%;height:100%;object-fit:contain}
-        .brand-name{font-size:20px;font-weight:700;color:#111827}
-        .brand-sub{font-size:12px;color:#6b7280;margin-top:2px;font-weight:400}
-        .meta{text-align:right}
-        .invoice-number{font-size:22px;font-weight:700;color:#111827;margin-top:8px;font-variant-numeric:tabular-nums}
-        .invoice-date{font-size:13px;color:#6b7280;margin-top:4px}
-        .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin:32px 0}
-        .detail-block{}
-        .detail-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:10px}
-        .detail-name{font-size:15px;font-weight:600;color:#111827}
-        .detail-sub{font-size:13px;color:#6b7280;margin-top:3px;line-height:1.5}
-        .status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.3px}
-        .status-paid{background:#dcfce7;color:#166534}
-        .status-pending{background:#fef9c3;color:#854d0e}
-        .status-failed{background:#fee2e2;color:#991b1b}
-        .status-expired{background:#f3f4f6;color:#6b7280}
-        table{width:100%;border-collapse:collapse;margin:8px 0 0}
-        .table-wrap{background:#f9fafb;border-radius:12px;padding:4px;margin:32px 0}
-        thead th{text-align:left;padding:14px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6b7280;border-bottom:1px solid #e5e7eb}
-        thead th:last-child{text-align:right}
-        tbody td{padding:16px;font-size:14px;color:#374151;border-bottom:1px solid #f3f4f6}
+        .brand-name{font-size:14px;font-weight:700;color:#111827}
+        .brand-sub{font-size:9px;color:#6b7280;line-height:1.3}
+        .inv-meta{text-align:right}
+        .inv-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6b7280}
+        .inv-number{font-size:13px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums;margin-top:1px}
+        .inv-date{font-size:9px;color:#6b7280;margin-top:1px}
+        .info-row{display:flex;justify-content:space-between;gap:12px;margin:8px 0;padding:6px 10px;background:#f8fafc;border-radius:6px}
+        .info-col{flex:1}
+        .info-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#9ca3af;margin-bottom:2px}
+        .info-name{font-size:11px;font-weight:600;color:#111827}
+        .info-sub{font-size:9px;color:#6b7280}
+        .status{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600}
+        .s-paid{background:#dcfce7;color:#166534}
+        .s-pending{background:#fef9c3;color:#854d0e}
+        .s-failed{background:#fee2e2;color:#991b1b}
+        table{width:100%;border-collapse:collapse;margin:6px 0 0}
+        thead th{text-align:left;padding:5px 8px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;border-bottom:1px solid #e5e7eb;background:#f9fafb}
+        thead th:last-child,thead th.r{text-align:right}
+        tbody td{padding:5px 8px;font-size:10px;color:#374151;border-bottom:1px solid #f3f4f6}
         tbody td:last-child{text-align:right;font-variant-numeric:tabular-nums}
-        .summary-section{display:flex;justify-content:flex-end;margin-top:0}
-        .summary-table{width:280px}
-        .summary-row{display:flex;justify-content:space-between;padding:8px 16px;font-size:13px;color:#6b7280}
-        .summary-row.discount{color:#dc2626}
-        .summary-row.total{background:#111827;color:#fff;border-radius:8px;padding:14px 16px;font-size:16px;font-weight:700;margin-top:4px}
-        .divider{height:1px;background:#e5e7eb;margin:40px 0 24px}
-        .footer{text-align:center;padding:24px 0}
-        .footer-thanks{font-size:15px;font-weight:600;color:#111827;margin-bottom:4px}
-        .footer-brand{font-size:12px;color:#9ca3af;margin-top:8px}
-        .footer-brand a{color:${branding.primary_color};text-decoration:none}
-        body{transform:scale(0.85);transform-origin:top left;width:117.6%}
-        @media print{body{padding:24px 20px}
-        .table-wrap{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+        tbody td.name{font-weight:600;color:#111827}
+        .summary{display:flex;justify-content:flex-end;margin-top:4px}
+        .summary-tbl{width:180px}
+        .s-row{display:flex;justify-content:space-between;padding:3px 8px;font-size:10px;color:#6b7280}
+        .s-row.disc{color:#dc2626}
+        .s-row.total{background:#111827;color:#fff;border-radius:4px;padding:6px 8px;font-size:12px;font-weight:700;margin-top:2px}
+        .s-row.paid{color:#059669;font-weight:600}
+        .s-row.due{color:#dc2626;font-weight:600}
+        .warranty-box{margin-top:6px;padding:5px 8px;background:#f0fdf4;border-left:2px solid #22c55e;border-radius:4px;font-size:9px}
+        .warranty-box .wlabel{font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;font-size:8px;margin-bottom:1px}
+        .note-box{margin-top:5px;padding:5px 8px;background:#f8fafc;border-left:2px solid ${branding.primary_color};border-radius:4px}
+        .note-box .nlabel{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:1px}
+        .note-box p{font-size:9px;color:#374151;line-height:1.4}
+        .footer{text-align:center;margin-top:8px;padding-top:6px;border-top:1px solid #e5e7eb}
+        .footer-thanks{font-size:10px;font-weight:600;color:#111827}
+        .footer-brand{font-size:8px;color:#9ca3af;margin-top:2px}
+        @media print{body{padding:0}.page{max-width:100%}}
       </style></head><body>
+      <div class="page">
 
       <div class="header">
         <div class="brand">
           ${branding.site_logo_url
             ? `<div class="brand-icon"><img src="${branding.site_logo_url}" alt="${branding.site_name}" /></div>`
-            : `<div class="brand-icon" style="background:linear-gradient(135deg,${branding.primary_color},#1d4ed8);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center">${branding.site_name.charAt(0)}</div>`
+            : `<div class="brand-icon" style="background:${branding.primary_color};color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;border-radius:6px">${branding.site_name.charAt(0)}</div>`
           }
           <div>
             <div class="brand-name">${branding.site_name}</div>
-            <div class="brand-sub">${branding.site_tagline || ''}</div>
+            ${branding.site_tagline ? `<div class="brand-sub">${branding.site_tagline}</div>` : ''}
             ${branding.support_phone ? `<div class="brand-sub">${branding.support_phone}</div>` : ''}
-            ${branding.site_address ? `<div class="brand-sub">${branding.site_address}</div>` : ''}
           </div>
         </div>
-        <div class="meta">
-          <div class="invoice-badge">Invoice</div>
-          <div class="invoice-number">#${order.id.slice(0, 8).toUpperCase()}</div>
-          <div class="invoice-date">${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</div>
+        <div class="inv-meta">
+          <div class="inv-title">Invoice</div>
+          <div class="inv-number">#${order.id.slice(0, 8).toUpperCase()}</div>
+          <div class="inv-date">${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</div>
         </div>
       </div>
 
-      <div class="details-grid">
-        <div class="detail-block">
-          <div class="detail-label">Bill To</div>
-          <div class="detail-name">${order.user?.full_name || "Walk-in Customer"}</div>
-          <div class="detail-sub">${order.user?.email || "—"}</div>
-          ${order.user?.phone ? `<div class="detail-sub">${order.user.phone}</div>` : ""}
+      <div class="info-row">
+        <div class="info-col">
+          <div class="info-label">Customer</div>
+          <div class="info-name">${order.user?.full_name || "Walk-in Customer"}</div>
+          ${order.user?.phone ? `<div class="info-sub">${order.user.phone}</div>` : ''}
+          ${order.user?.email && order.user.email !== 'walkin@guest.local' ? `<div class="info-sub">${order.user.email}</div>` : ''}
         </div>
-        <div class="detail-block">
-          <div class="detail-label">Payment Info</div>
-          <div style="margin-bottom:6px"><span class="status-badge status-${order.status}">${order.status === 'paid' ? '● Paid' : order.status === 'pending' ? '● Pending' : order.status === 'failed' ? '● Failed' : '● ' + order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span></div>
-          ${order.bakong_transaction_id ? `<div class="detail-sub">Txn: ${order.bakong_transaction_id}</div>` : ""}
-          ${order.paid_at ? `<div class="detail-sub">Paid: ${new Date(order.paid_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>` : ""}
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Description</th><th>Qty</th><th style="text-align:right">Unit Price</th>${hasDiscount ? '<th style="text-align:right">Discount</th>' : ''}<th style="text-align:right">Amount</th></tr></thead>
-           <tbody>
-            ${aggregateProductLines(order.product_name).map((item, i, arr) => {
-              const isLast = i === arr.length - 1;
-              return `<tr>
-              <td style="font-weight:500;color:#111827">${item.name}</td>
-              <td>${item.quantity}</td>
-              <td style="text-align:right">${i === 0 ? '$' + originalPrice.toFixed(2) : '—'}</td>
-              ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${i === 0 && itemDiscountAmount > 0 ? '-$' + itemDiscountAmount.toFixed(2) : '—'}</td>` : ''}
-              <td style="text-align:right;font-weight:600;color:#111827">${isLast ? '$' + amount.toFixed(2) : '—'}</td>
-            </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="summary-section">
-        <div class="summary-table">
-          <div class="summary-row"><span>Subtotal</span><span>$${originalPrice.toFixed(2)}</span></div>
-          ${itemDiscountAmount > 0 ? `<div class="summary-row discount"><span>Item Discount</span><span>-$${itemDiscountAmount.toFixed(2)}</span></div>` : ''}
-          ${saleDiscountAmount > 0 ? `<div class="summary-row discount"><span>Sale Discount</span><span>-$${saleDiscountAmount.toFixed(2)}</span></div>` : ''}
-          ${order.delivery_fee && parseFloat(order.delivery_fee) > 0 ? `<div class="summary-row"><span>Delivery Fee</span><span>+$${parseFloat(order.delivery_fee).toFixed(2)}</span></div>` : ''}
-          <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
-          ${(() => {
-            const totalPaid = (order.payments || []).reduce((s: number, p: any) => s + (typeof p.amount === "string" ? parseFloat(p.amount) : p.amount), 0);
-            const remaining = amount - totalPaid;
-            if (totalPaid <= 0) return '';
-            return `<div class="summary-row" style="color:#059669"><span>Paid</span><span>$${totalPaid.toFixed(2)}</span></div>` +
-              (remaining > 0.005 ? `<div class="summary-row" style="color:#dc2626"><span>Remaining</span><span>$${remaining.toFixed(2)}</span></div>` : '');
-          })()}
+        <div class="info-col" style="text-align:right">
+          <div class="info-label">Status</div>
+          <div style="margin-top:2px">
+            <span class="status s-${order.status}">${order.status === 'paid' ? '● Paid' : order.status === 'pending' ? (totalPaid > 0 ? '● Partial' : '● Pending') : '● ' + order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
+          </div>
+          ${order.bakong_transaction_id ? `<div class="info-sub" style="margin-top:2px">Txn: ${order.bakong_transaction_id}</div>` : ''}
         </div>
       </div>
 
-      ${order.warranty_period ? getWarrantyHtml(order.warranty_period, order.created_at, warrantiesList.find(w => w.name === order.warranty_period)?.policy) : ''}
+      <table>
+        <thead><tr><th>Item</th><th>Qty</th><th class="r">Price</th>${hasDiscount ? '<th class="r">Disc.</th>' : ''}<th class="r">Total</th></tr></thead>
+        <tbody>
+          ${aggregateProductLines(order.product_name).map((item, i, arr) => {
+            const isLast = i === arr.length - 1;
+            return `<tr>
+            <td class="name">${item.name}</td>
+            <td>${item.quantity}</td>
+            <td style="text-align:right">${i === 0 ? '$' + originalPrice.toFixed(2) : '—'}</td>
+            ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${i === 0 && itemDiscountAmount > 0 ? '-$' + itemDiscountAmount.toFixed(2) : '—'}</td>` : ''}
+            <td style="text-align:right;font-weight:600">${isLast ? '$' + amount.toFixed(2) : '—'}</td>
+          </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
 
-      ${order.notes ? `<div style="margin-top:${order.warranty_period ? '12' : '24'}px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}">
-        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div>
-        <div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div>
-      </div>` : ''}
+      <div class="summary">
+        <div class="summary-tbl">
+          <div class="s-row"><span>Subtotal</span><span>$${originalPrice.toFixed(2)}</span></div>
+          ${itemDiscountAmount > 0 ? `<div class="s-row disc"><span>Item Discount</span><span>-$${itemDiscountAmount.toFixed(2)}</span></div>` : ''}
+          ${saleDiscountAmount > 0 ? `<div class="s-row disc"><span>Sale Discount</span><span>-$${saleDiscountAmount.toFixed(2)}</span></div>` : ''}
+          ${order.delivery_fee && parseFloat(order.delivery_fee) > 0 ? `<div class="s-row"><span>Delivery</span><span>+$${parseFloat(order.delivery_fee).toFixed(2)}</span></div>` : ''}
+          <div class="s-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
+          ${totalPaid > 0 ? `<div class="s-row paid"><span>Paid</span><span>$${totalPaid.toFixed(2)}</span></div>` : ''}
+          ${totalPaid > 0 && remaining > 0.005 ? `<div class="s-row due"><span>Remaining</span><span>$${remaining.toFixed(2)}</span></div>` : ''}
+        </div>
+      </div>
 
-      <div class="divider"></div>
+      ${order.warranty_period ? `<div class="warranty-box"><div class="wlabel">Warranty</div><span>${order.warranty_period}</span></div>` : ''}
+
+      ${order.notes ? `<div class="note-box"><div class="nlabel">Note</div><p>${order.notes}</p></div>` : ''}
 
       <div class="footer">
         <div class="footer-thanks">${branding.invoice_footer_text}</div>
-        <div class="footer-brand">${branding.site_name}${branding.support_email ? ` — ${branding.support_email}` : ''}</div>
+        <div class="footer-brand">${branding.site_name}${branding.support_email ? ` · ${branding.support_email}` : ''}</div>
       </div>
 
+      </div>
       </body></html>`);
     doc.close();
     iframe.onload = () => {
