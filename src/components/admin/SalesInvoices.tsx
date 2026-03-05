@@ -647,7 +647,8 @@ const InvoicesTab = () => {
                   <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Invoice</th>
                   <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Customer</th>
                   <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Items</th>
-                  <th className="text-right px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Amount</th>
+                   <th className="text-right px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Amount</th>
+                   <th className="text-center px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Payment</th>
                    <th className="text-center px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                    <th className="text-center px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Warranty</th>
                    <th className="text-left px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
@@ -697,6 +698,35 @@ const InvoicesTab = () => {
                           <p className="text-[10px] text-muted-foreground line-through mt-0.5">${parseFloat(order.original_price).toFixed(2)}</p>
                         )}
                       </td>
+                       <td className="px-4 py-3.5 text-center">
+                         {(() => {
+                           const totalAmount = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount;
+                           const paidAmount = (order.payments || []).reduce((sum, p) => sum + (typeof p.amount === "string" ? parseFloat(p.amount as string) : p.amount), 0);
+                           const isPaidStatus = order.status === 'paid';
+                           
+                           if (isPaidStatus && paidAmount <= 0) {
+                             // Paid via other means (manual confirm, etc.)
+                             return <Badge className="text-[10px] font-semibold px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10">Full</Badge>;
+                           }
+                           if (paidAmount <= 0) {
+                             return <Badge variant="outline" className="text-[10px] font-semibold px-2.5 py-0.5">Unpaid</Badge>;
+                           }
+                           if (paidAmount >= totalAmount - 0.005) {
+                             return (
+                               <div className="flex flex-col items-center gap-0.5">
+                                 <Badge className="text-[10px] font-semibold px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10">Full</Badge>
+                                 <span className="text-[10px] text-muted-foreground tabular-nums">${paidAmount.toFixed(2)}</span>
+                               </div>
+                             );
+                           }
+                           return (
+                             <div className="flex flex-col items-center gap-0.5">
+                               <Badge className="text-[10px] font-semibold px-2.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/10">Partial</Badge>
+                               <span className="text-[10px] text-muted-foreground tabular-nums">${paidAmount.toFixed(2)} / ${totalAmount.toFixed(2)}</span>
+                             </div>
+                           );
+                         })()}
+                       </td>
                        <td className="px-4 py-3.5 text-center">
                          <Badge variant={status.variant} className="text-[10px] font-semibold px-2.5 py-0.5">{status.label}</Badge>
                        </td>
