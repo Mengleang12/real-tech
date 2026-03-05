@@ -543,6 +543,7 @@ const InvoicesTab = () => {
             <div class="brand-name">${branding.site_name}</div>
             ${branding.site_tagline ? `<div class="brand-sub">${branding.site_tagline}</div>` : ''}
             ${branding.support_phone ? `<div class="brand-sub">${branding.support_phone}</div>` : ''}
+            <div class="brand-sub">${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</div>
           </div>
         </div>
         <div class="inv-meta">
