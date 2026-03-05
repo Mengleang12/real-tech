@@ -959,6 +959,7 @@ const PurchaseDetailDialog = ({
             {purchase.completed_at && <span>Completed: {format(new Date(purchase.completed_at), 'MMM d, yyyy h:mm a')}</span>}
           </div>
         </TabsContent>
+      </Tabs>
     </AdminDialog>
 
       {/* Confirm Order Dialog */}
