@@ -480,52 +480,53 @@ const InvoicesTab = () => {
     const remaining = amount - totalPaid;
 
     doc.write(`<!DOCTYPE html><html><head><title>Invoice #${order.id.slice(0, 8).toUpperCase()}</title>
+      <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         *{margin:0;padding:0;box-sizing:border-box}
         @page{size:A5;margin:8mm 10mm}
-        body{font-family:'Inter',system-ui,sans-serif;width:100%;color:#1f2937;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:11px;line-height:1.4}
-        .page{max-width:128mm;margin:0 auto;padding:6mm 0}
-        .header{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:2px solid #111827}
-        .brand{display:flex;align-items:center;gap:8px}
-        .brand-icon{width:28px;height:28px;border-radius:6px;overflow:hidden;flex-shrink:0}
+        body{font-family:'Inter',system-ui,sans-serif;width:100%;color:#1f2937;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:13px;line-height:1.45}
+        .page{max-width:128mm;margin:0 auto;padding:4mm 0}
+        .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:2px solid #111827}
+        .brand{display:flex;align-items:center;gap:10px}
+        .brand-icon{width:32px;height:32px;border-radius:6px;overflow:hidden;flex-shrink:0}
         .brand-icon img{width:100%;height:100%;object-fit:contain}
-        .brand-name{font-size:14px;font-weight:700;color:#111827}
-        .brand-sub{font-size:9px;color:#6b7280;line-height:1.3}
+        .brand-name{font-size:16px;font-weight:700;color:#111827}
+        .brand-sub{font-size:10px;color:#6b7280;line-height:1.3}
         .inv-meta{text-align:right}
-        .inv-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6b7280}
-        .inv-number{font-size:13px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums;margin-top:1px}
-        .inv-date{font-size:9px;color:#6b7280;margin-top:1px}
-        .info-row{display:flex;justify-content:space-between;gap:12px;margin:8px 0;padding:6px 10px;background:#f8fafc;border-radius:6px}
+        .inv-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6b7280}
+        .inv-number{font-size:14px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums;margin-top:2px}
+        .inv-barcode{margin-top:4px;text-align:right}
+        .inv-barcode svg{height:28px;width:auto}
+        .inv-date{font-size:10px;color:#6b7280;margin-top:2px}
+        .info-row{display:flex;justify-content:space-between;gap:12px;margin:10px 0;padding:8px 12px;background:#f8fafc;border-radius:6px}
         .info-col{flex:1}
-        .info-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#9ca3af;margin-bottom:2px}
-        .info-name{font-size:11px;font-weight:600;color:#111827}
-        .info-sub{font-size:9px;color:#6b7280}
-        .status{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600}
+        .info-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#9ca3af;margin-bottom:2px}
+        .info-name{font-size:12px;font-weight:600;color:#111827}
+        .info-sub{font-size:10px;color:#6b7280}
+        .status{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
         .s-paid{background:#dcfce7;color:#166534}
         .s-pending{background:#fef9c3;color:#854d0e}
         .s-failed{background:#fee2e2;color:#991b1b}
-        table{width:100%;border-collapse:collapse;margin:6px 0 0}
-        thead th{text-align:left;padding:5px 8px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;border-bottom:1px solid #e5e7eb;background:#f9fafb}
+        table{width:100%;border-collapse:collapse;margin:8px 0 0}
+        thead th{text-align:left;padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;border-bottom:1px solid #e5e7eb;background:#f9fafb}
         thead th:last-child,thead th.r{text-align:right}
-        tbody td{padding:5px 8px;font-size:10px;color:#374151;border-bottom:1px solid #f3f4f6}
+        tbody td{padding:6px 10px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6}
         tbody td:last-child{text-align:right;font-variant-numeric:tabular-nums}
         tbody td.name{font-weight:600;color:#111827}
-        .summary{display:flex;justify-content:flex-end;margin-top:4px}
-        .summary-tbl{width:180px}
-        .s-row{display:flex;justify-content:space-between;padding:3px 8px;font-size:10px;color:#6b7280}
+        .summary{display:flex;justify-content:flex-end;margin-top:6px}
+        .summary-tbl{width:200px}
+        .s-row{display:flex;justify-content:space-between;padding:4px 10px;font-size:12px;color:#6b7280}
         .s-row.disc{color:#dc2626}
-        .s-row.total{background:#111827;color:#fff;border-radius:4px;padding:6px 8px;font-size:12px;font-weight:700;margin-top:2px}
-        .s-row.paid{color:#059669;font-weight:600}
-        .s-row.due{color:#dc2626;font-weight:600}
-        .warranty-box{margin-top:6px;padding:5px 8px;background:#f0fdf4;border-left:2px solid #22c55e;border-radius:4px;font-size:9px}
-        .warranty-box .wlabel{font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;font-size:8px;margin-bottom:1px}
-        .note-box{margin-top:5px;padding:5px 8px;background:#f8fafc;border-left:2px solid ${branding.primary_color};border-radius:4px}
-        .note-box .nlabel{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:1px}
-        .note-box p{font-size:9px;color:#374151;line-height:1.4}
-        .footer{text-align:center;margin-top:8px;padding-top:6px;border-top:1px solid #e5e7eb}
-        .footer-thanks{font-size:10px;font-weight:600;color:#111827}
-        .footer-brand{font-size:8px;color:#9ca3af;margin-top:2px}
+        .s-row.total{background:#111827;color:#fff;border-radius:4px;padding:8px 10px;font-size:14px;font-weight:700;margin-top:3px}
+        .warranty-box{margin-top:8px;padding:6px 10px;background:#f0fdf4;border-left:2px solid #22c55e;border-radius:4px;font-size:10px}
+        .warranty-box .wlabel{font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;font-size:9px;margin-bottom:1px}
+        .note-box{margin-top:6px;padding:6px 10px;background:#f8fafc;border-left:2px solid ${branding.primary_color};border-radius:4px}
+        .note-box .nlabel{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:1px}
+        .note-box p{font-size:10px;color:#374151;line-height:1.4}
+        .footer{text-align:center;margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb}
+        .footer-thanks{font-size:11px;font-weight:600;color:#111827}
+        .footer-brand{font-size:9px;color:#9ca3af;margin-top:2px}
         @media print{body{padding:0}.page{max-width:100%}}
       </style></head><body>
       <div class="page">
@@ -545,6 +546,7 @@ const InvoicesTab = () => {
         <div class="inv-meta">
           <div class="inv-title">Invoice</div>
           <div class="inv-number">#${order.id.slice(0, 8).toUpperCase()}</div>
+          <div class="inv-barcode"><svg id="inv-barcode"></svg></div>
           <div class="inv-date">${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</div>
         </div>
       </div>
@@ -603,6 +605,7 @@ const InvoicesTab = () => {
       </div>
 
       </div>
+      <script>try{JsBarcode("#inv-barcode","${order.id.slice(0, 8).toUpperCase()}",{format:"CODE128",height:28,width:1.2,displayValue:false,margin:0})}catch(e){}<\/script>
       </body></html>`);
     doc.close();
     iframe.onload = () => {
