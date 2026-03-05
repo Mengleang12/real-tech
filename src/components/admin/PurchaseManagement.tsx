@@ -518,6 +518,8 @@ const PurchaseDetailDialog = ({
   const [receivedQtys, setReceivedQtys] = useState<Record<number, number>>({});
   const [receivingItems, setReceivingItems] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
+  const [stockReversalConfirmOpen, setStockReversalConfirmOpen] = useState(false);
+  const [reversalDetails, setReversalDetails] = useState<{ product_name: string; delta: number }[]>([]);
 
   // Auto-fetch full purchase details on open (list data is incomplete)
   useEffect(() => {
@@ -542,7 +544,7 @@ const PurchaseDetailDialog = ({
     setReceiveMode(true);
   };
 
-  const handleReceiveItems = async () => {
+  const executeReceiveItems = async () => {
     setReceivingItems(true);
     try {
       const items = purchase.items.map((item) => ({
@@ -557,6 +559,28 @@ const PurchaseDetailDialog = ({
       toast.error(e.message || "Failed to receive items");
     }
     setReceivingItems(false);
+  };
+
+  const handleReceiveItems = () => {
+    // Check if any items have reduced quantities (stock reversal)
+    const reductions: { product_name: string; delta: number }[] = [];
+    purchase.items.forEach((item) => {
+      const oldQty = item.received_quantity || 0;
+      const newQty = receivedQtys[item.id] ?? oldQty;
+      if (newQty < oldQty) {
+        reductions.push({
+          product_name: item.product_name + (item.variant_label ? ` (${item.variant_label})` : ''),
+          delta: oldQty - newQty,
+        });
+      }
+    });
+
+    if (reductions.length > 0) {
+      setReversalDetails(reductions);
+      setStockReversalConfirmOpen(true);
+    } else {
+      executeReceiveItems();
+    }
   };
 
   const handleStatusChange = async (newStatus: string) => {
@@ -1109,6 +1133,53 @@ const PurchaseDetailDialog = ({
               }}
             >
               Yes, Cancel Order
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Stock Reversal Confirmation Dialog */}
+      <AlertDialog open={stockReversalConfirmOpen} onOpenChange={setStockReversalConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>⚠️ Stock Reversal Warning</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>You are reducing the received quantity for the following items. This will <strong>deduct stock</strong> from inventory:</p>
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead className="w-32 text-right">Stock Removed</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {reversalDetails.map((item, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="text-sm">{item.product_name}</TableCell>
+                          <TableCell className="text-right text-sm font-medium text-destructive">-{item.delta}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This action cannot be automatically undone. Make sure the quantities are correct before confirming.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go Back</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                setStockReversalConfirmOpen(false);
+                executeReceiveItems();
+              }}
+            >
+              Confirm Stock Reversal
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
