@@ -535,17 +535,15 @@ const InvoicesTab = () => {
 
       <div class="header">
         <div class="brand">
-          <div style="display:flex;flex-direction:column;align-items:flex-start">
-            ${branding.site_logo_url
-              ? `<div class="brand-icon"><img src="${branding.site_logo_url}" alt="${branding.site_name}" /></div>`
-              : `<div class="brand-icon" style="background:${branding.primary_color};color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;border-radius:6px">${branding.site_name.charAt(0)}</div>`
-            }
-            <div class="brand-sub" style="margin-top:3px">${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</div>
-          </div>
+          ${branding.site_logo_url
+            ? `<div class="brand-icon"><img src="${branding.site_logo_url}" alt="${branding.site_name}" /></div>`
+            : `<div class="brand-icon" style="background:${branding.primary_color};color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;border-radius:6px">${branding.site_name.charAt(0)}</div>`
+          }
           <div>
             <div class="brand-name">${branding.site_name}</div>
             ${branding.site_tagline ? `<div class="brand-sub">${branding.site_tagline}</div>` : ''}
             ${branding.support_phone ? `<div class="brand-sub">${branding.support_phone}</div>` : ''}
+            <div class="brand-sub">${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</div>
           </div>
         </div>
         <div class="inv-meta">
