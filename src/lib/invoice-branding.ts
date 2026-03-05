@@ -10,6 +10,7 @@ export interface InvoiceBranding {
   primary_color: string;
   invoice_footer_text: string;
   default_currency: string;
+  payment_qr_urls: string[];
 }
 
 const defaults: InvoiceBranding = {
@@ -22,6 +23,7 @@ const defaults: InvoiceBranding = {
   primary_color: '#2563eb',
   invoice_footer_text: 'Thank you for your purchase!',
   default_currency: 'USD',
+  payment_qr_urls: [],
 };
 
 let cache: InvoiceBranding | null = null;

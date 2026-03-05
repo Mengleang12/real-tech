@@ -527,6 +527,8 @@ const InvoicesTab = () => {
         .footer{text-align:center;margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb}
         .footer-thanks{font-size:11px;font-weight:600;color:#111827}
         .footer-brand{font-size:9px;color:#9ca3af;margin-top:2px}
+        .qr-section{display:flex;justify-content:center;gap:12px;margin-top:8px}
+        .qr-section img{width:72px;height:72px;object-fit:contain;border:1px solid #e5e7eb;border-radius:6px;padding:2px;background:#fff}
         @media print{body{padding:0}.page{max-width:100%}}
       </style></head><body>
       <div class="page">
@@ -604,6 +606,8 @@ const InvoicesTab = () => {
       })() : ''}
 
       ${order.notes ? `<div class="note-box"><div class="nlabel">Note</div><p>${order.notes}</p></div>` : ''}
+
+      ${(branding.payment_qr_urls || []).length > 0 ? `<div class="qr-section">${branding.payment_qr_urls.map((url: string) => `<img src="${url}" alt="Payment QR" />`).join('')}</div>` : ''}
 
       <div class="footer">
         <div class="footer-thanks">${branding.invoice_footer_text}</div>
