@@ -350,6 +350,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
       item_discount_type: "amount" as any,
       sale_discount: saleDiscount > 0 ? saleDiscount.toString() as any : "0" as any,
       sale_discount_type: saleDiscountType as any,
+      delivery_fee: deliveryFee > 0 ? deliveryFee.toString() as any : "0" as any,
       bakong_transaction_id: txnId || undefined,
       items: items as any,
     });
