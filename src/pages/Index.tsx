@@ -8,6 +8,7 @@ import { CategoryProductSection } from "@/components/CategoryProductSection";
 import { CategoryChips } from "@/components/CategoryChips";
 import { PageTransition } from "@/components/PageTransition";
 import { FloatingCartButton } from "@/components/FloatingCartButton";
+import { SEOHead } from "@/components/SEOHead";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
 import { useCategories } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -94,6 +95,8 @@ const Index = () => {
   };
 
   return (
+    <>
+    <SEOHead url="/" />
     <div className={`min-h-screen bg-background flex ${language === 'km' ? 'font-khmer' : ''}`}>
       {/* Mobile Overlay */}
       {sidebarOpen && (
@@ -143,6 +146,7 @@ const Index = () => {
       {/* Floating Cart Button */}
       <FloatingCartButton />
     </div>
+    </>
   );
 };
 
