@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,16 +12,18 @@ import { FlyToCartAnimation } from "@/components/FlyToCartAnimation";
 import { CartSheet } from "@/components/CartSheet";
 import { MaintenancePage } from "@/components/MaintenancePage";
 import Index from "./pages/Index";
-import Admin from "./pages/Admin";
-import ProductDetail from "./pages/ProductDetail";
-import Auth from "./pages/Auth";
-import MyPurchases from "./pages/MyPurchases";
-import PaymentHistory from "./pages/PaymentHistory";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import Wishlist from "./pages/Wishlist";
-import Checkout from "./pages/Checkout";
-import Install from "./pages/Install";
+
+// Lazy load non-critical pages
+const Admin = lazy(() => import("./pages/Admin"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Auth = lazy(() => import("./pages/Auth"));
+const MyPurchases = lazy(() => import("./pages/MyPurchases"));
+const PaymentHistory = lazy(() => import("./pages/PaymentHistory"));
+const Profile = lazy(() => import("./pages/Profile"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Wishlist = lazy(() => import("./pages/Wishlist"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Install = lazy(() => import("./pages/Install"));
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
 
@@ -75,28 +77,32 @@ function AppRoutes() {
   // Show maintenance page to non-admin users, but allow /auth and /admin access
   if (maintenance.enabled && !isAdminOrModerator) {
     return (
-      <Routes>
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="*" element={<MaintenancePage message={maintenance.message} />} />
-      </Routes>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<MaintenancePage message={maintenance.message} />} />
+        </Routes>
+      </Suspense>
     );
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/admin" element={<Admin />} />
-      <Route path="/my-purchases" element={<MyPurchases />} />
-      <Route path="/payment-history" element={<PaymentHistory />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/wishlist" element={<Wishlist />} />
-      <Route path="/checkout" element={<Checkout />} />
-      <Route path="/install" element={<Install />} />
-      <Route path="/:id" element={<ProductDetail />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/my-purchases" element={<MyPurchases />} />
+        <Route path="/payment-history" element={<PaymentHistory />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/install" element={<Install />} />
+        <Route path="/:id" element={<ProductDetail />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }
 
