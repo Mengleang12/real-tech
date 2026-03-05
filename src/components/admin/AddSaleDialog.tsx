@@ -383,15 +383,41 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                 </SelectContent>
               </Select>
               {paymentStatus === "partial" && (
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={paidAmount || ""}
-                  onChange={e => setPaidAmount(parseFloat(e.target.value) || 0)}
-                  className="h-9 text-sm mt-1"
-                  placeholder="Paid amount"
-                />
+                <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">Paid Amount</span>
+                    {grandTotal > 0 && (
+                      <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                        Remaining: ${Math.max(0, grandTotal - paidAmount).toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">$</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={paidAmount || ""}
+                      onChange={e => setPaidAmount(parseFloat(e.target.value) || 0)}
+                      className="h-9 text-sm pl-7 font-medium"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  {grandTotal > 0 && (
+                    <div className="space-y-1">
+                      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                        <div 
+                          className="h-full rounded-full bg-amber-500 transition-all duration-300"
+                          style={{ width: `${Math.min(100, (paidAmount / grandTotal) * 100)}%` }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground text-right">
+                        {((Math.min(paidAmount, grandTotal) / grandTotal) * 100).toFixed(0)}% paid
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
