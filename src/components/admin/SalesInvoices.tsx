@@ -26,6 +26,7 @@ import {
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
   paid:      { variant: "default",     label: "Paid" },
   pending:   { variant: "warning",     label: "Pending" },
+  partial:   { variant: "warning",     label: "Partial" },
   failed:    { variant: "destructive", label: "Failed" },
   expired:   { variant: "outline",     label: "Expired" },
   cancelled: { variant: "secondary",   label: "Cancelled" },
