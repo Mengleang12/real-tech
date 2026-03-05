@@ -381,6 +381,17 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                   <SelectItem value="unpaid">Unpaid</SelectItem>
                 </SelectContent>
               </Select>
+              {paymentStatus === "partial" && (
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={paidAmount || ""}
+                  onChange={e => setPaidAmount(parseFloat(e.target.value) || 0)}
+                  className="h-9 text-sm mt-1"
+                  placeholder="Paid amount"
+                />
+              )}
             </div>
 
             {/* Warranty Period */}
