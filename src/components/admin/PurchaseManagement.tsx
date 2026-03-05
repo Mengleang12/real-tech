@@ -959,6 +959,117 @@ const PurchaseDetailDialog = ({
             {purchase.completed_at && <span>Completed: {format(new Date(purchase.completed_at), 'MMM d, yyyy h:mm a')}</span>}
           </div>
         </TabsContent>
+
+        {/* ── Payments Tab ── */}
+        <TabsContent value="payments" className="space-y-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+            <div>
+              <Label>Amount *</Label>
+              <Input type="number" min="0" step="0.01" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="0.00" />
+            </div>
+            <div>
+              <Label>Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="bank">Bank Transfer</SelectItem>
+                  <SelectItem value="wing">Wing</SelectItem>
+                  <SelectItem value="aba">ABA</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Reference</Label>
+              <Input value={paymentRef} onChange={(e) => setPaymentRef(e.target.value)} placeholder="Ref #" />
+            </div>
+            <div>
+              <Label>Note</Label>
+              <Input value={paymentNote} onChange={(e) => setPaymentNote(e.target.value)} placeholder="Optional" />
+            </div>
+            <Button onClick={handleAddPayment} disabled={addingPayment}>
+              {addingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />} Add Payment
+            </Button>
+          </div>
+          {purchase.payments && purchase.payments.length > 0 ? (
+            <Table>
+              <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount</TableHead><TableHead>Method</TableHead><TableHead>Reference</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
+              <TableBody>
+                {purchase.payments.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="text-sm">{format(new Date(p.paid_at), 'MMM d, yyyy h:mm a')}</TableCell>
+                    <TableCell className="text-sm font-medium">${Number(p.amount).toFixed(2)}</TableCell>
+                    <TableCell className="text-sm capitalize">{p.method?.replace('_', ' ')}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{p.reference || '—'}</TableCell>
+                    <TableCell><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeletePayment(p.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">No payments recorded yet</p>
+          )}
+          <div className="flex justify-end gap-6 text-sm border-t border-border pt-3">
+            <span>Grand Total: <strong>${grandTotal.toFixed(2)}</strong></span>
+            <span>Paid: <strong className="text-green-600">${Number(purchase.paid_amount).toFixed(2)}</strong></span>
+            <span>Remaining: <strong className={remaining > 0 ? "text-destructive" : "text-green-600"}>${remaining.toFixed(2)}</strong></span>
+          </div>
+        </TabsContent>
+
+        {/* ── Expenses Tab ── */}
+        <TabsContent value="expenses" className="space-y-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+            <div>
+              <Label>Category *</Label>
+              <Select value={expenseCategory} onValueChange={setExpenseCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="delivery">Delivery</SelectItem>
+                  <SelectItem value="shipping">Shipping</SelectItem>
+                  <SelectItem value="tax">Tax</SelectItem>
+                  <SelectItem value="packaging">Packaging</SelectItem>
+                  <SelectItem value="customs">Customs</SelectItem>
+                  <SelectItem value="insurance">Insurance</SelectItem>
+                  <SelectItem value="handling">Handling</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Amount *</Label>
+              <Input type="number" min="0" step="0.01" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} placeholder="0.00" />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Input value={expenseDesc} onChange={(e) => setExpenseDesc(e.target.value)} placeholder="Optional note" />
+            </div>
+            <Button onClick={handleAddExpense} disabled={addingExpense}>
+              {addingExpense ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />} Add Expense
+            </Button>
+          </div>
+          {purchase.expenses && purchase.expenses.length > 0 ? (
+            <Table>
+              <TableHeader><TableRow><TableHead>Category</TableHead><TableHead>Description</TableHead><TableHead>Amount</TableHead><TableHead>Date</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
+              <TableBody>
+                {purchase.expenses.map((exp) => (
+                  <TableRow key={exp.id}>
+                    <TableCell className="text-sm capitalize">{exp.category}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{exp.description || '—'}</TableCell>
+                    <TableCell className="text-sm font-medium">${Number(exp.amount).toFixed(2)}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{format(new Date(exp.created_at), 'MMM d, yyyy h:mm a')}</TableCell>
+                    <TableCell><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteExpense(exp.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">No expenses recorded yet</p>
+          )}
+          <div className="flex justify-end text-sm border-t border-border pt-3">
+            <span>Total Expenses: <strong>${(purchase.expenses?.reduce((s, e) => s + Number(e.amount), 0) || 0).toFixed(2)}</strong></span>
+          </div>
+        </TabsContent>
       </Tabs>
     </AdminDialog>
 
