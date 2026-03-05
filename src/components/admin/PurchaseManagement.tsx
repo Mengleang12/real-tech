@@ -805,9 +805,16 @@ const PurchaseDetailDialog = ({
           </Table>
 
           {receiveMode && (
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-2 justify-end flex-wrap">
               <Button size="sm" variant="outline" onClick={() => setReceiveMode(false)} disabled={receivingItems}>
                 Cancel
+              </Button>
+              <Button size="sm" variant="outline" className="text-destructive" onClick={() => {
+                const qtys: Record<number, number> = {};
+                purchase.items.forEach((item) => { qtys[item.id] = 0; });
+                setReceivedQtys(qtys);
+              }}>
+                Reset All to 0
               </Button>
               <Button size="sm" variant="outline" onClick={() => {
                 const qtys: Record<number, number> = {};
