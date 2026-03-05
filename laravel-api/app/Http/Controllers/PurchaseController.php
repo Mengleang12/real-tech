@@ -694,4 +694,103 @@ class PurchaseController extends Controller
             'purchase' => $purchase->load(['items', 'payments', 'expenses']),
         ]);
     }
+
+    /**
+     * Delete a receive log entry and reverse its stock impact
+     */
+    public function deleteReceiveLog(Request $request, $id, $logId)
+    {
+        $purchase = Purchase::with('items')->find($id);
+        if (!$purchase) {
+            return response()->json(['error' => 'Purchase not found'], 404);
+        }
+
+        $log = PurchaseReceiveLog::where('id', $logId)
+            ->where('purchase_id', $id)
+            ->first();
+
+        if (!$log) {
+            return response()->json(['error' => 'Receive log not found'], 404);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $item = $purchase->items->firstWhere('id', $log->purchase_item_id);
+
+            if ($item) {
+                $delta = $log->quantity_received; // positive = was added, negative = was removed
+
+                // Reverse the stock change
+                if ($delta > 0) {
+                    // Was an addition, so remove stock
+                    if ($item->variant_id) {
+                        $variant = ProductVariant::find($item->variant_id);
+                        if ($variant) $variant->decrement('stock_quantity', $delta);
+                    } else {
+                        $product = Product::find($item->product_id);
+                        if ($product) {
+                            $product->decrement('stock_quantity', $delta);
+                            $product->refresh();
+                            $lowThreshold = $product->low_stock_threshold ?? 5;
+                            $product->update([
+                                'stock_status' => $product->stock_quantity <= 0 ? 'out_of_stock' : ($product->stock_quantity <= $lowThreshold ? 'low_stock' : 'in_stock'),
+                            ]);
+                        }
+                    }
+                } elseif ($delta < 0) {
+                    // Was a removal, so add stock back
+                    $absDelta = abs($delta);
+                    if ($item->variant_id) {
+                        $variant = ProductVariant::find($item->variant_id);
+                        if ($variant) $variant->increment('stock_quantity', $absDelta);
+                    } else {
+                        $product = Product::find($item->product_id);
+                        if ($product) {
+                            $product->increment('stock_quantity', $absDelta);
+                            $product->refresh();
+                            $lowThreshold = $product->low_stock_threshold ?? 5;
+                            $product->update([
+                                'stock_status' => $product->stock_quantity <= 0 ? 'out_of_stock' : ($product->stock_quantity <= $lowThreshold ? 'low_stock' : 'in_stock'),
+                            ]);
+                        }
+                    }
+                }
+
+                // Reverse the received_quantity on the item
+                $newReceived = max(0, ($item->received_quantity ?? 0) - $delta);
+                $item->update(['received_quantity' => $newReceived]);
+            }
+
+            $log->delete();
+
+            // Recalculate purchase status
+            $purchase->refresh();
+            $purchase->load('items');
+            $totalOrdered = $purchase->items->sum('quantity');
+            $totalReceived = $purchase->items->sum('received_quantity');
+
+            if ($totalReceived <= 0) {
+                $purchase->update(['status' => 'ordered']);
+            } elseif ($totalReceived >= $totalOrdered) {
+                $purchase->update(['status' => 'received']);
+            } else {
+                $purchase->update(['status' => 'partial']);
+            }
+
+            DB::commit();
+
+            $this->logActivity($request, 'purchase_receive_log_deleted', [
+                'details' => "Deleted receive log for PO {$purchase->reference_number} ({$log->product_name}: {$log->quantity_received})"
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'purchase' => $purchase->load(['items', 'payments', 'expenses', 'receiveLogs']),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to delete receive log: ' . $e->getMessage()], 500);
+        }
+    }
 }

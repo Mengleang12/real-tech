@@ -219,6 +219,7 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::delete('/admin/purchases/{id}/payments/{paymentId}', [PurchaseController::class, 'deletePayment']);
     Route::post('/admin/purchases/{id}/expenses', [PurchaseController::class, 'addExpense']);
     Route::delete('/admin/purchases/{id}/expenses/{expenseId}', [PurchaseController::class, 'deleteExpense']);
+    Route::delete('/admin/purchases/{id}/receive-logs/{logId}', [PurchaseController::class, 'deleteReceiveLog']);
 });
 
 // Protected user routes
