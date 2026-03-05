@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, ShoppingCart,
   FileText, Eye, Package, CheckCircle, Clock, Printer, Pencil,
-  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield
+  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield, CreditCard, Tag
 } from "lucide-react";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
@@ -400,6 +400,11 @@ const InvoicesTab = () => {
   const [editOrder, setEditOrder] = useState<AdminOrder | null>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
   const [markPaidOrderId, setMarkPaidOrderId] = useState<string | null>(null);
+  const [paymentOrder, setPaymentOrder] = useState<AdminOrder | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentNote, setPaymentNote] = useState("");
 
   // Debounce search
   useEffect(() => {
@@ -431,6 +436,44 @@ const InvoicesTab = () => {
     },
     onError: () => toast.error("Failed to update status"),
   });
+
+  const addPaymentMutation = useMutation({
+    mutationFn: ({ orderId, data }: { orderId: string; data: { amount: number; method: string; reference?: string; note?: string } }) =>
+      adminUsersApi.addPayment(orderId, data),
+    onSuccess: () => {
+      toast.success("Payment recorded");
+      queryClient.invalidateQueries({ queryKey: ["admin-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-sales-dashboard"] });
+      setPaymentOrder(null);
+      setPaymentAmount("");
+      setPaymentMethod("cash");
+      setPaymentReference("");
+      setPaymentNote("");
+    },
+    onError: () => toast.error("Failed to record payment"),
+  });
+
+  const handlePrintCustomerLabel = (order: AdminOrder) => {
+    const w = window.open("", "_blank", "width=400,height=300");
+    if (!w) return;
+    w.document.write(`<!DOCTYPE html><html><head><title>Customer Label</title>
+    <style>
+      @page { size: 80mm 50mm; margin: 0; }
+      body { font-family: -apple-system, sans-serif; padding: 8mm; margin: 0; }
+      .name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+      .info { font-size: 11px; color: #555; line-height: 1.6; }
+      .inv { font-size: 10px; color: #888; margin-top: 6px; border-top: 1px dashed #ccc; padding-top: 4px; }
+    </style></head><body>
+      <div class="name">${order.user?.full_name || "Walk-in Customer"}</div>
+      <div class="info">
+        ${order.user?.phone ? `<div>📞 ${order.user.phone}</div>` : ''}
+        ${order.user?.email ? `<div>✉ ${order.user.email}</div>` : ''}
+      </div>
+      <div class="inv">INV #${order.id.slice(0, 8).toUpperCase()} — ${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}</div>
+    </body></html>`);
+    w.document.close();
+    setTimeout(() => { w.print(); }, 300);
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-invoices", statusFilter, currentPage, debouncedSearch],
@@ -792,6 +835,10 @@ const InvoicesTab = () => {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => setSelectedOrder(order)} className="cursor-pointer"><Eye className="w-3.5 h-3.5 mr-2" /> View</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setEditOrder(order)} className="cursor-pointer"><Pencil className="w-3.5 h-3.5 mr-2" /> Edit</DropdownMenuItem>
+                              {order.status !== 'paid' && order.status !== 'cancelled' && (
+                                <DropdownMenuItem onClick={() => setPaymentOrder(order)} className="cursor-pointer"><CreditCard className="w-3.5 h-3.5 mr-2" /> Add Payment</DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => handlePrintCustomerLabel(order)} className="cursor-pointer"><Tag className="w-3.5 h-3.5 mr-2" /> Print Label</DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer" onClick={() => setDeleteOrderId(order.id)}><Trash2 className="w-3.5 h-3.5 mr-2" /> Delete</DropdownMenuItem>
                             </DropdownMenuContent>
@@ -1015,6 +1062,77 @@ const InvoicesTab = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add Payment Dialog */}
+      <Dialog open={!!paymentOrder} onOpenChange={(open) => { if (!open) { setPaymentOrder(null); setPaymentAmount(""); setPaymentMethod("cash"); setPaymentReference(""); setPaymentNote(""); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-primary" />
+              Add Payment
+            </DialogTitle>
+          </DialogHeader>
+          {paymentOrder && (() => {
+            const totalAmount = typeof paymentOrder.amount === "string" ? parseFloat(paymentOrder.amount as string) : paymentOrder.amount;
+            const totalPaid = (paymentOrder.payments || []).reduce((s: number, p: any) => s + (typeof p.amount === "string" ? parseFloat(p.amount) : p.amount), 0);
+            const remaining = totalAmount - totalPaid;
+            return (
+              <div className="space-y-4">
+                <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Total</span><span className="font-semibold">${totalAmount.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Paid</span><span className="font-semibold">${totalPaid.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm font-bold"><span>Remaining</span><span className="text-destructive">${remaining.toFixed(2)}</span></div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Amount *</label>
+                  <Input type="number" step="0.01" min="0.01" max={remaining} value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder={`Max: ${remaining.toFixed(2)}`} className="mt-1" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Method</label>
+                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="aba">ABA</SelectItem>
+                      <SelectItem value="acleda">ACLEDA</SelectItem>
+                      <SelectItem value="khqr">KHQR</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Reference (optional)</label>
+                  <Input value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} placeholder="Transaction ID..." className="mt-1" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Note (optional)</label>
+                  <Input value={paymentNote} onChange={(e) => setPaymentNote(e.target.value)} placeholder="Note..." className="mt-1" />
+                </div>
+                <Button
+                  className="w-full gap-2"
+                  disabled={!paymentAmount || parseFloat(paymentAmount) <= 0 || addPaymentMutation.isPending}
+                  onClick={() => {
+                    if (!paymentOrder) return;
+                    addPaymentMutation.mutate({
+                      orderId: paymentOrder.id,
+                      data: {
+                        amount: parseFloat(paymentAmount),
+                        method: paymentMethod,
+                        ...(paymentReference && { reference: paymentReference }),
+                        ...(paymentNote && { note: paymentNote }),
+                      },
+                    });
+                  }}
+                >
+                  {addPaymentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                  Record Payment
+                </Button>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
