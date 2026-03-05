@@ -451,6 +451,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                   </p>
                 </div>
               )}
+            </div>
           )}
 
           {/* ─── Customer Section ─── */}
