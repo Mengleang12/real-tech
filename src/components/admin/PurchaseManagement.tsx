@@ -518,6 +518,8 @@ const PurchaseDetailDialog = ({
   const [receivedQtys, setReceivedQtys] = useState<Record<number, number>>({});
   const [receivingItems, setReceivingItems] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
+  const [stockReversalConfirmOpen, setStockReversalConfirmOpen] = useState(false);
+  const [reversalDetails, setReversalDetails] = useState<{ product_name: string; delta: number }[]>([]);
 
   // Auto-fetch full purchase details on open (list data is incomplete)
   useEffect(() => {
