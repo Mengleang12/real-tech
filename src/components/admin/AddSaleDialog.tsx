@@ -636,6 +636,24 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                 </div>
               </div>
 
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Delivery Fee</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={deliveryFee || ""}
+                    onChange={e => setDeliveryFee(parseFloat(e.target.value) || 0)}
+                    className="h-8 text-sm w-24"
+                    placeholder="0"
+                  />
+                  {deliveryFee > 0 && (
+                    <span className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold">+${deliveryFee.toFixed(2)}</span>
+                  )}
+                </div>
+              </div>
+
               <Separator />
 
               <div className="flex items-center justify-between">
