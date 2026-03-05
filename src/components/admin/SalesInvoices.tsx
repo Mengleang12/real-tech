@@ -583,6 +583,13 @@ const InvoicesTab = () => {
           ${saleDiscountAmount > 0 ? `<div class="summary-row discount"><span>Sale Discount</span><span>-$${saleDiscountAmount.toFixed(2)}</span></div>` : ''}
           ${order.delivery_fee && parseFloat(order.delivery_fee) > 0 ? `<div class="summary-row"><span>Delivery Fee</span><span>+$${parseFloat(order.delivery_fee).toFixed(2)}</span></div>` : ''}
           <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
+          ${(() => {
+            const totalPaid = (order.payments || []).reduce((s: number, p: any) => s + (typeof p.amount === "string" ? parseFloat(p.amount) : p.amount), 0);
+            const remaining = amount - totalPaid;
+            if (totalPaid <= 0) return '';
+            return `<div class="summary-row" style="color:#059669"><span>Paid</span><span>$${totalPaid.toFixed(2)}</span></div>` +
+              (remaining > 0.005 ? `<div class="summary-row" style="color:#dc2626"><span>Remaining</span><span>$${remaining.toFixed(2)}</span></div>` : '');
+          })()}
         </div>
       </div>
 
@@ -901,6 +908,31 @@ const InvoicesTab = () => {
                       <span className="text-xs font-medium text-background/50 dark:text-muted-foreground ml-1.5">{selectedOrder.currency}</span>
                     </div>
                   </div>
+                  {/* Paid / Remaining */}
+                  {(() => {
+                    const totalPaid = (selectedOrder.payments || []).reduce((s: number, p: any) => s + (typeof p.amount === "string" ? parseFloat(p.amount) : p.amount), 0);
+                    const remaining = amount - totalPaid;
+                    if (totalPaid <= 0) return null;
+                    return (
+                      <div className="flex items-center justify-between px-4 py-2.5 bg-muted/50">
+                        <div className="flex items-center gap-4">
+                          <div>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Paid</span>
+                            <p className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">${totalPaid.toFixed(2)}</p>
+                          </div>
+                          {remaining > 0.005 && (
+                            <div>
+                              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Remaining</span>
+                              <p className="text-sm font-bold tabular-nums text-destructive">${remaining.toFixed(2)}</p>
+                            </div>
+                          )}
+                        </div>
+                        <Badge className={`text-[10px] px-2 py-0.5 ${remaining > 0.005 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"}`}>
+                          {remaining > 0.005 ? "Partial" : "Fully Paid"}
+                        </Badge>
+                      </div>
+                    );
+                  })()}
                 </div>
                 {selectedOrder.warranty_period && (() => {
                   const ws = getWarrantyStatus(selectedOrder.warranty_period, selectedOrder.created_at);
