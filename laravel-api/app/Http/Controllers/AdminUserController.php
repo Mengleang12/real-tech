@@ -250,7 +250,7 @@ class AdminUserController extends Controller
 
     public function allOrders(Request $request)
     {
-        $query = Sale::with(['user:id,email,full_name,phone', 'items']);
+        $query = Sale::with(['user:id,email,full_name,phone', 'items', 'payments']);
         
         if ($request->status) {
             $query->where('status', $request->status);
