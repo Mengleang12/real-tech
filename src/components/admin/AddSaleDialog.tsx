@@ -656,6 +656,16 @@ const WarrantySelect = ({ value, onChange }: { value: string; onChange: (v: stri
 
   const warranties = data?.warranties || [];
 
+  // Auto-select default warranty when data loads and no value is set
+  useEffect(() => {
+    if (!value && warranties.length > 0) {
+      const defaultWarranty = warranties.find((w) => w.is_default);
+      if (defaultWarranty) {
+        onChange(defaultWarranty.name);
+      }
+    }
+  }, [warranties, value, onChange]);
+
   return (
     <Select value={value || "__none__"} onValueChange={(v) => onChange(v === "__none__" ? "" : v)}>
       <SelectTrigger className="h-9 text-sm">
