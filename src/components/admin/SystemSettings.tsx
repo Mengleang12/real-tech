@@ -179,6 +179,7 @@ export function SystemSettingsPanel() {
           instagram_url: settings.instagram_url,
           enable_analytics: settings.enable_analytics,
           invoice_footer_text: settings.invoice_footer_text,
+          payment_qr_urls: settings.payment_qr_urls,
         }),
       });
       if (!res.ok) {
