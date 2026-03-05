@@ -974,6 +974,7 @@ export interface CreateSalePayload {
   sale_discount_type?: 'amount' | 'percent';
   delivery_fee?: number;
   paid_amount?: number;
+  paid_method?: string;
   notes?: string;
   warranty_period?: string;
   sale_date?: string;

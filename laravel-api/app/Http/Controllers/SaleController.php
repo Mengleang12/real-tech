@@ -44,6 +44,7 @@ class SaleController extends Controller
             'warranty_period' => 'nullable|string|max:100',
             'delivery_fee' => 'nullable|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
+            'paid_method' => 'nullable|string|max:50',
             'sale_date' => 'nullable|date',
         ]);
 
@@ -227,7 +228,7 @@ class SaleController extends Controller
                     SalePayment::create([
                         'sale_id' => $sale->id,
                         'amount' => round($paidAmount, 2),
-                        'method' => 'cash',
+                        'method' => $request->paid_method ?? 'cash',
                         'note' => 'Initial partial payment',
                         'paid_at' => now(),
                     ]);

@@ -55,6 +55,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   // Payment
   const [paymentStatus, setPaymentStatus] = useState<"paid" | "pending" | "partial" | "unpaid">("pending");
   const [paidAmount, setPaidAmount] = useState<number>(0);
+  const [paidMethod, setPaidMethod] = useState<string>("cash");
   const [saleDate, setSaleDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
   const [warrantyPeriod, setWarrantyPeriod] = useState("");
@@ -316,6 +317,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
       })),
       payment_status: paymentStatus,
       paid_amount: paymentStatus === "partial" && paidAmount > 0 ? paidAmount : undefined,
+      paid_method: paymentStatus === "partial" && paidAmount > 0 ? paidMethod : undefined,
       sale_discount: saleDiscount > 0 ? saleDiscount : undefined,
       sale_discount_type: saleDiscount > 0 ? saleDiscountType : undefined,
       notes: notes || undefined,
@@ -392,17 +394,33 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                       </span>
                     )}
                   </div>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">$</span>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={paidAmount || ""}
-                      onChange={e => setPaidAmount(parseFloat(e.target.value) || 0)}
-                      className="h-9 text-sm pl-7 font-medium"
-                      placeholder="0.00"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">$</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={paidAmount || ""}
+                        onChange={e => setPaidAmount(parseFloat(e.target.value) || 0)}
+                        className="h-9 text-sm pl-7 font-medium"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <Select value={paidMethod} onValueChange={setPaidMethod}>
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="aba">ABA</SelectItem>
+                        <SelectItem value="acleda">ACLEDA</SelectItem>
+                        <SelectItem value="wing">Wing</SelectItem>
+                        <SelectItem value="bakong">Bakong</SelectItem>
+                        <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   {grandTotal > 0 && (
                     <div className="space-y-1">
