@@ -282,7 +282,7 @@ export const SliderManagement = () => {
           </div>
 
           {/* Active */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-4">
             <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
             <Label>Active</Label>
           </div>
