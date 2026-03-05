@@ -30,6 +30,7 @@ interface SystemSettings {
   instagram_url: string;
   enable_analytics: boolean;
   invoice_footer_text: string;
+  payment_qr_urls: string[];
 }
 
 function hexToHsl(hex: string): string {
@@ -79,6 +80,7 @@ const defaultSettings: SystemSettings = {
   instagram_url: '',
   enable_analytics: true,
   invoice_footer_text: 'Thank you for your business!',
+  payment_qr_urls: [],
 };
 
 function getAuthHeaders(): Record<string, string> {
@@ -97,7 +99,9 @@ export function SystemSettingsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingQr, setUploadingQr] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const qrInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchSettings();
