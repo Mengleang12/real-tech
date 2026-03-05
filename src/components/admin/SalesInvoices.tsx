@@ -836,7 +836,7 @@ const InvoicesTab = () => {
                               <DropdownMenuItem onClick={() => setSelectedOrder(order)} className="cursor-pointer"><Eye className="w-3.5 h-3.5 mr-2" /> View</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setEditOrder(order)} className="cursor-pointer"><Pencil className="w-3.5 h-3.5 mr-2" /> Edit</DropdownMenuItem>
                               {order.status !== 'paid' && order.status !== 'cancelled' && (
-                                <DropdownMenuItem onClick={() => setPaymentOrder(order)} className="cursor-pointer"><CreditCard className="w-3.5 h-3.5 mr-2" /> Add Payment</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { const totalAmt = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount; const paid = (order.payments || []).reduce((s: number, p: any) => s + (typeof p.amount === "string" ? parseFloat(p.amount) : p.amount), 0); setPaymentAmount(Math.max(0, totalAmt - paid).toFixed(2)); setPaymentOrder(order); }} className="cursor-pointer"><CreditCard className="w-3.5 h-3.5 mr-2" /> Add Payment</DropdownMenuItem>
                               )}
                               <DropdownMenuItem onClick={() => handlePrintCustomerLabel(order)} className="cursor-pointer"><Tag className="w-3.5 h-3.5 mr-2" /> Print Label</DropdownMenuItem>
                               <DropdownMenuSeparator />
