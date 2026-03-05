@@ -34,7 +34,7 @@ export const CategoryChips = ({ categories, activeCategory, onCategoryChange }: 
   ];
 
   return (
-    <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border/40">
+    <div className="my-4">
       <div
         ref={scrollRef}
         className="flex items-center gap-2 px-4 py-2.5 overflow-x-auto scrollbar-hide"
