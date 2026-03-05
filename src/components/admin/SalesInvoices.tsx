@@ -550,7 +550,7 @@ const InvoicesTab = () => {
           <div class="inv-title">Invoice</div>
           <div class="inv-number">#${order.id.slice(0, 8).toUpperCase()}</div>
           <div class="inv-barcode"><svg id="inv-barcode"></svg></div>
-          <div class="inv-date">${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</div>
+          
         </div>
       </div>
 
