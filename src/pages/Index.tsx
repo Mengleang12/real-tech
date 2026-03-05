@@ -122,17 +122,18 @@ const Index = () => {
           />
         </div>
 
-        {/* Category Chips Bar */}
-        {!searchQuery && activeCategories.length > 0 && (
-          <CategoryChips
-            categories={activeCategories}
-            activeCategory={activeCategory}
-            onCategoryChange={handleCategoryChange}
-          />
-        )}
-
         <div className="px-4 sm:px-6 lg:px-8 pb-12 flex-1">
           {!searchQuery && activeCategory === "all" && <HeroSlider />}
+
+          {/* Category Chips Bar - under slider */}
+          {!searchQuery && activeCategories.length > 0 && (
+            <CategoryChips
+              categories={activeCategories}
+              activeCategory={activeCategory}
+              onCategoryChange={handleCategoryChange}
+            />
+          )}
+
           <PageTransition transitionKey={`${activeCategory}-${searchQuery}`}>
             {renderContent()}
           </PageTransition>
