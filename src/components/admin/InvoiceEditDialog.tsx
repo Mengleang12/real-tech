@@ -174,6 +174,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
   // Sale-level discount
   const [saleDiscount, setSaleDiscount] = useState(order.sale_discount ? parseFloat(order.sale_discount) : 0);
   const [saleDiscountType, setSaleDiscountType] = useState<"amount" | "percent">((order.sale_discount_type as "amount" | "percent") || "amount");
+  const [deliveryFee, setDeliveryFee] = useState(order.delivery_fee ? parseFloat(order.delivery_fee) : 0);
 
   // Product search
   const [productSearch, setProductSearch] = useState("");
@@ -188,6 +189,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
     setCart(buildCartFromOrder(order));
     setSaleDiscount(order.sale_discount ? parseFloat(order.sale_discount) : 0);
     setSaleDiscountType((order.sale_discount_type as "amount" | "percent") || "amount");
+    setDeliveryFee(order.delivery_fee ? parseFloat(order.delivery_fee) : 0);
   }, [order]);
 
   // Calculations
@@ -195,7 +197,7 @@ const EditTab = ({ order, onClose }: { order: AdminOrder; onClose: () => void })
   const saleDiscountAmount = saleDiscountType === "percent"
     ? subtotal * Math.min(saleDiscount, 100) / 100
     : Math.min(saleDiscount, subtotal);
-  const grandTotal = Math.max(0, subtotal - saleDiscountAmount);
+  const grandTotal = Math.max(0, subtotal - saleDiscountAmount) + deliveryFee;
 
   // Search products
   const handleSearchProducts = useCallback(async (q: string) => {
