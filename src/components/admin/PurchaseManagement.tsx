@@ -544,7 +544,7 @@ const PurchaseDetailDialog = ({
     setReceiveMode(true);
   };
 
-  const handleReceiveItems = async () => {
+  const executeReceiveItems = async () => {
     setReceivingItems(true);
     try {
       const items = purchase.items.map((item) => ({
@@ -559,6 +559,28 @@ const PurchaseDetailDialog = ({
       toast.error(e.message || "Failed to receive items");
     }
     setReceivingItems(false);
+  };
+
+  const handleReceiveItems = () => {
+    // Check if any items have reduced quantities (stock reversal)
+    const reductions: { product_name: string; delta: number }[] = [];
+    purchase.items.forEach((item) => {
+      const oldQty = item.received_quantity || 0;
+      const newQty = receivedQtys[item.id] ?? oldQty;
+      if (newQty < oldQty) {
+        reductions.push({
+          product_name: item.product_name + (item.variant_label ? ` (${item.variant_label})` : ''),
+          delta: oldQty - newQty,
+        });
+      }
+    });
+
+    if (reductions.length > 0) {
+      setReversalDetails(reductions);
+      setStockReversalConfirmOpen(true);
+    } else {
+      executeReceiveItems();
+    }
   };
 
   const handleStatusChange = async (newStatus: string) => {
