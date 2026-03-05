@@ -55,6 +55,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   // Payment
   const [paymentStatus, setPaymentStatus] = useState<"paid" | "pending" | "partial" | "unpaid">("pending");
   const [paidAmount, setPaidAmount] = useState<number>(0);
+  const [paidMethod, setPaidMethod] = useState<string>("cash");
   const [saleDate, setSaleDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
   const [warrantyPeriod, setWarrantyPeriod] = useState("");
