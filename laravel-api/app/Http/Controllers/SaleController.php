@@ -228,7 +228,7 @@ class SaleController extends Controller
                     SalePayment::create([
                         'sale_id' => $sale->id,
                         'amount' => round($paidAmount, 2),
-                        'method' => 'cash',
+                        'method' => $request->paid_method ?? 'cash',
                         'note' => 'Initial partial payment',
                         'paid_at' => now(),
                     ]);
