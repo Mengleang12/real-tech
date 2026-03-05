@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Plus, Minus, Search, Trash2, X, Save, Loader2, Package, DollarSign,
   ChevronLeft, ChevronRight, MoreHorizontal, Truck, CheckCircle2,
-  ClipboardList, Ban, FileText, CreditCard, Calendar, ScanBarcode
+  ClipboardList, Ban, FileText, CreditCard, Calendar, ScanBarcode,
+  PackageCheck, PackageX, RotateCcw, ArrowDownToLine
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
