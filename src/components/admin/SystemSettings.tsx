@@ -130,8 +130,8 @@ export function SystemSettingsPanel() {
     }
   };
 
-  const update = (key: keyof SystemSettings, value: string | number | boolean) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+  const update = (key: keyof SystemSettings, value: string | number | boolean | string[]) => {
+    setSettings(prev => ({ ...prev, [key]: value } as SystemSettings));
   };
 
   const toggleAndSave = async (key: keyof SystemSettings, value: boolean) => {
