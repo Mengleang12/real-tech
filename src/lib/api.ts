@@ -392,6 +392,7 @@ export interface AdminOrder {
   item_discount_type?: string;
   sale_discount?: string;
   sale_discount_type?: string;
+  delivery_fee?: string;
   currency: string;
   status: 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
   bakong_transaction_id?: string;
@@ -971,6 +972,7 @@ export interface CreateSalePayload {
   payment_status: 'paid' | 'pending' | 'partial' | 'unpaid';
   sale_discount?: number;
   sale_discount_type?: 'amount' | 'percent';
+  delivery_fee?: number;
   notes?: string;
   warranty_period?: string;
   sale_date?: string;
