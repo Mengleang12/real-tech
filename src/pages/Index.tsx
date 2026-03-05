@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { HeroSlider } from "@/components/HeroSlider";
 import { PopularApps } from "@/components/PopularApps";
 import { CategoryProductSection } from "@/components/CategoryProductSection";
+import { CategoryChips } from "@/components/CategoryChips";
 import { PageTransition } from "@/components/PageTransition";
 import { FloatingCartButton } from "@/components/FloatingCartButton";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
@@ -23,6 +24,23 @@ const Index = () => {
   const activeCategories = (categories || [])
     .filter(c => c.is_active)
     .sort((a, b) => a.sort_order - b.sort_order);
+
+  const handleCategoryChange = useCallback((slug: string) => {
+    setActiveCategory(slug);
+    setSidebarOpen(false);
+
+    // If "all" view and selecting a specific category, scroll to that section
+    if (slug !== "all") {
+      setTimeout(() => {
+        const el = document.getElementById(`category-${slug}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, []);
 
   const renderContent = () => {
     // When searching, show all categories
@@ -88,26 +106,37 @@ const Index = () => {
       {/* Sidebar */}
       <Sidebar 
         activeCategory={activeCategory} 
-        onCategoryChange={(category) => {
-          setActiveCategory(category);
-          setSidebarOpen(false);
-        }}
+        onCategoryChange={handleCategoryChange}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 pb-12">
-        <Header 
-          searchQuery={searchQuery} 
-          onSearchChange={setSearchQuery}
-          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-          isSidebarOpen={sidebarOpen}
-        />
-        {!searchQuery && activeCategory === "all" && <HeroSlider />}
-        <PageTransition transitionKey={`${activeCategory}-${searchQuery}`}>
-          {renderContent()}
-        </PageTransition>
+      <main className="flex-1 min-w-0 flex flex-col">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <Header 
+            searchQuery={searchQuery} 
+            onSearchChange={setSearchQuery}
+            onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+            isSidebarOpen={sidebarOpen}
+          />
+        </div>
+
+        {/* Category Chips Bar */}
+        {!searchQuery && activeCategories.length > 0 && (
+          <CategoryChips
+            categories={activeCategories}
+            activeCategory={activeCategory}
+            onCategoryChange={handleCategoryChange}
+          />
+        )}
+
+        <div className="px-4 sm:px-6 lg:px-8 pb-12 flex-1">
+          {!searchQuery && activeCategory === "all" && <HeroSlider />}
+          <PageTransition transitionKey={`${activeCategory}-${searchQuery}`}>
+            {renderContent()}
+          </PageTransition>
+        </div>
       </main>
 
       {/* Floating Cart Button */}

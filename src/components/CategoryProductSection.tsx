@@ -57,7 +57,7 @@ export const CategoryProductSection = ({ category, searchQuery = "", limit = 10 
   const displayName = language === 'km' && category.name_km ? category.name_km : category.name;
 
   return (
-    <section className="mb-10">
+    <section id={`category-${category.slug}`} className="mb-10 scroll-mt-20">
       <div className="flex items-center gap-2.5 mb-6">
         {category.icon_url && (
           <img src={category.icon_url} alt="" className="w-6 h-6 rounded object-contain" />
