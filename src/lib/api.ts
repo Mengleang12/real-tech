@@ -1230,3 +1230,51 @@ export const warrantyApi = {
     return apiRequest(`admin/warranties/${id}`, { method: 'DELETE' });
   },
 };
+
+// Slider Types
+export interface Slider {
+  id: number;
+  title?: string;
+  title_km?: string;
+  subtitle?: string;
+  subtitle_km?: string;
+  badge?: string;
+  badge_km?: string;
+  image_url: string;
+  link_url?: string;
+  accent_color: string;
+  gradient: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Sliders API
+export const slidersApi = {
+  // Public
+  getActive: async (): Promise<{ sliders: Slider[] }> => {
+    return apiRequest('sliders', { requiresAuth: false });
+  },
+
+  // Admin
+  getAll: async (): Promise<{ sliders: Slider[] }> => {
+    return apiRequest('admin/sliders');
+  },
+
+  create: async (data: Partial<Slider>): Promise<{ success: boolean; slider: Slider }> => {
+    return apiRequest('admin/sliders', { method: 'POST', body: data });
+  },
+
+  update: async (id: number, data: Partial<Slider>): Promise<{ success: boolean; slider: Slider }> => {
+    return apiRequest(`admin/sliders/${id}`, { method: 'PUT', body: data });
+  },
+
+  delete: async (id: number): Promise<{ success: boolean }> => {
+    return apiRequest(`admin/sliders/${id}`, { method: 'DELETE' });
+  },
+
+  reorder: async (order: number[]): Promise<{ success: boolean }> => {
+    return apiRequest('admin/sliders/reorder', { method: 'POST', body: { order } });
+  },
+};
