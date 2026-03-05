@@ -94,7 +94,7 @@ class SaleController extends Controller
 
             $saleStatus = match ($request->payment_status) {
                 'paid' => 'paid',
-                'partial' => 'partial',
+                'partial' => 'pending',
                 'unpaid' => 'pending',
                 default => 'pending',
             };
