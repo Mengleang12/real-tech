@@ -1197,6 +1197,10 @@ export const purchasesApi = {
   deleteExpense: async (id: string, expenseId: number): Promise<{ success: boolean; purchase: Purchase }> => {
     return apiRequest(`admin/purchases/${id}/expenses/${expenseId}`, { method: 'DELETE' });
   },
+
+  deleteReceiveLog: async (id: string, logId: number): Promise<{ success: boolean; purchase: Purchase }> => {
+    return apiRequest(`admin/purchases/${id}/receive-logs/${logId}`, { method: 'DELETE' });
+  },
 };
 
 // ─── Warranty Types & API ──────────────────────────────────────────────────────

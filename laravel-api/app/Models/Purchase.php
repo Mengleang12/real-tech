@@ -87,4 +87,8 @@ class Purchase extends Model
         return $this->hasMany(PurchaseExpense::class);
     }
 
+    public function receiveLogs(): HasMany
+    {
+        return $this->hasMany(PurchaseReceiveLog::class)->orderBy('received_at', 'desc');
+    }
 }
