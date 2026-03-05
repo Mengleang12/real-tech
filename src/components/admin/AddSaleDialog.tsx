@@ -475,10 +475,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
             </div>
 
             {customerType === "walkin" && (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">Walk-in customer — no account created</p>
-                <Input placeholder="Address" value={newCustomerAddress} onChange={e => setNewCustomerAddress(e.target.value)} className="h-9 text-sm" />
-              </div>
+              <p className="text-xs text-muted-foreground">Walk-in customer — no account created</p>
             )}
 
             {customerType === "existing" && (
