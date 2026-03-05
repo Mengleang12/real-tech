@@ -27,7 +27,11 @@ class SystemSettingController extends Controller
         'instagram_url',
         'enable_analytics',
         'invoice_footer_text',
+        'payment_qr_urls',
     ];
+
+    // Keys that store JSON arrays
+    private const JSON_KEYS = ['payment_qr_urls'];
 
     /**
      * Get system settings (only public keys).
@@ -46,8 +50,15 @@ class SystemSettingController extends Controller
         $typed = [];
         foreach (self::PUBLIC_KEYS as $key) {
             $value = $allSettings[$key] ?? null;
-            if ($value === null) continue;
-            if ($value === 'true') {
+            if ($value === null) {
+                if (in_array($key, self::JSON_KEYS)) {
+                    $typed[$key] = [];
+                }
+                continue;
+            }
+            if (in_array($key, self::JSON_KEYS)) {
+                $typed[$key] = json_decode($value, true) ?: [];
+            } elseif ($value === 'true') {
                 $typed[$key] = true;
             } elseif ($value === 'false') {
                 $typed[$key] = false;
@@ -82,6 +93,7 @@ class SystemSettingController extends Controller
      */
     public function branding()
     {
+        $qrRaw = SystemSetting::getValue('payment_qr_urls', '[]');
         return response()->json([
             'site_name' => SystemSetting::getValue('site_name', 'Realtech Computer'),
             'site_tagline' => SystemSetting::getValue('site_tagline', ''),
@@ -92,6 +104,7 @@ class SystemSettingController extends Controller
             'primary_color' => SystemSetting::getValue('primary_color', '#2563eb'),
             'invoice_footer_text' => SystemSetting::getValue('invoice_footer_text', 'Thank you for your purchase!'),
             'default_currency' => SystemSetting::getValue('default_currency', 'USD'),
+            'payment_qr_urls' => json_decode($qrRaw, true) ?: [],
         ]);
     }
 
@@ -107,10 +120,12 @@ class SystemSettingController extends Controller
 
         $settings = $request->only(self::PUBLIC_KEYS);
 
-        // Convert booleans to string
+        // Convert booleans and arrays to string
         foreach ($settings as $key => $value) {
             if (is_bool($value)) {
                 $settings[$key] = $value ? 'true' : 'false';
+            } elseif (is_array($value)) {
+                $settings[$key] = json_encode($value);
             }
         }
 
