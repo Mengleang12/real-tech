@@ -118,6 +118,7 @@ export const ProductCard = (props: ProductCardProps) => {
     <article
       className={`group relative rounded-2xl bg-card border border-border/40 overflow-hidden transition-all duration-300 ease-out hover:shadow-[0_8px_30px_-8px_hsl(var(--foreground)/0.1)] ${props.app ? "cursor-pointer" : ""} ${outOfStock ? 'opacity-75' : ''}`}
       onClick={handleClick}
+      onMouseEnter={handlePrefetch}
       itemScope
       itemType="https://schema.org/Product"
     >
