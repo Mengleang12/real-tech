@@ -88,19 +88,21 @@ function AppRoutes() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/admin" element={<Admin />} />
-      <Route path="/my-purchases" element={<MyPurchases />} />
-      <Route path="/payment-history" element={<PaymentHistory />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/wishlist" element={<Wishlist />} />
-      <Route path="/checkout" element={<Checkout />} />
-      <Route path="/install" element={<Install />} />
-      <Route path="/:id" element={<ProductDetail />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/my-purchases" element={<MyPurchases />} />
+        <Route path="/payment-history" element={<PaymentHistory />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/install" element={<Install />} />
+        <Route path="/:id" element={<ProductDetail />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }
 
