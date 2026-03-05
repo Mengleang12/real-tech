@@ -597,8 +597,10 @@ const InvoicesTab = () => {
 
       ${order.warranty_period ? (() => {
         const matchedWarranty = warrantiesList.find((w: any) => w.name === order.warranty_period);
+        const durationDays = matchedWarranty?.duration_days || 0;
+        const durationLabel = durationDays >= 365 ? (durationDays / 365) + ' Year' + (durationDays >= 730 ? 's' : '') : durationDays + ' Day' + (durationDays !== 1 ? 's' : '');
         const policyText = matchedWarranty?.policy ? matchedWarranty.policy.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
-        return policyText ? `<div class="warranty-box"><div class="wlabel">Warranty</div><p style="margin-top:2px;line-height:1.4">${policyText}</p></div>` : '';
+        return `<div class="warranty-box"><div class="wlabel">Warranty — ${matchedWarranty ? durationLabel : order.warranty_period}</div>${policyText ? `<p style="margin-top:2px;line-height:1.4">${policyText}</p>` : ''}</div>`;
       })() : ''}
 
       ${order.notes ? `<div class="note-box"><div class="nlabel">Note</div><p>${order.notes}</p></div>` : ''}
@@ -934,12 +936,13 @@ const InvoicesTab = () => {
                 </div>
                 {selectedOrder.warranty_period && (() => {
                   const matchedWarranty = warrantiesList.find(w => w.name === selectedOrder.warranty_period);
+                  const durationDays = matchedWarranty?.duration_days || 0;
+                  const durationLabel = durationDays >= 365 ? (durationDays / 365) + ' Year' + (durationDays >= 730 ? 's' : '') : durationDays + ' Day' + (durationDays !== 1 ? 's' : '');
                   const policyText = matchedWarranty?.policy ? matchedWarranty.policy.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
-                  if (!policyText) return null;
                   return (
                     <div className="rounded-lg bg-muted/30 p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1"><Shield className="w-3 h-3" /> Warranty</p>
-                      <p className="text-xs text-foreground leading-relaxed">{policyText}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1"><Shield className="w-3 h-3" /> Warranty — {matchedWarranty ? durationLabel : selectedOrder.warranty_period}</p>
+                      {policyText && <p className="text-xs text-foreground leading-relaxed">{policyText}</p>}
                     </div>
                   );
                 })()}
