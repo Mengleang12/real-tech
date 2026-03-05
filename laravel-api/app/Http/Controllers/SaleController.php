@@ -212,16 +212,26 @@ class SaleController extends Controller
                 ]);
             }
 
-            // Create initial payment record for partial payments
-            $paidAmount = $request->paid_amount ?? 0;
-            if ($paidAmount > 0 && in_array($request->payment_status, ['partial', 'paid'])) {
+            // Create initial payment record
+            if ($request->payment_status === 'paid') {
                 SalePayment::create([
                     'sale_id' => $sale->id,
-                    'amount' => round($paidAmount, 2),
+                    'amount' => round($totalAmount, 2),
                     'method' => 'cash',
-                    'note' => 'Initial payment',
+                    'note' => 'Full payment',
                     'paid_at' => now(),
                 ]);
+            } elseif ($request->payment_status === 'partial') {
+                $paidAmount = $request->paid_amount ?? 0;
+                if ($paidAmount > 0) {
+                    SalePayment::create([
+                        'sale_id' => $sale->id,
+                        'amount' => round($paidAmount, 2),
+                        'method' => 'cash',
+                        'note' => 'Initial partial payment',
+                        'paid_at' => now(),
+                    ]);
+                }
             }
 
 
