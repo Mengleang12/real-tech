@@ -1137,6 +1137,53 @@ const PurchaseDetailDialog = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Stock Reversal Confirmation Dialog */}
+      <AlertDialog open={stockReversalConfirmOpen} onOpenChange={setStockReversalConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>⚠️ Stock Reversal Warning</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>You are reducing the received quantity for the following items. This will <strong>deduct stock</strong> from inventory:</p>
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead className="w-32 text-right">Stock Removed</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {reversalDetails.map((item, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="text-sm">{item.product_name}</TableCell>
+                          <TableCell className="text-right text-sm font-medium text-destructive">-{item.delta}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This action cannot be automatically undone. Make sure the quantities are correct before confirming.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go Back</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                setStockReversalConfirmOpen(false);
+                executeReceiveItems();
+              }}
+            >
+              Confirm Stock Reversal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
