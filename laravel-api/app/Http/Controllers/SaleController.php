@@ -42,6 +42,7 @@ class SaleController extends Controller
             'notes' => 'nullable|string|max:500',
             'warranty_period' => 'nullable|string|max:100',
             'delivery_fee' => 'nullable|numeric|min:0',
+            'paid_amount' => 'nullable|numeric|min:0',
             'sale_date' => 'nullable|date',
         ]);
 
