@@ -30,6 +30,7 @@ use App\Http\Controllers\SalesReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\SliderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,6 +66,9 @@ Route::get('/product-attributes', [ProductAttributeController::class, 'index']);
 // Public maintenance check
 Route::get('/admin/settings/maintenance', [SystemSettingController::class, 'maintenanceStatus']);
 Route::get('/admin/settings/branding', [SystemSettingController::class, 'branding']);
+
+// Public sliders
+Route::get('/sliders', [SliderController::class, 'index']);
 
 
 // Protected admin routes (admin + moderator)
@@ -220,6 +224,13 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::post('/admin/purchases/{id}/expenses', [PurchaseController::class, 'addExpense']);
     Route::delete('/admin/purchases/{id}/expenses/{expenseId}', [PurchaseController::class, 'deleteExpense']);
     Route::delete('/admin/purchases/{id}/receive-logs/{logId}', [PurchaseController::class, 'deleteReceiveLog']);
+
+    // Slider management
+    Route::get('/admin/sliders', [SliderController::class, 'adminIndex']);
+    Route::post('/admin/sliders', [SliderController::class, 'store']);
+    Route::put('/admin/sliders/{id}', [SliderController::class, 'update']);
+    Route::delete('/admin/sliders/{id}', [SliderController::class, 'destroy']);
+    Route::post('/admin/sliders/reorder', [SliderController::class, 'reorder']);
 });
 
 // Protected user routes
