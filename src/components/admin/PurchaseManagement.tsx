@@ -517,6 +517,19 @@ const PurchaseDetailDialog = ({
   const [receiveMode, setReceiveMode] = useState(false);
   const [receivedQtys, setReceivedQtys] = useState<Record<number, number>>({});
   const [receivingItems, setReceivingItems] = useState(false);
+  const [initialLoaded, setInitialLoaded] = useState(false);
+
+  // Auto-fetch full purchase details on open (list data is incomplete)
+  useEffect(() => {
+    if (open && purchase && !initialLoaded) {
+      setInitialLoaded(true);
+      onRefresh();
+    }
+    if (!open) {
+      setInitialLoaded(false);
+      setReceiveMode(false);
+    }
+  }, [open, purchase?.id]);
 
   if (!purchase) return null;
 
