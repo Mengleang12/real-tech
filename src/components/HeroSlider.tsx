@@ -108,7 +108,7 @@ export const HeroSlider = () => {
 
   return (
     <div
-      className="relative mt-4 mb-8 group overflow-hidden border border-border shadow-md"
+      className="relative mt-4 group overflow-hidden border border-border shadow-md"
       style={{ borderRadius: "var(--radius)" }}
     >
       <div className="relative h-52 sm:h-64 md:h-80">
