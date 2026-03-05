@@ -970,6 +970,11 @@ const PaymentsTab = ({ order }: { order: AdminOrder }) => {
 // ─── Bottom Actions ───────────────────────────────────────────────────────────
 const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => void }) => {
   const queryClient = useQueryClient();
+  const { data: warrantiesData } = useQuery({
+    queryKey: ["warranties"],
+    queryFn: () => warrantyApi.getAll(),
+  });
+  const warrantiesList = warrantiesData?.warranties || [];
 
   const deleteMutation = useMutation({
     mutationFn: () => adminUsersApi.deleteOrder(order.id),
@@ -1073,7 +1078,7 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
         ${saleDiscountVal > 0 ? `<div class="summary-row discount"><span>Sale Discount (${saleDiscountLabel})</span><span>-$${saleDiscountVal.toFixed(2)}</span></div>` : ''}
         <div class="summary-row total"><span>Grand Total</span><span>$${amount.toFixed(2)} ${order.currency}</span></div>
       </div></div>
-      ${getWarrantyHtml(order.warranty_period, order.created_at)}
+      ${getWarrantyHtml(order.warranty_period, order.created_at, warrantiesList.find(w => w.name === order.warranty_period)?.policy)}
       ${order.notes ? `<div style="margin-top:${order.warranty_period ? '12' : '24'}px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div><div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div></div>` : ''}
       <div class="divider"></div>
       <div class="footer"><div class="footer-thanks">${branding.invoice_footer_text}</div><div class="footer-brand">${branding.site_name}${branding.support_email ? ` — ${branding.support_email}` : ''}</div></div>

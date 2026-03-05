@@ -121,7 +121,8 @@ export function getWarrantyBadgeVariant(status: WarrantyStatus): 'destructive' |
  */
 export function getWarrantyHtml(
   warrantyPeriod: string | undefined | null,
-  startDate: string | undefined | null
+  startDate: string | undefined | null,
+  policyHtml?: string | null
 ): string {
   if (!warrantyPeriod) return '';
   
@@ -138,10 +139,18 @@ export function getWarrantyHtml(
   
   const borderColor = status?.expired ? '#dc2626' : '#16a34a';
   const bgColor = status?.expired ? '#fef2f2' : '#f0fdf4';
+
+  const policySection = policyHtml
+    ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid ${status?.expired ? '#fecaca' : '#bbf7d0'}">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Warranty Policy</div>
+        <div style="font-size:12px;color:#374151;line-height:1.7">${policyHtml}</div>
+      </div>`
+    : '';
   
   return `<div style="margin-top:24px;padding:16px 20px;background:${bgColor};border-radius:10px;border-left:3px solid ${borderColor}">
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Warranty</div>
     <div style="font-size:13px;color:#374151;line-height:1.6">${warrantyPeriod}${statusText}</div>
     ${expiryText}
+    ${policySection}
   </div>`;
 }

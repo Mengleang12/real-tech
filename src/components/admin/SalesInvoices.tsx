@@ -5,7 +5,7 @@ import { AddSaleDialog } from "./AddSaleDialog";
 import { InvoiceEditDialog } from "./InvoiceEditDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { adminUsersApi, salesApi, type AdminOrder, type StockProduct } from "@/lib/api";
+import { adminUsersApi, salesApi, warrantyApi, type AdminOrder, type StockProduct } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -441,6 +441,12 @@ const InvoicesTab = () => {
     }),
   });
 
+  const { data: warrantiesData } = useQuery({
+    queryKey: ["warranties"],
+    queryFn: () => warrantyApi.getAll(),
+  });
+  const warrantiesList = warrantiesData?.warranties || [];
+
   const orders = data?.orders || [];
   const pagination = data?.pagination;
 
@@ -578,7 +584,7 @@ const InvoicesTab = () => {
         </div>
       </div>
 
-      ${order.warranty_period ? getWarrantyHtml(order.warranty_period, order.created_at) : ''}
+      ${order.warranty_period ? getWarrantyHtml(order.warranty_period, order.created_at, warrantiesList.find(w => w.name === order.warranty_period)?.policy) : ''}
 
       ${order.notes ? `<div style="margin-top:${order.warranty_period ? '12' : '24'}px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}">
         <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div>
