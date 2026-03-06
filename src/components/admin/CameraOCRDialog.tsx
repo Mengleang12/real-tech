@@ -1,9 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Camera, Loader2, RotateCcw, Check, SwitchCamera, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Camera, Loader2, RotateCcw, Check, SwitchCamera } from "lucide-react";
 interface CameraOCRDialogProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
