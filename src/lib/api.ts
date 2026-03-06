@@ -620,6 +620,23 @@ export interface AdminStaffUser {
   email: string;
 }
 
+// Staff Users API (admin/staff accounts)
+export const staffUsersApi = {
+  getAll: async (search?: string): Promise<{ users: { id: number; username: string; roles: string[]; created_at: string }[] }> => {
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    return apiRequest(`admin/staff-users${params}`);
+  },
+  create: async (data: { username: string; password: string; roles?: string[] }): Promise<{ success: boolean; user: any }> => {
+    return apiRequest('admin/staff-users', { method: 'POST', body: data });
+  },
+  update: async (id: number, data: { username?: string; password?: string; roles?: string[] }): Promise<{ success: boolean; user: any }> => {
+    return apiRequest(`admin/staff-users/${id}`, { method: 'PUT', body: data });
+  },
+  delete: async (id: number): Promise<{ success: boolean }> => {
+    return apiRequest(`admin/staff-users/${id}`, { method: 'DELETE' });
+  },
+};
+
 // Roles API
 export const rolesApi = {
   getAll: async (): Promise<{ users: UserWithRoles[] }> => {
