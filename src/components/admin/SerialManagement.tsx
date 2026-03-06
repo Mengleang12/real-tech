@@ -12,8 +12,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Search, Plus, Trash2, Loader2, Package, ChevronLeft, ChevronRight,
-  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban,
+  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban, Camera,
 } from "lucide-react";
+import { CameraOCRDialog } from "./CameraOCRDialog";
 
 const statusConfig = {
   available: { label: "Available", icon: CheckCircle2, color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
