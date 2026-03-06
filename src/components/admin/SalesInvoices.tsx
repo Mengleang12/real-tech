@@ -5,7 +5,7 @@ import { AddSaleDialog } from "./AddSaleDialog";
 import { InvoiceEditDialog } from "./InvoiceEditDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { adminUsersApi, salesApi, warrantyApi, type AdminOrder, type StockProduct } from "@/lib/api";
+import { adminUsersApi, salesApi, warrantyApi, categoriesApi, type AdminOrder, type StockProduct } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -207,6 +207,7 @@ const StockManagement = () => {
   const [editingStock, setEditingStock] = useState<{ productId: number; variantId?: number; qty: number } | null>(null);
   const [stockReason, setStockReason] = useState("");
   const [serialProduct, setSerialProduct] = useState<{ id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string; stock_quantity?: number }> } | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   // Debounce search
   useEffect(() => {
@@ -217,11 +218,17 @@ const StockManagement = () => {
     return () => clearTimeout(timer);
   }, [stockSearch]);
 
+  const { data: categoriesData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => categoriesApi.getAll(),
+  });
+
   const { data: stockData, isLoading: stockLoading } = useQuery({
-    queryKey: ["admin-stock", stockFilter, debouncedStockSearch, stockPage],
+    queryKey: ["admin-stock", stockFilter, debouncedStockSearch, stockPage, categoryFilter],
     queryFn: () => salesApi.getStockOverview({
       stock_status: stockFilter !== "all" ? stockFilter : undefined,
       search: debouncedStockSearch || undefined,
+      category_id: categoryFilter !== "all" ? Number(categoryFilter) : undefined,
       page: stockPage,
       limit: 20,
     }),
@@ -293,6 +300,15 @@ const StockManagement = () => {
             <SelectItem value="in_stock">In Stock</SelectItem>
             <SelectItem value="low_stock">Low Stock</SelectItem>
             <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); setStockPage(1); }}>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {(categoriesData?.categories || []).map((cat: any) => (
+              <SelectItem key={cat.id} value={String(cat.id)}>{cat.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

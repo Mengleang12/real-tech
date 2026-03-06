@@ -1087,13 +1087,14 @@ export const salesApi = {
     return apiRequest(`admin/sales/dashboard?${params.toString()}`);
   },
 
-  getStockOverview: async (params?: { stock_status?: string; search?: string; page?: number; limit?: number }): Promise<{
+  getStockOverview: async (params?: { stock_status?: string; search?: string; category_id?: number; page?: number; limit?: number }): Promise<{
     products: StockProduct[];
     pagination: { current_page: number; total_pages: number; total: number; per_page: number };
   }> => {
     const query = new URLSearchParams();
     if (params?.stock_status) query.set('stock_status', params.stock_status);
     if (params?.search) query.set('search', params.search);
+    if (params?.category_id) query.set('category_id', params.category_id.toString());
     if (params?.page) query.set('page', params.page.toString());
     if (params?.limit) query.set('limit', params.limit.toString());
     return apiRequest(`admin/sales/stock?${query.toString()}`);
