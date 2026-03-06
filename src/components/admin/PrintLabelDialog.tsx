@@ -326,9 +326,13 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
         <div className="border border-border rounded-lg p-3 bg-muted/20">
           <p className="text-xs text-muted-foreground mb-2">Preview ({labelWidth}×{labelHeight}mm each)</p>
           <div className="flex flex-wrap gap-2">
-            {items.slice(0, 6).map((item, idx) => (
-              <LabelPreview key={idx} sku={item.sku} price={item.price} width={labelWidth} height={labelHeight} />
-            ))}
+            {items.slice(0, 6).map((item, idx) => {
+              const variant = item.variant_id ? item.product.variants.find(v => v.id === item.variant_id) : null;
+              const variantLabel = variant ? Object.values(variant.combination).join(" / ") : "";
+              return (
+                <LabelPreview key={idx} sku={item.sku} price={item.price} name={item.product.name} variant={variantLabel} width={labelWidth} height={labelHeight} />
+              );
+            })}
             {totalLabels > 6 && (
               <div className="w-[90px] h-[60px] border border-dashed border-border rounded flex items-center justify-center text-xs text-muted-foreground">
                 +{totalLabels - 6} more
