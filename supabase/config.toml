@@ -1,4 +1,1 @@
 project_id = "ujvkovqqlbbmkdvnpbss"
-
-[functions.ocr-serial]
-verify_jwt = false

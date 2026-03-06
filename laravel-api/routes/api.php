@@ -33,6 +33,7 @@ use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SliderController;
 use App\Http\Controllers\ProductSerialController;
+use App\Http\Controllers\OcrController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +76,8 @@ Route::get('/sliders', [SliderController::class, 'index']);
 
 // Protected admin routes (admin + moderator)
 Route::middleware('auth.admin')->group(function () {
+    // OCR
+    Route::post('/admin/ocr/scan-serial', [OcrController::class, 'scanSerial']);
     // Product management
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);
