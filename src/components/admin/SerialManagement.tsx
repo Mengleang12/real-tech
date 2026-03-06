@@ -359,11 +359,20 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
 }) => {
   const queryClient = useQueryClient();
 
+  // Get stock limit for selected variant
+  const selectedVariant = selectedProduct?.variants.find(v => v.id === selectedVariantId);
+  const stockLimit = selectedVariant?.stock_quantity ?? Infinity;
+  const isOverStock = serialList.length >= stockLimit;
+
   const addSerial = () => {
     const trimmed = serialInput.trim();
     if (!trimmed) return;
     if (serialList.includes(trimmed)) {
-      toast.error("Duplicate serial number");
+      toast.error("Duplicate serial number - already in list");
+      return;
+    }
+    if (serialList.length >= stockLimit) {
+      toast.error(`Cannot exceed stock quantity (${stockLimit})`);
       return;
     }
     setSerialList([...serialList, trimmed]);
@@ -372,9 +381,20 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
 
   const handlePaste = (text: string) => {
     const lines = text.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-    const newSerials = lines.filter(s => !serialList.includes(s));
-    if (newSerials.length > 0) {
-      setSerialList([...serialList, ...newSerials]);
+    // Remove duplicates within paste and against existing list
+    const unique = [...new Set(lines)].filter(s => !serialList.includes(s));
+    const remaining = stockLimit - serialList.length;
+    if (remaining <= 0) {
+      toast.error(`Cannot exceed stock quantity (${stockLimit})`);
+      return;
+    }
+    const toAdd = unique.slice(0, remaining);
+    const skipped = unique.length - toAdd.length;
+    if (toAdd.length > 0) {
+      setSerialList([...serialList, ...toAdd]);
+    }
+    if (skipped > 0) {
+      toast.warning(`${skipped} serial(s) skipped - would exceed stock limit`);
     }
   };
 
@@ -387,6 +407,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
     onSuccess: (res) => {
       toast.success(res.message);
       queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
       setSerialList([]);
       onOpenChange(false);
     },
