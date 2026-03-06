@@ -7,6 +7,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UploadController;
+use App\Http\Controllers\StaffUserController;
 
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\OtpController;
