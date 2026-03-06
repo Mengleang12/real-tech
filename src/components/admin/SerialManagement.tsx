@@ -583,8 +583,16 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                 <Button onClick={addSerial} disabled={!serialInput.trim() || serialList.length >= remainingSlots}>
                   <Plus className="w-4 h-4" />
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setCameraOpen(true)}
+                  disabled={serialList.length >= remainingSlots}
+                  title="Scan serial with camera"
+                >
+                  <Camera className="w-4 h-4" />
+                </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground">Press Enter to add. Paste multiple (comma/newline separated).</p>
+              <p className="text-[10px] text-muted-foreground">Press Enter to add. Paste multiple (comma/newline separated). Or use camera to OCR.</p>
               {serialList.length >= remainingSlots && remainingSlots !== Infinity && (
                 <p className="text-[11px] text-destructive font-medium">Stock limit reached. Cannot add more serial numbers.</p>
               )}
