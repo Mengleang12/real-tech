@@ -214,16 +214,13 @@ class SaleController extends Controller
                     'serial_numbers' => !empty($itemSerials) ? implode(',', array_filter($itemSerials)) : null,
                 ]);
 
-                // Mark serials as sold
+                // Delete serials from database after sale
                 if (!empty($itemSerials)) {
                     $filteredSerials = array_filter($itemSerials);
                     if (!empty($filteredSerials)) {
                         \App\Models\ProductSerial::where('product_id', $product->id)
                             ->whereIn('serial_number', $filteredSerials)
-                            ->update([
-                                'status' => 'sold',
-                                'sale_id' => $sale->id,
-                            ]);
+                            ->delete();
                     }
                 }
             }
