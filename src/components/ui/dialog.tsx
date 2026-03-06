@@ -74,7 +74,7 @@ const DialogContent = React.forwardRef<
             </DialogPrimitive.Close>
           </div>
           {/* Content area */}
-          <div className="flex flex-col flex-1 min-h-0 p-6 overflow-y-auto">
+          <div className={cn("flex flex-col flex-1 min-h-0 overflow-y-auto", className?.includes("p-0") ? "p-0" : "p-6")}>
             {children}
           </div>
         </DialogPrimitive.Content>
