@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Admin;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -16,7 +16,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $admin = Admin::where('username', $request->username)->first();
+        $admin = User::where('username', $request->username)->first();
 
         if (!$admin || !Hash::check($request->password, $admin->password_hash)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
@@ -49,7 +49,7 @@ class AuthController extends Controller
             'new_password' => 'required|string|min:6',
         ]);
 
-        $admin = Admin::where('username', $request->username)->first();
+        $admin = User::where('username', $request->username)->first();
 
         if (!$admin || !Hash::check($request->current_password, $admin->password_hash)) {
             return response()->json(['error' => 'Invalid current password'], 401);

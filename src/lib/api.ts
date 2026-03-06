@@ -610,10 +610,22 @@ export interface PermissionsData {
   role_names: string[];
 }
 
+// Admin Users (staff) for role assignment
+export interface AdminStaffUser {
+  id: number;
+  username: string;
+  full_name: string;
+  email: string;
+}
+
 // Roles API
 export const rolesApi = {
   getAll: async (): Promise<{ users: UserWithRoles[] }> => {
     return apiRequest('admin/roles');
+  },
+
+  listUsers: async (): Promise<{ users: AdminStaffUser[] }> => {
+    return apiRequest('admin/roles/users');
   },
   
   add: async (userId: number, role: string): Promise<{ success: boolean; message: string }> => {

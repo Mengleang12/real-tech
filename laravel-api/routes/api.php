@@ -151,6 +151,7 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     
     // Roles management
     Route::get('/admin/roles', [RoleController::class, 'index']);
+    Route::get('/admin/roles/users', [RoleController::class, 'listUsers']);
     Route::post('/admin/roles', [RoleController::class, 'store']);
     Route::delete('/admin/roles', [RoleController::class, 'destroy']);
     
