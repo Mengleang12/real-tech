@@ -359,20 +359,46 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
 }) => {
   const queryClient = useQueryClient();
 
+  // Fetch existing serials for this product
+  const { data: existingData, isLoading: existingLoading } = useQuery({
+    queryKey: ["product-serials", selectedProduct?.id, selectedVariantId],
+    queryFn: () => serialsApi.getAll({
+      product_id: selectedProduct?.id,
+      status: undefined,
+      search: undefined,
+      page: 1,
+      limit: 200,
+    }),
+    enabled: !!selectedProduct && open,
+  });
+
+  // Filter existing serials by variant
+  const existingSerials = (existingData?.serials || []).filter(
+    (s: ProductSerial) => !selectedVariantId || s.variant_id === selectedVariantId
+  );
+  const existingCount = existingSerials.length;
+
   // Get stock limit for selected variant
   const selectedVariant = selectedProduct?.variants.find(v => v.id === selectedVariantId);
   const stockLimit = selectedVariant?.stock_quantity ?? Infinity;
-  const isOverStock = serialList.length >= stockLimit;
+  const totalAfterAdd = existingCount + serialList.length;
+  const isOverStock = totalAfterAdd >= stockLimit;
+  const remainingSlots = stockLimit === Infinity ? Infinity : Math.max(0, stockLimit - existingCount);
 
   const addSerial = () => {
     const trimmed = serialInput.trim();
     if (!trimmed) return;
+    // Check against both existing and pending list
     if (serialList.includes(trimmed)) {
       toast.error("Duplicate serial number - already in list");
       return;
     }
-    if (serialList.length >= stockLimit) {
-      toast.error(`Cannot exceed stock quantity (${stockLimit})`);
+    if (existingSerials.some((s: ProductSerial) => s.serial_number === trimmed)) {
+      toast.error("This serial number already exists for this product");
+      return;
+    }
+    if (serialList.length >= remainingSlots) {
+      toast.error(`Cannot exceed stock quantity (${stockLimit}). Already ${existingCount} serial(s) registered.`);
       return;
     }
     setSerialList([...serialList, trimmed]);
@@ -381,20 +407,20 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
 
   const handlePaste = (text: string) => {
     const lines = text.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-    // Remove duplicates within paste and against existing list
-    const unique = [...new Set(lines)].filter(s => !serialList.includes(s));
-    const remaining = stockLimit - serialList.length;
-    if (remaining <= 0) {
+    const existingSNs = new Set(existingSerials.map((s: ProductSerial) => s.serial_number));
+    const unique = [...new Set(lines)].filter(s => !serialList.includes(s) && !existingSNs.has(s));
+    const slotsLeft = remainingSlots - serialList.length;
+    if (slotsLeft <= 0) {
       toast.error(`Cannot exceed stock quantity (${stockLimit})`);
       return;
     }
-    const toAdd = unique.slice(0, remaining);
+    const toAdd = unique.slice(0, slotsLeft);
     const skipped = unique.length - toAdd.length;
     if (toAdd.length > 0) {
       setSerialList([...serialList, ...toAdd]);
     }
     if (skipped > 0) {
-      toast.warning(`${skipped} serial(s) skipped - would exceed stock limit`);
+      toast.warning(`${skipped} serial(s) skipped - would exceed stock limit or duplicates`);
     }
   };
 
@@ -408,14 +434,25 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       toast.success(res.message);
       queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
       queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["product-serials", selectedProduct?.id, selectedVariantId] });
       setSerialList([]);
-      onOpenChange(false);
+      // Don't close dialog - let user add more
     },
     onError: () => toast.error("Failed to add serials"),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => serialsApi.delete(id),
+    onSuccess: () => {
+      toast.success("Serial deleted");
+      queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
+      queryClient.invalidateQueries({ queryKey: ["product-serials", selectedProduct?.id, selectedVariantId] });
+    },
+    onError: () => toast.error("Failed to delete"),
+  });
+
   return (
-    <AdminDialog open={open} onOpenChange={onOpenChange} title="Add Serial Numbers" size="lg">
+    <AdminDialog open={open} onOpenChange={onOpenChange} title="Serial Numbers" size="lg">
       <div className="space-y-4">
         {productSearchSlot}
 
@@ -451,12 +488,60 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
               </div>
             )}
 
+            {/* Existing Serials */}
+            {existingLoading ? (
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : existingSerials.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">
+                    Existing Serials
+                    <span className="ml-1.5 text-muted-foreground font-normal">({existingCount})</span>
+                  </Label>
+                  {stockLimit !== Infinity && (
+                    <span className="text-xs text-muted-foreground">{existingCount} / {stockLimit} used</span>
+                  )}
+                </div>
+                <div className="border border-border rounded-lg max-h-36 overflow-y-auto bg-muted/20">
+                  {existingSerials.map((serial: ProductSerial) => {
+                    const cfg = statusConfig[serial.status] || statusConfig.available;
+                    const Icon = cfg.icon;
+                    return (
+                      <div key={serial.id} className="flex items-center justify-between px-3 py-1.5 border-b border-border/30 last:border-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm font-mono truncate">{serial.serial_number}</span>
+                          <Badge className={`text-[9px] px-1.5 py-0 ${cfg.color} hover:${cfg.color}`}>
+                            <Icon className="w-2.5 h-2.5 mr-0.5" />
+                            {cfg.label}
+                          </Badge>
+                        </div>
+                        {serial.status === 'available' && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
+                            onClick={() => { if (confirm("Delete this serial?")) deleteMutation.mutate(serial.id); }}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Add new serials */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Enter Serial Numbers</Label>
+                <Label className="text-sm font-medium">Add New Serials</Label>
                 {stockLimit !== Infinity && (
                   <span className={`text-xs font-medium ${isOverStock ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    {serialList.length} / {stockLimit} (stock limit)
+                    {remainingSlots - serialList.length} slot(s) remaining
                   </span>
                 )}
               </div>
@@ -474,14 +559,14 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                     }
                   }}
                   className="flex-1"
-                  disabled={isOverStock}
+                  disabled={serialList.length >= remainingSlots}
                 />
-                <Button onClick={addSerial} disabled={!serialInput.trim() || isOverStock}>
+                <Button onClick={addSerial} disabled={!serialInput.trim() || serialList.length >= remainingSlots}>
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
               <p className="text-[10px] text-muted-foreground">Press Enter to add. Paste multiple (comma/newline separated).</p>
-              {isOverStock && (
+              {serialList.length >= remainingSlots && remainingSlots !== Infinity && (
                 <p className="text-[11px] text-destructive font-medium">Stock limit reached. Cannot add more serial numbers.</p>
               )}
             </div>
@@ -500,7 +585,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
             )}
 
             <div className="flex justify-between items-center pt-2">
-              <span className="text-sm text-muted-foreground">{serialList.length} serial(s)</span>
+              <span className="text-sm text-muted-foreground">{serialList.length} new serial(s) to add</span>
               <Button
                 onClick={() => saveMutation.mutate()}
                 disabled={serialList.length === 0 || saveMutation.isPending}
