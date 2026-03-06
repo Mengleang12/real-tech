@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { salesApi, warrantyApi, type SaleCustomer, type SaleProduct, type CreateSalePayload } from "@/lib/api";
+import { salesApi, serialsApi, warrantyApi, type SaleCustomer, type SaleProduct, type CreateSalePayload } from "@/lib/api";
 import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./AdminDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
