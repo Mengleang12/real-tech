@@ -639,6 +639,23 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    <CameraOCRDialog
+      open={cameraOpen}
+      onOpenChange={setCameraOpen}
+      onSerialDetected={(serial) => {
+        if (existingSerials.some((s: ProductSerial) => s.serial_number === serial) || serialList.includes(serial)) {
+          toast.error("This serial number already exists");
+          return;
+        }
+        if (serialList.length >= remainingSlots) {
+          toast.error("Stock limit reached");
+          return;
+        }
+        setSerialList([...serialList, serial]);
+        toast.success(`Serial "${serial}" added`);
+      }}
+    />
     </>
   );
 };
