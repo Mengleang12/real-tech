@@ -207,6 +207,7 @@ const StockManagement = () => {
   const [editingStock, setEditingStock] = useState<{ productId: number; variantId?: number; qty: number } | null>(null);
   const [stockReason, setStockReason] = useState("");
   const [serialProduct, setSerialProduct] = useState<{ id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string; stock_quantity?: number }> } | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   // Debounce search
   useEffect(() => {
@@ -217,11 +218,17 @@ const StockManagement = () => {
     return () => clearTimeout(timer);
   }, [stockSearch]);
 
+  const { data: categoriesData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => categoriesApi.getAll(),
+  });
+
   const { data: stockData, isLoading: stockLoading } = useQuery({
-    queryKey: ["admin-stock", stockFilter, debouncedStockSearch, stockPage],
+    queryKey: ["admin-stock", stockFilter, debouncedStockSearch, stockPage, categoryFilter],
     queryFn: () => salesApi.getStockOverview({
       stock_status: stockFilter !== "all" ? stockFilter : undefined,
       search: debouncedStockSearch || undefined,
+      category_id: categoryFilter !== "all" ? Number(categoryFilter) : undefined,
       page: stockPage,
       limit: 20,
     }),
