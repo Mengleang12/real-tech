@@ -29,8 +29,8 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { title?: string }
+>(({ className, children, title, ...props }, ref) => {
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -50,7 +50,10 @@ const DialogContent = React.forwardRef<
         )}
       >
         {/* Title bar with close on the right */}
-        <div className="flex items-center justify-end px-4 py-2.5 bg-muted/60 border-b border-border/50 shrink-0">
+        <div className="flex items-center justify-between px-4 py-2.5 bg-muted/60 border-b border-border/50 shrink-0">
+          <DialogPrimitive.Title className="text-sm font-semibold leading-none tracking-tight">
+            {title}
+          </DialogPrimitive.Title>
           <DialogPrimitive.Close asChild>
             <button
               className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors focus:outline-none"
