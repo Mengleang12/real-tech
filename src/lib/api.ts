@@ -893,6 +893,63 @@ export const couponsApi = {
   },
 };
 
+// ─── Product Serials Types ────────────────────────────────────────────────────
+export interface ProductSerial {
+  id: number;
+  product_id: number;
+  variant_id?: number;
+  serial_number: string;
+  barcode: string;
+  status: 'available' | 'sold' | 'reserved' | 'defective';
+  sale_id?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  product?: { id: number; name: string; icon_url?: string };
+  variant?: { id: number; combination: Record<string, string>; sku?: string; price_adjustment: number };
+}
+
+export interface SerialLookupResult {
+  found: boolean;
+  status?: string;
+  message?: string;
+  serial?: ProductSerial;
+  product?: SaleProduct;
+}
+
+// Product Serials API
+export const serialsApi = {
+  getAll: async (params?: { product_id?: number; status?: string; search?: string; page?: number; limit?: number }): Promise<{
+    serials: ProductSerial[];
+    pagination: { current_page: number; total_pages: number; total: number; per_page: number };
+  }> => {
+    const query = new URLSearchParams();
+    if (params?.product_id) query.set('product_id', params.product_id.toString());
+    if (params?.status) query.set('status', params.status);
+    if (params?.search) query.set('search', params.search);
+    if (params?.page) query.set('page', params.page.toString());
+    if (params?.limit) query.set('limit', params.limit.toString());
+    return apiRequest(`admin/serials?${query.toString()}`);
+  },
+
+  add: async (data: { product_id: number; variant_id?: number; serials: { serial_number: string; notes?: string }[] }): Promise<{
+    success: boolean; message: string; created: ProductSerial[]; duplicates: string[];
+  }> => {
+    return apiRequest('admin/serials', { method: 'POST', body: data });
+  },
+
+  update: async (id: number, data: Partial<ProductSerial>): Promise<{ success: boolean; serial: ProductSerial }> => {
+    return apiRequest(`admin/serials/${id}`, { method: 'PUT', body: data });
+  },
+
+  delete: async (id: number): Promise<{ success: boolean }> => {
+    return apiRequest(`admin/serials/${id}`, { method: 'DELETE' });
+  },
+
+  lookup: async (code: string): Promise<SerialLookupResult> => {
+    return apiRequest('admin/serials/lookup', { method: 'POST', body: { code } });
+  },
+};
 
 // Categories API
 export const categoriesApi = {
