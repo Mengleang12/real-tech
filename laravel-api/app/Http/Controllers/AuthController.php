@@ -16,7 +16,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $admin = User::where('username', $request->username)->first();
+        $admin = User::with('roles')->where('username', $request->username)->first();
 
         if (!$admin || !Hash::check($request->password, $admin->password_hash)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
@@ -26,10 +26,11 @@ class AuthController extends Controller
         $token = Str::random(64);
         $expiry = now()->addHours(24);
 
-        $admin->update([
-            'auth_token' => $token,
-            'token_expiry' => $expiry,
-        ]);
+        $admin->auth_token = $token;
+        $admin->token_expiry = $expiry;
+        $admin->save();
+
+        $roles = $admin->roles->pluck('role')->toArray();
 
         return response()->json([
             'success' => true,
@@ -37,6 +38,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $admin->id,
                 'username' => $admin->username,
+                'roles' => $roles,
             ],
         ]);
     }
