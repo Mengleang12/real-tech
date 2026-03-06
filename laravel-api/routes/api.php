@@ -179,6 +179,14 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::get('/admin/sales/customers', [SaleController::class, 'searchCustomers']);
     Route::get('/admin/sales/products', [SaleController::class, 'searchProducts']);
 
+    // Product serials
+    Route::get('/admin/serials', [ProductSerialController::class, 'index']);
+    Route::post('/admin/serials', [ProductSerialController::class, 'store']);
+    Route::put('/admin/serials/{id}', [ProductSerialController::class, 'update']);
+    Route::delete('/admin/serials/{id}', [ProductSerialController::class, 'destroy']);
+    Route::post('/admin/serials/lookup', [ProductSerialController::class, 'lookup']);
+    Route::post('/admin/serials/print', [ProductSerialController::class, 'getForPrint']);
+
     // Sales Reports
     Route::get('/admin/reports/product-sales', [SalesReportController::class, 'productSales']);
     Route::get('/admin/reports/revenue-trend', [SalesReportController::class, 'revenueTrend']);
