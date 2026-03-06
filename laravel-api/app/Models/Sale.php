@@ -16,7 +16,7 @@ class Sale extends Model
 
     protected $fillable = [
         'id',
-        'user_id',
+        'customer_id',
         'product_id',
         'product_name',
         'serial_number',
@@ -59,9 +59,9 @@ class Sale extends Model
         });
     }
 
-    public function user(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 
     public function paymentLogs(): HasMany

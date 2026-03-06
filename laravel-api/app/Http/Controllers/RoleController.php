@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\UserRole;
-use App\Models\User;
+use App\Models\Customer;
 use App\Models\RolePermission;
 use App\Traits\LogsAdminActivity;
 use Illuminate\Http\Request;
@@ -16,30 +16,30 @@ class RoleController extends Controller
 
     public function index(Request $request)
     {
-        $roles = UserRole::with('user:id,email,full_name')
+        $roles = UserRole::with('customer:id,email,full_name')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $usersWithRoles = $roles->groupBy('user_id')->map(function ($userRoles) {
-            $firstRole = $userRoles->first();
+        $customersWithRoles = $roles->groupBy('customer_id')->map(function ($customerRoles) {
+            $firstRole = $customerRoles->first();
             return [
-                'user_id' => $firstRole->user_id,
-                'full_name' => $firstRole->user->full_name ?? null,
-                'email' => $firstRole->user->email ?? null,
-                'roles' => $userRoles->pluck('role')->toArray(),
+                'user_id' => $firstRole->customer_id,
+                'full_name' => $firstRole->customer->full_name ?? null,
+                'email' => $firstRole->customer->email ?? null,
+                'roles' => $customerRoles->pluck('role')->toArray(),
             ];
         })->values();
 
         return response()->json([
             'success' => true,
-            'users' => $usersWithRoles,
+            'users' => $customersWithRoles,
         ]);
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required|exists:customers,id',
             'role' => 'required|string|max:50',
         ]);
 
@@ -47,7 +47,6 @@ class RoleController extends Controller
             return response()->json(['error' => $validator->errors()->first()], 422);
         }
 
-        // Only super_admin can assign super_admin or admin roles
         if (in_array($request->role, ['super_admin', 'admin'])) {
             if (!$this->isSuperAdmin($request)) {
                 return response()->json(['error' => 'Only Super Admin can assign this role'], 403);
@@ -59,23 +58,23 @@ class RoleController extends Controller
             return response()->json(['error' => 'Role does not exist. Create it first in permission settings.'], 422);
         }
 
-        $existing = UserRole::where('user_id', $request->user_id)
+        $existing = UserRole::where('customer_id', $request->user_id)
             ->where('role', $request->role)
             ->first();
 
         if ($existing) {
-            return response()->json(['error' => 'User already has this role'], 422);
+            return response()->json(['error' => 'Customer already has this role'], 422);
         }
 
         $role = UserRole::create([
-            'user_id' => $request->user_id,
+            'customer_id' => $request->user_id,
             'role' => $request->role,
         ]);
 
-        $user = User::find($request->user_id);
+        $customer = Customer::find($request->user_id);
         $this->logActivity($request, 'role_assign', [
             'target_user_id' => $request->user_id,
-            'target_email' => $user->email ?? null,
+            'target_email' => $customer->email ?? null,
             'role' => $request->role,
         ]);
 
@@ -89,7 +88,7 @@ class RoleController extends Controller
     public function destroy(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required|exists:customers,id',
             'role' => 'required|string|max:50',
         ]);
 
@@ -97,14 +96,13 @@ class RoleController extends Controller
             return response()->json(['error' => $validator->errors()->first()], 422);
         }
 
-        // Only super_admin can remove super_admin or admin roles
         if (in_array($request->role, ['super_admin', 'admin'])) {
             if (!$this->isSuperAdmin($request)) {
                 return response()->json(['error' => 'Only Super Admin can remove this role'], 403);
             }
         }
 
-        $deleted = UserRole::where('user_id', $request->user_id)
+        $deleted = UserRole::where('customer_id', $request->user_id)
             ->where('role', $request->role)
             ->delete();
 
@@ -112,10 +110,10 @@ class RoleController extends Controller
             return response()->json(['error' => 'Role not found'], 404);
         }
 
-        $user = User::find($request->user_id);
+        $customer = Customer::find($request->user_id);
         $this->logActivity($request, 'role_remove', [
             'target_user_id' => $request->user_id,
-            'target_email' => $user->email ?? null,
+            'target_email' => $customer->email ?? null,
             'role' => $request->role,
         ]);
 
@@ -127,7 +125,6 @@ class RoleController extends Controller
 
     public function permissions(Request $request)
     {
-        // Only super_admin can view/manage permissions
         if (!$this->isSuperAdmin($request)) {
             return response()->json(['error' => 'Only Super Admin can manage permissions'], 403);
         }
@@ -257,29 +254,24 @@ class RoleController extends Controller
 
     public function myPermissions(Request $request)
     {
-        $user = $request->user();
-        $user->load('roles');
+        $customer = $request->user();
+        $customer->load('roles');
         
-        $userRoles = $user->roles->pluck('role')->toArray();
-        $permissions = RolePermission::getPermissionsForRoles($userRoles);
+        $customerRoles = $customer->roles->pluck('role')->toArray();
+        $permissions = RolePermission::getPermissionsForRoles($customerRoles);
 
-        // Add special flag for super_admin
-        $isSuperAdmin = in_array('super_admin', $userRoles);
+        $isSuperAdmin = in_array('super_admin', $customerRoles);
 
         return response()->json([
             'success' => true,
-            'roles' => $userRoles,
+            'roles' => $customerRoles,
             'permissions' => $permissions,
             'is_super_admin' => $isSuperAdmin,
         ]);
     }
 
-    /**
-     * Check if the current request user is a super_admin.
-     */
     private function isSuperAdmin(Request $request): bool
     {
-        // Legacy admin tokens have all permissions
         $permissions = $request->attributes->get('user_permissions', []);
         if (in_array('*', $permissions)) {
             return true;
@@ -290,8 +282,7 @@ class RoleController extends Controller
             return false;
         }
 
-        // Check if user model has roles relationship (Admin model doesn't)
-        if (!($user instanceof \App\Models\User)) {
+        if (!($user instanceof \App\Models\Customer)) {
             return false;
         }
 

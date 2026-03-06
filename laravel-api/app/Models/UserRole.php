@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserRole extends Model
 {
     protected $fillable = [
-        'user_id',
+        'customer_id',
         'role',
     ];
 
@@ -16,8 +16,8 @@ class UserRole extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function user()
+    public function customer()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 }

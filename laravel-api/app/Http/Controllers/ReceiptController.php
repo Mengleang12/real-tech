@@ -12,7 +12,7 @@ class ReceiptController extends Controller
 {
     public function index(Request $request)
     {
-        $receipts = Receipt::where('user_id', $request->user()->id)
+        $receipts = Receipt::where('customer_id', $request->user()->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -25,7 +25,7 @@ class ReceiptController extends Controller
     public function show(Request $request, $id)
     {
         $receipt = Receipt::where('id', $id)
-            ->where('user_id', $request->user()->id)
+            ->where('customer_id', $request->user()->id)
             ->first();
 
         if (!$receipt) {
@@ -40,25 +40,25 @@ class ReceiptController extends Controller
 
     public static function createFromSale(Sale $sale, ?array $downloadLinks = null): Receipt
     {
-        $user = $sale->user;
+        $customer = $sale->customer;
 
         $receipt = Receipt::create([
             'sale_id' => $sale->id,
-            'user_id' => $sale->user_id,
+            'customer_id' => $sale->customer_id,
             'product_id' => $sale->product_id,
             'product_name' => $sale->product_name,
             'amount' => $sale->amount,
             'currency' => $sale->currency,
             'payment_method' => 'ABA PayWay',
             'transaction_id' => $sale->bakong_transaction_id,
-            'user_email' => $user->email,
-            'user_name' => $user->full_name,
+            'user_email' => $customer->email,
+            'user_name' => $customer->full_name,
             'paid_at' => $sale->paid_at ?? now(),
             'download_links' => $downloadLinks,
         ]);
 
         try {
-            Mail::to($user->email)->send(new ReceiptMail($receipt));
+            Mail::to($customer->email)->send(new ReceiptMail($receipt));
             $receipt->update([
                 'email_sent' => true,
                 'email_sent_at' => now(),
@@ -73,7 +73,7 @@ class ReceiptController extends Controller
     public function resend(Request $request, $id)
     {
         $receipt = Receipt::where('id', $id)
-            ->where('user_id', $request->user()->id)
+            ->where('customer_id', $request->user()->id)
             ->first();
 
         if (!$receipt) {
@@ -101,11 +101,10 @@ class ReceiptController extends Controller
 
     public function adminIndex(Request $request)
     {
-        $query = Receipt::with('user:id,email,full_name')
-            ->orderBy('created_at', 'desc');
+        $query = Receipt::orderBy('created_at', 'desc');
 
-        if ($request->has('user_id')) {
-            $query->where('user_id', $request->user_id);
+        if ($request->has('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
         }
 
         if ($request->has('date_from')) {

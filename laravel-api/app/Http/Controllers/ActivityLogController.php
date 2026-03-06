@@ -12,9 +12,9 @@ class ActivityLogController extends Controller
         $days = $request->input('days', 7);
         $action = $request->input('action');
         $perPage = min($request->input('per_page', 50), 200);
-        $userId = $request->input('user_id');
+        $customerId = $request->input('user_id');
 
-        $query = UserActivityLog::with('user:id,email,full_name')
+        $query = UserActivityLog::with('customer:id,email,full_name')
             ->where('created_at', '>=', now()->subDays($days))
             ->orderBy('created_at', 'desc');
 
@@ -22,14 +22,13 @@ class ActivityLogController extends Controller
             $query->where('action', $action);
         }
 
-        if ($userId) {
-            $query->where('user_id', $userId);
+        if ($customerId) {
+            $query->where('customer_id', $customerId);
         }
 
-        // Stats from date+user scoped query
         $statsQuery = UserActivityLog::where('created_at', '>=', now()->subDays($days));
-        if ($userId) {
-            $statsQuery->where('user_id', $userId);
+        if ($customerId) {
+            $statsQuery->where('customer_id', $customerId);
         }
         $allForStats = $statsQuery->get();
 
@@ -40,12 +39,10 @@ class ActivityLogController extends Controller
             'downloads' => $allForStats->where('action', 'download')->count(),
         ];
 
-        // Get unique actions for filter
         $uniqueActions = UserActivityLog::where('created_at', '>=', now()->subDays($days))
             ->distinct()
             ->pluck('action');
 
-        // Paginate
         $paginated = $query->paginate($perPage);
 
         return response()->json([
@@ -65,7 +62,7 @@ class ActivityLogController extends Controller
     public function store(Request $request)
     {
         $log = UserActivityLog::create([
-            'user_id' => $request->user_id,
+            'customer_id' => $request->user_id,
             'action' => $request->action,
             'details' => $request->details,
             'ip_address' => $request->ip(),
@@ -85,14 +82,14 @@ class ActivityLogController extends Controller
             'product_name' => 'required|string',
         ]);
 
-        $user = $request->user();
+        $customer = $request->user();
 
-        if (!$user) {
+        if (!$customer) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         UserActivityLog::create([
-            'user_id' => $user->id,
+            'customer_id' => $customer->id,
             'action' => 'download',
             'details' => [
                 'product_id' => $request->product_id,

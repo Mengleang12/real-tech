@@ -10,7 +10,7 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $sales = Sale::where('user_id', $request->user()->id)
+        $sales = Sale::where('customer_id', $request->user()->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -31,7 +31,7 @@ class OrderController extends Controller
             'product_id' => 'required|integer',
         ]);
 
-        $purchased = Sale::where('user_id', $request->user()->id)
+        $purchased = Sale::where('customer_id', $request->user()->id)
             ->where('product_id', $request->product_id)
             ->where('status', 'paid')
             ->exists();
@@ -47,9 +47,9 @@ class OrderController extends Controller
             'amount' => 'required|numeric|min:0',
         ]);
 
-        $user = $request->user();
+        $customer = $request->user();
 
-        $existingPaid = Sale::where('user_id', $user->id)
+        $existingPaid = Sale::where('customer_id', $customer->id)
             ->where('product_id', $request->product_id)
             ->where('status', 'paid')
             ->first();
@@ -60,7 +60,7 @@ class OrderController extends Controller
             ], 400);
         }
 
-        $existingPending = Sale::where('user_id', $user->id)
+        $existingPending = Sale::where('customer_id', $customer->id)
             ->where('product_id', $request->product_id)
             ->where('status', 'pending')
             ->where('expires_at', '>', now())
@@ -74,7 +74,7 @@ class OrderController extends Controller
         }
 
         $sale = Sale::create([
-            'user_id' => $user->id,
+            'customer_id' => $customer->id,
             'product_id' => $request->product_id,
             'product_name' => $request->product_name,
             'amount' => $request->amount,
@@ -92,7 +92,7 @@ class OrderController extends Controller
     public function confirm(Request $request, $id)
     {
         $sale = Sale::where('id', $id)
-            ->where('user_id', $request->user()->id)
+            ->where('customer_id', $request->user()->id)
             ->first();
 
         if (!$sale) {

@@ -9,7 +9,7 @@ class UserStatus extends Model
     protected $table = 'user_status';
     
     protected $fillable = [
-        'user_id',
+        'customer_id',
         'status',
         'reason',
         'suspended_until',
@@ -22,9 +22,9 @@ class UserStatus extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function user()
+    public function customer()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 
     public function updatedByAdmin()

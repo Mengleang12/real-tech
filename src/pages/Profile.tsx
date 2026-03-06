@@ -100,7 +100,7 @@ export default function Profile() {
     try {
       const formData = new FormData();
       formData.append('file', croppedBlob, 'avatar.jpg');
-      const uploadResponse = await fetch(`${API_BASE_URL}/api/users/upload-avatar`, {
+      const uploadResponse = await fetch(`${API_BASE_URL}/api/customers/upload-avatar`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -108,7 +108,7 @@ export default function Profile() {
       if (!uploadResponse.ok) throw new Error('Upload failed');
       const uploadData = await uploadResponse.json();
       const newAvatarUrl = uploadData.url;
-      const profileResponse = await fetch(`${API_BASE_URL}/api/users/profile`, {
+      const profileResponse = await fetch(`${API_BASE_URL}/api/customers/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ full_name: fullName || user?.full_name, phone: phone || user?.phone, avatar_url: newAvatarUrl }),
@@ -127,7 +127,7 @@ export default function Profile() {
   const handleUpdateProfile = async () => {
     setIsUpdatingProfile(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/profile`, {
+      const response = await fetch(`${API_BASE_URL}/api/customers/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ full_name: fullName, phone, avatar_url: avatarUrl }),
@@ -153,7 +153,7 @@ export default function Profile() {
     }
     setIsChangingPassword(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/change-password`, {
+      const response = await fetch(`${API_BASE_URL}/api/customers/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),

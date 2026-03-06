@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Customer;
 use App\Models\Sale;
 use App\Models\SaleAttachment;
 use App\Models\SalePayment;
@@ -21,7 +21,7 @@ class AdminUserController extends Controller
 
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = Customer::query();
         
         if ($request->search) {
             $search = $request->search;
@@ -52,29 +52,29 @@ class AdminUserController extends Controller
 
     public function show($id)
     {
-        $user = User::with(['sales' => function($q) {
+        $customer = Customer::with(['sales' => function($q) {
             $q->orderBy('created_at', 'desc');
         }])->findOrFail($id);
         
         return response()->json([
-            'user' => $user,
-            'orders' => $user->sales,
+            'user' => $customer,
+            'orders' => $customer->sales,
         ]);
     }
 
     public function orders($id)
     {
-        $user = User::findOrFail($id);
+        $customer = Customer::findOrFail($id);
         
-        $sales = Sale::where('user_id', $id)
+        $sales = Sale::where('customer_id', $id)
             ->orderBy('created_at', 'desc')
             ->get();
         
         return response()->json([
             'user' => [
-                'id' => $user->id,
-                'email' => $user->email,
-                'full_name' => $user->full_name,
+                'id' => $customer->id,
+                'email' => $customer->email,
+                'full_name' => $customer->full_name,
             ],
             'orders' => $sales,
         ]);
@@ -88,9 +88,9 @@ class AdminUserController extends Controller
             'amount' => 'nullable|numeric|min:0',
         ]);
         
-        $user = User::findOrFail($userId);
+        $customer = Customer::findOrFail($userId);
         
-        $existingPaid = Sale::where('user_id', $userId)
+        $existingPaid = Sale::where('customer_id', $userId)
             ->where('product_id', $request->product_id)
             ->where('status', 'paid')
             ->first();
@@ -103,7 +103,7 @@ class AdminUserController extends Controller
         
         $sale = Sale::create([
             'id' => (string) Str::uuid(),
-            'user_id' => $userId,
+            'customer_id' => $userId,
             'product_id' => $request->product_id,
             'product_name' => $request->product_name,
             'amount' => $request->amount ?? 0,
@@ -119,7 +119,7 @@ class AdminUserController extends Controller
 
         $this->logActivity($request, 'admin_grant_product', [
             'target_user_id' => $userId,
-            'target_email' => $user->email,
+            'target_email' => $customer->email,
             'product_id' => $request->product_id,
             'product_name' => $request->product_name,
         ]);
@@ -133,9 +133,9 @@ class AdminUserController extends Controller
 
     public function revokeProduct(Request $request, $userId, $productId)
     {
-        $user = User::findOrFail($userId);
+        $customer = Customer::findOrFail($userId);
         
-        $sale = Sale::where('user_id', $userId)
+        $sale = Sale::where('customer_id', $userId)
             ->where('product_id', $productId)
             ->where('status', 'paid')
             ->first();
@@ -151,7 +151,7 @@ class AdminUserController extends Controller
 
         $this->logActivity($request, 'admin_revoke_product', [
             'target_user_id' => $userId,
-            'target_email' => $user->email,
+            'target_email' => $customer->email,
             'product_id' => $productId,
             'product_name' => $productName,
         ]);
@@ -182,7 +182,7 @@ class AdminUserController extends Controller
 
         $this->logActivity($request, 'admin_approve_order', [
             'order_id' => $orderId,
-            'user_id' => $sale->user_id,
+            'customer_id' => $sale->customer_id,
             'product_name' => $sale->product_name,
             'amount' => $sale->amount,
         ]);
@@ -200,7 +200,7 @@ class AdminUserController extends Controller
         
         $saleData = [
             'order_id' => $orderId,
-            'user_id' => $sale->user_id,
+            'customer_id' => $sale->customer_id,
             'product_name' => $sale->product_name,
             'amount' => $sale->amount,
             'status' => $sale->status,
@@ -250,14 +250,14 @@ class AdminUserController extends Controller
 
     public function allOrders(Request $request)
     {
-        $query = Sale::with(['user:id,email,full_name,phone', 'items', 'payments']);
+        $query = Sale::with(['customer:id,email,full_name,phone', 'items', 'payments']);
         
         if ($request->status) {
             $query->where('status', $request->status);
         }
         
-        if ($request->user_id) {
-            $query->where('user_id', $request->user_id);
+        if ($request->customer_id) {
+            $query->where('customer_id', $request->customer_id);
         }
 
         if ($request->search) {
@@ -267,7 +267,7 @@ class AdminUserController extends Controller
                   ->orWhere('id', 'like', "%{$search}%")
                   ->orWhere('serial_number', 'like', "%{$search}%")
                   ->orWhere('bakong_transaction_id', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($uq) use ($search) {
+                  ->orWhereHas('customer', function($uq) use ($search) {
                       $uq->where('email', 'like', "%{$search}%")
                         ->orWhere('full_name', 'like', "%{$search}%");
                   });
@@ -535,7 +535,7 @@ class AdminUserController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Order updated successfully',
-                'order' => $sale->load(['user:id,email,full_name,phone', 'items', 'attachments', 'payments']),
+                'order' => $sale->load(['customer:id,email,full_name,phone', 'items', 'attachments', 'payments']),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -546,7 +546,7 @@ class AdminUserController extends Controller
     // ─── Get Order Detail (with attachments & payments) ───────────────────
     public function getOrderDetail($orderId)
     {
-        $sale = Sale::with(['user:id,email,full_name,phone', 'items', 'attachments', 'payments'])
+        $sale = Sale::with(['customer:id,email,full_name,phone', 'items', 'attachments', 'payments'])
             ->findOrFail($orderId);
 
         return response()->json([
@@ -657,13 +657,13 @@ class AdminUserController extends Controller
     public function storeCustomer(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|unique:customers,email',
             'full_name' => 'nullable|string|max:100',
             'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:6',
         ]);
 
-        $user = User::create([
+        $customer = Customer::create([
             'email' => $request->email,
             'full_name' => $request->full_name,
             'phone' => $request->phone,
@@ -671,23 +671,23 @@ class AdminUserController extends Controller
         ]);
 
         $this->logActivity($request, 'admin_create_customer', [
-            'customer_id' => $user->id,
-            'email' => $user->email,
+            'customer_id' => $customer->id,
+            'email' => $customer->email,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Customer created successfully',
-            'user' => $user,
+            'user' => $customer,
         ], 201);
     }
 
     public function updateCustomer(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $customer = Customer::findOrFail($id);
 
         $request->validate([
-            'email' => 'nullable|email|unique:users,email,' . $id,
+            'email' => 'nullable|email|unique:customers,email,' . $id,
             'full_name' => 'nullable|string|max:100',
             'phone' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6',
@@ -699,26 +699,26 @@ class AdminUserController extends Controller
         if ($request->has('phone')) $data['phone'] = $request->phone;
         if ($request->filled('password')) $data['password_hash'] = bcrypt($request->password);
 
-        $user->update($data);
+        $customer->update($data);
 
         $this->logActivity($request, 'admin_update_customer', [
             'customer_id' => $id,
-            'email' => $user->email,
+            'email' => $customer->email,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Customer updated successfully',
-            'user' => $user,
+            'user' => $customer,
         ]);
     }
 
     public function destroyCustomer(Request $request, $id)
     {
-        $user = User::findOrFail($id);
-        $email = $user->email;
+        $customer = Customer::findOrFail($id);
+        $email = $customer->email;
 
-        $user->delete();
+        $customer->delete();
 
         $this->logActivity($request, 'admin_delete_customer', [
             'customer_id' => $id,

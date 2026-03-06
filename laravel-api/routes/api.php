@@ -41,7 +41,7 @@ use App\Http\Controllers\SliderController;
 // Public routes
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [UserController::class, 'register']);
-Route::post('/users/login', [UserController::class, 'login']);
+Route::post('/customers/login', [UserController::class, 'login']);
 
 // OTP routes (public)
 Route::post('/otp/send-registration', [OtpController::class, 'sendRegistrationOtp']);
@@ -119,11 +119,11 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     
     // Admin user management
-    Route::get('/admin/users', [AdminUserController::class, 'index']);
-    Route::get('/admin/users/{id}', [AdminUserController::class, 'show']);
-    Route::get('/admin/users/{id}/orders', [AdminUserController::class, 'orders']);
-    Route::post('/admin/users/{id}/grant-product', [AdminUserController::class, 'grantProduct']);
-    Route::delete('/admin/users/{userId}/revoke-product/{productId}', [AdminUserController::class, 'revokeProduct']);
+    Route::get('/admin/customers', [AdminUserController::class, 'index']);
+    Route::get('/admin/customers/{id}', [AdminUserController::class, 'show']);
+    Route::get('/admin/customers/{id}/orders', [AdminUserController::class, 'orders']);
+    Route::post('/admin/customers/{id}/grant-product', [AdminUserController::class, 'grantProduct']);
+    Route::delete('/admin/customers/{userId}/revoke-product/{productId}', [AdminUserController::class, 'revokeProduct']);
     Route::get('/admin/orders', [AdminUserController::class, 'allOrders']);
     Route::get('/admin/orders/{orderId}', [AdminUserController::class, 'getOrderDetail']);
     Route::put('/admin/orders/{orderId}', [AdminUserController::class, 'updateOrder']);
@@ -200,9 +200,9 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::put('/admin/settings', [SystemSettingController::class, 'update']);
 
     // Customer CRUD
-    Route::post('/admin/users', [AdminUserController::class, 'storeCustomer']);
-    Route::put('/admin/users/{id}', [AdminUserController::class, 'updateCustomer']);
-    Route::delete('/admin/users/{id}', [AdminUserController::class, 'destroyCustomer']);
+    Route::post('/admin/customers', [AdminUserController::class, 'storeCustomer']);
+    Route::put('/admin/customers/{id}', [AdminUserController::class, 'updateCustomer']);
+    Route::delete('/admin/customers/{id}', [AdminUserController::class, 'destroyCustomer']);
 
     // Suppliers
     Route::get('/admin/suppliers', [SupplierController::class, 'index']);
@@ -235,11 +235,11 @@ Route::middleware('auth.admin:admin_only')->group(function () {
 
 // Protected user routes
 Route::middleware('auth.user')->group(function () {
-    Route::get('/users/me', [UserController::class, 'me']);
-    Route::put('/users/profile', [UserController::class, 'updateProfile']);
-    Route::post('/users/change-password', [UserController::class, 'changePassword']);
-    Route::get('/users/permissions', [RoleController::class, 'myPermissions']);
-    Route::post('/users/upload-avatar', [UploadController::class, 'uploadAvatar']);
+    Route::get('/customers/me', [UserController::class, 'me']);
+    Route::put('/customers/profile', [UserController::class, 'updateProfile']);
+    Route::post('/customers/change-password', [UserController::class, 'changePassword']);
+    Route::get('/customers/permissions', [RoleController::class, 'myPermissions']);
+    Route::post('/customers/upload-avatar', [UploadController::class, 'uploadAvatar']);
     
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/purchased', [OrderController::class, 'hasPurchased']);

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Coupon;
 use App\Models\UserCoupon;
-use App\Models\User;
+use App\Models\Customer;
 use App\Traits\LogsAdminActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -95,18 +95,18 @@ class CouponController extends Controller
 
         $validated = $request->validate([
             'user_ids' => 'required|array',
-            'user_ids.*' => 'exists:users,id',
+            'user_ids.*' => 'exists:customers,id',
         ]);
 
         $assigned = 0;
-        foreach ($validated['user_ids'] as $userId) {
-            $exists = UserCoupon::where('user_id', $userId)
+        foreach ($validated['user_ids'] as $customerId) {
+            $exists = UserCoupon::where('customer_id', $customerId)
                 ->where('coupon_id', $coupon->id)
                 ->exists();
 
             if (!$exists) {
                 UserCoupon::create([
-                    'user_id' => $userId,
+                    'customer_id' => $customerId,
                     'coupon_id' => $coupon->id,
                 ]);
                 $assigned++;
@@ -121,7 +121,7 @@ class CouponController extends Controller
         ]);
 
         return response()->json([
-            'message' => "Coupon assigned to {$assigned} user(s)",
+            'message' => "Coupon assigned to {$assigned} customer(s)",
             'assigned_count' => $assigned,
         ]);
     }
@@ -131,32 +131,31 @@ class CouponController extends Controller
         $coupon = Coupon::findOrFail($id);
         
         $userCoupons = UserCoupon::where('coupon_id', $id)
-            ->with('user:id,name,email')
+            ->with('customer:id,full_name,email')
             ->get();
 
         return response()->json(['user_coupons' => $userCoupons]);
     }
 
-    public function removeFromUser(Request $request, $couponId, $userId)
+    public function removeFromUser(Request $request, $couponId, $customerId)
     {
         UserCoupon::where('coupon_id', $couponId)
-            ->where('user_id', $userId)
+            ->where('customer_id', $customerId)
             ->delete();
 
         $this->logActivity($request, 'coupon_remove_user', [
             'coupon_id' => $couponId,
-            'target_user_id' => $userId,
+            'target_user_id' => $customerId,
         ]);
 
-        return response()->json(['message' => 'Coupon removed from user']);
+        return response()->json(['message' => 'Coupon removed from customer']);
     }
 
-    // User: Get my available coupons
     public function myAvailableCoupons(Request $request)
     {
-        $user = $request->user();
+        $customer = $request->user();
 
-        $coupons = UserCoupon::where('user_id', $user->id)
+        $coupons = UserCoupon::where('customer_id', $customer->id)
             ->where('is_used', false)
             ->with(['coupon' => function ($q) {
                 $q->where('is_active', true)
@@ -177,10 +176,10 @@ class CouponController extends Controller
 
     public function getApplicableCoupons(Request $request)
     {
-        $user = $request->user();
+        $customer = $request->user();
         $price = $request->query('price', 0);
 
-        $coupons = UserCoupon::where('user_id', $user->id)
+        $coupons = UserCoupon::where('customer_id', $customer->id)
             ->where('is_used', false)
             ->with(['coupon' => function ($q) use ($price) {
                 $q->where('is_active', true)
@@ -203,7 +202,7 @@ class CouponController extends Controller
 
     public function applyCoupon(Request $request)
     {
-        $user = $request->user();
+        $customer = $request->user();
 
         $validated = $request->validate([
             'user_coupon_id' => 'required|uuid',
@@ -211,7 +210,7 @@ class CouponController extends Controller
         ]);
 
         $userCoupon = UserCoupon::where('id', $validated['user_coupon_id'])
-            ->where('user_id', $user->id)
+            ->where('customer_id', $customer->id)
             ->where('is_used', false)
             ->with('coupon')
             ->first();
