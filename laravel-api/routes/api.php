@@ -227,6 +227,12 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::delete('/admin/purchases/{id}/expenses/{expenseId}', [PurchaseController::class, 'deleteExpense']);
     Route::delete('/admin/purchases/{id}/receive-logs/{logId}', [PurchaseController::class, 'deleteReceiveLog']);
 
+    // Staff user management
+    Route::get('/admin/staff-users', [StaffUserController::class, 'index']);
+    Route::post('/admin/staff-users', [StaffUserController::class, 'store']);
+    Route::put('/admin/staff-users/{id}', [StaffUserController::class, 'update']);
+    Route::delete('/admin/staff-users/{id}', [StaffUserController::class, 'destroy']);
+
     // Slider management
     Route::get('/admin/sliders', [SliderController::class, 'adminIndex']);
     Route::post('/admin/sliders', [SliderController::class, 'store']);
