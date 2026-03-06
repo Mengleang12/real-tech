@@ -176,7 +176,7 @@ export const SerialManagement = () => {
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => { if (confirm("Delete this serial?")) deleteMutation.mutate(serial.id); }}
+                            onClick={() => setDeleteSerialId(serial.id)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
