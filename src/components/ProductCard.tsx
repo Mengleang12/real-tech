@@ -64,9 +64,9 @@ export const ProductCard = (props: ProductCardProps) => {
       ? app.variants.filter(v => v.is_active).reduce((sum, v) => sum + v.stock_quantity, 0)
       : 0;
     const threshold = 5;
-    if (totalStock <= 0) return { status: 'out', label: language === 'km' ? 'អស់ស្តុក' : 'Out of stock' };
-    if (totalStock <= threshold) return { status: 'low', label: language === 'km' ? `នៅសល់ ${totalStock}` : `${totalStock} left` };
-    return null; // normal stock, no badge needed
+    if (totalStock <= 0) return { status: 'out' as const, label: language === 'km' ? 'អស់ស្តុក' : 'Out of stock', stock: totalStock };
+    if (totalStock <= threshold) return { status: 'low' as const, label: language === 'km' ? `នៅសល់ ${totalStock}` : `${totalStock} left`, stock: totalStock };
+    return { status: 'ok' as const, label: language === 'km' ? 'មានស្តុក' : 'In stock', stock: totalStock };
   };
   const stockInfo = getStockInfo();
 
@@ -146,14 +146,14 @@ export const ProductCard = (props: ProductCardProps) => {
           </div>
         )}
 
-        {/* Stock badge */}
-        {stockInfo && (
-          <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full shadow-md ${
+        {/* Stock badge - only for out/low */}
+        {stockInfo && stockInfo.status !== 'ok' && (
+          <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md backdrop-blur-sm ${
             stockInfo.status === 'out' 
-              ? 'bg-destructive text-destructive-foreground' 
-              : 'bg-amber-500 text-white'
+              ? 'bg-destructive/90 text-destructive-foreground' 
+              : 'bg-amber-500/90 text-white'
           }`}>
-            {stockInfo.status === 'low' && <AlertTriangle className="w-3 h-3" />}
+            {stockInfo.status === 'low' && <AlertTriangle className="w-2.5 h-2.5" />}
             {stockInfo.label}
           </div>
         )}
@@ -178,16 +178,36 @@ export const ProductCard = (props: ProductCardProps) => {
           {displayName}
         </h3>
 
-        {/* Price */}
-        <div>
-          {isPaidApp ? (
-            <span className="text-base font-bold text-destructive">
-              ${priceNum.toFixed(1)}
-            </span>
-          ) : (
-            <span className="text-sm font-semibold text-primary">
-              {language === "km" ? "ឥតគិតថ្លៃ" : "Free"}
-            </span>
+        {/* Price + Stock indicator */}
+        <div className="flex items-center justify-between">
+          <div>
+            {isPaidApp ? (
+              <span className="text-base font-bold text-destructive">
+                ${priceNum.toFixed(1)}
+              </span>
+            ) : (
+              <span className="text-sm font-semibold text-primary">
+                {language === "km" ? "ឥតគិតថ្លៃ" : "Free"}
+              </span>
+            )}
+          </div>
+          {stockInfo && (
+            <div className="flex items-center gap-1.5">
+              <span className={`inline-block w-1.5 h-1.5 rounded-full ${
+                stockInfo.status === 'ok' ? 'bg-emerald-500' : 
+                stockInfo.status === 'low' ? 'bg-amber-500 animate-pulse' : 
+                'bg-destructive'
+              }`} />
+              <span className={`text-[10px] font-medium ${
+                stockInfo.status === 'ok' ? 'text-emerald-600 dark:text-emerald-400' : 
+                stockInfo.status === 'low' ? 'text-amber-600 dark:text-amber-400' : 
+                'text-destructive'
+              }`}>
+                {stockInfo.status === 'ok' 
+                  ? (language === 'km' ? 'មានស្តុក' : 'In stock')
+                  : stockInfo.label}
+              </span>
+            </div>
           )}
         </div>
 
