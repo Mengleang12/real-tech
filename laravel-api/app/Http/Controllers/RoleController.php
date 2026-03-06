@@ -57,6 +57,7 @@ class RoleController extends Controller
     }
 
 
+    public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
