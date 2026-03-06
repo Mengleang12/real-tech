@@ -689,6 +689,7 @@ const navGroups: NavGroup[] = [
   {
     label: "System",
     items: [
+      { id: "staff_users", label: "Staff Users", icon: User, permission: "roles.manage" },
       { id: "roles", label: "Roles", icon: Shield, permission: "roles.manage" },
       { id: "notifications", label: "Notifications", icon: Bell, permission: "notifications.manage" },
       { id: "activity", label: "Activity", icon: Activity, permission: "activity.view" },
