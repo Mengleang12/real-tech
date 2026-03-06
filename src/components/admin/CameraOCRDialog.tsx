@@ -242,7 +242,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
             )}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
-};
