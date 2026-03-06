@@ -146,14 +146,14 @@ export const ProductCard = (props: ProductCardProps) => {
           </div>
         )}
 
-        {/* Stock badge */}
-        {stockInfo && (
-          <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full shadow-md ${
+        {/* Stock badge - only for out/low */}
+        {stockInfo && stockInfo.status !== 'ok' && (
+          <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md backdrop-blur-sm ${
             stockInfo.status === 'out' 
-              ? 'bg-destructive text-destructive-foreground' 
-              : 'bg-amber-500 text-white'
+              ? 'bg-destructive/90 text-destructive-foreground' 
+              : 'bg-amber-500/90 text-white'
           }`}>
-            {stockInfo.status === 'low' && <AlertTriangle className="w-3 h-3" />}
+            {stockInfo.status === 'low' && <AlertTriangle className="w-2.5 h-2.5" />}
             {stockInfo.label}
           </div>
         )}
