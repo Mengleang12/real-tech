@@ -117,7 +117,7 @@ class AnalyticsController extends Controller
         $perPage = $request->input('limit', 50);
 
         // Get all products
-        $productsQuery = Product::select('id', 'name', 'icon_url', 'price', 'stock_quantity');
+        $productsQuery = Product::select('id', 'name', 'icon_url');
         if ($search) {
             $productsQuery->where('name', 'like', "%{$search}%");
         }
