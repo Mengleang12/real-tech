@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchPermissions = async (authToken: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/permissions`, {
+      const response = await fetch(`${API_BASE_URL}/api/customers/permissions`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${authToken}`,
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyToken = async (authToken: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+      const response = await fetch(`${API_BASE_URL}/api/customers/me`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${authToken}`,
@@ -156,7 +156,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/customers/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ email, password }),

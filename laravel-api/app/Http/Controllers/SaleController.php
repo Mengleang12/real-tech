@@ -7,7 +7,7 @@ use App\Models\SaleItem;
 use App\Models\SalePayment;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\User;
+use App\Models\Customer;
 use App\Traits\LogsAdminActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -53,8 +53,8 @@ class SaleController extends Controller
         try {
             // Resolve or create customer
             if ($request->customer_type === 'existing') {
-                $user = User::find($request->customer_id);
-                if (!$user) {
+                $customer = Customer::find($request->customer_id);
+                if (!$customer) {
                     return response()->json(['error' => 'Customer not found'], 404);
                 }
             } else {
@@ -62,16 +62,16 @@ class SaleController extends Controller
                 $isWalkin = $customerName === 'Walk-in Customer' && !$request->customer_email && !$request->customer_phone;
 
                 if ($isWalkin) {
-                    $user = User::where('email', 'walkin@guest.local')->first();
-                    if (!$user) {
-                        $user = User::create([
+                    $customer = Customer::where('email', 'walkin@guest.local')->first();
+                    if (!$customer) {
+                        $customer = Customer::create([
                             'full_name' => 'Walk-in Customer',
                             'email' => 'walkin@guest.local',
                             'password_hash' => bcrypt(Str::random(32)),
                         ]);
                     }
                 } else {
-                    $user = User::create([
+                    $customer = Customer::create([
                         'full_name' => $customerName,
                         'phone' => $request->customer_phone,
                         'email' => $request->customer_email ?? 'walkin_' . Str::random(8) . '@guest.local',
@@ -168,7 +168,7 @@ class SaleController extends Controller
             $saleDate = $request->sale_date ? $request->sale_date . ' ' . now()->format('H:i:s') : now()->toDateTimeString();
 
             $sale = new Sale([
-                'user_id' => $user->id,
+                'customer_id' => $customer->id,
                 'product_id' => $firstProductId,
                 'product_name' => implode(', ', $productNames),
                 'serial_number' => $serialNumberStr,
@@ -237,8 +237,8 @@ class SaleController extends Controller
 
 
             $this->logActivity($request, 'admin_sale_created', [
-                'customer_id' => $user->id,
-                'customer_name' => $user->full_name,
+                'customer_id' => $customer->id,
+                'customer_name' => $customer->full_name,
                 'customer_type' => $request->customer_type,
                 'payment_status' => $request->payment_status,
                 'total_amount' => round($totalAmount, 2),
@@ -253,10 +253,10 @@ class SaleController extends Controller
                 'message' => 'Sale created successfully',
                 'orders' => [$sale],
                 'customer' => [
-                    'id' => $user->id,
-                    'full_name' => $user->full_name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
+                    'id' => $customer->id,
+                    'full_name' => $customer->full_name,
+                    'email' => $customer->email,
+                    'phone' => $customer->phone,
                 ],
                 'total_amount' => round($totalAmount, 2),
             ], 201);
@@ -276,7 +276,7 @@ class SaleController extends Controller
             return response()->json(['customers' => []]);
         }
 
-        $customers = User::where(function ($q) use ($search) {
+        $customers = Customer::where(function ($q) use ($search) {
             $q->where('full_name', 'like', "%{$search}%")
               ->orWhere('email', 'like', "%{$search}%")
               ->orWhere('phone', 'like', "%{$search}%");

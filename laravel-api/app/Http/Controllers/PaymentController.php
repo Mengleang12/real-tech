@@ -39,7 +39,7 @@ class PaymentController extends Controller
             return response()->json(['error' => 'Order not found'], 404);
         }
 
-        if ($sale->user_id !== $request->user()->id) {
+        if ($sale->customer_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -50,7 +50,6 @@ class PaymentController extends Controller
                 return response()->json(['error' => 'Failed to generate QR code'], 500);
             }
 
-            // Create payment log
             $paymentLog = PaymentLog::create([
                 'sale_id' => $sale->id,
                 'tran_id' => $qrData['tran_id'],
@@ -63,7 +62,6 @@ class PaymentController extends Controller
                 'status' => 'pending',
             ]);
 
-            // Update sale with transaction ID
             $sale->update([
                 'bakong_transaction_id' => $qrData['tran_id'],
                 'payment_md5' => $paymentLog->id,
@@ -99,7 +97,6 @@ class PaymentController extends Controller
             return response()->json(['error' => 'Order not found'], 404);
         }
 
-        // Check if sale is expired
         if ($sale->isExpired()) {
             $sale->update(['status' => 'expired']);
             return response()->json([
@@ -108,7 +105,6 @@ class PaymentController extends Controller
             ]);
         }
 
-        // Already paid
         if ($sale->isPaid()) {
             return response()->json([
                 'status' => 'paid',
@@ -116,14 +112,12 @@ class PaymentController extends Controller
             ]);
         }
 
-        // Get payment log
         $paymentLog = PaymentLog::find($request->md5);
 
         if (!$paymentLog) {
             return response()->json(['error' => 'Payment log not found'], 404);
         }
 
-        // Check payment status with ABA
         $statusResult = $this->checkPaymentStatus($paymentLog);
 
         if ($statusResult['status'] === 'approved') {
@@ -137,9 +131,8 @@ class PaymentController extends Controller
                 'status_text' => $statusResult['status_text'],
             ]);
 
-            // Log purchase activity
             UserActivityLog::create([
-                'user_id' => $sale->user_id,
+                'customer_id' => $sale->customer_id,
                 'action' => 'purchase',
                 'details' => [
                     'sale_id' => $sale->id,
@@ -152,13 +145,9 @@ class PaymentController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            // Send Telegram notification
             $this->sendTelegramNotification($sale);
-
-            // Deduct stock
             SaleController::deductStock($sale);
 
-            // Create and send receipt email
             try {
                 ReceiptController::createFromSale($sale);
             } catch (\Exception $e) {
@@ -171,7 +160,6 @@ class PaymentController extends Controller
             ]);
         }
 
-        // Update payment log status
         $paymentLog->update([
             'status_text' => $statusResult['status_text'],
         ]);
@@ -199,7 +187,6 @@ class PaymentController extends Controller
             'paid_at' => now(),
         ]);
 
-        // Update payment log if exists
         $paymentLog = PaymentLog::where('sale_id', $sale->id)->latest()->first();
         if ($paymentLog) {
             $paymentLog->update([
@@ -208,13 +195,9 @@ class PaymentController extends Controller
             ]);
         }
 
-        // Send Telegram notification
         $this->sendTelegramNotification($sale);
-
-        // Deduct stock
         SaleController::deductStock($sale);
 
-        // Create and send receipt email
         try {
             ReceiptController::createFromSale($sale);
         } catch (\Exception $e) {
@@ -229,7 +212,6 @@ class PaymentController extends Controller
 
     private function getQRString(float $amount, string $saleId): ?array
     {
-        // Fetch ABA data
         $abaDataResponse = Http::get($this->paywayUrl);
 
         if (!$abaDataResponse->successful()) {
@@ -242,15 +224,12 @@ class PaymentController extends Controller
             return null;
         }
 
-        // Generate request parameters
         $deviceId = $this->generateDeviceId();
         $requestTime = now()->format('YmdHis');
 
-        // Generate hash
         $hashString = $deviceId . $requestTime . $saleId . $amount;
         $hash = hash_hmac('sha512', $hashString, $this->paywaySecret);
 
-        // Request QR from ABA
         $response = Http::post('https://pwapp.ababank.com/api/pw-app/v1/payment/gateway/list-payment-options', [
             'aba_data' => $abaData,
             'device_id' => $deviceId,

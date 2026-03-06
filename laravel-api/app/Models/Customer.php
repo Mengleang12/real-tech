@@ -6,8 +6,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class User extends Authenticatable
+class Customer extends Authenticatable
 {
+    protected $table = 'customers';
+
     protected $fillable = [
         'email',
         'password_hash',
@@ -33,22 +35,22 @@ class User extends Authenticatable
 
     public function sales(): HasMany
     {
-        return $this->hasMany(Sale::class);
+        return $this->hasMany(Sale::class, 'customer_id');
     }
 
     public function status(): HasOne
     {
-        return $this->hasOne(UserStatus::class);
+        return $this->hasOne(UserStatus::class, 'customer_id');
     }
 
     public function roles(): HasMany
     {
-        return $this->hasMany(UserRole::class);
+        return $this->hasMany(UserRole::class, 'customer_id');
     }
 
     public function activityLogs(): HasMany
     {
-        return $this->hasMany(UserActivityLog::class);
+        return $this->hasMany(UserActivityLog::class, 'customer_id');
     }
 
     public function hasRole(string $role): bool

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\OtpMail;
 use App\Models\OtpCode;
-use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -12,21 +12,17 @@ use Firebase\JWT\JWT;
 
 class OtpController extends Controller
 {
-    /**
-     * Send OTP for registration
-     */
     public function sendRegistrationOtp(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
         ]);
 
-        // Check if email already registered and verified
-        $existingUser = User::where('email', $request->email)
+        $existingCustomer = Customer::where('email', $request->email)
             ->whereNotNull('email_verified_at')
             ->first();
 
-        if ($existingUser) {
+        if ($existingCustomer) {
             return response()->json(['error' => 'Email already registered'], 400);
         }
 
@@ -44,9 +40,6 @@ class OtpController extends Controller
         ]);
     }
 
-    /**
-     * Verify OTP and complete registration
-     */
     public function verifyRegistrationOtp(Request $request)
     {
         $request->validate([
@@ -62,19 +55,16 @@ class OtpController extends Controller
             return response()->json(['error' => 'Invalid or expired OTP'], 400);
         }
 
-        // Check if user exists (unverified)
-        $user = User::where('email', $request->email)->first();
+        $customer = Customer::where('email', $request->email)->first();
 
-        if ($user) {
-            // Update existing unverified user
-            $user->update([
+        if ($customer) {
+            $customer->update([
                 'password_hash' => Hash::make($request->password),
                 'full_name' => $request->full_name,
                 'email_verified_at' => now(),
             ]);
         } else {
-            // Create new user
-            $user = User::create([
+            $customer = Customer::create([
                 'email' => $request->email,
                 'password_hash' => Hash::make($request->password),
                 'full_name' => $request->full_name,
@@ -82,32 +72,28 @@ class OtpController extends Controller
             ]);
         }
 
-        $token = $this->generateToken($user);
+        $token = $this->generateToken($customer);
 
         return response()->json([
             'success' => true,
             'token' => $token,
             'user' => [
-                'id' => $user->id,
-                'email' => $user->email,
-                'full_name' => $user->full_name,
+                'id' => $customer->id,
+                'email' => $customer->email,
+                'full_name' => $customer->full_name,
             ],
         ]);
     }
 
-    /**
-     * Send OTP for password reset
-     */
     public function sendPasswordResetOtp(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $customer = Customer::where('email', $request->email)->first();
 
-        if (!$user) {
-            // Don't reveal if email exists
+        if (!$customer) {
             return response()->json([
                 'success' => true,
                 'message' => 'If the email exists, an OTP has been sent',
@@ -128,9 +114,6 @@ class OtpController extends Controller
         ]);
     }
 
-    /**
-     * Verify OTP code only (without resetting password)
-     */
     public function verifyResetCode(Request $request)
     {
         $request->validate([
@@ -150,16 +133,12 @@ class OtpController extends Controller
             return response()->json(['error' => 'Invalid or expired OTP'], 400);
         }
 
-        // Don't mark as used yet - will be marked when password is actually reset
         return response()->json([
             'success' => true,
             'message' => 'OTP verified successfully',
         ]);
     }
 
-    /**
-     * Verify OTP and reset password
-     */
     public function verifyPasswordResetOtp(Request $request)
     {
         $request->validate([
@@ -174,13 +153,13 @@ class OtpController extends Controller
             return response()->json(['error' => 'Invalid or expired OTP'], 400);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $customer = Customer::where('email', $request->email)->first();
 
-        if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
+        if (!$customer) {
+            return response()->json(['error' => 'Customer not found'], 404);
         }
 
-        $user->update([
+        $customer->update([
             'password_hash' => Hash::make($request->password),
         ]);
 
@@ -190,9 +169,6 @@ class OtpController extends Controller
         ]);
     }
 
-    /**
-     * Resend OTP
-     */
     public function resendOtp(Request $request)
     {
         $request->validate([
@@ -200,7 +176,6 @@ class OtpController extends Controller
             'type' => 'required|in:registration,password_reset',
         ]);
 
-        // Rate limiting check - only allow resend after 60 seconds
         $lastOtp = OtpCode::where('email', $request->email)
             ->where('type', $request->type)
             ->latest()
@@ -227,15 +202,15 @@ class OtpController extends Controller
         ]);
     }
 
-    private function generateToken(User $user): string
+    private function generateToken(Customer $customer): string
     {
         $payload = [
             'iss' => config('app.url'),
-            'sub' => $user->id,
-            'user_id' => $user->id,
-            'email' => $user->email,
+            'sub' => $customer->id,
+            'user_id' => $customer->id,
+            'email' => $customer->email,
             'iat' => time(),
-            'exp' => time() + (60 * 60 * 24 * 7), // 7 days
+            'exp' => time() + (60 * 60 * 24 * 7),
         ];
 
         return JWT::encode($payload, config('app.jwt_secret'), 'HS256');

@@ -439,23 +439,23 @@ export const adminUsersApi = {
     if (params?.limit) query.set('limit', params.limit.toString());
     
     const queryString = query.toString();
-    return apiRequest(`admin/users${queryString ? `?${queryString}` : ''}`);
+    return apiRequest(`admin/customers${queryString ? `?${queryString}` : ''}`);
   },
   
   getById: async (id: number): Promise<{ user: AdminUser; orders: AdminOrder[] }> => {
-    return apiRequest(`admin/users/${id}`);
+    return apiRequest(`admin/customers/${id}`);
   },
   
   getOrders: async (userId: number): Promise<{ user: { id: number; email: string; full_name?: string }; orders: AdminOrder[] }> => {
-    return apiRequest(`admin/users/${userId}/orders`);
+    return apiRequest(`admin/customers/${userId}/orders`);
   },
   
   grantProduct: async (userId: number, data: { product_id: number; product_name: string; amount?: number }): Promise<{ success: boolean; message: string; order: AdminOrder }> => {
-    return apiRequest(`admin/users/${userId}/grant-product`, { method: 'POST', body: data });
+    return apiRequest(`admin/customers/${userId}/grant-product`, { method: 'POST', body: data });
   },
   
   revokeProduct: async (userId: number, productId: number): Promise<{ success: boolean; message: string }> => {
-    return apiRequest(`admin/users/${userId}/revoke-product/${productId}`, { method: 'DELETE' });
+    return apiRequest(`admin/customers/${userId}/revoke-product/${productId}`, { method: 'DELETE' });
   },
   
   getAllOrders: async (params?: { status?: string; user_id?: number; search?: string; page?: number; limit?: number }): Promise<{
@@ -494,15 +494,15 @@ export const adminUsersApi = {
   },
 
   createCustomer: async (data: { email: string; full_name?: string; phone?: string; password: string }): Promise<{ success: boolean; user: AdminUser }> => {
-    return apiRequest('admin/users', { method: 'POST', body: data });
+    return apiRequest('admin/customers', { method: 'POST', body: data });
   },
 
   updateCustomer: async (id: number, data: { email?: string; full_name?: string; phone?: string; password?: string }): Promise<{ success: boolean; user: AdminUser }> => {
-    return apiRequest(`admin/users/${id}`, { method: 'PUT', body: data });
+    return apiRequest(`admin/customers/${id}`, { method: 'PUT', body: data });
   },
 
   deleteCustomer: async (id: number): Promise<{ success: boolean; message: string }> => {
-    return apiRequest(`admin/users/${id}`, { method: 'DELETE' });
+    return apiRequest(`admin/customers/${id}`, { method: 'DELETE' });
   },
 
   uploadAttachment: async (orderId: string, file: File): Promise<{ success: boolean; attachment: OrderAttachment }> => {

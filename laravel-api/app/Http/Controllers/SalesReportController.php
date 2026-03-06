@@ -232,12 +232,12 @@ class SalesReportController extends Controller
 
         $customers = Sale::where('status', 'paid')
             ->whereBetween('paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
-            ->join('users', 'sales.user_id', '=', 'users.id')
+            ->join('customers', 'sales.customer_id', '=', 'customers.id')
             ->select(
-                'sales.user_id',
-                'users.full_name',
-                'users.email',
-                'users.phone',
+                'sales.customer_id as user_id',
+                'customers.full_name',
+                'customers.email',
+                'customers.phone',
                 DB::raw('COUNT(*) as total_orders'),
                 DB::raw('SUM(sales.amount) as total_spent'),
                 DB::raw('AVG(sales.amount) as avg_order_value'),
@@ -245,7 +245,7 @@ class SalesReportController extends Controller
                 DB::raw('MAX(sales.paid_at) as last_purchase'),
                 DB::raw('COUNT(DISTINCT sales.product_id) as unique_products')
             )
-            ->groupBy('sales.user_id', 'users.full_name', 'users.email', 'users.phone')
+            ->groupBy('sales.customer_id', 'customers.full_name', 'customers.email', 'customers.phone')
             ->orderByDesc('total_spent')
             ->limit($limit)
             ->get()
@@ -267,13 +267,13 @@ class SalesReportController extends Controller
         // Overall customer stats
         $totalCustomers = Sale::where('status', 'paid')
             ->whereBetween('paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
-            ->distinct('user_id')
-            ->count('user_id');
+            ->distinct('customer_id')
+            ->count('customer_id');
 
         $repeatCustomers = Sale::where('status', 'paid')
             ->whereBetween('paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
-            ->select('user_id')
-            ->groupBy('user_id')
+            ->select('customer_id')
+            ->groupBy('customer_id')
             ->havingRaw('COUNT(*) > 1')
             ->get()
             ->count();

@@ -10,7 +10,7 @@ class UserCoupon extends Model
     use HasUuids;
 
     protected $fillable = [
-        'user_id',
+        'customer_id',
         'coupon_id',
         'is_used',
         'used_on_sale_id',
@@ -22,9 +22,9 @@ class UserCoupon extends Model
         'used_at' => 'datetime',
     ];
 
-    public function user()
+    public function customer()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 
     public function coupon()

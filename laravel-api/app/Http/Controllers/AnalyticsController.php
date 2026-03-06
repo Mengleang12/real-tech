@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\User;
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
@@ -43,8 +43,8 @@ class AnalyticsController extends Controller
             ->get();
         $paidSales = $sales->where('status', 'paid');
 
-        $totalUsers = User::count();
-        $newUsers = User::where('created_at', '>=', $startDate)->where('created_at', '<=', $endDate)->count();
+        $totalUsers = Customer::count();
+        $newUsers = Customer::where('created_at', '>=', $startDate)->where('created_at', '<=', $endDate)->count();
 
         $stats = [
             'total_users' => $totalUsers,
@@ -74,7 +74,7 @@ class AnalyticsController extends Controller
             ->groupBy('status')
             ->get();
 
-        $recentOrders = Sale::with('user:id,email,full_name')
+        $recentOrders = Sale::with('customer:id,email,full_name')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
