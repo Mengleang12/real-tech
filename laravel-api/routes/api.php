@@ -7,6 +7,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UploadController;
+use App\Http\Controllers\StaffUserController;
 
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\OtpController;
@@ -225,6 +226,12 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::post('/admin/purchases/{id}/expenses', [PurchaseController::class, 'addExpense']);
     Route::delete('/admin/purchases/{id}/expenses/{expenseId}', [PurchaseController::class, 'deleteExpense']);
     Route::delete('/admin/purchases/{id}/receive-logs/{logId}', [PurchaseController::class, 'deleteReceiveLog']);
+
+    // Staff user management
+    Route::get('/admin/staff-users', [StaffUserController::class, 'index']);
+    Route::post('/admin/staff-users', [StaffUserController::class, 'store']);
+    Route::put('/admin/staff-users/{id}', [StaffUserController::class, 'update']);
+    Route::delete('/admin/staff-users/{id}', [StaffUserController::class, 'destroy']);
 
     // Slider management
     Route::get('/admin/sliders', [SliderController::class, 'adminIndex']);

@@ -46,6 +46,7 @@ import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/co
 import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
 import { SupplierManagement } from "@/components/admin/SupplierManagement";
 import { SliderManagement } from "@/components/admin/SliderManagement";
+import { StaffUserManagement } from "@/components/admin/StaffUserManagement";
 import { WarrantyManagement } from "@/components/admin/WarrantyManagement";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabelDialog";
@@ -631,7 +632,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "sliders" | "users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "sliders" | "users" | "staff_users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties";
 
 interface NavItem {
   id: AdminTab;
@@ -688,6 +689,7 @@ const navGroups: NavGroup[] = [
   {
     label: "System",
     items: [
+      { id: "staff_users", label: "Staff Users", icon: User, permission: "roles.manage" },
       { id: "roles", label: "Roles", icon: Shield, permission: "roles.manage" },
       { id: "notifications", label: "Notifications", icon: Bell, permission: "notifications.manage" },
       { id: "activity", label: "Activity", icon: Activity, permission: "activity.view" },
@@ -1258,6 +1260,7 @@ const AdminDashboard = () => {
           {activeTab === "payments" && <PaymentHistoryAdmin />}
           {activeTab === "reviews" && <ProductReviewSystem />}
           {activeTab === "roles" && <RoleManagement />}
+          {activeTab === "staff_users" && <StaffUserManagement />}
           {activeTab === "notifications" && <NotificationSystem />}
           {activeTab === "activity" && <ActivityLogs />}
           {activeTab === "status" && <UserStatusManagement />}
