@@ -1260,6 +1260,7 @@ const AdminDashboard = () => {
           {activeTab === "payments" && <PaymentHistoryAdmin />}
           {activeTab === "reviews" && <ProductReviewSystem />}
           {activeTab === "roles" && <RoleManagement />}
+          {activeTab === "staff_users" && <StaffUserManagement />}
           {activeTab === "notifications" && <NotificationSystem />}
           {activeTab === "activity" && <ActivityLogs />}
           {activeTab === "status" && <UserStatusManagement />}
