@@ -64,9 +64,9 @@ export const ProductCard = (props: ProductCardProps) => {
       ? app.variants.filter(v => v.is_active).reduce((sum, v) => sum + v.stock_quantity, 0)
       : 0;
     const threshold = 5;
-    if (totalStock <= 0) return { status: 'out', label: language === 'km' ? 'អស់ស្តុក' : 'Out of stock' };
-    if (totalStock <= threshold) return { status: 'low', label: language === 'km' ? `នៅសល់ ${totalStock}` : `${totalStock} left` };
-    return null; // normal stock, no badge needed
+    if (totalStock <= 0) return { status: 'out' as const, label: language === 'km' ? 'អស់ស្តុក' : 'Out of stock', stock: totalStock };
+    if (totalStock <= threshold) return { status: 'low' as const, label: language === 'km' ? `នៅសល់ ${totalStock}` : `${totalStock} left`, stock: totalStock };
+    return { status: 'ok' as const, label: language === 'km' ? 'មានស្តុក' : 'In stock', stock: totalStock };
   };
   const stockInfo = getStockInfo();
 
