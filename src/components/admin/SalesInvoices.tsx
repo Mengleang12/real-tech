@@ -387,6 +387,22 @@ const StockManagement = () => {
                       })}
                     </div>
                   )}
+
+                  {/* Add Serial Numbers button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 text-xs"
+                    onClick={() => setSerialProduct({
+                      id: product.id,
+                      name: product.name,
+                      icon_url: product.icon_url,
+                      variants: product.variants.map(v => ({ id: v.id, combination: v.combination, sku: v.sku })),
+                    })}
+                  >
+                    <ScanBarcode className="w-3.5 h-3.5" />
+                    Add Serial Numbers
+                  </Button>
                 </div>
               </div>
             );
