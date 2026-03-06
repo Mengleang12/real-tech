@@ -33,6 +33,7 @@ use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SliderController;
 use App\Http\Controllers\ProductSerialController;
+use App\Http\Controllers\OcrController;
 
 /*
 |--------------------------------------------------------------------------
