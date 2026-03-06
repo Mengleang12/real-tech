@@ -43,18 +43,8 @@ class Customer extends Authenticatable
         return $this->hasOne(UserStatus::class, 'customer_id');
     }
 
-    public function roles(): HasMany
-    {
-        return $this->hasMany(UserRole::class, 'customer_id');
-    }
-
     public function activityLogs(): HasMany
     {
         return $this->hasMany(UserActivityLog::class, 'customer_id');
-    }
-
-    public function hasRole(string $role): bool
-    {
-        return $this->roles()->where('role', $role)->exists();
     }
 }

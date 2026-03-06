@@ -31,7 +31,7 @@ class Notification extends Model
 
     public function createdByAdmin()
     {
-        return $this->belongsTo(Admin::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function scopePublished($query)
