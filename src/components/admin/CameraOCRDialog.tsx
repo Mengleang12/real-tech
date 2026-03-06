@@ -84,7 +84,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     setDetectedSerial(null);
     try {
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('admin_api_key') || localStorage.getItem('auth_token') || '';
       
       const response = await fetch(`${API_BASE_URL}/api/admin/ocr/scan-serial`, {
         method: "POST",
