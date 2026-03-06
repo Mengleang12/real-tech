@@ -12,8 +12,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Search, Plus, Trash2, Loader2, Package, ChevronLeft, ChevronRight,
-  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban,
+  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban, Camera,
 } from "lucide-react";
+import { CameraOCRDialog } from "./CameraOCRDialog";
 
 const statusConfig = {
   available: { label: "Available", icon: CheckCircle2, color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
@@ -374,6 +375,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
 }) => {
   const queryClient = useQueryClient();
   const [deleteSerialId, setDeleteSerialId] = useState<number | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   // Fetch existing serials for this product
   const { data: existingData, isLoading: existingLoading } = useQuery({
@@ -581,8 +583,16 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                 <Button onClick={addSerial} disabled={!serialInput.trim() || serialList.length >= remainingSlots}>
                   <Plus className="w-4 h-4" />
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setCameraOpen(true)}
+                  disabled={serialList.length >= remainingSlots}
+                  title="Scan serial with camera"
+                >
+                  <Camera className="w-4 h-4" />
+                </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground">Press Enter to add. Paste multiple (comma/newline separated).</p>
+              <p className="text-[10px] text-muted-foreground">Press Enter to add. Paste multiple (comma/newline separated). Or use camera to OCR.</p>
               {serialList.length >= remainingSlots && remainingSlots !== Infinity && (
                 <p className="text-[11px] text-destructive font-medium">Stock limit reached. Cannot add more serial numbers.</p>
               )}
@@ -629,6 +639,23 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    <CameraOCRDialog
+      open={cameraOpen}
+      onOpenChange={setCameraOpen}
+      onSerialDetected={(serial) => {
+        if (existingSerials.some((s: ProductSerial) => s.serial_number === serial) || serialList.includes(serial)) {
+          toast.error("This serial number already exists");
+          return;
+        }
+        if (serialList.length >= remainingSlots) {
+          toast.error("Stock limit reached");
+          return;
+        }
+        setSerialList([...serialList, serial]);
+        toast.success(`Serial "${serial}" added`);
+      }}
+    />
     </>
   );
 };
