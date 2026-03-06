@@ -27,45 +27,58 @@ const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
+// Context to hoist title into the header bar
+const DialogTitleContext = React.createContext<{
+  title: React.ReactNode;
+  setTitle: (t: React.ReactNode) => void;
+}>({ title: null, setTitle: () => {} });
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
+  const [title, setTitle] = React.useState<React.ReactNode>(null);
+
   return (
-    <DialogPortal>
-      <DialogOverlay />
-      <DialogPrimitive.Content
-        ref={ref}
-        {...props}
-        onInteractOutside={(e) => {
-          e.preventDefault();
-        }}
-        className={cn(
-          "fixed z-50 flex flex-col border-0 bg-card overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-          // Mobile: fullscreen
-          "inset-0 rounded-none",
-          // Desktop: centered dialog
-          "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-full sm:max-w-lg sm:rounded-xl sm:max-h-[85vh]",
-          className,
-        )}
-      >
-        {/* Title bar with close on the right */}
-        <div className="flex items-center justify-end px-4 py-2.5 bg-muted/60 border-b border-border/50 shrink-0">
-          <DialogPrimitive.Close asChild>
-            <button
-              className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors focus:outline-none"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </DialogPrimitive.Close>
-        </div>
-        {/* Content area */}
-        <div className="flex flex-col flex-1 min-h-0 p-6 overflow-y-auto">
-          {children}
-        </div>
-      </DialogPrimitive.Content>
-    </DialogPortal>
+    <DialogTitleContext.Provider value={{ title, setTitle }}>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogPrimitive.Content
+          ref={ref}
+          {...props}
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+          className={cn(
+            "fixed z-50 flex flex-col border-0 bg-card overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "inset-0 rounded-none",
+            "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-full sm:max-w-lg sm:rounded-xl sm:max-h-[85vh]",
+            className,
+          )}
+        >
+          {/* Header bar: title left, close right */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-muted/60 border-b border-border/50 shrink-0 min-h-[44px]">
+            <DialogPrimitive.Title asChild>
+              <span className="text-sm font-semibold leading-none tracking-tight truncate">
+                {title}
+              </span>
+            </DialogPrimitive.Title>
+            <DialogPrimitive.Close asChild>
+              <button
+                className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors focus:outline-none shrink-0 ml-2"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </DialogPrimitive.Close>
+          </div>
+          {/* Content area */}
+          <div className="flex flex-col flex-1 min-h-0 p-6 overflow-y-auto">
+            {children}
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </DialogTitleContext.Provider>
   );
 });
 DialogContent.displayName = DialogPrimitive.Content.displayName;
@@ -80,16 +93,21 @@ const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 );
 DialogFooter.displayName = "DialogFooter";
 
+// DialogTitle hoists its children into the header bar and renders nothing in place
 const DialogTitle = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
+  HTMLHeadingElement,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
-    {...props}
-  />
-));
+>(({ className, children, ...props }, ref) => {
+  const { setTitle } = React.useContext(DialogTitleContext);
+
+  React.useEffect(() => {
+    setTitle(children);
+    return () => setTitle(null);
+  }, [children, setTitle]);
+
+  // Render nothing here — title is shown in the header bar
+  return null;
+});
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
 const DialogDescription = React.forwardRef<
