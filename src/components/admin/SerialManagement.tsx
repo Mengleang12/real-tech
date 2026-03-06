@@ -29,6 +29,7 @@ export const SerialManagement = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
+  const [deleteSerialId, setDeleteSerialId] = useState<number | null>(null);
 
   // Debounce
   useEffect(() => {
