@@ -29,6 +29,6 @@ class UserStatus extends Model
 
     public function updatedByAdmin()
     {
-        return $this->belongsTo(Admin::class, 'updated_by');
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

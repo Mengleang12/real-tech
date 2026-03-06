@@ -20,25 +20,48 @@ class AuthenticateAdmin
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // First, try legacy admin token (users table, formerly admins)
-        $admin = User::where('auth_token', $token)
+        // Try admin token (users table, formerly admins)
+        $admin = User::with('roles')->where('auth_token', $token)
             ->where('token_expiry', '>', now())
             ->first();
 
         if ($admin) {
+            $adminRoles = $admin->roles->pluck('role')->toArray();
+            $permissions = RolePermission::getPermissionsForRoles($adminRoles);
+
+            $isAdmin = in_array('admin', $adminRoles);
+            $isSuperAdmin = in_array('super_admin', $adminRoles);
+
+            // If no roles assigned, treat legacy admin users as full admin
+            if (empty($adminRoles)) {
+                $isAdmin = true;
+            }
+
+            if ($level === 'admin_only' && !$isAdmin && !$isSuperAdmin) {
+                $adminOnlyPerms = ['users.manage', 'orders.manage', 'roles.manage', 'user_status.manage', 'coupons.manage', 'settings.manage', 'analytics.view', 'receipts.view'];
+                $hasAdminPerm = !empty(array_intersect($adminOnlyPerms, $permissions));
+                
+                if (!$hasAdminPerm) {
+                    return response()->json(['error' => 'Admin access required'], 403);
+                }
+            }
+
             $request->setUserResolver(function () use ($admin) {
                 return $admin;
             });
-            $request->attributes->set('admin_role', 'admin');
-            $request->attributes->set('user_permissions', ['*']);
+            $effectiveRole = $isSuperAdmin ? 'super_admin' : ($isAdmin ? 'admin' : 'custom');
+            $request->attributes->set('admin_role', $effectiveRole);
+            $request->attributes->set('user_permissions', ($isAdmin || $isSuperAdmin) ? ['*'] : $permissions);
+
             return $next($request);
         }
 
-        // Try customer JWT token (customers with roles)
+        // Try customer JWT token — customers do NOT have admin access
+        // This block is kept for backward compatibility but denies admin access
         try {
             $decoded = JWT::decode($token, new Key(config('app.jwt_secret'), 'HS256'));
             
-            $customer = Customer::with(['roles', 'status'])->find($decoded->user_id);
+            $customer = Customer::with('status')->find($decoded->user_id);
 
             if (!$customer) {
                 return response()->json(['error' => 'Unauthorized'], 401);
@@ -54,35 +77,8 @@ class AuthenticateAdmin
                 }
             }
 
-            // Note: Customer roles are kept for backward compatibility but
-            // the primary role system now targets the users (admin) table
-            $customerRoles = $customer->roles->pluck('role')->toArray();
-            $customerPermissions = RolePermission::getPermissionsForRoles($customerRoles);
-
-            $isAdmin = in_array('admin', $customerRoles);
-            $isSuperAdmin = in_array('super_admin', $customerRoles);
-
-            if ($level === 'admin_only' && !$isAdmin && !$isSuperAdmin && !in_array('roles.manage', $customerPermissions)) {
-                $adminOnlyPerms = ['users.manage', 'orders.manage', 'roles.manage', 'user_status.manage', 'coupons.manage', 'settings.manage', 'analytics.view', 'receipts.view'];
-                $hasAdminPerm = !empty(array_intersect($adminOnlyPerms, $customerPermissions));
-                
-                if (!$hasAdminPerm) {
-                    return response()->json(['error' => 'Admin access required'], 403);
-                }
-            }
-
-            if (!$isAdmin && !$isSuperAdmin && empty($customerPermissions)) {
-                return response()->json(['error' => 'You do not have permission to access this resource'], 403);
-            }
-
-            $request->setUserResolver(function () use ($customer) {
-                return $customer;
-            });
-            $effectiveRole = $isSuperAdmin ? 'super_admin' : ($isAdmin ? 'admin' : 'custom');
-            $request->attributes->set('admin_role', $effectiveRole);
-            $request->attributes->set('user_permissions', ($isAdmin || $isSuperAdmin) ? ['*'] : $customerPermissions);
-
-            return $next($request);
+            // Customers no longer have admin roles — deny admin access
+            return response()->json(['error' => 'Admin access required'], 403);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Unauthorized'], 401);

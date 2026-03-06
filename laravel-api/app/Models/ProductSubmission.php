@@ -39,6 +39,6 @@ class ProductSubmission extends Model
 
     public function reviewedByAdmin()
     {
-        return $this->belongsTo(Admin::class, 'reviewed_by');
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 }
