@@ -590,7 +590,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
               <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input
                 ref={searchInputRef}
-                placeholder="Search or scan barcode... (Enter to quick-add)"
+                placeholder="Scan serial/barcode or search product... (Enter to add)"
                 value={productSearch}
                 onChange={(e) => handleSearchProducts(e.target.value)}
                 onKeyDown={e => {
