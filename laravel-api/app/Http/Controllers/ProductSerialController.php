@@ -56,6 +56,24 @@ class ProductSerialController extends Controller
             'serials.*.notes' => 'nullable|string',
         ]);
 
+        // Check stock limit if variant specified
+        if ($request->variant_id) {
+            $variant = \App\Models\ProductVariant::find($request->variant_id);
+            if ($variant) {
+                $existingCount = ProductSerial::where('product_id', $request->product_id)
+                    ->where('variant_id', $request->variant_id)
+                    ->whereIn('status', ['available', 'reserved'])
+                    ->count();
+                $maxAllowed = $variant->stock_quantity - $existingCount;
+                if (count($request->serials) > $maxAllowed) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Cannot add " . count($request->serials) . " serial(s). Only {$maxAllowed} slot(s) available (stock: {$variant->stock_quantity}, existing serials: {$existingCount}).",
+                    ], 422);
+                }
+            }
+        }
+
         $created = [];
         $duplicates = [];
 
@@ -63,7 +81,7 @@ class ProductSerialController extends Controller
             $sn = trim($item['serial_number']);
             if (!$sn) continue;
 
-            // Check if barcode/serial already exists
+            // Check if serial already exists for this product
             $exists = ProductSerial::where('serial_number', $sn)
                 ->where('product_id', $request->product_id)
                 ->exists();

@@ -296,7 +296,7 @@ const AddSerialsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange:
 export const AddSerialsForProductDialog = ({ open, onOpenChange, product }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  product: { id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string }> };
+  product: { id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string; stock_quantity?: number }> };
 }) => {
   const [selectedVariantId, setSelectedVariantId] = useState<number | undefined>(
     product.variants.length > 0 ? product.variants[0].id : undefined
@@ -321,7 +321,7 @@ export const AddSerialsForProductDialog = ({ open, onOpenChange, product }: {
       id: v.id,
       combination: v.combination,
       sku: v.sku || "",
-      stock_quantity: 0,
+      stock_quantity: v.stock_quantity ?? 0,
       price_adjustment: 0,
       is_active: true,
     })),
@@ -359,11 +359,20 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
 }) => {
   const queryClient = useQueryClient();
 
+  // Get stock limit for selected variant
+  const selectedVariant = selectedProduct?.variants.find(v => v.id === selectedVariantId);
+  const stockLimit = selectedVariant?.stock_quantity ?? Infinity;
+  const isOverStock = serialList.length >= stockLimit;
+
   const addSerial = () => {
     const trimmed = serialInput.trim();
     if (!trimmed) return;
     if (serialList.includes(trimmed)) {
-      toast.error("Duplicate serial number");
+      toast.error("Duplicate serial number - already in list");
+      return;
+    }
+    if (serialList.length >= stockLimit) {
+      toast.error(`Cannot exceed stock quantity (${stockLimit})`);
       return;
     }
     setSerialList([...serialList, trimmed]);
@@ -372,9 +381,20 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
 
   const handlePaste = (text: string) => {
     const lines = text.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-    const newSerials = lines.filter(s => !serialList.includes(s));
-    if (newSerials.length > 0) {
-      setSerialList([...serialList, ...newSerials]);
+    // Remove duplicates within paste and against existing list
+    const unique = [...new Set(lines)].filter(s => !serialList.includes(s));
+    const remaining = stockLimit - serialList.length;
+    if (remaining <= 0) {
+      toast.error(`Cannot exceed stock quantity (${stockLimit})`);
+      return;
+    }
+    const toAdd = unique.slice(0, remaining);
+    const skipped = unique.length - toAdd.length;
+    if (toAdd.length > 0) {
+      setSerialList([...serialList, ...toAdd]);
+    }
+    if (skipped > 0) {
+      toast.warning(`${skipped} serial(s) skipped - would exceed stock limit`);
     }
   };
 
@@ -387,6 +407,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
     onSuccess: (res) => {
       toast.success(res.message);
       queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
       setSerialList([]);
       onOpenChange(false);
     },
@@ -431,7 +452,14 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
             )}
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Enter Serial Numbers</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Enter Serial Numbers</Label>
+                {stockLimit !== Infinity && (
+                  <span className={`text-xs font-medium ${isOverStock ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    {serialList.length} / {stockLimit} (stock limit)
+                  </span>
+                )}
+              </div>
               <div className="flex gap-2">
                 <Input
                   placeholder="Type or scan serial number..."
@@ -446,12 +474,16 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                     }
                   }}
                   className="flex-1"
+                  disabled={isOverStock}
                 />
-                <Button onClick={addSerial} disabled={!serialInput.trim()}>
+                <Button onClick={addSerial} disabled={!serialInput.trim() || isOverStock}>
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
               <p className="text-[10px] text-muted-foreground">Press Enter to add. Paste multiple (comma/newline separated).</p>
+              {isOverStock && (
+                <p className="text-[11px] text-destructive font-medium">Stock limit reached. Cannot add more serial numbers.</p>
+              )}
             </div>
 
             {serialList.length > 0 && (
