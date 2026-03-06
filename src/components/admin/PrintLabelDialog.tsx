@@ -84,10 +84,12 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
     }
 
     // Build print content
-    const allLabels: { sku: string; price: number }[] = [];
+    const allLabels: { sku: string; price: number; name: string; variant: string }[] = [];
     items.forEach(item => {
+      const variant = item.variant_id ? item.product.variants.find(v => v.id === item.variant_id) : null;
+      const variantLabel = variant ? Object.values(variant.combination).join(" / ") : "";
       for (let i = 0; i < item.quantity; i++) {
-        allLabels.push({ sku: item.sku, price: item.price });
+        allLabels.push({ sku: item.sku, price: item.price, name: item.product.name, variant: variantLabel });
       }
     });
 
@@ -118,14 +120,16 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 1mm;
+            padding: 1.5mm 2mm;
             overflow: hidden;
             page-break-after: always;
           }
           .label:last-child { page-break-after: auto; }
-          .label svg { max-width: ${labelWidth - 2}mm; height: ${Math.floor(labelHeight * 0.5)}mm; }
-          .sku-text { font-size: 7pt; font-weight: bold; margin-top: 0.5mm; }
-          .price-text { font-size: 8pt; font-weight: bold; margin-top: 0.5mm; }
+          .label svg { max-width: ${labelWidth - 4}mm; height: ${Math.floor(labelHeight * 0.3)}mm; }
+          .product-name { font-size: 7pt; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
+          .variant-text { font-size: 6pt; color: #666; text-align: center; margin-bottom: 0.5mm; }
+          .price-text { font-size: 9pt; font-weight: 900; margin-top: 0.5mm; }
+          .sku-text { font-size: 5.5pt; color: #888; margin-top: 0.3mm; }
         </style>
       </head>
       <body id="grid">
@@ -136,39 +140,50 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
 
     const grid = doc.getElementById("grid")!;
 
-    allLabels.forEach(({ sku, price }) => {
+    allLabels.forEach(({ sku, price, name, variant }) => {
       const labelDiv = doc.createElement("div");
       labelDiv.className = "label";
 
+      // Product name
+      const nameDiv = doc.createElement("div");
+      nameDiv.className = "product-name";
+      nameDiv.textContent = name;
+      labelDiv.appendChild(nameDiv);
+
+      // Variant
+      if (variant) {
+        const varDiv = doc.createElement("div");
+        varDiv.className = "variant-text";
+        varDiv.textContent = variant;
+        labelDiv.appendChild(varDiv);
+      }
+
+      // Barcode
       const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
       labelDiv.appendChild(svg);
-
       try {
         JsBarcode(svg, sku, {
           format: "CODE128",
-          width: 1.2,
-          height: 28,
+          width: 1,
+          height: 22,
           displayValue: false,
           margin: 0,
         });
       } catch {
         svg.remove();
-        const text = doc.createElement("div");
-        text.textContent = sku;
-        text.style.fontSize = "7pt";
-        text.style.fontWeight = "bold";
-        labelDiv.appendChild(text);
       }
 
-      const skuDiv = doc.createElement("div");
-      skuDiv.className = "sku-text";
-      skuDiv.textContent = sku;
-      labelDiv.appendChild(skuDiv);
-
+      // Price
       const priceDiv = doc.createElement("div");
       priceDiv.className = "price-text";
       priceDiv.textContent = `$${price.toFixed(2)}`;
       labelDiv.appendChild(priceDiv);
+
+      // SKU
+      const skuDiv = doc.createElement("div");
+      skuDiv.className = "sku-text";
+      skuDiv.textContent = sku;
+      labelDiv.appendChild(skuDiv);
 
       grid.appendChild(labelDiv);
     });
@@ -311,9 +326,13 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
         <div className="border border-border rounded-lg p-3 bg-muted/20">
           <p className="text-xs text-muted-foreground mb-2">Preview ({labelWidth}×{labelHeight}mm each)</p>
           <div className="flex flex-wrap gap-2">
-            {items.slice(0, 6).map((item, idx) => (
-              <LabelPreview key={idx} sku={item.sku} price={item.price} width={labelWidth} height={labelHeight} />
-            ))}
+            {items.slice(0, 6).map((item, idx) => {
+              const variant = item.variant_id ? item.product.variants.find(v => v.id === item.variant_id) : null;
+              const variantLabel = variant ? Object.values(variant.combination).join(" / ") : "";
+              return (
+                <LabelPreview key={idx} sku={item.sku} price={item.price} name={item.product.name} variant={variantLabel} width={labelWidth} height={labelHeight} />
+              );
+            })}
             {totalLabels > 6 && (
               <div className="w-[90px] h-[60px] border border-dashed border-border rounded flex items-center justify-center text-xs text-muted-foreground">
                 +{totalLabels - 6} more
@@ -349,7 +368,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
 };
 
 // Single label preview component
-const LabelPreview = ({ sku, price, width = 30, height = 20 }: { sku: string; price: number; width?: number; height?: number }) => {
+const LabelPreview = ({ sku, price, name, variant, width = 30, height = 20 }: { sku: string; price: number; name?: string; variant?: string; width?: number; height?: number }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const pxW = Math.round(width * 3);
   const pxH = Math.round(height * 3);
@@ -359,22 +378,22 @@ const LabelPreview = ({ sku, price, width = 30, height = 20 }: { sku: string; pr
       try {
         JsBarcode(svgRef.current, sku, {
           format: "CODE128",
-          width: 1,
-          height: 20,
+          width: 0.8,
+          height: 16,
           displayValue: false,
           margin: 0,
         });
-      } catch {
-        // fallback: just show text
-      }
+      } catch { /* fallback */ }
     }
   }, [sku]);
 
   return (
-    <div style={{ width: pxW, height: pxH }} className="border border-border rounded flex flex-col items-center justify-center bg-background p-1 overflow-hidden">
-      <svg ref={svgRef} style={{ maxWidth: pxW - 10 }} className="h-[20px]" />
-      <span className="text-[8px] font-bold font-mono mt-0.5 leading-none">{sku}</span>
-      <span className="text-[9px] font-bold leading-none mt-0.5">${price.toFixed(2)}</span>
+    <div style={{ width: pxW, height: pxH }} className="border border-border rounded flex flex-col items-center justify-center bg-background px-1.5 py-0.5 overflow-hidden gap-0">
+      {name && <span className="text-[7px] font-bold text-center leading-tight line-clamp-1 w-full">{name}</span>}
+      {variant && <span className="text-[6px] text-muted-foreground text-center leading-tight">{variant}</span>}
+      <svg ref={svgRef} style={{ maxWidth: pxW - 10 }} className="h-[16px]" />
+      <span className="text-[9px] font-black leading-none">${price.toFixed(2)}</span>
+      <span className="text-[5px] text-muted-foreground font-mono leading-none">{sku}</span>
     </div>
   );
 };
