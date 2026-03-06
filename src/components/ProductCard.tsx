@@ -178,16 +178,36 @@ export const ProductCard = (props: ProductCardProps) => {
           {displayName}
         </h3>
 
-        {/* Price */}
-        <div>
-          {isPaidApp ? (
-            <span className="text-base font-bold text-destructive">
-              ${priceNum.toFixed(1)}
-            </span>
-          ) : (
-            <span className="text-sm font-semibold text-primary">
-              {language === "km" ? "ឥតគិតថ្លៃ" : "Free"}
-            </span>
+        {/* Price + Stock indicator */}
+        <div className="flex items-center justify-between">
+          <div>
+            {isPaidApp ? (
+              <span className="text-base font-bold text-destructive">
+                ${priceNum.toFixed(1)}
+              </span>
+            ) : (
+              <span className="text-sm font-semibold text-primary">
+                {language === "km" ? "ឥតគិតថ្លៃ" : "Free"}
+              </span>
+            )}
+          </div>
+          {stockInfo && (
+            <div className="flex items-center gap-1.5">
+              <span className={`inline-block w-1.5 h-1.5 rounded-full ${
+                stockInfo.status === 'ok' ? 'bg-emerald-500' : 
+                stockInfo.status === 'low' ? 'bg-amber-500 animate-pulse' : 
+                'bg-destructive'
+              }`} />
+              <span className={`text-[10px] font-medium ${
+                stockInfo.status === 'ok' ? 'text-emerald-600 dark:text-emerald-400' : 
+                stockInfo.status === 'low' ? 'text-amber-600 dark:text-amber-400' : 
+                'text-destructive'
+              }`}>
+                {stockInfo.status === 'ok' 
+                  ? (language === 'km' ? 'មានស្តុក' : 'In stock')
+                  : stockInfo.label}
+              </span>
+            </div>
           )}
         </div>
 
