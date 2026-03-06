@@ -41,6 +41,13 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     }
   }, [facingMode]);
 
+  // Auto-start camera when dialog opens
+  useEffect(() => {
+    if (open && !capturing && !capturedImage) {
+      startCamera();
+    }
+  }, [open]);
+
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(t => t.stop());
