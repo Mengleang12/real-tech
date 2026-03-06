@@ -397,7 +397,7 @@ const StockManagement = () => {
                       id: product.id,
                       name: product.name,
                       icon_url: product.icon_url,
-                      variants: product.variants.map(v => ({ id: v.id, combination: v.combination, sku: v.sku })),
+                      variants: product.variants.map(v => ({ id: v.id, combination: v.combination, sku: v.sku, stock_quantity: v.stock_quantity })),
                     })}
                   >
                     <ScanBarcode className="w-3.5 h-3.5" />
