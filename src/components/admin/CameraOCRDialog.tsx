@@ -191,9 +191,9 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
           {/* Actions */}
           <div className="flex gap-2">
             {!capturing && !capturedImage && (
-              <Button onClick={() => startCamera()} className="flex-1 gap-2">
-                <Camera className="w-4 h-4" />
-                Open Camera
+              <Button onClick={() => startCamera()} className="flex-1 gap-2" disabled>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Starting Camera...
               </Button>
             )}
 
