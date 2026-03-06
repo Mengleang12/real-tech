@@ -29,8 +29,14 @@ const roleColors: Record<string, string> = {
 
 export const RoleManagement = () => {
   const queryClient = useQueryClient();
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin: isAuthSuperAdmin } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState<"assign" | "permissions">("assign");
+
+  // Check admin roles from localStorage for legacy admin
+  const adminRoles: string[] = (() => {
+    try { return JSON.parse(localStorage.getItem('admin_roles') || '[]'); } catch { return []; }
+  })();
+  const isSuperAdmin = isAuthSuperAdmin || adminRoles.includes('super_admin') || adminRoles.includes('admin');
 
   return (
     <div className="space-y-6">

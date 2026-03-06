@@ -289,7 +289,7 @@ export const appsApi = productsApi;
 
 export const authApi = {
   login: async (username: string, password: string) => {
-    const response = await apiRequest<{ success: boolean; token: string; user: { id: number; username: string } }>(
+    const response = await apiRequest<{ success: boolean; token: string; user: { id: number; username: string; roles?: string[] } }>(
       'auth/login',
       { method: 'POST', body: { username, password }, requiresAuth: false }
     );
@@ -297,6 +297,7 @@ export const authApi = {
     if (response.success) {
       localStorage.setItem('admin_api_key', response.token);
       localStorage.setItem('admin_user', JSON.stringify(response.user));
+      localStorage.setItem('admin_roles', JSON.stringify(response.user.roles || []));
     }
     
     return response;
@@ -312,6 +313,7 @@ export const authApi = {
   logout: () => {
     localStorage.removeItem('admin_api_key');
     localStorage.removeItem('admin_user');
+    localStorage.removeItem('admin_roles');
   },
   
   isAuthenticated: () => !!localStorage.getItem('admin_api_key'),

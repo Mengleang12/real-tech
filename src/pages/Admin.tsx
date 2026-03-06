@@ -1089,12 +1089,18 @@ const InvoicesPage = () => {
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user, signOut, isAdmin: isAuthAdmin, isSuperAdmin, hasPermission } = useAuth();
+  const { user, signOut, isAdmin: isAuthAdmin, isSuperAdmin: isAuthSuperAdmin, hasPermission } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Legacy admin gets full admin access
   const isLegacyAdmin = authApi.isAuthenticated();
   const isAdmin = isAuthAdmin || isLegacyAdmin;
+  
+  // Check admin roles from localStorage for legacy admin
+  const adminRoles: string[] = (() => {
+    try { return JSON.parse(localStorage.getItem('admin_roles') || '[]'); } catch { return []; }
+  })();
+  const isSuperAdmin = isAuthSuperAdmin || adminRoles.includes('super_admin') || adminRoles.includes('admin');
 
   // Filter nav groups based on permissions
   const visibleGroups = navGroups.map(group => ({
