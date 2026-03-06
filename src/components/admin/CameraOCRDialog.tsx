@@ -76,17 +76,18 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     setProcessing(true);
     setDetectedSerial(null);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ocr-serial`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ imageDataUrl }),
-        }
-      );
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await fetch(`${API_BASE_URL}/api/admin/ocr/scan-serial`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ image: imageDataUrl }),
+      });
 
       const data = await response.json();
 
@@ -95,7 +96,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
         return;
       }
 
-      const result = data.serial;
+      const result = data.serial?.trim();
 
       if (result && result !== "NONE" && result.length > 3) {
         setDetectedSerial(result);

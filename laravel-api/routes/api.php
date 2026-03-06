@@ -76,6 +76,8 @@ Route::get('/sliders', [SliderController::class, 'index']);
 
 // Protected admin routes (admin + moderator)
 Route::middleware('auth.admin')->group(function () {
+    // OCR
+    Route::post('/admin/ocr/scan-serial', [OcrController::class, 'scanSerial']);
     // Product management
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);
