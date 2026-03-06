@@ -525,7 +525,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                             size="icon"
                             variant="ghost"
                             className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
-                            onClick={() => { if (confirm("Delete this serial?")) deleteMutation.mutate(serial.id); }}
+                            onClick={() => setDeleteSerialId(serial.id)}
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
