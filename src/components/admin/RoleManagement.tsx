@@ -48,15 +48,19 @@ export const RoleManagement = () => {
       <Tabs value={activeSubTab} onValueChange={(v) => setActiveSubTab(v as any)}>
         <TabsList>
           <TabsTrigger value="assign">Assign Roles</TabsTrigger>
-          <TabsTrigger value="permissions">Role Permissions</TabsTrigger>
+          {isSuperAdmin && (
+            <TabsTrigger value="permissions">Role Permissions</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="assign" className="mt-4">
           <AssignRolesTab />
         </TabsContent>
-        <TabsContent value="permissions" className="mt-4">
-          <PermissionsTab />
-        </TabsContent>
+        {isSuperAdmin && (
+          <TabsContent value="permissions" className="mt-4">
+            <PermissionsTab />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
