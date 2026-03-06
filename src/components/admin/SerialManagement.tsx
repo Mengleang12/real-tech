@@ -322,7 +322,7 @@ export const AddSerialsForProductDialog = ({ open, onOpenChange, product }: {
       combination: v.combination,
       sku: v.sku || "",
       stock_quantity: 0,
-      price_adjustment: "0",
+      price_adjustment: 0,
       is_active: true,
     })),
   };
