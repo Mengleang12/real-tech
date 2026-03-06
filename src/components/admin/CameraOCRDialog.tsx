@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Camera, Loader2, RotateCcw, Check, SwitchCamera } from "lucide-react";
+import { Camera, Loader2, RotateCcw, Check, SwitchCamera, ScanLine, Focus } from "lucide-react";
+
 interface CameraOCRDialogProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -21,7 +22,6 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
 
   const startCamera = useCallback(async (facing: "environment" | "user" = facingMode) => {
     try {
-      // Stop existing stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
@@ -35,12 +35,11 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
       setCapturing(true);
       setCapturedImage(null);
       setDetectedSerial(null);
-    } catch (err) {
+    } catch {
       toast.error("Cannot access camera. Please allow camera permission.");
     }
   }, [facingMode]);
 
-  // Auto-start camera when dialog opens
   useEffect(() => {
     if (open && !capturing && !capturedImage) {
       startCamera();
@@ -84,7 +83,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     try {
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
       const token = localStorage.getItem('admin_api_key') || localStorage.getItem('auth_token') || '';
-      
+
       const response = await fetch(`${API_BASE_URL}/api/admin/ocr/scan-serial`, {
         method: "POST",
         headers: {
@@ -138,93 +137,121 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md p-0 overflow-hidden">
-        <DialogHeader className="p-0 pb-0">
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <Camera className="w-4 h-4" />
-            Scan Serial Number
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-md p-0">
+        <DialogTitle>Scan Serial Number</DialogTitle>
 
-        <div className="flex flex-col items-center justify-center flex-1 px-4 pb-4 space-y-4">
-          {/* Icon + label */}
+        <div className="flex flex-col items-center justify-center flex-1 gap-4 px-4 pb-5">
+          {/* Waiting state */}
           {!capturedImage && !capturing && (
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <Camera className="w-8 h-8 text-primary" />
+            <div className="flex flex-col items-center gap-3 py-8 text-muted-foreground">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <ScanLine className="w-9 h-9 text-primary" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-muted border-2 border-card flex items-center justify-center">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                </div>
               </div>
-              <p className="text-sm">Position the serial number in view</p>
+              <div className="text-center">
+                <p className="text-sm font-medium text-foreground">Initializing Camera</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Please allow camera access</p>
+              </div>
             </div>
           )}
 
-          {/* Camera view or captured image */}
-          <div className="relative rounded-xl overflow-hidden bg-black aspect-[4/3] w-full max-w-sm">
-            {!capturedImage ? (
-              <>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                />
-                {capturing && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="border-2 border-dashed border-white/50 rounded-lg w-[80%] h-[40%]" />
+          {/* Camera / captured view */}
+          {(capturing || capturedImage) && (
+            <div className="relative w-full max-w-sm">
+              <div className="relative rounded-2xl overflow-hidden bg-black aspect-[4/3] ring-1 ring-border/50">
+                {!capturedImage ? (
+                  <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Scan overlay with corner brackets */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="relative w-[75%] h-[35%]">
+                        {/* Corner brackets */}
+                        <div className="absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-primary rounded-tl-sm" />
+                        <div className="absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 border-primary rounded-tr-sm" />
+                        <div className="absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 border-primary rounded-bl-sm" />
+                        <div className="absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 border-primary rounded-br-sm" />
+                        {/* Animated scan line */}
+                        <div className="absolute inset-x-2 top-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
+                      </div>
+                    </div>
+                    {/* Hint text */}
+                    <div className="absolute bottom-3 inset-x-0 flex justify-center pointer-events-none">
+                      <span className="text-[11px] text-white/70 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                        <Focus className="w-3 h-3" />
+                        Align serial number in the frame
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+                )}
+
+                {processing && (
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                    </div>
+                    <span className="text-white text-sm font-medium">Detecting serial number...</span>
                   </div>
                 )}
-              </>
-            ) : (
-              <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
-            )}
-
-            {processing && (
-              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
-                <Loader2 className="w-8 h-8 text-white animate-spin" />
-                <span className="text-white text-sm">Detecting serial number...</span>
               </div>
-            )}
-          </div>
+
+              {/* Camera toggle - floating */}
+              {capturing && (
+                <button
+                  onClick={toggleCamera}
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                >
+                  <SwitchCamera className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
 
           <canvas ref={canvasRef} className="hidden" />
 
-          {/* Detected serial */}
+          {/* Detected serial result */}
           {detectedSerial && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 text-center w-full max-w-sm">
-              <p className="text-xs text-muted-foreground mb-1">Detected Serial Number</p>
-              <p className="text-lg font-mono font-bold text-emerald-600 dark:text-emerald-400">{detectedSerial}</p>
+            <div className="w-full max-w-sm rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <Check className="w-3 h-3 text-emerald-500" />
+                </div>
+                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Serial Detected</span>
+              </div>
+              <p className="text-lg font-mono font-bold text-foreground tracking-wide text-center bg-muted/50 rounded-lg py-2">
+                {detectedSerial}
+              </p>
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex gap-2 w-full max-w-sm">
-            {!capturing && !capturedImage && (
-              <Button onClick={() => startCamera()} className="flex-1 gap-2" disabled>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Starting Camera...
-              </Button>
-            )}
-
+          {/* Action buttons */}
+          <div className="flex gap-2.5 w-full max-w-sm">
             {capturing && (
-              <>
-                <Button onClick={toggleCamera} variant="outline" size="icon">
-                  <SwitchCamera className="w-4 h-4" />
-                </Button>
-                <Button onClick={capture} className="flex-1 gap-2">
-                  <Camera className="w-4 h-4" />
-                  Capture
-                </Button>
-              </>
+              <Button onClick={capture} className="flex-1 gap-2 h-11 rounded-xl" size="lg">
+                <Camera className="w-4 h-4" />
+                Capture
+              </Button>
             )}
 
             {capturedImage && !processing && (
               <>
-                <Button onClick={retake} variant="outline" className="flex-1 gap-2">
+                <Button onClick={retake} variant="outline" className="flex-1 gap-2 h-11 rounded-xl" size="lg">
                   <RotateCcw className="w-4 h-4" />
                   Retake
                 </Button>
                 {detectedSerial && (
-                  <Button onClick={confirmSerial} className="flex-1 gap-2">
+                  <Button onClick={confirmSerial} className="flex-1 gap-2 h-11 rounded-xl" size="lg">
                     <Check className="w-4 h-4" />
                     Use Serial
                   </Button>
