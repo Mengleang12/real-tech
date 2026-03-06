@@ -32,6 +32,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SliderController;
+use App\Http\Controllers\ProductSerialController;
 
 /*
 |--------------------------------------------------------------------------
