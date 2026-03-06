@@ -368,7 +368,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
 };
 
 // Single label preview component
-const LabelPreview = ({ sku, price, width = 30, height = 20 }: { sku: string; price: number; width?: number; height?: number }) => {
+const LabelPreview = ({ sku, price, name, variant, width = 30, height = 20 }: { sku: string; price: number; name?: string; variant?: string; width?: number; height?: number }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const pxW = Math.round(width * 3);
   const pxH = Math.round(height * 3);
@@ -378,22 +378,22 @@ const LabelPreview = ({ sku, price, width = 30, height = 20 }: { sku: string; pr
       try {
         JsBarcode(svgRef.current, sku, {
           format: "CODE128",
-          width: 1,
-          height: 20,
+          width: 0.8,
+          height: 16,
           displayValue: false,
           margin: 0,
         });
-      } catch {
-        // fallback: just show text
-      }
+      } catch { /* fallback */ }
     }
   }, [sku]);
 
   return (
-    <div style={{ width: pxW, height: pxH }} className="border border-border rounded flex flex-col items-center justify-center bg-background p-1 overflow-hidden">
-      <svg ref={svgRef} style={{ maxWidth: pxW - 10 }} className="h-[20px]" />
-      <span className="text-[8px] font-bold font-mono mt-0.5 leading-none">{sku}</span>
-      <span className="text-[9px] font-bold leading-none mt-0.5">${price.toFixed(2)}</span>
+    <div style={{ width: pxW, height: pxH }} className="border border-border rounded flex flex-col items-center justify-center bg-background px-1.5 py-0.5 overflow-hidden gap-0">
+      {name && <span className="text-[7px] font-bold text-center leading-tight line-clamp-1 w-full">{name}</span>}
+      {variant && <span className="text-[6px] text-muted-foreground text-center leading-tight">{variant}</span>}
+      <svg ref={svgRef} style={{ maxWidth: pxW - 10 }} className="h-[16px]" />
+      <span className="text-[9px] font-black leading-none">${price.toFixed(2)}</span>
+      <span className="text-[5px] text-muted-foreground font-mono leading-none">{sku}</span>
     </div>
   );
 };
