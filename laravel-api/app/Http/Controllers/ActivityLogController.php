@@ -62,7 +62,7 @@ class ActivityLogController extends Controller
     public function store(Request $request)
     {
         $log = UserActivityLog::create([
-            'customer_id' => $request->user_id,
+            'user_id' => $request->user_id,
             'action' => $request->action,
             'details' => $request->details,
             'ip_address' => $request->ip(),
