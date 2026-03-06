@@ -723,6 +723,14 @@ const AppsTab = () => {
   useEffect(() => { loadApps(); }, [currentPage, searchQuery]);
   useEffect(() => { setCurrentPage(1); }, [searchQuery]);
 
+  // Disable zoom on admin page
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="viewport"]');
+    const original = meta?.getAttribute('content') || '';
+    if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    return () => { if (meta) meta.setAttribute('content', original); };
+  }, []);
+
   const loadApps = async () => {
     setLoading(true);
     try {
