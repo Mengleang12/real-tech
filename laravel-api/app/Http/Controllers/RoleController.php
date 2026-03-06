@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\UserRole;
-use App\Models\Customer;
+use App\Models\User;
 use App\Models\RolePermission;
 use App\Traits\LogsAdminActivity;
 use Illuminate\Http\Request;
@@ -16,30 +16,50 @@ class RoleController extends Controller
 
     public function index(Request $request)
     {
-        $roles = UserRole::with('customer:id,email,full_name')
+        $roles = UserRole::with('user:id,username')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $customersWithRoles = $roles->groupBy('customer_id')->map(function ($customerRoles) {
-            $firstRole = $customerRoles->first();
+        $usersWithRoles = $roles->groupBy('user_id')->map(function ($userRoles) {
+            $firstRole = $userRoles->first();
             return [
-                'user_id' => $firstRole->customer_id,
-                'full_name' => $firstRole->customer->full_name ?? null,
-                'email' => $firstRole->customer->email ?? null,
-                'roles' => $customerRoles->pluck('role')->toArray(),
+                'user_id' => $firstRole->user_id,
+                'full_name' => $firstRole->user->username ?? null,
+                'email' => $firstRole->user->username ?? null,
+                'roles' => $userRoles->pluck('role')->toArray(),
             ];
         })->values();
 
         return response()->json([
             'success' => true,
-            'users' => $customersWithRoles,
+            'users' => $usersWithRoles,
         ]);
     }
 
-    public function store(Request $request)
+    /**
+     * List all users from the users (admin) table for role assignment.
+     */
+    public function listUsers(Request $request)
+    {
+        $users = User::select('id', 'username')->orderBy('username')->get();
+
+        return response()->json([
+            'success' => true,
+            'users' => $users->map(function ($u) {
+                return [
+                    'id' => $u->id,
+                    'username' => $u->username,
+                    'full_name' => $u->username,
+                    'email' => $u->username,
+                ];
+            }),
+        ]);
+    }
+
+
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:customers,id',
+            'user_id' => 'required|exists:users,id',
             'role' => 'required|string|max:50',
         ]);
 
@@ -58,23 +78,23 @@ class RoleController extends Controller
             return response()->json(['error' => 'Role does not exist. Create it first in permission settings.'], 422);
         }
 
-        $existing = UserRole::where('customer_id', $request->user_id)
+        $existing = UserRole::where('user_id', $request->user_id)
             ->where('role', $request->role)
             ->first();
 
         if ($existing) {
-            return response()->json(['error' => 'Customer already has this role'], 422);
+            return response()->json(['error' => 'User already has this role'], 422);
         }
 
         $role = UserRole::create([
-            'customer_id' => $request->user_id,
+            'user_id' => $request->user_id,
             'role' => $request->role,
         ]);
 
-        $customer = Customer::find($request->user_id);
+        $user = User::find($request->user_id);
         $this->logActivity($request, 'role_assign', [
             'target_user_id' => $request->user_id,
-            'target_email' => $customer->email ?? null,
+            'target_username' => $user->username ?? null,
             'role' => $request->role,
         ]);
 
@@ -88,7 +108,7 @@ class RoleController extends Controller
     public function destroy(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:customers,id',
+            'user_id' => 'required|exists:users,id',
             'role' => 'required|string|max:50',
         ]);
 
@@ -102,7 +122,7 @@ class RoleController extends Controller
             }
         }
 
-        $deleted = UserRole::where('customer_id', $request->user_id)
+        $deleted = UserRole::where('user_id', $request->user_id)
             ->where('role', $request->role)
             ->delete();
 
@@ -110,10 +130,10 @@ class RoleController extends Controller
             return response()->json(['error' => 'Role not found'], 404);
         }
 
-        $customer = Customer::find($request->user_id);
+        $user = User::find($request->user_id);
         $this->logActivity($request, 'role_remove', [
             'target_user_id' => $request->user_id,
-            'target_email' => $customer->email ?? null,
+            'target_username' => $user->username ?? null,
             'role' => $request->role,
         ]);
 
@@ -277,16 +297,17 @@ class RoleController extends Controller
             return true;
         }
 
+        // Check if authenticated user is a User (admin) with super_admin role
         $user = $request->user();
         if (!$user) {
             return false;
         }
 
-        if (!($user instanceof \App\Models\Customer)) {
-            return false;
+        if ($user instanceof \App\Models\User) {
+            $user->load('roles');
+            return $user->roles->pluck('role')->contains('super_admin');
         }
 
-        $user->load('roles');
-        return $user->roles->pluck('role')->contains('super_admin');
+        return false;
     }
 }

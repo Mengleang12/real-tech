@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { rolesApi, adminUsersApi, permissionsApi, type UserWithRoles, type PermissionDef } from "@/lib/api";
+import { rolesApi, permissionsApi, type UserWithRoles, type PermissionDef } from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 const roleIcons: Record<string, React.ElementType> = {
@@ -74,8 +74,8 @@ const AssignRolesTab = () => {
   });
 
   const { data: usersData } = useQuery({
-    queryKey: ["admin-all-users"],
-    queryFn: () => adminUsersApi.getAll({ limit: 100 }),
+    queryKey: ["admin-staff-users"],
+    queryFn: () => rolesApi.listUsers(),
   });
 
   const { data: permData } = useQuery({
@@ -185,7 +185,7 @@ const AssignRolesTab = () => {
             <Select value={newRoleUserId} onValueChange={setNewRoleUserId}>
               <SelectTrigger><SelectValue placeholder="Select user" /></SelectTrigger>
               <SelectContent>
-                {allUsers.map((u) => <SelectItem key={u.id} value={String(u.id)}>{u.full_name || u.email}</SelectItem>)}
+                {allUsers.map((u) => <SelectItem key={u.id} value={String(u.id)}>{u.username || u.full_name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={newRole} onValueChange={setNewRole}>

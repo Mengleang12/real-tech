@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Admin;
+use App\Models\User;
 use App\Models\Customer;
 use App\Models\RolePermission;
 use Closure;
@@ -20,8 +20,8 @@ class AuthenticateAdmin
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // First, try legacy admin token
-        $admin = Admin::where('auth_token', $token)
+        // First, try legacy admin token (users table, formerly admins)
+        $admin = User::where('auth_token', $token)
             ->where('token_expiry', '>', now())
             ->first();
 
@@ -34,7 +34,7 @@ class AuthenticateAdmin
             return $next($request);
         }
 
-        // Try customer JWT token
+        // Try customer JWT token (customers with roles)
         try {
             $decoded = JWT::decode($token, new Key(config('app.jwt_secret'), 'HS256'));
             
@@ -54,6 +54,8 @@ class AuthenticateAdmin
                 }
             }
 
+            // Note: Customer roles are kept for backward compatibility but
+            // the primary role system now targets the users (admin) table
             $customerRoles = $customer->roles->pluck('role')->toArray();
             $customerPermissions = RolePermission::getPermissionsForRoles($customerRoles);
 
