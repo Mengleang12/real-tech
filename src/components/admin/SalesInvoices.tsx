@@ -206,6 +206,7 @@ const StockManagement = () => {
   const [stockPage, setStockPage] = useState(1);
   const [editingStock, setEditingStock] = useState<{ productId: number; variantId?: number; qty: number } | null>(null);
   const [stockReason, setStockReason] = useState("");
+  const [serialProduct, setSerialProduct] = useState<{ id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string }> } | null>(null);
 
   // Debounce search
   useEffect(() => {
