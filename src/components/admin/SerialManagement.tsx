@@ -468,6 +468,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
   });
 
   return (
+    <>
     <AdminDialog open={open} onOpenChange={onOpenChange} title="Serial Numbers" size="lg">
       <div className="space-y-4">
         {productSearchSlot}
