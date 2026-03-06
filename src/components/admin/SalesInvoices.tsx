@@ -5,7 +5,7 @@ import { AddSaleDialog } from "./AddSaleDialog";
 import { InvoiceEditDialog } from "./InvoiceEditDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { adminUsersApi, salesApi, warrantyApi, type AdminOrder, type StockProduct } from "@/lib/api";
+import { adminUsersApi, salesApi, warrantyApi, categoriesApi, type AdminOrder, type StockProduct } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
