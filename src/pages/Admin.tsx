@@ -675,6 +675,7 @@ const navGroups: NavGroup[] = [
       { id: "brands", label: "Brands", icon: Bookmark, permission: "apps.view" },
       { id: "attributes", label: "Attributes", icon: SlidersHorizontal, permission: "apps.view" },
       { id: "print_labels", label: "Print Labels", icon: Tag, permission: "apps.view" },
+      { id: "serials", label: "Serial Numbers", icon: ScanBarcode, permission: "apps.view" },
       { id: "sliders", label: "Sliders", icon: Image, permission: "settings.manage" },
     ],
   },
