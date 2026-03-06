@@ -24,7 +24,7 @@ trait LogsAdminActivity
         }
 
         UserActivityLog::create([
-            'customer_id' => $userId,
+            'user_id' => $userId,
             'action' => $action,
             'details' => $details,
             'ip_address' => $request->ip(),

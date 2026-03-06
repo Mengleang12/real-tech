@@ -9,7 +9,7 @@ class UserActivityLog extends Model
     public $timestamps = false;
     
     protected $fillable = [
-        'customer_id',
+        'user_id',
         'action',
         'details',
         'ip_address',
@@ -21,8 +21,8 @@ class UserActivityLog extends Model
         'created_at' => 'datetime',
     ];
 
-    public function customer()
+    public function user()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(User::class);
     }
 }
