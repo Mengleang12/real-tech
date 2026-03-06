@@ -146,9 +146,19 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
           </DialogTitle>
         </DialogHeader>
 
-        <div className="px-4 pb-4 space-y-3">
+        <div className="flex flex-col items-center justify-center flex-1 px-4 pb-4 space-y-4">
+          {/* Icon + label */}
+          {!capturedImage && !capturing && (
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Camera className="w-8 h-8 text-primary" />
+              </div>
+              <p className="text-sm">Position the serial number in view</p>
+            </div>
+          )}
+
           {/* Camera view or captured image */}
-          <div className="relative rounded-lg overflow-hidden bg-black aspect-[4/3]">
+          <div className="relative rounded-xl overflow-hidden bg-black aspect-[4/3] w-full max-w-sm">
             {!capturedImage ? (
               <>
                 <video
@@ -158,7 +168,6 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
                   muted
                   className="w-full h-full object-cover"
                 />
-                {/* Overlay guide */}
                 {capturing && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="border-2 border-dashed border-white/50 rounded-lg w-[80%] h-[40%]" />
@@ -181,14 +190,14 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
 
           {/* Detected serial */}
           {detectedSerial && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 text-center">
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 text-center w-full max-w-sm">
               <p className="text-xs text-muted-foreground mb-1">Detected Serial Number</p>
               <p className="text-lg font-mono font-bold text-emerald-600 dark:text-emerald-400">{detectedSerial}</p>
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full max-w-sm">
             {!capturing && !capturedImage && (
               <Button onClick={() => startCamera()} className="flex-1 gap-2" disabled>
                 <Loader2 className="w-4 h-4 animate-spin" />
