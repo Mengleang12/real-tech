@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { salesApi, warrantyApi, type SaleCustomer, type SaleProduct, type CreateSalePayload } from "@/lib/api";
+import { salesApi, serialsApi, warrantyApi, type SaleCustomer, type SaleProduct, type CreateSalePayload } from "@/lib/api";
 import { AdminDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./AdminDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,35 +90,72 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setProductLoading(false);
   }, []);
 
-  // Handle Enter key on search input: auto-add first matching product (scan behavior)
+  // Handle Enter key on search input: try serial lookup first, then product search
   const handleQuickAdd = useCallback(async (code: string) => {
     const trimmed = code.trim();
     if (!trimmed) return;
     setScanLoading(true);
     try {
+      // 1. Try serial/barcode lookup first
+      const serialRes = await serialsApi.lookup(trimmed);
+      if (serialRes.found && serialRes.product) {
+        if (serialRes.status === 'sold') {
+          toast.error(`This item (S/N: ${serialRes.serial?.serial_number}) has already been sold`);
+          setScanLoading(false);
+          setProductSearch("");
+          setTimeout(() => searchInputRef.current?.focus(), 100);
+          return;
+        }
+        if (serialRes.status === 'defective') {
+          toast.error(`This item (S/N: ${serialRes.serial?.serial_number}) is marked as defective`);
+          setScanLoading(false);
+          setProductSearch("");
+          setTimeout(() => searchInputRef.current?.focus(), 100);
+          return;
+        }
+        // Available - add to cart with serial number
+        const product = serialRes.product;
+        const variantId = serialRes.serial?.variant_id || (product.variants.length > 0 ? product.variants[0].id : undefined);
+        addToCart(product, variantId);
+        // Auto-add the serial number to the cart item
+        if (serialRes.serial) {
+          setTimeout(() => {
+            setCart(prev => prev.map(c => {
+              if (c.product.id === product.id && c.variant_id === variantId) {
+                const sn = serialRes.serial!.serial_number;
+                if (!c.serial_numbers.includes(sn)) {
+                  return { ...c, serial_numbers: [...c.serial_numbers, sn] };
+                }
+              }
+              return c;
+            }));
+          }, 50);
+        }
+        toast.success(`Scanned: ${product.name} (S/N: ${serialRes.serial?.serial_number})`);
+        setScanLoading(false);
+        setProductSearch("");
+        setProducts([]);
+        setTimeout(() => searchInputRef.current?.focus(), 100);
+        return;
+      }
+
+      // 2. Fallback to product search
       const res = await salesApi.searchProducts(trimmed);
       const found = res.products;
       if (found.length === 0) {
-        // Silently do nothing - no alert
+        toast.error(`No product or serial found for "${trimmed}"`);
         setScanLoading(false);
+        setProductSearch("");
+        setTimeout(() => searchInputRef.current?.focus(), 100);
         return;
       }
       // Exact SKU match first
-      const exactProduct = found.find(p => p.variants.some(v => v.sku === trimmed));
       const exactVariant = found.flatMap(p => p.variants.map(v => ({ product: p, variant: v }))).find(pv => pv.variant.sku === trimmed);
 
       if (exactVariant) {
         addToCart(exactVariant.product, exactVariant.variant.id);
         toast.success(`Added: ${exactVariant.product.name}`);
-      } else if (exactProduct) {
-        if (exactProduct.variants.length > 0) {
-          addToCart(exactProduct, exactProduct.variants[0].id);
-        } else {
-          addToCart(exactProduct);
-        }
-        toast.success(`Added: ${exactProduct.name}`);
       } else {
-        // Auto-select first result
         const first = found[0];
         if (first.variants.length > 0) {
           addToCart(first, first.variants[0].id);
@@ -553,7 +590,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
               <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input
                 ref={searchInputRef}
-                placeholder="Search or scan barcode... (Enter to quick-add)"
+                placeholder="Scan serial/barcode or search product... (Enter to add)"
                 value={productSearch}
                 onChange={(e) => handleSearchProducts(e.target.value)}
                 onKeyDown={e => {

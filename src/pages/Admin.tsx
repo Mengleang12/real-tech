@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, Users, BarChart3, Bell, Shield, Activity, 
   UserX, Tag, Play, Home, Menu, Download, Star, TrendingUp, Settings2, Loader2, ClipboardPaste, ShieldAlert, DollarSign,
   FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw, FileText, Pencil,
-  ShoppingBag, Truck, Wand2, Image, User, Lock, Eye, EyeOff
+  ShoppingBag, Truck, Wand2, Image, User, Lock, Eye, EyeOff, ScanBarcode
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,7 @@ import { WarrantyManagement } from "@/components/admin/WarrantyManagement";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabelDialog";
 import { SalesReport } from "@/components/admin/SalesReport";
+import { SerialManagement } from "@/components/admin/SerialManagement";
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -632,7 +633,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "sliders" | "users" | "staff_users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "serials" | "sliders" | "users" | "staff_users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties";
 
 interface NavItem {
   id: AdminTab;
@@ -674,6 +675,7 @@ const navGroups: NavGroup[] = [
       { id: "brands", label: "Brands", icon: Bookmark, permission: "apps.view" },
       { id: "attributes", label: "Attributes", icon: SlidersHorizontal, permission: "apps.view" },
       { id: "print_labels", label: "Print Labels", icon: Tag, permission: "apps.view" },
+      { id: "serials", label: "Serial Numbers", icon: ScanBarcode, permission: "apps.view" },
       { id: "sliders", label: "Sliders", icon: Image, permission: "settings.manage" },
     ],
   },
@@ -1249,6 +1251,7 @@ const AdminDashboard = () => {
           {activeTab === "brands" && <BrandManagement />}
           {activeTab === "attributes" && <AttributeManagement />}
           {activeTab === "print_labels" && <PrintLabelsPage />}
+          {activeTab === "serials" && <SerialManagement />}
           {activeTab === "sliders" && <SliderManagement />}
           {activeTab === "users" && <UserManagement />}
           {activeTab === "stock" && <StockPage />}
