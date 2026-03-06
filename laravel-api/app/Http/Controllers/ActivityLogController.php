@@ -12,9 +12,9 @@ class ActivityLogController extends Controller
         $days = $request->input('days', 7);
         $action = $request->input('action');
         $perPage = min($request->input('per_page', 50), 200);
-        $customerId = $request->input('user_id');
+        $userId = $request->input('user_id');
 
-        $query = UserActivityLog::with('customer:id,email,full_name')
+        $query = UserActivityLog::with('user:id,username')
             ->where('created_at', '>=', now()->subDays($days))
             ->orderBy('created_at', 'desc');
 
@@ -22,13 +22,13 @@ class ActivityLogController extends Controller
             $query->where('action', $action);
         }
 
-        if ($customerId) {
-            $query->where('customer_id', $customerId);
+        if ($userId) {
+            $query->where('user_id', $userId);
         }
 
         $statsQuery = UserActivityLog::where('created_at', '>=', now()->subDays($days));
-        if ($customerId) {
-            $statsQuery->where('customer_id', $customerId);
+        if ($userId) {
+            $statsQuery->where('user_id', $userId);
         }
         $allForStats = $statsQuery->get();
 
@@ -62,7 +62,7 @@ class ActivityLogController extends Controller
     public function store(Request $request)
     {
         $log = UserActivityLog::create([
-            'customer_id' => $request->user_id,
+            'user_id' => $request->user_id,
             'action' => $request->action,
             'details' => $request->details,
             'ip_address' => $request->ip(),
@@ -89,7 +89,7 @@ class ActivityLogController extends Controller
         }
 
         UserActivityLog::create([
-            'customer_id' => $customer->id,
+            'user_id' => $customer->id,
             'action' => 'download',
             'details' => [
                 'product_id' => $request->product_id,
