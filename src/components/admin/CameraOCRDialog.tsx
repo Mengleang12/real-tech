@@ -76,34 +76,26 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     setProcessing(true);
     setDetectedSerial(null);
     try {
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: "Extract the serial number from this image. This is likely a MacBook/laptop 'About This Mac' screen or a product label. Return ONLY the serial number value, nothing else. No explanation, no quotes, just the serial number string. If you cannot find a serial number, respond with NONE.",
-                },
-                {
-                  type: "image_url",
-                  image_url: { url: imageDataUrl },
-                },
-              ],
-            },
-          ],
-        }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ocr-serial`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ imageDataUrl }),
+        }
+      );
 
       const data = await response.json();
-      const result = data.choices?.[0]?.message?.content?.trim();
+
+      if (!response.ok) {
+        toast.error(data.error || "OCR processing failed.");
+        return;
+      }
+
+      const result = data.serial;
 
       if (result && result !== "NONE" && result.length > 3) {
         setDetectedSerial(result);
