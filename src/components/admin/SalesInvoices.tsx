@@ -242,13 +242,42 @@ const StockManagement = () => {
   const stockPagination = stockData?.pagination;
 
   const getStockBadge = (status: string) => {
-    if (status === "out_of_stock") return <Badge variant="destructive" className="text-xs">Out of Stock</Badge>;
-    if (status === "low_stock") return <Badge className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/10">Low Stock</Badge>;
-    return <Badge className="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10">In Stock</Badge>;
+    if (status === "out_of_stock") return <Badge variant="destructive" className="text-[10px] px-2 py-0.5">Out of Stock</Badge>;
+    if (status === "low_stock") return <Badge className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/10">Low Stock</Badge>;
+    return <Badge className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10">In Stock</Badge>;
   };
+
+  const getStockStatus = (qty: number) => qty <= 0 ? 'out_of_stock' : qty <= 5 ? 'low_stock' : 'in_stock';
+
+  const getStockColor = (status: string) => {
+    if (status === 'out_of_stock') return 'bg-destructive';
+    if (status === 'low_stock') return 'bg-amber-500';
+    return 'bg-emerald-500';
+  };
+
+  // Summary counts
+  const totalProducts = stockProducts.length;
+  const inStockCount = stockProducts.filter(p => p.variants.reduce((s, v) => s + v.stock_quantity, 0) > 5).length;
+  const lowStockCount = stockProducts.filter(p => { const t = p.variants.reduce((s, v) => s + v.stock_quantity, 0); return t > 0 && t <= 5; }).length;
+  const outOfStockCount = stockProducts.filter(p => p.variants.reduce((s, v) => s + v.stock_quantity, 0) <= 0).length;
 
   return (
     <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Total Products', count: totalProducts, color: 'text-foreground', bg: 'bg-muted/50' },
+          { label: 'In Stock', count: inStockCount, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5' },
+          { label: 'Low Stock', count: lowStockCount, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/5' },
+          { label: 'Out of Stock', count: outOfStockCount, color: 'text-destructive', bg: 'bg-destructive/5' },
+        ].map((item) => (
+          <div key={item.label} className={`${item.bg} border border-border/50 rounded-xl p-4`}>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{item.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${item.color}`}>{item.count}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -266,81 +295,100 @@ const StockManagement = () => {
         </Select>
       </div>
 
-      {/* Stock Table */}
+      {/* Stock Cards */}
       {stockLoading ? (
-        <div className="space-y-2">{[1,2,3,4,5].map(i => <div key={i} className="border border-border rounded-md bg-card p-4 space-y-2"><Skeleton className="h-4 w-48" /><Skeleton className="h-3 w-64" /></div>)}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{[1,2,3,4].map(i => <div key={i} className="border border-border rounded-xl bg-card p-5 space-y-3"><Skeleton className="h-5 w-48" /><Skeleton className="h-3 w-64" /><Skeleton className="h-2 w-full" /></div>)}</div>
       ) : stockProducts.length === 0 ? (
-        <div className="text-center py-12 border border-border rounded-md bg-card">
-          <Boxes className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">No products found</p>
+        <div className="text-center py-16 border border-border rounded-xl bg-card">
+          <Boxes className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-sm font-medium text-muted-foreground">No products found</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Try adjusting your search or filter</p>
         </div>
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Price</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Stock</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Variants</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {stockProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {product.icon_url ? (
-                          <img src={product.icon_url} alt={product.name} className="w-10 h-10 rounded-lg object-cover border border-border/50" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center border border-border/50">
-                            <Package className="w-4 h-4 text-muted-foreground" />
-                          </div>
-                        )}
-                        <span className="font-medium text-sm">{product.name}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {stockProducts.map((product) => {
+            const totalStock = product.variants.reduce((s, v) => s + v.stock_quantity, 0);
+            const status = getStockStatus(totalStock);
+            const maxStock = Math.max(totalStock, 20); // for progress bar scaling
+            const price = product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0) : 0;
+
+            return (
+              <div key={product.id} className="border border-border/60 rounded-xl bg-card overflow-hidden hover:shadow-sm transition-shadow">
+                {/* Top bar color indicator */}
+                <div className={`h-0.5 ${getStockColor(status)}`} />
+
+                <div className="p-4 space-y-3">
+                  {/* Header */}
+                  <div className="flex items-start gap-3">
+                    {product.icon_url ? (
+                      <img src={product.icon_url} alt={product.name} className="w-11 h-11 rounded-lg object-cover border border-border/40 flex-shrink-0" />
+                    ) : (
+                      <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center border border-border/40 flex-shrink-0">
+                        <Package className="w-5 h-5 text-muted-foreground/40" />
                       </div>
-                    </td>
-                    <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{product.category || "—"}</Badge></td>
-                    <td className="px-4 py-3 font-semibold tabular-nums">${product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0).toFixed(2) : '0.00'}</td>
-                    <td className="px-4 py-3 font-semibold tabular-nums">{product.variants.reduce((s, v) => s + v.stock_quantity, 0)}</td>
-                    <td className="px-4 py-3">{getStockBadge(product.variants.reduce((s, v) => s + v.stock_quantity, 0) <= 0 ? 'out_of_stock' : product.variants.reduce((s, v) => s + v.stock_quantity, 0) <= 5 ? 'low_stock' : 'in_stock')}</td>
-                    <td className="px-4 py-3">
-                      {product.variants.length > 0 ? (
-                        <div className="space-y-1">
-                          {product.variants.map((v) => {
-                            const label = Object.values(v.combination).join(" / ");
-                            return (
-                              <div key={v.id} className="flex items-center gap-2 text-xs">
-                                <span className="text-muted-foreground">{label}:</span>
-                                <span className="font-semibold tabular-nums">{v.stock_quantity}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-5 w-5"
-                                  onClick={() => setEditingStock({ productId: product.id, variantId: v.id, qty: v.stock_quantity })}
-                                >
-                                  <Pencil className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">No variants</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {/* All stock is managed at variant level now */}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-foreground truncate">{product.name}</h4>
+                        {getStockBadge(status)}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-muted-foreground">{product.category || "Uncategorized"}</span>
+                        <span className="text-xs text-muted-foreground">·</span>
+                        <span className="text-xs font-medium text-foreground">${price.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className={`text-lg font-bold tabular-nums ${status === 'out_of_stock' ? 'text-destructive' : status === 'low_stock' ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
+                        {totalStock}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">total units</p>
+                    </div>
+                  </div>
+
+                  {/* Stock Progress Bar */}
+                  <div className="space-y-1">
+                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${getStockColor(status)}`}
+                        style={{ width: `${Math.min((totalStock / maxStock) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Variants */}
+                  {product.variants.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {product.variants.map((v) => {
+                        const label = Object.values(v.combination).join(" / ");
+                        const vStatus = getStockStatus(v.stock_quantity);
+                        return (
+                          <button
+                            key={v.id}
+                            onClick={() => setEditingStock({ productId: product.id, variantId: v.id, qty: v.stock_quantity })}
+                            className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg border transition-colors hover:bg-muted/80 cursor-pointer ${
+                              vStatus === 'out_of_stock' ? 'border-destructive/30 bg-destructive/5' :
+                              vStatus === 'low_stock' ? 'border-amber-500/30 bg-amber-500/5' :
+                              'border-border/60 bg-muted/30'
+                            }`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStockColor(vStatus)}`} />
+                            <span className="text-muted-foreground">{label}</span>
+                            <span className={`font-semibold tabular-nums ${
+                              vStatus === 'out_of_stock' ? 'text-destructive' :
+                              vStatus === 'low_stock' ? 'text-amber-600 dark:text-amber-400' :
+                              'text-foreground'
+                            }`}>{v.stock_quantity}</span>
+                            <Pencil className="w-2.5 h-2.5 text-muted-foreground/50" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
