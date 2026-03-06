@@ -296,7 +296,7 @@ const AddSerialsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange:
 export const AddSerialsForProductDialog = ({ open, onOpenChange, product }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  product: { id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string }> };
+  product: { id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string; stock_quantity?: number }> };
 }) => {
   const [selectedVariantId, setSelectedVariantId] = useState<number | undefined>(
     product.variants.length > 0 ? product.variants[0].id : undefined
@@ -321,7 +321,7 @@ export const AddSerialsForProductDialog = ({ open, onOpenChange, product }: {
       id: v.id,
       combination: v.combination,
       sku: v.sku || "",
-      stock_quantity: 0,
+      stock_quantity: v.stock_quantity ?? 0,
       price_adjustment: 0,
       is_active: true,
     })),
