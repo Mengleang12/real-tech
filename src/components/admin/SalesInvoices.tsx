@@ -451,6 +451,15 @@ const StockManagement = () => {
             </div>
           )}
       </AdminDialog>
+
+      {/* Add Serial Numbers Dialog */}
+      {serialProduct && (
+        <AddSerialsForProductDialog
+          open={!!serialProduct}
+          onOpenChange={(v) => { if (!v) setSerialProduct(null); }}
+          product={serialProduct}
+        />
+      )}
     </div>
   );
 };
