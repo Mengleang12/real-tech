@@ -375,6 +375,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
 }) => {
   const queryClient = useQueryClient();
   const [deleteSerialId, setDeleteSerialId] = useState<number | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   // Fetch existing serials for this product
   const { data: existingData, isLoading: existingLoading } = useQuery({
