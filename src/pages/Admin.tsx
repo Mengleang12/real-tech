@@ -633,7 +633,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "serials" | "sliders" | "users" | "staff_users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "sliders" | "users" | "staff_users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties";
 
 interface NavItem {
   id: AdminTab;
@@ -675,7 +675,6 @@ const navGroups: NavGroup[] = [
       { id: "brands", label: "Brands", icon: Bookmark, permission: "apps.view" },
       { id: "attributes", label: "Attributes", icon: SlidersHorizontal, permission: "apps.view" },
       { id: "print_labels", label: "Print Labels", icon: Tag, permission: "apps.view" },
-      { id: "serials", label: "Serial Numbers", icon: ScanBarcode, permission: "apps.view" },
       { id: "sliders", label: "Sliders", icon: Image, permission: "settings.manage" },
     ],
   },
@@ -1060,15 +1059,39 @@ const SalesDashboardPage = () => (
 );
 
 // ─── Stock Page ───────────────────────────────────────────────────────────────
-const StockPage = () => (
-  <div className="space-y-6">
-    <div>
-      <h2 className="text-xl font-semibold">Stock Management</h2>
-      <p className="text-sm text-muted-foreground mt-1">Monitor and manage product inventory</p>
+const StockPage = () => {
+  const [stockTab, setStockTab] = useState<"inventory" | "serials">("inventory");
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold">Stock Management</h2>
+        <p className="text-sm text-muted-foreground mt-1">Monitor and manage product inventory</p>
+      </div>
+      <div className="flex gap-2 border-b border-border pb-1">
+        <Button
+          variant={stockTab === "inventory" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setStockTab("inventory")}
+          className="gap-1.5"
+        >
+          <Boxes className="h-4 w-4" />
+          Inventory
+        </Button>
+        <Button
+          variant={stockTab === "serials" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setStockTab("serials")}
+          className="gap-1.5"
+        >
+          <ScanBarcode className="h-4 w-4" />
+          Serial Numbers
+        </Button>
+      </div>
+      {stockTab === "inventory" && <StockManagement />}
+      {stockTab === "serials" && <SerialManagement />}
     </div>
-    <StockManagement />
-  </div>
-);
+  );
+};
 
 // ─── Invoices Page (with New Sale button) ─────────────────────────────────────
 const InvoicesPage = () => {
@@ -1251,7 +1274,6 @@ const AdminDashboard = () => {
           {activeTab === "brands" && <BrandManagement />}
           {activeTab === "attributes" && <AttributeManagement />}
           {activeTab === "print_labels" && <PrintLabelsPage />}
-          {activeTab === "serials" && <SerialManagement />}
           {activeTab === "sliders" && <SliderManagement />}
           {activeTab === "users" && <UserManagement />}
           {activeTab === "stock" && <StockPage />}
