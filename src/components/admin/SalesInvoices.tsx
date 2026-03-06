@@ -20,8 +20,9 @@ import { toast } from "sonner";
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, ShoppingCart,
   FileText, Eye, Package, CheckCircle, Clock, Printer, Pencil,
-  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield, CreditCard, Tag
+  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield, CreditCard, Tag, ScanBarcode
 } from "lucide-react";
+import { AddSerialsForProductDialog } from "./SerialManagement";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
   paid:      { variant: "default",     label: "Paid" },
@@ -205,6 +206,7 @@ const StockManagement = () => {
   const [stockPage, setStockPage] = useState(1);
   const [editingStock, setEditingStock] = useState<{ productId: number; variantId?: number; qty: number } | null>(null);
   const [stockReason, setStockReason] = useState("");
+  const [serialProduct, setSerialProduct] = useState<{ id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string }> } | null>(null);
 
   // Debounce search
   useEffect(() => {
@@ -385,6 +387,22 @@ const StockManagement = () => {
                       })}
                     </div>
                   )}
+
+                  {/* Add Serial Numbers button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 text-xs"
+                    onClick={() => setSerialProduct({
+                      id: product.id,
+                      name: product.name,
+                      icon_url: product.icon_url,
+                      variants: product.variants.map(v => ({ id: v.id, combination: v.combination, sku: v.sku })),
+                    })}
+                  >
+                    <ScanBarcode className="w-3.5 h-3.5" />
+                    Add Serial Numbers
+                  </Button>
                 </div>
               </div>
             );
@@ -433,6 +451,15 @@ const StockManagement = () => {
             </div>
           )}
       </AdminDialog>
+
+      {/* Add Serial Numbers Dialog */}
+      {serialProduct && (
+        <AddSerialsForProductDialog
+          open={!!serialProduct}
+          onOpenChange={(v) => { if (!v) setSerialProduct(null); }}
+          product={serialProduct}
+        />
+      )}
     </div>
   );
 };

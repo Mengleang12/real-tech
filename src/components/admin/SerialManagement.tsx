@@ -206,7 +206,7 @@ export const SerialManagement = () => {
   );
 };
 
-// ─── Add Serials Dialog ──────────────────────────────────────────────────────
+// ─── Add Serials Dialog (generic - search for product) ──────────────────────
 const AddSerialsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) => {
   const queryClient = useQueryClient();
   const [productSearch, setProductSearch] = useState("");
@@ -235,46 +235,20 @@ const AddSerialsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange:
     setProducts([]);
   };
 
-  const addSerial = () => {
-    const trimmed = serialInput.trim();
-    if (!trimmed) return;
-    if (serialList.includes(trimmed)) {
-      toast.error("Duplicate serial number");
-      return;
-    }
-    setSerialList([...serialList, trimmed]);
-    setSerialInput("");
-  };
-
-  const handlePaste = (text: string) => {
-    const lines = text.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-    const newSerials = lines.filter(s => !serialList.includes(s));
-    if (newSerials.length > 0) {
-      setSerialList([...serialList, ...newSerials]);
-    }
-  };
-
-  const saveMutation = useMutation({
-    mutationFn: () => serialsApi.add({
-      product_id: selectedProduct!.id,
-      variant_id: selectedVariantId,
-      serials: serialList.map(sn => ({ serial_number: sn })),
-    }),
-    onSuccess: (res) => {
-      toast.success(res.message);
-      queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
-      setSelectedProduct(null);
-      setSerialList([]);
-      onOpenChange(false);
-    },
-    onError: () => toast.error("Failed to add serials"),
-  });
-
   return (
-    <AdminDialog open={open} onOpenChange={onOpenChange} title="Add Serial Numbers" size="lg">
-      <div className="space-y-4">
-        {/* Product Selection */}
-        {!selectedProduct ? (
+    <SerialInputDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      selectedProduct={selectedProduct}
+      selectedVariantId={selectedVariantId}
+      onChangeProduct={() => setSelectedProduct(null)}
+      onSelectVariant={setSelectedVariantId}
+      serialInput={serialInput}
+      setSerialInput={setSerialInput}
+      serialList={serialList}
+      setSerialList={setSerialList}
+      productSearchSlot={
+        !selectedProduct ? (
           <div className="space-y-2">
             <Label className="text-sm font-medium">Select Product</Label>
             <div className="relative">
@@ -312,24 +286,150 @@ const AddSerialsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange:
               </div>
             )}
           </div>
-        ) : (
-          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border">
-            {selectedProduct.icon_url && <img src={selectedProduct.icon_url} className="w-10 h-10 rounded-lg object-cover" alt="" />}
-            <div className="flex-1">
-              <p className="font-medium text-sm">{selectedProduct.name}</p>
-              {selectedVariantId && (
-                <p className="text-xs text-muted-foreground">
-                  {Object.values(selectedProduct.variants.find(v => v.id === selectedVariantId)?.combination || {}).join(" / ")}
-                </p>
-              )}
-            </div>
-            <Button size="sm" variant="outline" onClick={() => setSelectedProduct(null)}>Change</Button>
-          </div>
-        )}
+        ) : undefined
+      }
+    />
+  );
+};
 
-        {/* Serial Input */}
+// ─── Add Serials For Product Dialog (pre-filled product from stock card) ─────
+export const AddSerialsForProductDialog = ({ open, onOpenChange, product }: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  product: { id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string }> };
+}) => {
+  const [selectedVariantId, setSelectedVariantId] = useState<number | undefined>(
+    product.variants.length > 0 ? product.variants[0].id : undefined
+  );
+  const [serialInput, setSerialInput] = useState("");
+  const [serialList, setSerialList] = useState<string[]>([]);
+
+  // Reset when product changes
+  useEffect(() => {
+    if (open) {
+      setSelectedVariantId(product.variants.length > 0 ? product.variants[0].id : undefined);
+      setSerialInput("");
+      setSerialList([]);
+    }
+  }, [open, product]);
+
+  const fakeProduct: SaleProduct = {
+    id: product.id,
+    name: product.name,
+    icon_url: product.icon_url || null,
+    variants: product.variants.map(v => ({
+      id: v.id,
+      combination: v.combination,
+      sku: v.sku || "",
+      stock_quantity: 0,
+      price_adjustment: 0,
+      is_active: true,
+    })),
+  };
+
+  return (
+    <SerialInputDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      selectedProduct={fakeProduct}
+      selectedVariantId={selectedVariantId}
+      onChangeProduct={() => onOpenChange(false)}
+      onSelectVariant={setSelectedVariantId}
+      serialInput={serialInput}
+      setSerialInput={setSerialInput}
+      serialList={serialList}
+      setSerialList={setSerialList}
+    />
+  );
+};
+
+// ─── Shared Serial Input Dialog ─────────────────────────────────────────────
+const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVariantId, onChangeProduct, onSelectVariant, serialInput, setSerialInput, serialList, setSerialList, productSearchSlot }: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  selectedProduct: SaleProduct | null;
+  selectedVariantId?: number;
+  onChangeProduct: () => void;
+  onSelectVariant: (id: number | undefined) => void;
+  serialInput: string;
+  setSerialInput: (v: string) => void;
+  serialList: string[];
+  setSerialList: (v: string[]) => void;
+  productSearchSlot?: React.ReactNode;
+}) => {
+  const queryClient = useQueryClient();
+
+  const addSerial = () => {
+    const trimmed = serialInput.trim();
+    if (!trimmed) return;
+    if (serialList.includes(trimmed)) {
+      toast.error("Duplicate serial number");
+      return;
+    }
+    setSerialList([...serialList, trimmed]);
+    setSerialInput("");
+  };
+
+  const handlePaste = (text: string) => {
+    const lines = text.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+    const newSerials = lines.filter(s => !serialList.includes(s));
+    if (newSerials.length > 0) {
+      setSerialList([...serialList, ...newSerials]);
+    }
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: () => serialsApi.add({
+      product_id: selectedProduct!.id,
+      variant_id: selectedVariantId,
+      serials: serialList.map(sn => ({ serial_number: sn })),
+    }),
+    onSuccess: (res) => {
+      toast.success(res.message);
+      queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
+      setSerialList([]);
+      onOpenChange(false);
+    },
+    onError: () => toast.error("Failed to add serials"),
+  });
+
+  return (
+    <AdminDialog open={open} onOpenChange={onOpenChange} title="Add Serial Numbers" size="lg">
+      <div className="space-y-4">
+        {productSearchSlot}
+
         {selectedProduct && (
           <>
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border">
+              {selectedProduct.icon_url && <img src={selectedProduct.icon_url} className="w-10 h-10 rounded-lg object-cover" alt="" />}
+              <div className="flex-1">
+                <p className="font-medium text-sm">{selectedProduct.name}</p>
+                {selectedVariantId && (
+                  <p className="text-xs text-muted-foreground">
+                    {Object.values(selectedProduct.variants.find(v => v.id === selectedVariantId)?.combination || {}).join(" / ")}
+                  </p>
+                )}
+              </div>
+              <Button size="sm" variant="outline" onClick={onChangeProduct}>Change</Button>
+            </div>
+
+            {/* Variant selector if multiple */}
+            {selectedProduct.variants.length > 1 && (
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">Variant</Label>
+                <Select value={String(selectedVariantId || "")} onValueChange={v => onSelectVariant(Number(v))}>
+                  <SelectTrigger><SelectValue placeholder="Select variant" /></SelectTrigger>
+                  <SelectContent>
+                    {selectedProduct.variants.map(v => (
+                      <SelectItem key={v.id} value={String(v.id)}>
+                        {Object.values(v.combination).join(" / ")}{v.sku ? ` · ${v.sku}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label className="text-sm font-medium">Enter Serial Numbers</Label>
               <div className="flex gap-2">
@@ -354,7 +454,6 @@ const AddSerialsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange:
               <p className="text-[10px] text-muted-foreground">Press Enter to add. Paste multiple (comma/newline separated).</p>
             </div>
 
-            {/* Serial List */}
             {serialList.length > 0 && (
               <div className="border border-border rounded-lg max-h-48 overflow-y-auto">
                 {serialList.map((sn, idx) => (
