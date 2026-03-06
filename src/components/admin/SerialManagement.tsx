@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { serialsApi, salesApi, type ProductSerial, type SaleProduct } from "@/lib/api";
 import { AdminDialog } from "./AdminDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +29,7 @@ export const SerialManagement = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
+  const [deleteSerialId, setDeleteSerialId] = useState<number | null>(null);
 
   // Debounce
   useEffect(() => {
@@ -174,7 +176,7 @@ export const SerialManagement = () => {
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => { if (confirm("Delete this serial?")) deleteMutation.mutate(serial.id); }}
+                            onClick={() => setDeleteSerialId(serial.id)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
@@ -202,6 +204,19 @@ export const SerialManagement = () => {
 
       {/* Add Serials Dialog */}
       <AddSerialsDialog open={addOpen} onOpenChange={setAddOpen} />
+
+      <AlertDialog open={deleteSerialId !== null} onOpenChange={(open) => { if (!open) setDeleteSerialId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Serial Number</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to delete this serial number? This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => { if (deleteSerialId) { deleteMutation.mutate(deleteSerialId); setDeleteSerialId(null); } }}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -358,6 +373,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
   productSearchSlot?: React.ReactNode;
 }) => {
   const queryClient = useQueryClient();
+  const [deleteSerialId, setDeleteSerialId] = useState<number | null>(null);
 
   // Fetch existing serials for this product
   const { data: existingData, isLoading: existingLoading } = useQuery({
@@ -452,6 +468,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
   });
 
   return (
+    <>
     <AdminDialog open={open} onOpenChange={onOpenChange} title="Serial Numbers" size="lg">
       <div className="space-y-4">
         {productSearchSlot}
@@ -523,7 +540,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                             size="icon"
                             variant="ghost"
                             className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
-                            onClick={() => { if (confirm("Delete this serial?")) deleteMutation.mutate(serial.id); }}
+                            onClick={() => setDeleteSerialId(serial.id)}
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
@@ -599,5 +616,19 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
         )}
       </div>
     </AdminDialog>
+
+    <AlertDialog open={deleteSerialId !== null} onOpenChange={(open) => { if (!open) setDeleteSerialId(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Serial Number</AlertDialogTitle>
+          <AlertDialogDescription>Are you sure you want to delete this serial number? This action cannot be undone.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => { if (deleteSerialId) { deleteMutation.mutate(deleteSerialId); setDeleteSerialId(null); } }}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
