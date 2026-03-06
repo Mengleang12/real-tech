@@ -452,7 +452,14 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
             )}
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Enter Serial Numbers</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Enter Serial Numbers</Label>
+                {stockLimit !== Infinity && (
+                  <span className={`text-xs font-medium ${isOverStock ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    {serialList.length} / {stockLimit} (stock limit)
+                  </span>
+                )}
+              </div>
               <div className="flex gap-2">
                 <Input
                   placeholder="Type or scan serial number..."
@@ -467,12 +474,16 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                     }
                   }}
                   className="flex-1"
+                  disabled={isOverStock}
                 />
-                <Button onClick={addSerial} disabled={!serialInput.trim()}>
+                <Button onClick={addSerial} disabled={!serialInput.trim() || isOverStock}>
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
               <p className="text-[10px] text-muted-foreground">Press Enter to add. Paste multiple (comma/newline separated).</p>
+              {isOverStock && (
+                <p className="text-[11px] text-destructive font-medium">Stock limit reached. Cannot add more serial numbers.</p>
+              )}
             </div>
 
             {serialList.length > 0 && (
