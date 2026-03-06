@@ -51,6 +51,7 @@ import { WarrantyManagement } from "@/components/admin/WarrantyManagement";
 import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabelDialog";
 import { SalesReport } from "@/components/admin/SalesReport";
+import { SerialManagement } from "@/components/admin/SerialManagement";
 import { useAuth } from "@/contexts/AuthContext";
 
 
