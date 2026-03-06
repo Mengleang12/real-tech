@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Maximize, PanelLeft, PanelRight, Minimize2 } from "lucide-react";
+import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ const DialogClose = DialogPrimitive.Close;
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, onClick, ...props }, ref) => (
+>(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
@@ -27,90 +27,10 @@ const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
-type WindowMode = 'normal' | 'fullscreen';
-
-// Green button - toggles fullscreen directly
-const GreenButton = ({
-  mode,
-  onToggle,
-}: {
-  mode: WindowMode;
-  onToggle: () => void;
-}) => {
-  const isFullscreen = mode === 'fullscreen';
-
-  return (
-    <button
-      onClick={onToggle}
-      className="w-4 h-4 rounded-full bg-[#28C840] hover:brightness-90 transition-all group relative focus:outline-none"
-      aria-label={isFullscreen ? "Exit full screen" : "Enter full screen"}
-    >
-      <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#006500]" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-        {isFullscreen ? (
-          <>
-            <path d="M4 8L2 10M8 4l2-2" />
-            <path d="M2 7v3h3M10 5V2H7" />
-          </>
-        ) : (
-          <>
-            <path d="M3.5 2v3.5H2M8.5 10V6.5H10" />
-            <path d="M2 5.5L5.5 2M10 6.5L6.5 10" />
-          </>
-        )}
-      </svg>
-    </button>
-  );
-};
-
-// macOS traffic light dots
-const TrafficLights = ({ mode, onModeChange }: { mode: WindowMode; onModeChange: (mode: WindowMode) => void }) => (
-  <div className="flex items-center gap-2">
-    <DialogPrimitive.Close asChild>
-      <button
-        className="w-4 h-4 rounded-full bg-[#FF5F57] hover:brightness-90 transition-all group relative focus:outline-none"
-        aria-label="Close"
-      >
-        <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#4a0002]" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M3.5 3.5l5 5M8.5 3.5l-5 5" />
-        </svg>
-      </button>
-    </DialogPrimitive.Close>
-    <GreenButton mode={mode} onToggle={() => onModeChange(mode === 'fullscreen' ? 'normal' : 'fullscreen')} />
-  </div>
-);
-
-const getWindowStyles = (mode: WindowMode): React.CSSProperties => {
-  const transition = 'width 0.3s ease, height 0.3s ease, max-width 0.3s ease, max-height 0.3s ease, border-radius 0.3s ease, box-shadow 0.3s ease, left 0.3s ease, top 0.3s ease, transform 0.3s ease';
-
-  switch (mode) {
-    case 'fullscreen':
-      return {
-        width: '100vw',
-        height: '100vh',
-        maxWidth: '100vw',
-        maxHeight: '100vh',
-        borderRadius: 0,
-        boxShadow: 'none',
-        transform: 'translate(-50%, -50%)',
-        transition,
-      };
-    default:
-      return {
-        maxHeight: '85vh',
-        borderRadius: '0.75rem',
-        boxShadow: 'var(--shadow-window)',
-        transform: 'translate(-50%, -50%)',
-        transition,
-      };
-  }
-};
-
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
-  const [mode, setMode] = React.useState<WindowMode>('normal');
-
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -121,18 +41,27 @@ const DialogContent = React.forwardRef<
           e.preventDefault();
         }}
         className={cn(
-          "fixed z-50 flex flex-col w-full max-w-lg border-0 bg-card overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 left-[50%] top-[50%]",
-          mode === 'normal' && "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+          "fixed z-50 flex flex-col border-0 bg-card overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          // Mobile: fullscreen
+          "inset-0 rounded-none",
+          // Desktop: centered dialog
+          "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-full sm:max-w-lg sm:rounded-xl sm:max-h-[85vh]",
           className,
         )}
-        style={getWindowStyles(mode)}
       >
-        {/* macOS title bar */}
-        <div className="flex items-center px-4 py-2.5 bg-muted/60 border-b border-border/50 shrink-0">
-          <TrafficLights mode={mode} onModeChange={setMode} />
+        {/* Title bar with close on the right */}
+        <div className="flex items-center justify-end px-4 py-2.5 bg-muted/60 border-b border-border/50 shrink-0">
+          <DialogPrimitive.Close asChild>
+            <button
+              className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors focus:outline-none"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </DialogPrimitive.Close>
         </div>
         {/* Content area */}
-        <div className="flex flex-col flex-1 min-h-0 p-6">
+        <div className="flex flex-col flex-1 min-h-0 p-6 overflow-y-auto">
           {children}
         </div>
       </DialogPrimitive.Content>
