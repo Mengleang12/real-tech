@@ -615,5 +615,19 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
         )}
       </div>
     </AdminDialog>
+
+    <AlertDialog open={deleteSerialId !== null} onOpenChange={(open) => { if (!open) setDeleteSerialId(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Serial Number</AlertDialogTitle>
+          <AlertDialogDescription>Are you sure you want to delete this serial number? This action cannot be undone.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => { if (deleteSerialId) { deleteMutation.mutate(deleteSerialId); setDeleteSerialId(null); } }}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
