@@ -68,6 +68,7 @@ class SaleController extends Controller
                             'full_name' => 'Walk-in Customer',
                             'email' => 'walkin@guest.local',
                             'password_hash' => bcrypt(Str::random(32)),
+                            'address' => $request->customer_address,
                         ]);
                     }
                 } else {
@@ -76,6 +77,7 @@ class SaleController extends Controller
                         'phone' => $request->customer_phone,
                         'email' => $request->customer_email ?? 'walkin_' . Str::random(8) . '@guest.local',
                         'password_hash' => bcrypt(Str::random(32)),
+                        'address' => $request->customer_address,
                     ]);
                 }
             }
