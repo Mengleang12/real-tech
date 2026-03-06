@@ -96,7 +96,7 @@ class ProductController extends Controller
         
         $token = $request->bearerToken();
         if ($token) {
-            $admin = \App\Models\Admin::where('auth_token', $token)
+            $admin = \App\Models\User::where('auth_token', $token)
                 ->where('token_expiry', '>', now())
                 ->first();
             if ($admin) {
