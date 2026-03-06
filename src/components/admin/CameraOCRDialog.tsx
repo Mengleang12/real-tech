@@ -138,14 +138,31 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md p-0 overflow-hidden">
-        <DialogHeader className="p-4 pb-2">
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <Camera className="w-4 h-4" />
-            Scan Serial Number
-          </DialogTitle>
-        </DialogHeader>
+    <DialogPrimitive.Root open={open} onOpenChange={handleClose}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Content
+          onInteractOutside={(e) => e.preventDefault()}
+          className={cn(
+            "fixed z-50 flex flex-col bg-card overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            // Mobile: fullscreen
+            "inset-0 rounded-none",
+            // Desktop: centered dialog
+            "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-md sm:w-full sm:rounded-xl sm:max-h-[85vh]",
+          )}
+        >
+          {/* Title bar with close on the right */}
+          <div className="flex items-center justify-between px-4 py-3 bg-muted/60 border-b border-border/50 shrink-0">
+            <div className="flex items-center gap-2 text-base font-semibold">
+              <Camera className="w-4 h-4" />
+              Scan Serial Number
+            </div>
+            <DialogPrimitive.Close asChild>
+              <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors focus:outline-none" aria-label="Close">
+                <X className="w-4 h-4" />
+              </button>
+            </DialogPrimitive.Close>
+          </div>
 
         <div className="px-4 pb-4 space-y-3">
           {/* Camera view or captured image */}
