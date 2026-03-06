@@ -89,7 +89,7 @@ class ActivityLogController extends Controller
         }
 
         UserActivityLog::create([
-            'customer_id' => $customer->id,
+            'user_id' => $customer->id,
             'action' => 'download',
             'details' => [
                 'product_id' => $request->product_id,
