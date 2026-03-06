@@ -33,6 +33,7 @@ export const RoleManagement = () => {
   const [activeSubTab, setActiveSubTab] = useState<"assign" | "permissions">("assign");
 
   // Check admin roles from localStorage for legacy admin
+  const isLegacyAdmin = !!localStorage.getItem('admin_api_key');
   const adminRoles: string[] = (() => {
     try {
       const rolesFromKey = JSON.parse(localStorage.getItem("admin_roles") || "[]");
@@ -50,7 +51,8 @@ export const RoleManagement = () => {
       return [];
     }
   })();
-  const isSuperAdmin = isAuthSuperAdmin || adminRoles.includes("super_admin");
+  // Legacy admin with no roles assigned = full admin access (backward compatible)
+  const isSuperAdmin = isAuthSuperAdmin || adminRoles.includes("super_admin") || adminRoles.includes("admin") || (isLegacyAdmin && adminRoles.length === 0);
 
   return (
     <div className="space-y-6">
