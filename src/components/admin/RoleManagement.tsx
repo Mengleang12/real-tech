@@ -34,9 +34,23 @@ export const RoleManagement = () => {
 
   // Check admin roles from localStorage for legacy admin
   const adminRoles: string[] = (() => {
-    try { return JSON.parse(localStorage.getItem('admin_roles') || '[]'); } catch { return []; }
+    try {
+      const rolesFromKey = JSON.parse(localStorage.getItem("admin_roles") || "[]");
+      const adminUser = JSON.parse(localStorage.getItem("admin_user") || "{}");
+      const rolesFromUser = Array.isArray(adminUser?.roles) ? adminUser.roles : [];
+
+      return Array.from(
+        new Set(
+          [...rolesFromKey, ...rolesFromUser]
+            .filter((role): role is string => typeof role === "string")
+            .map((role) => role.trim().toLowerCase())
+        )
+      );
+    } catch {
+      return [];
+    }
   })();
-  const isSuperAdmin = isAuthSuperAdmin || adminRoles.includes('super_admin') || adminRoles.includes('admin');
+  const isSuperAdmin = isAuthSuperAdmin || adminRoles.includes("super_admin");
 
   return (
     <div className="space-y-6">
