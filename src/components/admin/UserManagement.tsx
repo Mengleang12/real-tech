@@ -182,17 +182,16 @@ export const UserManagement = () => {
   };
 
   const handleSaveCustomer = async () => {
-    if (!customerForm.email.trim()) { toast.error("Email is required"); return; }
-    if (!editingCustomer && !customerForm.password.trim()) { toast.error("Password is required"); return; }
+    if (!customerForm.full_name.trim()) { toast.error("Name is required"); return; }
     setSavingCustomer(true);
     try {
       if (editingCustomer) {
-        const updateData: any = { email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone };
-        if (customerForm.password.trim()) updateData.password = customerForm.password;
+        const updateData: any = { full_name: customerForm.full_name, phone: customerForm.phone, address: customerForm.address };
+        if (customerForm.email.trim()) updateData.email = customerForm.email;
         await adminUsersApi.updateCustomer(editingCustomer.id, updateData);
         toast.success("Customer updated");
       } else {
-        await adminUsersApi.createCustomer({ email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone, password: customerForm.password });
+        await adminUsersApi.createCustomer({ email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone, address: customerForm.address });
         toast.success("Customer created");
       }
       setShowCustomerForm(false);
