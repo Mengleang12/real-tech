@@ -166,9 +166,9 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
 
           {/* Camera / captured view — fills the dialog */}
           {(capturing || capturedImage) && (
-            <div className="relative flex-1 flex flex-col min-h-0">
+            <div className="relative flex-1 flex flex-col min-h-0" style={{ minHeight: '50vh' }}>
               {/* Camera feed — fills available space */}
-              <div className="relative flex-1 bg-black min-h-0">
+              <div className="relative flex-1 bg-black" style={{ minHeight: '40vh' }}>
                 {!capturedImage ? (
                   <>
                     <video
