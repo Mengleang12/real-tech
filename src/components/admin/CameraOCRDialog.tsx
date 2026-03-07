@@ -47,14 +47,31 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     }
   }, [facingMode]);
 
-  // Auto-start camera when dialog opens
+  // Auto-start camera when dialog opens, stop when it closes or unmounts
   useEffect(() => {
-    if (open && !capturing && !capturedImage) {
+    if (open) {
       startCamera();
+    } else {
+      // Directly stop all tracks to ensure camera is released
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      setCapturing(false);
+      setCapturedImage(null);
+      setDetectedSerial(null);
+      setProcessing(false);
     }
-    if (!open) {
-      stopCamera();
-    }
+    return () => {
+      // Cleanup on unmount
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+    };
   }, [open]);
 
   const stopCamera = useCallback(() => {
