@@ -237,6 +237,17 @@ export const SerialManagement = () => {
                               size="icon"
                               variant="ghost"
                               className="h-7 w-7"
+                              onClick={() => printSerialLabel(serial)}
+                              title="Print label"
+                            >
+                              <Printer className="w-3.5 h-3.5 text-muted-foreground" />
+                            </Button>
+                          )}
+                          {serial.status === 'available' && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
                               onClick={() => updateMutation.mutate({ id: serial.id, data: { status: 'defective' } })}
                               title="Mark defective"
                             >
