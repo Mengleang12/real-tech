@@ -6,7 +6,7 @@ export const useCategories = () => {
     queryKey: ["categories"],
     queryFn: async () => {
       const response = await categoriesApi.getAll();
-      return response.categories;
+      return Array.isArray(response?.categories) ? response.categories : Array.isArray(response) ? response : [];
     },
     staleTime: 1000 * 60 * 10,
   });
