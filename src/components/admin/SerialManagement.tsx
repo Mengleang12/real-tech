@@ -83,13 +83,11 @@ function printSerialLabel(serial: {
   snDiv.textContent = serial.serial_number;
   labelDiv.appendChild(snDiv);
 
-  // Price
-  if (price > 0) {
-    const priceDiv = doc.createElement("div");
-    priceDiv.className = "price-text";
-    priceDiv.textContent = `$${Number(price).toFixed(2)}`;
-    labelDiv.appendChild(priceDiv);
-  }
+  // Price (always show)
+  const priceDiv = doc.createElement("div");
+  priceDiv.className = "price-text";
+  priceDiv.textContent = `$${Number(price).toFixed(2)}`;
+  labelDiv.appendChild(priceDiv);
 
   setTimeout(() => {
     iframe.contentWindow?.print();
