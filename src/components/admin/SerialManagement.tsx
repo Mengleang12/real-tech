@@ -764,13 +764,21 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                         <span className="text-[13px] font-mono tracking-wide truncate">{serial.serial_number}</span>
                         <span className={`text-[9px] px-1.5 py-0 rounded-full font-medium ${cfg.color}`}>{cfg.label}</span>
                       </div>
-                      <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         {serial.status === 'available' && (
                           <>
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => setDeleteSerialId(serial.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
                               onClick={() => printSerialLabel({
                                 ...serial,
                                 product: selectedProduct ? { name: selectedProduct.name, icon_url: selectedProduct.icon_url || undefined } : serial.product,
@@ -781,15 +789,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                               })}
                               title="Print label"
                             >
-                              <Printer className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                              onClick={() => setDeleteSerialId(serial.id)}
-                            >
-                              <Trash2 className="w-3 h-3" />
+                              <Printer className="w-3.5 h-3.5" />
                             </Button>
                           </>
                         )}
