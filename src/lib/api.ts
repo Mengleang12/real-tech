@@ -356,6 +356,7 @@ export interface AdminUser {
   full_name?: string;
   phone?: string;
   avatar_url?: string;
+  address?: string;
   created_at: string;
   updated_at: string;
   paid_orders_count?: number;
