@@ -60,7 +60,7 @@ export const UserManagement = () => {
   const [editingCustomer, setEditingCustomer] = useState<AdminUser | null>(null);
   const [deletingCustomer, setDeletingCustomer] = useState<AdminUser | null>(null);
   const [savingCustomer, setSavingCustomer] = useState(false);
-  const [customerForm, setCustomerForm] = useState({ email: "", full_name: "", phone: "", password: "" });
+  const [customerForm, setCustomerForm] = useState({ email: "", full_name: "", phone: "", address: "" });
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users", searchQuery, currentPage],
@@ -173,26 +173,25 @@ export const UserManagement = () => {
   const openCustomerForm = (user?: AdminUser) => {
     if (user) {
       setEditingCustomer(user);
-      setCustomerForm({ email: user.email, full_name: user.full_name || "", phone: user.phone || "", password: "" });
+      setCustomerForm({ email: user.email, full_name: user.full_name || "", phone: user.phone || "", address: user.address || "" });
     } else {
       setEditingCustomer(null);
-      setCustomerForm({ email: "", full_name: "", phone: "", password: "" });
+      setCustomerForm({ email: "", full_name: "", phone: "", address: "" });
     }
     setShowCustomerForm(true);
   };
 
   const handleSaveCustomer = async () => {
-    if (!customerForm.email.trim()) { toast.error("Email is required"); return; }
-    if (!editingCustomer && !customerForm.password.trim()) { toast.error("Password is required"); return; }
+    if (!customerForm.full_name.trim()) { toast.error("Name is required"); return; }
     setSavingCustomer(true);
     try {
       if (editingCustomer) {
-        const updateData: any = { email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone };
-        if (customerForm.password.trim()) updateData.password = customerForm.password;
+        const updateData: any = { full_name: customerForm.full_name, phone: customerForm.phone, address: customerForm.address };
+        if (customerForm.email.trim()) updateData.email = customerForm.email;
         await adminUsersApi.updateCustomer(editingCustomer.id, updateData);
         toast.success("Customer updated");
       } else {
-        await adminUsersApi.createCustomer({ email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone, password: customerForm.password });
+        await adminUsersApi.createCustomer({ email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone, address: customerForm.address });
         toast.success("Customer created");
       }
       setShowCustomerForm(false);
@@ -600,20 +599,20 @@ export const UserManagement = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Email *</Label>
-              <Input value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} className="mt-1.5" placeholder="customer@email.com" />
+              <Label>Full Name *</Label>
+              <Input value={customerForm.full_name} onChange={e => setCustomerForm({ ...customerForm, full_name: e.target.value })} className="mt-1.5" placeholder="Full name" />
             </div>
             <div>
-              <Label>Full Name</Label>
-              <Input value={customerForm.full_name} onChange={e => setCustomerForm({ ...customerForm, full_name: e.target.value })} className="mt-1.5" placeholder="Full name" />
+              <Label>Email</Label>
+              <Input value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} className="mt-1.5" placeholder="customer@email.com" />
             </div>
             <div>
               <Label>Phone</Label>
               <Input value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} className="mt-1.5" placeholder="Phone number" />
             </div>
             <div>
-              <Label>{editingCustomer ? "New Password (leave blank to keep)" : "Password *"}</Label>
-              <Input type="password" value={customerForm.password} onChange={e => setCustomerForm({ ...customerForm, password: e.target.value })} className="mt-1.5" placeholder={editingCustomer ? "••••••••" : "Min 6 characters"} />
+              <Label>Address</Label>
+              <Input value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} className="mt-1.5" placeholder="Customer address" />
             </div>
           </div>
           <DialogFooter>

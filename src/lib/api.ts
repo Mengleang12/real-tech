@@ -356,6 +356,7 @@ export interface AdminUser {
   full_name?: string;
   phone?: string;
   avatar_url?: string;
+  address?: string;
   created_at: string;
   updated_at: string;
   paid_orders_count?: number;
@@ -495,11 +496,11 @@ export const adminUsersApi = {
     return apiRequest(`admin/orders/${orderId}`, { method: 'PUT', body: data });
   },
 
-  createCustomer: async (data: { email: string; full_name?: string; phone?: string; password: string }): Promise<{ success: boolean; user: AdminUser }> => {
+  createCustomer: async (data: { email?: string; full_name?: string; phone?: string; address?: string }): Promise<{ success: boolean; user: AdminUser }> => {
     return apiRequest('admin/customers', { method: 'POST', body: data });
   },
 
-  updateCustomer: async (id: number, data: { email?: string; full_name?: string; phone?: string; password?: string }): Promise<{ success: boolean; user: AdminUser }> => {
+  updateCustomer: async (id: number, data: { email?: string; full_name?: string; phone?: string; address?: string }): Promise<{ success: boolean; user: AdminUser }> => {
     return apiRequest(`admin/customers/${id}`, { method: 'PUT', body: data });
   },
 
