@@ -50,9 +50,13 @@ const DialogContent = React.forwardRef<
             e.preventDefault();
           }}
           className={cn(
-          "fixed z-50 flex flex-col border-0 bg-card overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "fixed z-50 flex flex-col border-0 bg-card overflow-hidden",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "data-[state=closed]:slide-out-to-bottom-[10%] data-[state=open]:slide-in-from-bottom-[10%]",
           "inset-0 rounded-none",
           "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-full sm:rounded-xl sm:max-h-[85vh]",
+          "duration-300",
           !className?.includes("max-w-") && "sm:max-w-lg",
           className,
           )}
