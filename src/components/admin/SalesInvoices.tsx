@@ -1234,7 +1234,7 @@ const InvoicesTab = () => {
 
       {/* Print Customer Label Dialog */}
       <Dialog open={!!labelOrder} onOpenChange={(open) => { if (!open) setLabelOrder(null); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm max-sm:max-w-[100vw] max-sm:h-[100dvh] max-sm:rounded-none max-sm:m-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:data-[state=open]:slide-in-from-bottom">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Tag className="w-5 h-5 text-primary" />
