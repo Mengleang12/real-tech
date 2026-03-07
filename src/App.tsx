@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { RequireCustomerAuth } from "@/components/RequireCustomerAuth";
 import { FlyToCartAnimation } from "@/components/FlyToCartAnimation";
 import { CartSheet } from "@/components/CartSheet";
 import { MaintenancePage } from "@/components/MaintenancePage";
@@ -93,9 +94,9 @@ function AppRoutes() {
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/admin" element={<Admin />} />
-        <Route path="/my-purchases" element={<MyPurchases />} />
-        <Route path="/payment-history" element={<PaymentHistory />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/my-purchases" element={<RequireCustomerAuth><MyPurchases /></RequireCustomerAuth>} />
+        <Route path="/payment-history" element={<RequireCustomerAuth><PaymentHistory /></RequireCustomerAuth>} />
+        <Route path="/profile" element={<RequireCustomerAuth><Profile /></RequireCustomerAuth>} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/install" element={<Install />} />

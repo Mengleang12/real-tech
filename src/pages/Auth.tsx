@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import realtechLogoFallback from '@/assets/realtech-logo.png';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, KeyRound, ShieldX, Ban, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +55,7 @@ type AuthMode = 'login' | 'register' | 'verify-registration' | 'forgot-password'
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading } = useAuth();
   const { language } = useLanguage();
   const t = useTranslations();
@@ -88,7 +89,8 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      const from = (location.state as any)?.from || '/';
+      navigate(from, { replace: true });
     }
 
     const authError = sessionStorage.getItem('auth_error');
