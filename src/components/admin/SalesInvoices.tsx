@@ -1234,25 +1234,64 @@ const InvoicesTab = () => {
 
       {/* Print Customer Label Dialog */}
       <Dialog open={!!labelOrder} onOpenChange={(open) => { if (!open) setLabelOrder(null); }}>
-        <DialogContent className="max-w-sm max-sm:max-w-[100vw] max-sm:h-[100dvh] max-sm:rounded-none max-sm:m-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:data-[state=open]:slide-in-from-bottom">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Tag className="w-5 h-5 text-primary" />
-              Print Customer Label
-            </DialogTitle>
-          </DialogHeader>
-          {labelOrder && (
-            <div className="space-y-4">
-              <div className="rounded-lg bg-muted/50 p-3 space-y-1">
-                <p className="font-semibold text-sm">{labelOrder.user?.full_name || "Walk-in Customer"}</p>
-                {labelOrder.user?.phone && <p className="text-xs text-muted-foreground">📞 {labelOrder.user.phone}</p>}
-                {labelOrder.user?.email && <p className="text-xs text-muted-foreground">✉ {labelOrder.user.email}</p>}
+        <DialogContent className="max-w-sm max-sm:max-w-[100vw] max-sm:h-[100dvh] max-sm:rounded-none max-sm:m-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:data-[state=open]:slide-in-from-bottom p-0 gap-0 overflow-hidden">
+          {/* Header with gradient */}
+          <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-primary/[0.06] via-transparent to-accent/30">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,hsl(var(--primary)/0.08),transparent_60%)]" />
+            <div className="relative flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shadow-sm ring-2 ring-background">
+                <Tag className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <label className="text-sm font-medium">Address</label>
-                <Input value={labelAddress} onChange={(e) => setLabelAddress(e.target.value)} placeholder="Enter address..." className="mt-1" />
+                <DialogHeader className="p-0 space-y-0">
+                  <DialogTitle className="text-base font-semibold">Print Customer Label</DialogTitle>
+                </DialogHeader>
+                <p className="text-[11px] text-muted-foreground mt-0.5">80mm × 50mm thermal label</p>
               </div>
-              <Button className="w-full gap-2" onClick={handlePrintCustomerLabel}>
+            </div>
+          </div>
+
+          {labelOrder && (
+            <div className="px-5 pb-5 space-y-4 pt-4">
+              {/* Customer info card */}
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-bold text-primary">
+                      {(labelOrder.user?.full_name || "W")[0].toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{labelOrder.user?.full_name || "Walk-in Customer"}</p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      {labelOrder.user?.phone && (
+                        <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                          📞 {labelOrder.user.phone}
+                        </span>
+                      )}
+                      {labelOrder.user?.email && (
+                        <span className="text-[11px] text-muted-foreground flex items-center gap-1 truncate">
+                          ✉ {labelOrder.user.email}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Address input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Shipping Address</label>
+                <Input
+                  value={labelAddress}
+                  onChange={(e) => setLabelAddress(e.target.value)}
+                  placeholder="Enter address..."
+                  className="h-9 rounded-lg bg-muted/40 border-border/50 focus:bg-card"
+                />
+              </div>
+
+              {/* Print button */}
+              <Button className="w-full gap-2 h-10 rounded-xl" onClick={handlePrintCustomerLabel}>
                 <Printer className="w-4 h-4" /> Print Label
               </Button>
             </div>
