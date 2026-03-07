@@ -565,231 +565,243 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
     onError: () => toast.error("Failed to delete"),
   });
 
-  return (
-    <>
-    <AdminDialog open={open} onOpenChange={onOpenChange} title="Serial Numbers" size="lg">
-      <div className="space-y-5">
-        {productSearchSlot}
+    const progressPercent = stockLimit !== Infinity ? Math.min(100, (existingCount / stockLimit) * 100) : 0;
+    const progressColor = existingCount >= stockLimit ? 'bg-destructive' : existingCount > stockLimit * 0.7 ? 'bg-amber-500' : 'bg-emerald-500';
 
-        {selectedProduct && (
-          <>
-            {/* Product header card */}
-            <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-gradient-to-r from-muted/60 to-muted/30 border border-border/60">
+    return (
+    <>
+    <AdminDialog open={open} onOpenChange={onOpenChange} title="" size="lg" className="p-0 gap-0 overflow-hidden">
+      {/* ── Beautiful header ── */}
+      <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-primary/[0.06] via-transparent to-accent/30">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,hsl(var(--primary)/0.08),transparent_60%)]" />
+        <div className="relative">
+          {productSearchSlot && !selectedProduct && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <ScanBarcode className="w-4.5 h-4.5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold">Add Serial Numbers</h3>
+                  <p className="text-xs text-muted-foreground">Search and select a product to begin</p>
+                </div>
+              </div>
+              <div className="mt-3">{productSearchSlot}</div>
+            </div>
+          )}
+
+          {selectedProduct && (
+            <div className="flex items-start gap-3.5">
               {selectedProduct.icon_url ? (
-                <img src={selectedProduct.icon_url} className="w-11 h-11 rounded-xl object-cover border border-border/40 shadow-sm" alt="" />
+                <img src={selectedProduct.icon_url} className="w-12 h-12 rounded-xl object-cover border border-border/40 shadow-sm ring-2 ring-background" alt="" />
               ) : (
-                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Package className="w-5 h-5 text-primary" />
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center ring-2 ring-background shadow-sm">
+                  <Package className="w-5.5 h-5.5 text-primary" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">{selectedProduct.name}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-base font-semibold truncate">{selectedProduct.name}</h3>
+                  <Button size="sm" variant="ghost" onClick={onChangeProduct} className="rounded-lg h-7 text-[11px] text-muted-foreground hover:text-foreground shrink-0">
+                    <Pencil className="w-3 h-3 mr-1" />Change
+                  </Button>
+                </div>
                 {selectedVariantId && (
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {Object.values(selectedProduct.variants.find(v => v.id === selectedVariantId)?.combination || {}).join(" / ")}
+                    {Object.values(selectedProduct.variants.find(v => v.id === selectedVariantId)?.combination || {}).join(" · ")}
                   </p>
                 )}
                 {stockLimit !== Infinity && (
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <div className="flex-1 h-1.5 rounded-full bg-border/60 overflow-hidden max-w-[120px]">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          existingCount >= stockLimit ? 'bg-destructive' : existingCount > stockLimit * 0.7 ? 'bg-amber-500' : 'bg-primary'
-                        }`}
-                        style={{ width: `${Math.min(100, (existingCount / stockLimit) * 100)}%` }}
-                      />
+                  <div className="flex items-center gap-2.5 mt-2">
+                    <div className="flex-1 h-1.5 rounded-full bg-border/40 overflow-hidden">
+                      <div className={`h-full rounded-full transition-all duration-500 ${progressColor}`} style={{ width: `${progressPercent}%` }} />
                     </div>
-                    <span className="text-[10px] text-muted-foreground font-medium">{existingCount}/{stockLimit}</span>
+                    <span className="text-[10px] text-muted-foreground font-mono tabular-nums">{existingCount}/{stockLimit}</span>
                   </div>
                 )}
               </div>
-              <Button size="sm" variant="outline" onClick={onChangeProduct} className="rounded-lg h-8 text-xs">Change</Button>
             </div>
+          )}
+        </div>
+      </div>
 
-            {/* Variant selector if multiple */}
-            {selectedProduct.variants.length > 1 && (
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Variant</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedProduct.variants.map(v => {
-                    const isActive = v.id === selectedVariantId;
-                    return (
-                      <button
-                        key={v.id}
-                        onClick={() => onSelectVariant(v.id)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
-                          isActive
-                            ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                            : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
-                        }`}
-                      >
-                        {Object.values(v.combination).join(" / ")}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+      {selectedProduct && (
+        <div className="px-5 pb-5 space-y-4">
+          {/* ── Variant chips ── */}
+          {selectedProduct.variants.length > 1 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {selectedProduct.variants.map(v => {
+                const isActive = v.id === selectedVariantId;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => onSelectVariant(v.id)}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? 'border-primary/40 bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]'
+                        : 'border-border/60 bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
+                    }`}
+                  >
+                    {Object.values(v.combination).join(" / ")}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
-            {/* Add new serials input */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Add Serials</Label>
-                {stockLimit !== Infinity && (
-                  <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                    isOverStock || (remainingSlots - serialList.length) <= 0
-                      ? 'bg-destructive/10 text-destructive'
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {Math.max(0, remainingSlots - serialList.length)} slot{remainingSlots - serialList.length !== 1 ? 's' : ''} left
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                  <Input
-                    placeholder="Type or scan serial number..."
-                    value={serialInput}
-                    onChange={e => setSerialInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addSerial(); } }}
-                    onPaste={e => {
-                      const text = e.clipboardData.getData("text");
-                      if (text.includes("\n") || text.includes(",")) {
-                        e.preventDefault();
-                        handlePaste(text);
-                      }
-                    }}
-                    className="pl-9 h-10 rounded-lg"
-                    disabled={serialList.length >= remainingSlots}
-                  />
-                </div>
-                <Button onClick={addSerial} disabled={!serialInput.trim() || serialList.length >= remainingSlots} className="h-10 rounded-lg px-3">
-                  <Plus className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setCameraOpen(true)}
-                  disabled={serialList.length >= remainingSlots}
-                  title="Scan with camera"
-                  className="h-10 rounded-lg px-3"
-                >
-                  <Camera className="w-4 h-4" />
-                </Button>
-              </div>
-              {serialList.length >= remainingSlots && remainingSlots !== Infinity && (
-                <p className="text-[11px] text-destructive font-medium flex items-center gap-1.5">
-                  <AlertTriangle className="w-3 h-3" /> Stock limit reached
-                </p>
+          {/* ── Scan / Input area ── */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Scan or Type</span>
+              {stockLimit !== Infinity && (
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                  (remainingSlots - serialList.length) <= 0
+                    ? 'bg-destructive/10 text-destructive'
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                }`}>
+                  {Math.max(0, remainingSlots - serialList.length)} remaining
+                </span>
               )}
             </div>
+            <div className="flex gap-1.5">
+              <div className="relative flex-1">
+                <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                <Input
+                  placeholder="Serial number..."
+                  value={serialInput}
+                  onChange={e => setSerialInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addSerial(); } }}
+                  onPaste={e => {
+                    const text = e.clipboardData.getData("text");
+                    if (text.includes("\n") || text.includes(",")) {
+                      e.preventDefault();
+                      handlePaste(text);
+                    }
+                  }}
+                  className="pl-9 h-9 rounded-lg bg-muted/40 border-border/50 focus:bg-card"
+                  disabled={serialList.length >= remainingSlots}
+                />
+              </div>
+              <Button size="icon" onClick={addSerial} disabled={!serialInput.trim() || serialList.length >= remainingSlots} className="h-9 w-9 rounded-lg">
+                <Plus className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => setCameraOpen(true)}
+                disabled={serialList.length >= remainingSlots}
+                className="h-9 w-9 rounded-lg"
+              >
+                <Camera className="w-4 h-4" />
+              </Button>
+            </div>
+            {serialList.length >= remainingSlots && remainingSlots !== Infinity && (
+              <p className="text-[10px] text-destructive font-medium flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> Stock limit reached
+              </p>
+            )}
+          </div>
 
-            {/* Pending serials (to be saved) */}
-            {serialList.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Pending <span className="text-primary">({serialList.length})</span>
-                </Label>
-                <div className="rounded-xl border border-primary/20 bg-primary/[0.03] overflow-hidden">
-                  {serialList.map((sn, idx) => (
-                    <div key={idx} className="flex items-center justify-between px-3 py-2 border-b border-primary/10 last:border-0 group">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[9px] font-bold text-primary">{idx + 1}</span>
-                        </div>
-                        <span className="text-sm font-mono tracking-wide truncate">{sn}</span>
-                      </div>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                        onClick={() => setSerialList(serialList.filter((_, i) => i !== idx))}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+          {/* ── Pending serials ── */}
+          {serialList.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Pending <span className="text-primary font-bold">{serialList.length}</span>
+                </span>
+                <Button
+                  size="sm"
+                  onClick={() => saveMutation.mutate()}
+                  disabled={serialList.length === 0 || saveMutation.isPending}
+                  className="h-7 rounded-lg text-[11px] gap-1.5 px-3"
+                >
+                  {saveMutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
+                  Save All
+                </Button>
+              </div>
+              <div className="rounded-xl border border-primary/15 bg-primary/[0.02] overflow-hidden divide-y divide-primary/10">
+                {serialList.map((sn, idx) => (
+                  <div key={idx} className="flex items-center justify-between px-3 py-1.5 group hover:bg-primary/[0.04] transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-[9px] font-bold text-primary/60 w-4 text-center tabular-nums">{idx + 1}</span>
+                      <span className="text-[13px] font-mono tracking-wide truncate">{sn}</span>
                     </div>
-                  ))}
-                </div>
-                <div className="flex justify-end pt-1">
-                  <Button
-                    onClick={() => saveMutation.mutate()}
-                    disabled={serialList.length === 0 || saveMutation.isPending}
-                    className="gap-2 rounded-lg"
-                  >
-                    {saveMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                    Save {serialList.length} Serial{serialList.length !== 1 ? "s" : ""}
-                  </Button>
-                </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                      onClick={() => setSerialList(serialList.filter((_, i) => i !== idx))}
+                    >
+                      <XCircle className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Existing Serials */}
-            {existingLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-20 w-full rounded-xl" />
-              </div>
-            ) : existingSerials.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Registered <span className="text-foreground">({existingCount})</span>
-                </Label>
-                <div className="rounded-xl border border-border overflow-hidden max-h-52 overflow-y-auto scrollbar-macos">
-                  {existingSerials.map((serial: ProductSerial) => {
-                    const cfg = statusConfig[serial.status] || statusConfig.available;
-                    const Icon = cfg.icon;
-                    return (
-                      <div key={serial.id} className="flex items-center justify-between px-3 py-2 border-b border-border/40 last:border-0 group hover:bg-muted/30 transition-colors">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                            serial.status === 'available' ? 'bg-emerald-500' :
-                            serial.status === 'sold' ? 'bg-muted-foreground/40' :
-                            serial.status === 'reserved' ? 'bg-amber-500' : 'bg-destructive'
-                          }`} />
-                          <span className="text-sm font-mono tracking-wide truncate">{serial.serial_number}</span>
-                          <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${cfg.color} border-0`}>
-                            {cfg.label}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {serial.status === 'available' && (
-                            <>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                                onClick={() => printSerialLabel({
-                                  ...serial,
-                                  product: selectedProduct ? { name: selectedProduct.name, icon_url: selectedProduct.icon_url || undefined } : serial.product,
-                                  variant: selectedVariantId ? {
-                                    ...selectedProduct?.variants.find(v => v.id === selectedVariantId),
-                                    combination: selectedProduct?.variants.find(v => v.id === selectedVariantId)?.combination || {},
-                                  } as any : serial.variant,
-                                })}
-                                title="Print label"
-                              >
-                                <Printer className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                                onClick={() => setDeleteSerialId(serial.id)}
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
+          {/* ── Registered serials ── */}
+          {existingLoading ? (
+            <div className="space-y-2 pt-1">
+              {[1,2,3].map(i => <Skeleton key={i} className="h-8 w-full rounded-lg" />)}
+            </div>
+          ) : existingSerials.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                Registered <span className="text-foreground/80 font-bold">{existingCount}</span>
+              </span>
+              <div className="rounded-xl border border-border/60 overflow-hidden max-h-52 overflow-y-auto scrollbar-macos divide-y divide-border/40">
+                {existingSerials.map((serial: ProductSerial) => {
+                  const cfg = statusConfig[serial.status] || statusConfig.available;
+                  return (
+                    <div key={serial.id} className="flex items-center justify-between px-3 py-1.5 group hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                          serial.status === 'available' ? 'bg-emerald-500' :
+                          serial.status === 'sold' ? 'bg-muted-foreground/30' :
+                          serial.status === 'reserved' ? 'bg-amber-500' : 'bg-destructive'
+                        }`} />
+                        <span className="text-[13px] font-mono tracking-wide truncate">{serial.serial_number}</span>
+                        <span className={`text-[9px] px-1.5 py-0 rounded-full font-medium ${cfg.color}`}>{cfg.label}</span>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {serial.status === 'available' && (
+                          <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                              onClick={() => printSerialLabel({
+                                ...serial,
+                                product: selectedProduct ? { name: selectedProduct.name, icon_url: selectedProduct.icon_url || undefined } : serial.product,
+                                variant: selectedVariantId ? {
+                                  ...selectedProduct?.variants.find(v => v.id === selectedVariantId),
+                                  combination: selectedProduct?.variants.find(v => v.id === selectedVariantId)?.combination || {},
+                                } as any : serial.variant,
+                              })}
+                              title="Print label"
+                            >
+                              <Printer className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                              onClick={() => setDeleteSerialId(serial.id)}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
     </AdminDialog>
 
     <AlertDialog open={deleteSerialId !== null} onOpenChange={(open) => { if (!open) setDeleteSerialId(null); }}>
