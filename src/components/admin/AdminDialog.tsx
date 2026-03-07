@@ -48,7 +48,7 @@ export const AdminDialog = ({
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
           {children}
         </div>
         {footer && <DialogFooter className="shrink-0 border-t border-border pt-4 px-0">{footer}</DialogFooter>}
