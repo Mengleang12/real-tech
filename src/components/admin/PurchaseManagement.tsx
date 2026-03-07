@@ -485,8 +485,6 @@ const AddPurchaseDialog = ({
           </div>
         )}
       </div>
-
-      </div>
     </AdminDialog>
   );
 };
