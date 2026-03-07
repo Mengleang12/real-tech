@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, ShoppingCart,
   FileText, Eye, Package, CheckCircle, Clock, Printer, Pencil,
-  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield, CreditCard, Tag, ScanBarcode
+  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield, CreditCard, Tag, ScanBarcode, StickyNote
 } from "lucide-react";
 import { AddSerialsForProductDialog } from "./SerialManagement";
 
@@ -546,19 +546,25 @@ const InvoicesTab = () => {
 
   const [labelOrder, setLabelOrder] = useState<AdminOrder | null>(null);
   const [labelAddress, setLabelAddress] = useState("Cambodia");
+  const [labelSize, setLabelSize] = useState("80x50");
 
   const handlePrintCustomerLabel = () => {
     if (!labelOrder) return;
     const order = labelOrder;
+    const [lw, lh] = labelSize.split('x').map(Number);
+    const padSize = lw >= 80 ? '8mm' : lw >= 60 ? '5mm' : '3mm';
+    const nameSize = lw >= 80 ? '14px' : lw >= 60 ? '11px' : '9px';
+    const infoSize = lw >= 80 ? '11px' : lw >= 60 ? '9px' : '7px';
+    const invSize = lw >= 80 ? '10px' : lw >= 60 ? '8px' : '6px';
     const w = window.open("", "_blank", "width=400,height=300");
     if (!w) return;
     w.document.write(`<!DOCTYPE html><html><head><title>Customer Label</title>
     <style>
-      @page { size: 80mm 50mm; margin: 0; }
-      body { font-family: -apple-system, sans-serif; padding: 8mm; margin: 0; }
-      .name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-      .info { font-size: 11px; color: #555; line-height: 1.6; }
-      .inv { font-size: 10px; color: #888; margin-top: 6px; border-top: 1px dashed #ccc; padding-top: 4px; }
+      @page { size: ${lw}mm ${lh}mm; margin: 0; }
+      body { font-family: -apple-system, sans-serif; padding: ${padSize}; margin: 0; }
+      .name { font-size: ${nameSize}; font-weight: 700; margin-bottom: 4px; }
+      .info { font-size: ${infoSize}; color: #555; line-height: 1.6; }
+      .inv { font-size: ${invSize}; color: #888; margin-top: 6px; border-top: 1px dashed #ccc; padding-top: 4px; }
     </style></head><body>
       <div class="name">${order.user?.full_name || "Walk-in Customer"}</div>
       <div class="info">
@@ -1276,6 +1282,36 @@ const InvoicesTab = () => {
                       )}
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Paper size selector */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Label Size</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { value: "40x30", label: "40×30", sub: "mm" },
+                    { value: "50x30", label: "50×30", sub: "mm" },
+                    { value: "60x40", label: "60×40", sub: "mm" },
+                    { value: "80x50", label: "80×50", sub: "mm" },
+                  ].map(opt => {
+                    const active = labelSize === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setLabelSize(opt.value)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all cursor-pointer ${
+                          active
+                            ? 'border-primary/40 bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]'
+                            : 'border-border/60 bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
+                        }`}
+                      >
+                        <StickyNote className="w-3 h-3" />
+                        {opt.label} <span className="text-[9px] opacity-50">{opt.sub}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
