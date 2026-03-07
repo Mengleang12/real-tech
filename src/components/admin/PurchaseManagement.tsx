@@ -276,6 +276,15 @@ const AddPurchaseDialog = ({
       title={editPurchase ? "Edit Purchase Order" : "New Purchase Order"}
       description="Create a purchase order to restock inventory from a supplier"
       size="4xl"
+      footer={
+        <div className="flex justify-end gap-3 w-full">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+            {editPurchase ? "Update" : "Create PO"}
+          </Button>
+        </div>
+      }
     >
       <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
         {/* Supplier */}
