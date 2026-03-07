@@ -12,9 +12,90 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Search, Plus, Trash2, Loader2, Package, ChevronLeft, ChevronRight,
-  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban, Camera,
+  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban, Camera, Printer,
 } from "lucide-react";
 import { CameraOCRDialog } from "./CameraOCRDialog";
+import JsBarcode from "jsbarcode";
+
+// ─── Print Serial Label Utility ─────────────────────────────────────────────
+function printSerialLabel(serial: {
+  serial_number: string;
+  barcode?: string;
+  product?: { name: string; icon_url?: string };
+  variant?: { combination: Record<string, string>; price_adjustment?: number; sku?: string };
+}) {
+  const productName = serial.product?.name || "Product";
+  const variantLabel = serial.variant ? Object.values(serial.variant.combination).join(" / ") : "";
+  const price = serial.variant?.price_adjustment ?? 0;
+  const barcodeValue = serial.barcode || serial.serial_number;
+
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.top = "-10000px";
+  iframe.style.left = "-10000px";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument!;
+  doc.open();
+  doc.write(`<!DOCTYPE html><html><head><style>
+    @page { size: 40mm 30mm; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; }
+    .label {
+      width: 40mm; height: 30mm;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 1.5mm 2mm; overflow: hidden;
+    }
+    .product-name { font-size: 7pt; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
+    .variant-text { font-size: 6pt; color: #666; text-align: center; margin-bottom: 0.5mm; }
+    .label svg { max-width: 36mm; height: 8mm; }
+    .serial-text { font-size: 6pt; font-family: monospace; text-align: center; margin-top: 0.3mm; letter-spacing: 0.5pt; }
+    .price-text { font-size: 9pt; font-weight: 900; margin-top: 0.5mm; }
+  </style></head><body><div class="label" id="label"></div></body></html>`);
+  doc.close();
+
+  const labelDiv = doc.getElementById("label")!;
+
+  // Product name
+  const nameDiv = doc.createElement("div");
+  nameDiv.className = "product-name";
+  nameDiv.textContent = productName;
+  labelDiv.appendChild(nameDiv);
+
+  // Variant
+  if (variantLabel) {
+    const varDiv = doc.createElement("div");
+    varDiv.className = "variant-text";
+    varDiv.textContent = variantLabel;
+    labelDiv.appendChild(varDiv);
+  }
+
+  // Barcode
+  const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
+  labelDiv.appendChild(svg);
+  try {
+    JsBarcode(svg, barcodeValue, { format: "CODE128", width: 1, height: 20, displayValue: false, margin: 0 });
+  } catch { svg.remove(); }
+
+  // Serial number text
+  const snDiv = doc.createElement("div");
+  snDiv.className = "serial-text";
+  snDiv.textContent = serial.serial_number;
+  labelDiv.appendChild(snDiv);
+
+  // Price
+  if (price > 0) {
+    const priceDiv = doc.createElement("div");
+    priceDiv.className = "price-text";
+    priceDiv.textContent = `$${Number(price).toFixed(2)}`;
+    labelDiv.appendChild(priceDiv);
+  }
+
+  setTimeout(() => {
+    iframe.contentWindow?.print();
+    setTimeout(() => document.body.removeChild(iframe), 2000);
+  }, 300);
+}
 
 const statusConfig = {
   available: { label: "Available", icon: CheckCircle2, color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
@@ -151,6 +232,17 @@ export const SerialManagement = () => {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center gap-1 justify-end">
+                          {serial.status === 'available' && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
+                              onClick={() => printSerialLabel(serial)}
+                              title="Print label"
+                            >
+                              <Printer className="w-3.5 h-3.5 text-muted-foreground" />
+                            </Button>
+                          )}
                           {serial.status === 'available' && (
                             <Button
                               size="icon"
@@ -537,16 +629,36 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                             {cfg.label}
                           </Badge>
                         </div>
-                        {serial.status === 'available' && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
-                            onClick={() => setDeleteSerialId(serial.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        )}
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                          {serial.status === 'available' && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-muted-foreground"
+                              onClick={() => printSerialLabel({
+                                ...serial,
+                                product: selectedProduct ? { name: selectedProduct.name, icon_url: selectedProduct.icon_url || undefined } : serial.product,
+                                variant: selectedVariantId ? { 
+                                  ...selectedProduct?.variants.find(v => v.id === selectedVariantId),
+                                  combination: selectedProduct?.variants.find(v => v.id === selectedVariantId)?.combination || {},
+                                } as any : serial.variant,
+                              })}
+                              title="Print label"
+                            >
+                              <Printer className="w-3 h-3" />
+                            </Button>
+                          )}
+                          {serial.status === 'available' && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
+                              onClick={() => setDeleteSerialId(serial.id)}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
