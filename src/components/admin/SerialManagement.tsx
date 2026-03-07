@@ -193,11 +193,12 @@ export const SerialManagement = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Serial Number</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Barcode</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
+                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
+                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Serial Number</th>
+                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Barcode</th>
+                   <th className="text-right px-4 py-3 font-medium text-muted-foreground">Price</th>
+                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                   <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -224,6 +225,9 @@ export const SerialManagement = () => {
                       </td>
                       <td className="px-4 py-3 font-mono text-sm">{serial.serial_number}</td>
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{serial.barcode}</td>
+                      <td className="px-4 py-3 text-right text-sm font-medium">
+                        {serial.variant?.price_adjustment != null ? `$${Number(serial.variant.price_adjustment).toFixed(2)}` : '—'}
+                      </td>
                       <td className="px-4 py-3">
                         <Badge className={`text-[10px] ${cfg.color} hover:${cfg.color}`}>
                           <Icon className="w-3 h-3 mr-1" />
