@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { RequireCustomerAuth } from "@/components/RequireCustomerAuth";
 import { FlyToCartAnimation } from "@/components/FlyToCartAnimation";
 import { CartSheet } from "@/components/CartSheet";
 import { MaintenancePage } from "@/components/MaintenancePage";
