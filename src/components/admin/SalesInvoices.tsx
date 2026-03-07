@@ -546,6 +546,7 @@ const InvoicesTab = () => {
 
   const [labelOrder, setLabelOrder] = useState<AdminOrder | null>(null);
   const [labelAddress, setLabelAddress] = useState("Cambodia");
+  const [labelSize, setLabelSize] = useState("80x50");
 
   const handlePrintCustomerLabel = () => {
     if (!labelOrder) return;
