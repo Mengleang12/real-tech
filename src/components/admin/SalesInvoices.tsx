@@ -548,34 +548,48 @@ const InvoicesTab = () => {
   const [labelAddress, setLabelAddress] = useState("Cambodia");
   const [labelSize, setLabelSize] = useState("30x20");
 
-  const handlePrintCustomerLabel = () => {
+  const handlePrintCustomerLabel = async () => {
     if (!labelOrder) return;
     const order = labelOrder;
     const [lw, lh] = labelSize.split('x').map(Number);
-    const padSize = lw >= 80 ? '8mm' : lw >= 60 ? '5mm' : '3mm';
-    const nameSize = lw >= 80 ? '14px' : lw >= 60 ? '11px' : '9px';
-    const infoSize = lw >= 80 ? '11px' : lw >= 60 ? '9px' : '7px';
-    const invSize = lw >= 80 ? '10px' : lw >= 60 ? '8px' : '6px';
-    const w = window.open("", "_blank", "width=400,height=300");
-    if (!w) return;
-    w.document.write(`<!DOCTYPE html><html><head><title>Customer Label</title>
-    <style>
+    const branding = await getInvoiceBranding();
+    const logoUrl = branding.site_logo_url || '';
+    const padSize = lw >= 80 ? '6mm' : lw >= 60 ? '4mm' : '2mm';
+    const logoH = lw >= 80 ? '14mm' : lw >= 60 ? '10mm' : '7mm';
+    const senderSize = lw >= 80 ? '9px' : lw >= 60 ? '8px' : '6.5px';
+    const infoSize = lw >= 80 ? '10px' : lw >= 60 ? '8px' : '7px';
+
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.top = "-10000px";
+    iframe.style.left = "-10000px";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument!;
+    doc.open();
+    doc.write(`<!DOCTYPE html><html><head><style>
       @page { size: ${lw}mm ${lh}mm; margin: 0; }
-      body { font-family: -apple-system, sans-serif; padding: ${padSize}; margin: 0; }
-      .name { font-size: ${nameSize}; font-weight: 700; margin-bottom: 4px; }
-      .info { font-size: ${infoSize}; color: #555; line-height: 1.6; }
-      .inv { font-size: ${invSize}; color: #888; margin-top: 6px; border-top: 1px dashed #ccc; padding-top: 4px; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: -apple-system, 'Kantumruy Pro', sans-serif; padding: ${padSize}; display: flex; flex-direction: column; align-items: center; width: ${lw}mm; height: ${lh}mm; }
+      .logo { height: ${logoH}; object-fit: contain; margin-bottom: 1mm; }
+      .sender { font-size: ${senderSize}; color: #333; text-align: center; margin-bottom: 1.5mm; font-weight: 500; }
+      .divider { width: 80%; border-top: 0.5px dashed #ccc; margin: 1mm 0; }
+      .customer { font-size: ${infoSize}; text-align: center; line-height: 1.5; color: #222; }
     </style></head><body>
-      <div class="name">${order.user?.full_name || "Walk-in Customer"}</div>
-      <div class="info">
-        ${order.user?.phone ? `<div>📞 ${order.user.phone}</div>` : ''}
-        ${order.user?.email ? `<div>✉ ${order.user.email}</div>` : ''}
-        ${labelAddress ? `<div>📍 ${labelAddress}</div>` : ''}
+      ${logoUrl ? `<img class="logo" src="${logoUrl}" alt="Logo" />` : ''}
+      <div class="sender">ផ្ញើរ: 087 753939</div>
+      <div class="divider"></div>
+      <div class="customer">
+        ${labelAddress ? `<div>${labelAddress}</div>` : ''}
+        ${order.user?.phone ? `<div>${order.user.phone}</div>` : ''}
       </div>
-      <div class="inv">INV #${order.id.slice(0, 8).toUpperCase()} — ${order.created_at ? new Date(order.created_at.replace(/-/g, '/')).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}</div>
     </body></html>`);
-    w.document.close();
-    setTimeout(() => { w.print(); }, 300);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 2000);
+    }, 400);
     setLabelOrder(null);
   };
 
