@@ -173,10 +173,10 @@ export const UserManagement = () => {
   const openCustomerForm = (user?: AdminUser) => {
     if (user) {
       setEditingCustomer(user);
-      setCustomerForm({ email: user.email, full_name: user.full_name || "", phone: user.phone || "", password: "" });
+      setCustomerForm({ email: user.email, full_name: user.full_name || "", phone: user.phone || "", address: user.address || "" });
     } else {
       setEditingCustomer(null);
-      setCustomerForm({ email: "", full_name: "", phone: "", password: "" });
+      setCustomerForm({ email: "", full_name: "", phone: "", address: "" });
     }
     setShowCustomerForm(true);
   };
