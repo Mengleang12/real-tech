@@ -22,15 +22,22 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
 
   const startCamera = useCallback(async (facing: "environment" | "user" = facingMode) => {
     try {
+      // Fully stop previous stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
       }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        try { await videoRef.current.play(); } catch {}
       }
       setCapturing(true);
       setCapturedImage(null);
