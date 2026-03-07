@@ -40,11 +40,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     }
   }, [facingMode]);
 
-  useEffect(() => {
-    if (open && !capturing && !capturedImage) {
-      startCamera();
-    }
-  }, [open]);
+  // Removed useEffect auto-start — iOS requires direct user gesture for getUserMedia
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -141,21 +137,20 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
         <DialogTitle>Scan Serial Number</DialogTitle>
 
         <div className="flex flex-col items-center justify-center flex-1 gap-4 px-4 pb-5">
-          {/* Waiting state */}
+          {/* Tap to start - required for iOS */}
           {!capturedImage && !capturing && (
-            <div className="flex flex-col items-center gap-3 py-8 text-muted-foreground">
-              <div className="relative">
-                <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <ScanLine className="w-9 h-9 text-primary" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-muted border-2 border-card flex items-center justify-center">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                </div>
+            <div className="flex flex-col items-center gap-4 py-8">
+              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <ScanLine className="w-9 h-9 text-primary" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-foreground">Initializing Camera</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Please allow camera access</p>
+                <p className="text-sm font-medium text-foreground">Ready to Scan</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Tap below to open camera</p>
               </div>
+              <Button onClick={() => startCamera()} className="gap-2 h-11 rounded-xl px-6" size="lg">
+                <Camera className="w-4 h-4" />
+                Open Camera
+              </Button>
             </div>
           )}
 
