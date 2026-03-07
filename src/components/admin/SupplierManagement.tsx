@@ -98,7 +98,7 @@ export const SupplierManagement = () => {
           <p className="text-sm text-muted-foreground">No suppliers yet. Create one to get started.</p>
         </div>
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50">
