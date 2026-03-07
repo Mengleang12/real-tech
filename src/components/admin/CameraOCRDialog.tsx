@@ -40,11 +40,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     }
   }, [facingMode]);
 
-  useEffect(() => {
-    if (open && !capturing && !capturedImage) {
-      startCamera();
-    }
-  }, [open]);
+  // Removed useEffect auto-start — iOS requires direct user gesture for getUserMedia
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
