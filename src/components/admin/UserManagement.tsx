@@ -597,22 +597,24 @@ export const UserManagement = () => {
           <DialogHeader>
             <DialogTitle>{editingCustomer ? "Edit Customer" : "New Customer"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 pb-2">
             <div>
               <Label>Full Name *</Label>
               <Input value={customerForm.full_name} onChange={e => setCustomerForm({ ...customerForm, full_name: e.target.value })} className="mt-1.5" placeholder="Full name" />
             </div>
-            <div>
-              <Label>Email</Label>
-              <Input value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} className="mt-1.5" placeholder="customer@email.com" />
-            </div>
-            <div>
-              <Label>Phone</Label>
-              <Input value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} className="mt-1.5" placeholder="Phone number" />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Email</Label>
+                <Input value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} className="mt-1.5" placeholder="customer@email.com" />
+              </div>
+              <div>
+                <Label>Phone</Label>
+                <Input value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} className="mt-1.5" placeholder="Phone number" />
+              </div>
             </div>
             <div>
               <Label>Address</Label>
-              <Input value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} className="mt-1.5" placeholder="Customer address" />
+              <Textarea value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} className="mt-1.5 min-h-[60px]" placeholder="Customer address" rows={2} />
             </div>
           </div>
           <DialogFooter>
