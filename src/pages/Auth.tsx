@@ -89,7 +89,8 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      const from = (location.state as any)?.from || '/';
+      navigate(from, { replace: true });
     }
 
     const authError = sessionStorage.getItem('auth_error');
