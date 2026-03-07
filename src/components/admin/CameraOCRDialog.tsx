@@ -54,6 +54,9 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setCapturing(false);
   }, []);
 
