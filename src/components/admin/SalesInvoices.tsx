@@ -1285,6 +1285,36 @@ const InvoicesTab = () => {
                 </div>
               </div>
 
+              {/* Paper size selector */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Label Size</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { value: "40x30", label: "40×30", sub: "mm" },
+                    { value: "50x30", label: "50×30", sub: "mm" },
+                    { value: "60x40", label: "60×40", sub: "mm" },
+                    { value: "80x50", label: "80×50", sub: "mm" },
+                  ].map(opt => {
+                    const active = labelSize === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setLabelSize(opt.value)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all cursor-pointer ${
+                          active
+                            ? 'border-primary/40 bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]'
+                            : 'border-border/60 bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
+                        }`}
+                      >
+                        <StickyNote className="w-3 h-3" />
+                        {opt.label} <span className="text-[9px] opacity-50">{opt.sub}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Address input */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Shipping Address</label>
