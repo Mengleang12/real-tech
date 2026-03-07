@@ -155,24 +155,14 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
         <DialogTitle>Scan Serial Number</DialogTitle>
 
         <div className="flex flex-col flex-1 min-h-0">
-          {/* Tap to start - required for iOS */}
+          {/* Loading state while camera initializes */}
           {!capturedImage && !capturing && (
-            <div className="flex flex-col items-center justify-center gap-5 flex-1 py-16">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <ScanLine className="w-8 h-8 text-primary" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-foreground">Ready to Scan</p>
-                <p className="text-xs text-muted-foreground mt-1">Tap to open camera and scan serial number</p>
-              </div>
-              <Button onClick={() => startCamera()} className="gap-2 h-12 rounded-xl px-8" size="lg">
-                <Camera className="w-4 h-4" />
-                Open Camera
-              </Button>
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           )}
 
-          {/* Camera / captured view — fills the dialog */}
+          {/* Camera / captured view */}
           {(capturing || capturedImage) && (
             <div className="relative flex-1 flex flex-col min-h-0" style={{ minHeight: '50vh' }}>
               {/* Camera feed — fills available space */}
