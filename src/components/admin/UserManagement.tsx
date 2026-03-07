@@ -599,20 +599,20 @@ export const UserManagement = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Email *</Label>
-              <Input value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} className="mt-1.5" placeholder="customer@email.com" />
+              <Label>Full Name *</Label>
+              <Input value={customerForm.full_name} onChange={e => setCustomerForm({ ...customerForm, full_name: e.target.value })} className="mt-1.5" placeholder="Full name" />
             </div>
             <div>
-              <Label>Full Name</Label>
-              <Input value={customerForm.full_name} onChange={e => setCustomerForm({ ...customerForm, full_name: e.target.value })} className="mt-1.5" placeholder="Full name" />
+              <Label>Email</Label>
+              <Input value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} className="mt-1.5" placeholder="customer@email.com" />
             </div>
             <div>
               <Label>Phone</Label>
               <Input value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} className="mt-1.5" placeholder="Phone number" />
             </div>
             <div>
-              <Label>{editingCustomer ? "New Password (leave blank to keep)" : "Password *"}</Label>
-              <Input type="password" value={customerForm.password} onChange={e => setCustomerForm({ ...customerForm, password: e.target.value })} className="mt-1.5" placeholder={editingCustomer ? "••••••••" : "Min 6 characters"} />
+              <Label>Address</Label>
+              <Input value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} className="mt-1.5" placeholder="Customer address" />
             </div>
           </div>
           <DialogFooter>
