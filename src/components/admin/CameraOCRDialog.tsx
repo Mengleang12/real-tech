@@ -136,28 +136,29 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
       <DialogContent className="max-w-md p-0">
         <DialogTitle>Scan Serial Number</DialogTitle>
 
-        <div className="flex flex-col items-center justify-center flex-1 gap-4 px-4 pb-5">
+        <div className="flex flex-col flex-1 min-h-0">
           {/* Tap to start - required for iOS */}
           {!capturedImage && !capturing && (
-            <div className="flex flex-col items-center gap-4 py-8">
-              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <ScanLine className="w-9 h-9 text-primary" />
+            <div className="flex flex-col items-center justify-center gap-5 flex-1 py-16">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <ScanLine className="w-8 h-8 text-primary" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-foreground">Ready to Scan</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Tap below to open camera</p>
+                <p className="text-sm font-semibold text-foreground">Ready to Scan</p>
+                <p className="text-xs text-muted-foreground mt-1">Tap to open camera and scan serial number</p>
               </div>
-              <Button onClick={() => startCamera()} className="gap-2 h-11 rounded-xl px-6" size="lg">
+              <Button onClick={() => startCamera()} className="gap-2 h-12 rounded-xl px-8" size="lg">
                 <Camera className="w-4 h-4" />
                 Open Camera
               </Button>
             </div>
           )}
 
-          {/* Camera / captured view */}
+          {/* Camera / captured view — fills the dialog */}
           {(capturing || capturedImage) && (
-            <div className="relative w-full max-w-sm">
-              <div className="relative rounded-2xl overflow-hidden bg-black aspect-[4/3] ring-1 ring-border/50">
+            <div className="relative flex-1 flex flex-col min-h-0">
+              {/* Camera feed — fills available space */}
+              <div className="relative flex-1 bg-black min-h-0">
                 {!capturedImage ? (
                   <>
                     <video
@@ -165,30 +166,35 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
                       autoPlay
                       playsInline
                       muted
-                      className="w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                     {/* Scan overlay with corner brackets */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="relative w-[75%] h-[35%]">
-                        {/* Corner brackets */}
-                        <div className="absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-primary rounded-tl-sm" />
-                        <div className="absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 border-primary rounded-tr-sm" />
-                        <div className="absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 border-primary rounded-bl-sm" />
-                        <div className="absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 border-primary rounded-br-sm" />
-                        {/* Animated scan line */}
-                        <div className="absolute inset-x-2 top-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
+                      <div className="relative w-[80%] h-[30%]">
+                        <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-primary rounded-tl-sm" />
+                        <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-primary rounded-tr-sm" />
+                        <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-primary rounded-bl-sm" />
+                        <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-primary rounded-br-sm" />
+                        <div className="absolute inset-x-2 top-1/2 h-0.5 bg-gradient-to-r from-transparent via-primary/60 to-transparent animate-pulse" />
                       </div>
                     </div>
                     {/* Hint text */}
-                    <div className="absolute bottom-3 inset-x-0 flex justify-center pointer-events-none">
-                      <span className="text-[11px] text-white/70 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <div className="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none">
+                      <span className="text-[11px] text-white/80 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5">
                         <Focus className="w-3 h-3" />
                         Align serial number in the frame
                       </span>
                     </div>
+                    {/* Camera toggle */}
+                    <button
+                      onClick={toggleCamera}
+                      className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                    >
+                      <SwitchCamera className="w-4 h-4" />
+                    </button>
                   </>
                 ) : (
-                  <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+                  <img src={capturedImage} alt="Captured" className="absolute inset-0 w-full h-full object-cover" />
                 )}
 
                 {processing && (
@@ -201,59 +207,52 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
                 )}
               </div>
 
-              {/* Camera toggle - floating */}
-              {capturing && (
-                <button
-                  onClick={toggleCamera}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
-                >
-                  <SwitchCamera className="w-4 h-4" />
-                </button>
-              )}
+              {/* Bottom controls */}
+              <div className="shrink-0 bg-background p-3 space-y-3">
+                {/* Detected serial result */}
+                {detectedSerial && (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-emerald-500" />
+                      </div>
+                      <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Serial Detected</span>
+                    </div>
+                    <p className="text-base font-mono font-bold text-foreground tracking-wide text-center bg-muted/50 rounded-lg py-2">
+                      {detectedSerial}
+                    </p>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex gap-2.5">
+                  {capturing && (
+                    <Button onClick={capture} className="flex-1 gap-2 h-12 rounded-xl" size="lg">
+                      <Camera className="w-4 h-4" />
+                      Capture
+                    </Button>
+                  )}
+
+                  {capturedImage && !processing && (
+                    <>
+                      <Button onClick={retake} variant="outline" className="flex-1 gap-2 h-11 rounded-xl" size="lg">
+                        <RotateCcw className="w-4 h-4" />
+                        Retake
+                      </Button>
+                      {detectedSerial && (
+                        <Button onClick={confirmSerial} className="flex-1 gap-2 h-11 rounded-xl" size="lg">
+                          <Check className="w-4 h-4" />
+                          Use Serial
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
           <canvas ref={canvasRef} className="hidden" />
-
-          {/* Detected serial result */}
-          {detectedSerial && (
-            <div className="w-full max-w-sm rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <Check className="w-3 h-3 text-emerald-500" />
-                </div>
-                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Serial Detected</span>
-              </div>
-              <p className="text-lg font-mono font-bold text-foreground tracking-wide text-center bg-muted/50 rounded-lg py-2">
-                {detectedSerial}
-              </p>
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className="flex gap-2.5 w-full max-w-sm">
-            {capturing && (
-              <Button onClick={capture} className="flex-1 gap-2 h-11 rounded-xl" size="lg">
-                <Camera className="w-4 h-4" />
-                Capture
-              </Button>
-            )}
-
-            {capturedImage && !processing && (
-              <>
-                <Button onClick={retake} variant="outline" className="flex-1 gap-2 h-11 rounded-xl" size="lg">
-                  <RotateCcw className="w-4 h-4" />
-                  Retake
-                </Button>
-                {detectedSerial && (
-                  <Button onClick={confirmSerial} className="flex-1 gap-2 h-11 rounded-xl" size="lg">
-                    <Check className="w-4 h-4" />
-                    Use Serial
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
         </div>
       </DialogContent>
     </Dialog>
