@@ -55,6 +55,7 @@ type AuthMode = 'login' | 'register' | 'verify-registration' | 'forgot-password'
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading } = useAuth();
   const { language } = useLanguage();
   const t = useTranslations();
