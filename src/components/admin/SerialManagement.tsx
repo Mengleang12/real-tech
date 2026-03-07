@@ -629,16 +629,36 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                             {cfg.label}
                           </Badge>
                         </div>
-                        {serial.status === 'available' && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
-                            onClick={() => setDeleteSerialId(serial.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        )}
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                          {serial.status === 'available' && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-muted-foreground"
+                              onClick={() => printSerialLabel({
+                                ...serial,
+                                product: selectedProduct ? { name: selectedProduct.name, icon_url: selectedProduct.icon_url || undefined } : serial.product,
+                                variant: selectedVariantId ? { 
+                                  ...selectedProduct?.variants.find(v => v.id === selectedVariantId),
+                                  combination: selectedProduct?.variants.find(v => v.id === selectedVariantId)?.combination || {},
+                                } as any : serial.variant,
+                              })}
+                              title="Print label"
+                            >
+                              <Printer className="w-3 h-3" />
+                            </Button>
+                          )}
+                          {serial.status === 'available' && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
+                              onClick={() => setDeleteSerialId(serial.id)}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
