@@ -477,13 +477,6 @@ const AddPurchaseDialog = ({
         )}
       </div>
 
-      {/* Footer */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-border mt-4">
-        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-          {editPurchase ? "Update" : "Create PO"}
-        </Button>
       </div>
     </AdminDialog>
   );
