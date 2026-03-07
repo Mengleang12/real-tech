@@ -225,6 +225,9 @@ export const SerialManagement = () => {
                       </td>
                       <td className="px-4 py-3 font-mono text-sm">{serial.serial_number}</td>
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{serial.barcode}</td>
+                      <td className="px-4 py-3 text-right text-sm font-medium">
+                        {serial.variant?.price_adjustment != null ? `$${Number(serial.variant.price_adjustment).toFixed(2)}` : '—'}
+                      </td>
                       <td className="px-4 py-3">
                         <Badge className={`text-[10px] ${cfg.color} hover:${cfg.color}`}>
                           <Icon className="w-3 h-3 mr-1" />
