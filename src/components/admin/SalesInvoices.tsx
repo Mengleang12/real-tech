@@ -546,7 +546,7 @@ const InvoicesTab = () => {
 
   const [labelOrder, setLabelOrder] = useState<AdminOrder | null>(null);
   const [labelAddress, setLabelAddress] = useState("Cambodia");
-  const [labelSize, setLabelSize] = useState("80x50");
+  const [labelSize, setLabelSize] = useState("30x20");
 
   const handlePrintCustomerLabel = () => {
     if (!labelOrder) return;
@@ -1290,6 +1290,7 @@ const InvoicesTab = () => {
                 <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Label Size</label>
                 <div className="flex flex-wrap gap-1.5">
                   {[
+                    { value: "30x20", label: "30×20", sub: "mm" },
                     { value: "40x30", label: "40×30", sub: "mm" },
                     { value: "50x30", label: "50×30", sub: "mm" },
                     { value: "60x40", label: "60×40", sub: "mm" },
