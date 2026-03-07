@@ -551,15 +551,20 @@ const InvoicesTab = () => {
   const handlePrintCustomerLabel = () => {
     if (!labelOrder) return;
     const order = labelOrder;
+    const [lw, lh] = labelSize.split('x').map(Number);
+    const padSize = lw >= 80 ? '8mm' : lw >= 60 ? '5mm' : '3mm';
+    const nameSize = lw >= 80 ? '14px' : lw >= 60 ? '11px' : '9px';
+    const infoSize = lw >= 80 ? '11px' : lw >= 60 ? '9px' : '7px';
+    const invSize = lw >= 80 ? '10px' : lw >= 60 ? '8px' : '6px';
     const w = window.open("", "_blank", "width=400,height=300");
     if (!w) return;
     w.document.write(`<!DOCTYPE html><html><head><title>Customer Label</title>
     <style>
-      @page { size: 80mm 50mm; margin: 0; }
-      body { font-family: -apple-system, sans-serif; padding: 8mm; margin: 0; }
-      .name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-      .info { font-size: 11px; color: #555; line-height: 1.6; }
-      .inv { font-size: 10px; color: #888; margin-top: 6px; border-top: 1px dashed #ccc; padding-top: 4px; }
+      @page { size: ${lw}mm ${lh}mm; margin: 0; }
+      body { font-family: -apple-system, sans-serif; padding: ${padSize}; margin: 0; }
+      .name { font-size: ${nameSize}; font-weight: 700; margin-bottom: 4px; }
+      .info { font-size: ${infoSize}; color: #555; line-height: 1.6; }
+      .inv { font-size: ${invSize}; color: #888; margin-top: 6px; border-top: 1px dashed #ccc; padding-top: 4px; }
     </style></head><body>
       <div class="name">${order.user?.full_name || "Walk-in Customer"}</div>
       <div class="info">
