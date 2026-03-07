@@ -94,9 +94,9 @@ function AppRoutes() {
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/admin" element={<Admin />} />
-        <Route path="/my-purchases" element={<MyPurchases />} />
-        <Route path="/payment-history" element={<PaymentHistory />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/my-purchases" element={<RequireCustomerAuth><MyPurchases /></RequireCustomerAuth>} />
+        <Route path="/payment-history" element={<RequireCustomerAuth><PaymentHistory /></RequireCustomerAuth>} />
+        <Route path="/profile" element={<RequireCustomerAuth><Profile /></RequireCustomerAuth>} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/install" element={<Install />} />
