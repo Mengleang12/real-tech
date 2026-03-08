@@ -28,7 +28,7 @@ const SectionSkeleton = () => (
   </div>
 );
 
-export const CategoryProductSection = ({ category, searchQuery = "", limit = 10 }: CategoryProductSectionProps) => {
+export const CategoryProductSection = ({ category, searchQuery = "", limit = 10, showEmpty = false }: CategoryProductSectionProps) => {
   const { language } = useLanguage();
 
   const { data, isLoading } = usePaginatedApps({
@@ -50,8 +50,8 @@ export const CategoryProductSection = ({ category, searchQuery = "", limit = 10 
   const products = data?.data || [];
   const total = data?.pagination?.total || 0;
 
-  // Don't render empty categories
-  if (!isLoading && products.length === 0) {
+  // Don't render empty categories unless showEmpty is true
+  if (!isLoading && products.length === 0 && !showEmpty) {
     return null;
   }
 
