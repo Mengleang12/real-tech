@@ -74,10 +74,13 @@ export const CategoryProductSection = ({ category, searchQuery = "", limit = 10,
       {isLoading ? (
         <SectionSkeleton />
       ) : products.length === 0 ? (
-        <div className="text-center py-16 border border-border/40 rounded-2xl bg-card">
-          <p className="text-sm text-muted-foreground">
-            {language === 'km' ? 'មិនមានផលិតផលនៅឡើយ' : 'No products found in this category'}
-          </p>
+        <div className="border border-border/40 rounded-2xl bg-card">
+          <EmptyState
+            icon={PackageOpen}
+            title={language === 'km' ? 'មិនមានផលិតផលនៅឡើយ' : 'No products found'}
+            description={language === 'km' ? 'ផ្នែកនេះមិនទាន់មានផលិតផលទេ' : 'This category doesn\'t have any products yet'}
+            compact
+          />
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
