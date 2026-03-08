@@ -10,6 +10,7 @@ interface CategoryProductSectionProps {
   category: Category;
   searchQuery?: string;
   limit?: number;
+  showEmpty?: boolean;
 }
 
 const SectionSkeleton = () => (
@@ -27,7 +28,7 @@ const SectionSkeleton = () => (
   </div>
 );
 
-export const CategoryProductSection = ({ category, searchQuery = "", limit = 10 }: CategoryProductSectionProps) => {
+export const CategoryProductSection = ({ category, searchQuery = "", limit = 10, showEmpty = false }: CategoryProductSectionProps) => {
   const { language } = useLanguage();
 
   const { data, isLoading } = usePaginatedApps({
@@ -49,8 +50,8 @@ export const CategoryProductSection = ({ category, searchQuery = "", limit = 10 
   const products = data?.data || [];
   const total = data?.pagination?.total || 0;
 
-  // Don't render empty categories
-  if (!isLoading && products.length === 0) {
+  // Don't render empty categories unless showEmpty is true
+  if (!isLoading && products.length === 0 && !showEmpty) {
     return null;
   }
 
@@ -72,6 +73,12 @@ export const CategoryProductSection = ({ category, searchQuery = "", limit = 10 
 
       {isLoading ? (
         <SectionSkeleton />
+      ) : products.length === 0 ? (
+        <div className="text-center py-16 border border-border/40 rounded-2xl bg-card">
+          <p className="text-sm text-muted-foreground">
+            {language === 'km' ? 'មិនមានផលិតផលនៅឡើយ' : 'No products found in this category'}
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {products.map((product) => (
