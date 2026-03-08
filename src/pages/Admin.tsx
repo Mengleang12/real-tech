@@ -904,9 +904,13 @@ const AppsTab = () => {
             ))}
           </div>
         ) : apps.length === 0 ? (
-          <div className="text-center py-12 border border-border rounded-md bg-card">
-            <Package className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">No products found</p>
+          <div className="border border-border/40 rounded-2xl bg-card">
+            <EmptyState
+              icon={Package}
+              title="No products found"
+              description="Try adjusting your search or add a new product."
+              compact
+            />
           </div>
         ) : (
             <div className="border border-border rounded-lg overflow-hidden">

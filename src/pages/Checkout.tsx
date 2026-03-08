@@ -154,25 +154,19 @@ const Checkout = () => {
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Empty state */}
         {items.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
-              <ShoppingCart className="w-8 h-8 text-muted-foreground/30" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">
-                {language === "km" ? "កន្ត្រកទទេ" : "Your cart is empty"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {language === "km" ? "បន្ថែមកម្មវិធីដើម្បីចាប់ផ្ដើម" : "Add some apps to get started"}
-              </p>
-            </div>
-            <Link to="/">
-              <Button size="sm" className="text-xs gap-1.5">
-                <ArrowLeft className="w-3.5 h-3.5" />
-                {language === "km" ? "រកមើលកម្មវិធី" : "Browse Apps"}
-              </Button>
-            </Link>
-          </div>
+          <EmptyState
+            icon={ShoppingCart}
+            title={language === "km" ? "កន្ត្រកទទេ" : "Your cart is empty"}
+            description={language === "km" ? "បន្ថែមកម្មវិធីដើម្បីចាប់ផ្ដើម" : "Add some apps to get started"}
+            action={
+              <Link to="/">
+                <Button size="sm" className="text-xs gap-1.5">
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  {language === "km" ? "រកមើលកម្មវិធី" : "Browse Apps"}
+                </Button>
+              </Link>
+            }
+          />
         )}
 
         {/* Cart items */}

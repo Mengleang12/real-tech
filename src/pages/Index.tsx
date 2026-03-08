@@ -62,9 +62,11 @@ const Index = () => {
         return <CategoryProductSection category={selectedCat} searchQuery={searchQuery} limit={20} showEmpty />;
       }
       return (
-        <div className="text-center py-20 text-muted-foreground">
-          <p className="text-lg">{language === 'km' ? 'មិនមានផលិតផលនៅឡើយ' : 'No products available yet'}</p>
-        </div>
+        <EmptyState
+          icon={PackageOpen}
+          title={language === 'km' ? 'មិនមានផលិតផលនៅឡើយ' : 'No products available yet'}
+          description={language === 'km' ? 'សូមពិនិត្យមើលពេលក្រោយ' : 'Check back later for new products'}
+        />
       );
     }
 
