@@ -1,5 +1,7 @@
 import { useMemo } from "react";
+import { PackageOpen } from "lucide-react";
 import { ProductCard } from "./ProductCard";
+import { EmptyState } from "./EmptyState";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePaginatedApps } from "@/hooks/useApps";
 import { useOrders } from "@/hooks/useOrders";
