@@ -36,11 +36,7 @@ const ProductGridSkeleton = () => (
   </div>
 );
 
-const EmptyState = ({ message }: { message: string }) => (
-  <div className="text-center py-12 text-muted-foreground">
-    <p>{message}</p>
-  </div>
-);
+import { EmptyState } from "./EmptyState";
 
 export const ProductGrid = ({ 
   title, 
