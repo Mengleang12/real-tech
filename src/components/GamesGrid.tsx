@@ -172,7 +172,7 @@ export const GamesGrid = ({ searchQuery = "", itemsPerPage = 10 }: GamesGridProp
           )}
         </div>
       ) : (
-        <EmptyState message="No games available yet." />
+        <EmptyState icon={Gamepad2} title="No games available yet" description="Check back later for new additions." />
       )}
     </section>
   );
