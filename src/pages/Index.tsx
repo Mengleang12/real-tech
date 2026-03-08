@@ -59,7 +59,7 @@ const Index = () => {
     if (activeCategory !== "all") {
       const selectedCat = activeCategories.find(c => c.slug === activeCategory);
       if (selectedCat) {
-        return <CategoryProductSection category={selectedCat} searchQuery={searchQuery} limit={20} />;
+        return <CategoryProductSection category={selectedCat} searchQuery={searchQuery} limit={20} showEmpty />;
       }
       return (
         <div className="text-center py-20 text-muted-foreground">
