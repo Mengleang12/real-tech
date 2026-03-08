@@ -137,7 +137,7 @@ export const ProductGrid = ({
       {isLoading && !data ? (
         <ProductGridSkeleton />
       ) : error ? (
-        <EmptyState message="Failed to load apps. Please try again." />
+        <EmptyState icon={Package} title="Failed to load" description="Something went wrong. Please try again." compact />
       ) : apps.length > 0 ? (
         <div className={isFetching ? "opacity-70 transition-opacity" : ""}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
