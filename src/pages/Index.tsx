@@ -12,6 +12,8 @@ import { SEOHead } from "@/components/SEOHead";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
 import { useCategories } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PackageOpen } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("all");

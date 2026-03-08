@@ -10,6 +10,7 @@ import { ArrowLeft, ShoppingCart, Trash2, X, Package, CreditCard, AlertTriangle 
 import DeliveryInfoForm, { type DeliveryInfo } from "@/components/DeliveryInfoForm";
 import GuestCheckoutDialog from "@/components/GuestCheckoutDialog";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/EmptyState";
 
 const Checkout = () => {
   const { items, removeFromCart, clearCart, totalPrice } = useCart();

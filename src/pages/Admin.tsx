@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { SEOHead } from "@/components/SEOHead";
+import { EmptyState } from "@/components/EmptyState";
 import { useNavigate } from "react-router-dom";
 import { 
   Plus, Minus, Edit, Trash2, LogOut, Package, Search, X, Save, ArrowLeft, 

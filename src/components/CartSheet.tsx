@@ -3,6 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Trash2, X, AlertTriangle } from "lucide-react";
+import { EmptyState } from "./EmptyState";
 import { useNavigate } from "react-router-dom";
 
 export const CartSheet = () => {

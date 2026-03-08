@@ -8,6 +8,7 @@ import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { appsApi, type App } from '@/lib/api';
 import { PageTransition } from '@/components/PageTransition';
+import { EmptyState } from '@/components/EmptyState';
 
 const Wishlist = () => {
   const navigate = useNavigate();
