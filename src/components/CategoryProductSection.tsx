@@ -10,6 +10,7 @@ interface CategoryProductSectionProps {
   category: Category;
   searchQuery?: string;
   limit?: number;
+  showEmpty?: boolean;
 }
 
 const SectionSkeleton = () => (
