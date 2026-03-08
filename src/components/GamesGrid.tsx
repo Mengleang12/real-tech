@@ -110,7 +110,7 @@ export const GamesGrid = ({ searchQuery = "", itemsPerPage = 10 }: GamesGridProp
       {isLoading && !data ? (
         <GamesGridSkeleton />
       ) : error ? (
-        <EmptyState message="Failed to load games. Please try again." />
+        <EmptyState icon={Gamepad2} title="Failed to load games" description="Please try again later." compact />
       ) : games.length > 0 ? (
         <div className={isFetching ? "opacity-70 transition-opacity" : ""}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
