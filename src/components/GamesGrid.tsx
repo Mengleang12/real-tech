@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Gamepad2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { ProductCard } from "./ProductCard";
 import { useTranslations } from "@/contexts/LanguageContext";
