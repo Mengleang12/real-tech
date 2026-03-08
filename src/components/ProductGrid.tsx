@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Package } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { ProductCard } from "./ProductCard";
 import { useTranslations } from "@/contexts/LanguageContext";
@@ -36,11 +36,7 @@ const ProductGridSkeleton = () => (
   </div>
 );
 
-const EmptyState = ({ message }: { message: string }) => (
-  <div className="text-center py-12 text-muted-foreground">
-    <p>{message}</p>
-  </div>
-);
+import { EmptyState } from "./EmptyState";
 
 export const ProductGrid = ({ 
   title, 
@@ -141,7 +137,7 @@ export const ProductGrid = ({
       {isLoading && !data ? (
         <ProductGridSkeleton />
       ) : error ? (
-        <EmptyState message="Failed to load apps. Please try again." />
+        <EmptyState icon={Package} title="Failed to load" description="Something went wrong. Please try again." compact />
       ) : apps.length > 0 ? (
         <div className={isFetching ? "opacity-70 transition-opacity" : ""}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
@@ -203,7 +199,7 @@ export const ProductGrid = ({
           )}
         </div>
       ) : (
-        <EmptyState message="No programs available yet." />
+        <EmptyState icon={Package} title="No programs available yet" description="Check back later for new additions." />
       )}
     </section>
   );

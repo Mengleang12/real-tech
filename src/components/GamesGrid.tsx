@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Gamepad2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { ProductCard } from "./ProductCard";
 import { useTranslations } from "@/contexts/LanguageContext";
@@ -28,11 +28,7 @@ const GamesGridSkeleton = () => (
   </div>
 );
 
-const EmptyState = ({ message }: { message: string }) => (
-  <div className="text-center py-12 text-muted-foreground">
-    <p>{message}</p>
-  </div>
-);
+import { EmptyState } from "./EmptyState";
 
 export const GamesGrid = ({ searchQuery = "", itemsPerPage = 10 }: GamesGridProps) => {
   const t = useTranslations();
@@ -114,7 +110,7 @@ export const GamesGrid = ({ searchQuery = "", itemsPerPage = 10 }: GamesGridProp
       {isLoading && !data ? (
         <GamesGridSkeleton />
       ) : error ? (
-        <EmptyState message="Failed to load games. Please try again." />
+        <EmptyState icon={Gamepad2} title="Failed to load games" description="Please try again later." compact />
       ) : games.length > 0 ? (
         <div className={isFetching ? "opacity-70 transition-opacity" : ""}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
@@ -176,7 +172,7 @@ export const GamesGrid = ({ searchQuery = "", itemsPerPage = 10 }: GamesGridProp
           )}
         </div>
       ) : (
-        <EmptyState message="No games available yet." />
+        <EmptyState icon={Gamepad2} title="No games available yet" description="Check back later for new additions." />
       )}
     </section>
   );

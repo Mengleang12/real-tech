@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/EmptyState";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   CreditCard, ArrowLeft,
@@ -385,21 +386,19 @@ const PaymentHistory = () => {
             </Button>
           </div>
         ) : !filteredOrders || filteredOrders.length === 0 ? (
-          <div className="text-center py-16 border border-border rounded-md bg-card">
-            <CreditCard className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <h2 className="text-sm font-medium mb-1">
-              {filter === 'all'
+          <div className="border border-border/40 rounded-2xl bg-card">
+            <EmptyState
+              icon={CreditCard}
+              title={filter === 'all'
                 ? (language === 'km' ? 'គ្មានប្រវត្តិបង់ប្រាក់ទេ' : 'No transactions yet')
                 : (language === 'km' ? `គ្មានការបង់ប្រាក់ ${filterTabs.find(t => t.value === filter)?.labelKm}` : `No ${filter} orders`)
               }
-            </h2>
-            <p className="text-xs text-muted-foreground mb-4">
-              {filter !== 'all' 
+              description={filter !== 'all' 
                 ? (language === 'km' ? 'សាកល្បងជ្រើសរើសតម្រងផ្សេង' : 'Try selecting a different filter')
                 : (language === 'km' ? 'អ្នកមិនទាន់បានធ្វើប្រតិបត្តិការទេ' : "You haven't made any transactions yet")
               }
-            </p>
-            {filter === 'all' && <Link to="/"><Button size="sm" variant="outline">{language === 'km' ? 'រុករកកម្មវិធី' : 'Browse Apps'}</Button></Link>}
+              action={filter === 'all' ? <Link to="/"><Button size="sm" variant="outline">{language === 'km' ? 'រុករកកម្មវិធី' : 'Browse Apps'}</Button></Link> : undefined}
+            />
           </div>
         ) : (
           <div className="space-y-2">

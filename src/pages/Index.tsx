@@ -12,6 +12,8 @@ import { SEOHead } from "@/components/SEOHead";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
 import { useCategories } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PackageOpen } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -62,9 +64,11 @@ const Index = () => {
         return <CategoryProductSection category={selectedCat} searchQuery={searchQuery} limit={20} showEmpty />;
       }
       return (
-        <div className="text-center py-20 text-muted-foreground">
-          <p className="text-lg">{language === 'km' ? 'មិនមានផលិតផលនៅឡើយ' : 'No products available yet'}</p>
-        </div>
+        <EmptyState
+          icon={PackageOpen}
+          title={language === 'km' ? 'មិនមានផលិតផលនៅឡើយ' : 'No products available yet'}
+          description={language === 'km' ? 'សូមពិនិត្យមើលពេលក្រោយ' : 'Check back later for new products'}
+        />
       );
     }
 

@@ -3,6 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Trash2, X, AlertTriangle } from "lucide-react";
+import { EmptyState } from "./EmptyState";
 import { useNavigate } from "react-router-dom";
 
 export const CartSheet = () => {
@@ -21,9 +22,13 @@ export const CartSheet = () => {
         </SheetHeader>
 
         {items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-3 px-5">
-            <ShoppingCart className="w-12 h-12 opacity-20" />
-            <p className="text-sm">{language === "km" ? "កន្ត្រកទទេ" : "Your cart is empty"}</p>
+          <div className="flex-1 flex flex-col items-center justify-center px-5">
+            <EmptyState
+              icon={ShoppingCart}
+              title={language === "km" ? "កន្ត្រកទទេ" : "Your cart is empty"}
+              description={language === "km" ? "បន្ថែមផលិតផល" : "Add products to your cart"}
+              compact
+            />
           </div>
         ) : (
           <>

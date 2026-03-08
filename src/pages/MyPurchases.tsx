@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrders, Order } from "@/hooks/useOrders";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getWarrantyStatus, getWarrantyBadgeVariant } from "@/lib/warranty-utils";
@@ -181,13 +182,13 @@ const MyPurchases = () => {
             </Button>
           </div>
         ) : paidOrders.length === 0 ? (
-          <div className="text-center py-16 border border-border rounded-md bg-card">
-            <Package className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <h2 className="text-sm font-medium mb-1">{language === 'km' ? 'គ្មានការទិញទេ' : 'No purchases yet'}</h2>
-            <p className="text-xs text-muted-foreground mb-4">
-              {language === 'km' ? 'អ្នកមិនទាន់បានទិញកម្មវិធីណាមួយទេ' : "You haven't purchased any apps yet"}
-            </p>
-            <Link to="/"><Button size="sm" variant="outline">{language === 'km' ? 'រុករកកម្មវិធី' : 'Browse Apps'}</Button></Link>
+          <div className="border border-border/40 rounded-2xl bg-card">
+            <EmptyState
+              icon={Package}
+              title={language === 'km' ? 'គ្មានការទិញទេ' : 'No purchases yet'}
+              description={language === 'km' ? 'អ្នកមិនទាន់បានទិញកម្មវិធីណាមួយទេ' : "You haven't purchased any apps yet"}
+              action={<Link to="/"><Button size="sm" variant="outline">{language === 'km' ? 'រុករកកម្មវិធី' : 'Browse Apps'}</Button></Link>}
+            />
           </div>
         ) : (
           <div className="space-y-2">

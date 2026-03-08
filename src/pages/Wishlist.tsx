@@ -8,6 +8,7 @@ import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { appsApi, type App } from '@/lib/api';
 import { PageTransition } from '@/components/PageTransition';
+import { EmptyState } from '@/components/EmptyState';
 
 const Wishlist = () => {
   const navigate = useNavigate();
@@ -69,15 +70,16 @@ const Wishlist = () => {
               ))}
             </div>
           ) : apps.length === 0 ? (
-            <div className="text-center py-20">
-              <Heart className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
-              <p className="text-muted-foreground">
-                {language === 'km' ? 'បញ្ជីសំណព្វរបស់អ្នកទទេ' : 'Your wishlist is empty'}
-              </p>
-              <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate('/')}>
-                {language === 'km' ? 'រកកម្មវិធី' : 'Browse Apps'}
-              </Button>
-            </div>
+            <EmptyState
+              icon={Heart}
+              title={language === 'km' ? 'បញ្ជីសំណព្វរបស់អ្នកទទេ' : 'Your wishlist is empty'}
+              description={language === 'km' ? 'រកផលិតផលដែលអ្នកចូលចិត្ត' : 'Save your favorite products here'}
+              action={
+                <Button variant="outline" size="sm" onClick={() => navigate('/')}>
+                  {language === 'km' ? 'រកកម្មវិធី' : 'Browse Apps'}
+                </Button>
+              }
+            />
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {apps.map(app => (
