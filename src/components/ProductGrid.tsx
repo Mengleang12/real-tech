@@ -199,7 +199,7 @@ export const ProductGrid = ({
           )}
         </div>
       ) : (
-        <EmptyState message="No programs available yet." />
+        <EmptyState icon={Package} title="No programs available yet" description="Check back later for new additions." />
       )}
     </section>
   );
