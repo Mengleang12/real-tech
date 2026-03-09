@@ -37,7 +37,20 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        try { await videoRef.current.play(); } catch {}
+        // Wait for video to be ready before playing
+        await new Promise<void>((resolve) => {
+          const video = videoRef.current!;
+          const onReady = () => {
+            video.removeEventListener('loadedmetadata', onReady);
+            resolve();
+          };
+          if (video.readyState >= 1) {
+            resolve();
+          } else {
+            video.addEventListener('loadedmetadata', onReady);
+          }
+        });
+        await videoRef.current.play();
       }
       setCapturing(true);
       setCapturedImage(null);
