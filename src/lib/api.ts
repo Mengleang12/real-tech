@@ -414,6 +414,12 @@ export interface AdminOrder {
     full_name?: string;
     phone?: string;
   };
+  customer?: {
+    id: number;
+    email?: string;
+    full_name?: string;
+    phone?: string;
+  };
 }
 
 export interface SaleItemRecord {

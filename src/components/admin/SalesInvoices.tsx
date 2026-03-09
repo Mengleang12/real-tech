@@ -179,7 +179,7 @@ const SalesOverview = () => {
                     <div key={sale.id} className="flex items-center justify-between">
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{saleProductSummary}</p>
-                        <p className="text-xs text-muted-foreground">{(sale as any).user?.full_name || (sale as any).user?.email || "Customer"}</p>
+                        <p className="text-xs text-muted-foreground">{(sale as any).customer?.full_name || (sale as any).user?.full_name || "Customer"}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold tabular-nums">${amt.toFixed(2)}</p>
@@ -718,9 +718,9 @@ const InvoicesTab = () => {
       <div class="info-row">
         <div class="info-col">
           <div class="info-label">Customer</div>
-          <div class="info-name">${order.user?.full_name || "Walk-in Customer"}</div>
-          ${order.user?.phone ? `<div class="info-sub">${order.user.phone}</div>` : ''}
-          ${order.user?.email && order.user.email !== 'walkin@guest.local' ? `<div class="info-sub">${order.user.email}</div>` : ''}
+          <div class="info-name">${order.customer?.full_name || order.user?.full_name || "Walk-in Customer"}</div>
+          ${(order.customer?.phone || order.user?.phone) ? `<div class="info-sub">${order.customer?.phone || order.user?.phone}</div>` : ''}
+          ${(order.customer?.email || order.user?.email) && (order.customer?.email || order.user?.email) !== 'walkin@guest.local' ? `<div class="info-sub">${order.customer?.email || order.user?.email}</div>` : ''}
         </div>
         <div class="info-col" style="text-align:right">
           <div class="info-label">Status</div>
@@ -856,8 +856,8 @@ const InvoicesTab = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <p className="font-medium text-sm text-foreground">{order.user?.full_name || "Walk-in"}</p>
-                        {order.user?.phone && <p className="text-xs text-muted-foreground mt-0.5">{order.user.phone}</p>}
+                        <p className="font-medium text-sm text-foreground">{order.customer?.full_name || order.user?.full_name || "Walk-in"}</p>
+                        {(order.customer?.phone || order.user?.phone) && <p className="text-xs text-muted-foreground mt-0.5">{order.customer?.phone || order.user?.phone}</p>}
                       </td>
                       <td className="px-4 py-3.5">
                         <div className="space-y-0.5 max-w-[200px]">
@@ -1004,9 +1004,9 @@ const InvoicesTab = () => {
                 <Separator />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Customer</p>
-                  <p className="font-medium">{selectedOrder.user?.full_name || "—"}</p>
-                  <p className="text-sm text-muted-foreground">{selectedOrder.user?.email || "—"}</p>
-                  {selectedOrder.user?.phone && <p className="text-sm text-muted-foreground">{selectedOrder.user.phone}</p>}
+                  <p className="font-medium">{selectedOrder.customer?.full_name || selectedOrder.user?.full_name || "—"}</p>
+                  <p className="text-sm text-muted-foreground">{selectedOrder.customer?.email || selectedOrder.user?.email || "—"}</p>
+                  {(selectedOrder.customer?.phone || selectedOrder.user?.phone) && <p className="text-sm text-muted-foreground">{selectedOrder.customer?.phone || selectedOrder.user?.phone}</p>}
                 </div>
                 <Separator />
                 <div>
@@ -1278,11 +1278,11 @@ const InvoicesTab = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-bold text-primary">
-                      {(labelOrder.user?.full_name || "W")[0].toUpperCase()}
+                      {((labelOrder.customer?.full_name || labelOrder.user?.full_name) || "W")[0].toUpperCase()}
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold text-sm truncate">{labelOrder.user?.full_name || "Walk-in Customer"}</p>
+                    <p className="font-semibold text-sm truncate">{labelOrder.customer?.full_name || labelOrder.user?.full_name || "Walk-in Customer"}</p>
                     <div className="flex items-center gap-3 mt-0.5">
                       {labelOrder.user?.phone && (
                         <span className="text-[11px] text-muted-foreground flex items-center gap-1">
