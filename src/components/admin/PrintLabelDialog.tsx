@@ -158,16 +158,20 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
         labelDiv.appendChild(varDiv);
       }
 
-      // Barcode
+      // Barcode - use higher width for better scannability
       const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
       labelDiv.appendChild(svg);
       try {
+        const barcodeHeight = labelHeight >= 30 ? 35 : 28;
         JsBarcode(svg, sku, {
           format: "CODE128",
-          width: 1,
-          height: 22,
-          displayValue: false,
-          margin: 0,
+          width: 2,
+          height: barcodeHeight,
+          displayValue: true,
+          fontSize: labelHeight >= 30 ? 10 : 8,
+          textMargin: 1,
+          margin: 2,
+          font: "Arial",
         });
       } catch {
         svg.remove();
