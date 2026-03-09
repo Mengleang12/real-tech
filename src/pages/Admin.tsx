@@ -43,6 +43,8 @@ import { BrandManagement } from "@/components/admin/BrandManagement";
 import { AttributeManagement } from "@/components/admin/AttributeManagement";
 import { cn } from "@/lib/utils";
 import { SystemSettingsPanel } from "@/components/admin/SystemSettings";
+import { getInvoiceBranding, type InvoiceBranding } from "@/lib/invoice-branding";
+import realtechLogo from "@/assets/realtech-logo.png";
 import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/components/admin/SalesInvoices";
 import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
 import { SupplierManagement } from "@/components/admin/SupplierManagement";
