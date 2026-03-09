@@ -72,7 +72,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     }
   }, [stopAllTracks]);
 
-  // Cleanup when dialog closes — do NOT auto-start camera (Safari gesture requirement)
+  // Cleanup when dialog closes
   useEffect(() => {
     if (!open) {
       stopAllTracks();
@@ -89,16 +89,6 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
       }
     };
   }, [open, stopAllTracks]);
-
-  // Ensure stream is attached after video mounts (fixes first-open black screen on Safari)
-  useEffect(() => {
-    if (!capturing || !videoRef.current || !streamRef.current) return;
-    const video = videoRef.current;
-    if (video.srcObject !== streamRef.current) {
-      video.srcObject = streamRef.current;
-    }
-    void video.play().catch(() => {});
-  }, [capturing]);
 
   const stopCamera = useCallback(() => {
     stopAllTracks();
@@ -188,7 +178,6 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
   };
 
   // CRITICAL: Called directly from user click — satisfies Safari gesture requirement
-  // Do NOT call getUserMedia from useEffect/setTimeout — Safari will show black screen
   const handleStartCamera = async () => {
     setFacingMode("environment");
     await startCamera("environment");
@@ -201,6 +190,27 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
         <DialogDescription className="sr-only">Use your camera to scan a serial number label</DialogDescription>
 
         <div className="flex flex-col min-h-0">
+          {/* 
+            CRITICAL: Video element is ALWAYS mounted (hidden when not active).
+            This ensures videoRef.current is available when startCamera() runs
+            from the click handler, so Safari can attach the stream and call play()
+            within the user gesture chain. Conditionally rendering <video> caused
+            black screen on Safari because videoRef was null during getUserMedia.
+          */}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            {...{ 'webkit-playsinline': '' } as any}
+            className={
+              capturing && !capturedImage
+                ? "absolute inset-0 w-full h-full object-cover"
+                : "hidden"
+            }
+            style={{ WebkitTransform: 'translateZ(0)' }}
+          />
+
           {/* Initial state — user must click to start camera (Safari gesture requirement) */}
           {!cameraReady && !capturedImage && (
             <div className="flex flex-col items-center justify-center gap-4 py-20 px-6">
@@ -227,16 +237,6 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
               <div className="relative flex-1 bg-black" style={{ minHeight: '55vh' }}>
                 {!capturedImage ? (
                   <>
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      // Safari requires webkit-playsinline
-                      {...{ 'webkit-playsinline': '' } as any}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{ WebkitTransform: 'translateZ(0)' }}
-                    />
                     {/* Scan overlay with corner brackets */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="relative w-[80%] h-[30%]">
