@@ -382,10 +382,13 @@ const LabelPreview = ({ sku, price, name, variant, width = 30, height = 20 }: { 
       try {
         JsBarcode(svgRef.current, sku, {
           format: "CODE128",
-          width: 0.8,
-          height: 16,
-          displayValue: false,
-          margin: 0,
+          width: 1.2,
+          height: 20,
+          displayValue: true,
+          fontSize: 7,
+          textMargin: 1,
+          margin: 1,
+          font: "Arial",
         });
       } catch { /* fallback */ }
     }
