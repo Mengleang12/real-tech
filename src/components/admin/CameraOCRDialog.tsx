@@ -190,6 +190,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
   // CRITICAL: Called directly from user click — satisfies Safari gesture requirement
   // Do NOT call getUserMedia from useEffect/setTimeout — Safari will show black screen
   const handleStartCamera = async () => {
+    setFacingMode("environment");
     await startCamera("environment");
   };
 
