@@ -298,6 +298,7 @@ export const authApi = {
       localStorage.setItem('admin_api_key', response.token);
       localStorage.setItem('admin_user', JSON.stringify(response.user));
       localStorage.setItem('admin_roles', JSON.stringify(response.user.roles || []));
+      localStorage.setItem('admin_token_time', Date.now().toString());
     }
     
     return response;
@@ -314,9 +315,26 @@ export const authApi = {
     localStorage.removeItem('admin_api_key');
     localStorage.removeItem('admin_user');
     localStorage.removeItem('admin_roles');
+    localStorage.removeItem('admin_token_time');
   },
   
-  isAuthenticated: () => !!localStorage.getItem('admin_api_key'),
+  isAuthenticated: () => {
+    const token = localStorage.getItem('admin_api_key');
+    if (!token) return false;
+    const tokenTime = localStorage.getItem('admin_token_time');
+    if (tokenTime) {
+      const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
+      if (Date.now() - Number(tokenTime) > ONE_MONTH_MS) {
+        // Token expired — auto logout
+        localStorage.removeItem('admin_api_key');
+        localStorage.removeItem('admin_user');
+        localStorage.removeItem('admin_roles');
+        localStorage.removeItem('admin_token_time');
+        return false;
+      }
+    }
+    return true;
+  },
   
   getUser: () => {
     const user = localStorage.getItem('admin_user');
