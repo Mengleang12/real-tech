@@ -221,6 +221,18 @@ export const SerialManagement = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
+                   <th className="px-3 py-3 w-10">
+                     <Checkbox
+                       checked={serials.length > 0 && serials.every(s => selectedIds.has(s.id))}
+                       onCheckedChange={(checked) => {
+                         if (checked) {
+                           setSelectedIds(new Set(serials.map(s => s.id)));
+                         } else {
+                           setSelectedIds(new Set());
+                         }
+                       }}
+                     />
+                   </th>
                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Serial Number</th>
                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Barcode</th>
