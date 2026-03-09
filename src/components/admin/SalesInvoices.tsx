@@ -572,9 +572,9 @@ const InvoicesTab = () => {
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font-family: -apple-system, 'Kantumruy Pro', sans-serif; padding: ${padSize}; display: flex; flex-direction: column; align-items: center; width: ${lw}mm; height: ${lh}mm; }
       .logo { height: ${logoH}; object-fit: contain; margin-bottom: 1mm; }
-      .sender { font-size: ${senderSize}; color: #333; text-align: center; margin-bottom: 1.5mm; font-weight: 500; }
+      .sender { font-size: ${senderSize}; color: #333; text-align: center; margin-bottom: 1.5mm; font-weight: 700; }
       .divider { width: 80%; border-top: 0.5px dashed #ccc; margin: 1mm 0; }
-      .customer { font-size: ${infoSize}; text-align: center; line-height: 1.5; color: #222; }
+      .customer { font-size: ${infoSize}; text-align: center; line-height: 1.5; color: #111; font-weight: 700; }
     </style></head><body>
       <div class="sender">ផ្ញើរ: 087 753939</div>
       <div class="divider"></div>
