@@ -762,7 +762,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                         <span className="text-[13px] font-mono tracking-wide truncate">{serial.serial_number}</span>
                         <span className={`text-[9px] px-1.5 py-0 rounded-full font-medium ${cfg.color}`}>{cfg.label}</span>
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         {serial.status === 'available' && (
                           <>
                             <Button
