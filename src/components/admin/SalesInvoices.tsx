@@ -1278,11 +1278,11 @@ const InvoicesTab = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-bold text-primary">
-                      {(labelOrder.user?.full_name || "W")[0].toUpperCase()}
+                      {((labelOrder.customer?.full_name || labelOrder.user?.full_name) || "W")[0].toUpperCase()}
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold text-sm truncate">{labelOrder.user?.full_name || "Walk-in Customer"}</p>
+                    <p className="font-semibold text-sm truncate">{labelOrder.customer?.full_name || labelOrder.user?.full_name || "Walk-in Customer"}</p>
                     <div className="flex items-center gap-3 mt-0.5">
                       {labelOrder.user?.phone && (
                         <span className="text-[11px] text-muted-foreground flex items-center gap-1">
