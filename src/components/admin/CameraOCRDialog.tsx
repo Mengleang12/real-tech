@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Camera, Loader2, RotateCcw, Check, SwitchCamera, ScanLine, Focus } from "lucide-react";
+import { Camera, Loader2, RotateCcw, Check, SwitchCamera, Focus } from "lucide-react";
 
 interface CameraOCRDialogProps {
   open: boolean;
@@ -19,75 +19,9 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [detectedSerial, setDetectedSerial] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
+  const [cameraReady, setCameraReady] = useState(false);
 
-  const startCamera = useCallback(async (facing: "environment" | "user" = facingMode) => {
-    try {
-      // Fully stop previous stream
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
-      }
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        // Wait for video to be ready before playing
-        await new Promise<void>((resolve) => {
-          const video = videoRef.current!;
-          const onReady = () => {
-            video.removeEventListener('loadedmetadata', onReady);
-            resolve();
-          };
-          if (video.readyState >= 1) {
-            resolve();
-          } else {
-            video.addEventListener('loadedmetadata', onReady);
-          }
-        });
-        await videoRef.current.play();
-      }
-      setCapturing(true);
-      setCapturedImage(null);
-      setDetectedSerial(null);
-    } catch {
-      toast.error("Cannot access camera. Please allow camera permission.");
-    }
-  }, [facingMode]);
-
-  // Auto-start camera when dialog opens, stop when it closes or unmounts
-  useEffect(() => {
-    if (open) {
-      startCamera();
-    } else {
-      // Directly stop all tracks to ensure camera is released
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
-      }
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-      setCapturing(false);
-      setCapturedImage(null);
-      setDetectedSerial(null);
-      setProcessing(false);
-    }
-    return () => {
-      // Cleanup on unmount
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
-      }
-    };
-  }, [open]);
-
-  const stopCamera = useCallback(() => {
+  const stopAllTracks = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
@@ -95,8 +29,71 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-    setCapturing(false);
   }, []);
+
+  const startCamera = useCallback(async (facing: "environment" | "user") => {
+    try {
+      stopAllTracks();
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        // Wait for video metadata to load before playing (Safari fix)
+        await new Promise<void>((resolve, reject) => {
+          const video = videoRef.current!;
+          if (video.readyState >= 1) {
+            resolve();
+            return;
+          }
+          const onReady = () => {
+            video.removeEventListener('loadedmetadata', onReady);
+            video.removeEventListener('error', onError);
+            resolve();
+          };
+          const onError = () => {
+            video.removeEventListener('loadedmetadata', onReady);
+            video.removeEventListener('error', onError);
+            reject(new Error('Video load error'));
+          };
+          video.addEventListener('loadedmetadata', onReady);
+          video.addEventListener('error', onError);
+        });
+        await videoRef.current.play();
+      }
+      setCapturing(true);
+      setCameraReady(true);
+      setCapturedImage(null);
+      setDetectedSerial(null);
+    } catch {
+      toast.error("Cannot access camera. Please allow camera permission.");
+    }
+  }, [stopAllTracks]);
+
+  // Cleanup when dialog closes
+  useEffect(() => {
+    if (!open) {
+      stopAllTracks();
+      setCapturing(false);
+      setCapturedImage(null);
+      setDetectedSerial(null);
+      setProcessing(false);
+      setCameraReady(false);
+    }
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+    };
+  }, [open, stopAllTracks]);
+
+  const stopCamera = useCallback(() => {
+    stopAllTracks();
+    setCapturing(false);
+  }, [stopAllTracks]);
 
   const toggleCamera = useCallback(() => {
     const newFacing = facingMode === "environment" ? "user" : "environment";
@@ -170,32 +167,51 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     setCapturedImage(null);
     setDetectedSerial(null);
     setProcessing(false);
+    setCameraReady(false);
     onOpenChange(false);
   };
 
   const retake = () => {
     setCapturedImage(null);
     setDetectedSerial(null);
-    startCamera();
+    startCamera(facingMode);
+  };
+
+  // Called directly from user click — satisfies Safari gesture requirement
+  const handleStartCamera = () => {
+    startCamera(facingMode);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md p-0">
-        <DialogTitle>Scan Serial Number</DialogTitle>
+      <DialogContent className="max-w-md p-0 overflow-hidden">
+        <DialogTitle className="sr-only">Scan Serial Number</DialogTitle>
+        <DialogDescription className="sr-only">Use your camera to scan a serial number label</DialogDescription>
 
-        <div className="flex flex-col flex-1 min-h-0">
-          {/* Loading state while camera initializes */}
-          {!capturedImage && !capturing && (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <div className="flex flex-col min-h-0">
+          {/* Initial state — prompt user to start camera (gesture-based for Safari) */}
+          {!cameraReady && !capturedImage && (
+            <div className="flex flex-col items-center justify-center gap-4 py-20 px-6">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 flex items-center justify-center">
+                <Camera className="w-7 h-7 text-primary/50" strokeWidth={1.5} />
+              </div>
+              <div className="text-center space-y-1">
+                <h3 className="text-sm font-semibold text-foreground">Scan Serial Number</h3>
+                <p className="text-xs text-muted-foreground max-w-[220px]">
+                  Point your camera at the serial number label to scan it automatically
+                </p>
+              </div>
+              <Button onClick={handleStartCamera} className="gap-2 rounded-xl h-11 px-6" size="lg">
+                <Camera className="w-4 h-4" />
+                Open Camera
+              </Button>
             </div>
           )}
 
           {/* Camera / captured view */}
           {(capturing || capturedImage) && (
             <div className="relative flex-1 flex flex-col min-h-0" style={{ minHeight: '50vh' }}>
-              {/* Camera feed — fills available space */}
+              {/* Camera feed */}
               <div className="relative flex-1 bg-black" style={{ minHeight: '40vh' }}>
                 {!capturedImage ? (
                   <>
@@ -204,7 +220,10 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
                       autoPlay
                       playsInline
                       muted
+                      // Safari requires webkit-playsinline
+                      {...{ 'webkit-playsinline': '' } as any}
                       className="absolute inset-0 w-full h-full object-cover"
+                      style={{ WebkitTransform: 'translateZ(0)' }}
                     />
                     {/* Scan overlay with corner brackets */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
