@@ -2,7 +2,7 @@ import { useState } from "react";
 import { 
   TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, 
   CalendarIcon, ArrowUpRight, ArrowDownRight, X, Package,
-  AlertTriangle, PackageCheck, Activity
+  AlertTriangle, PackageCheck, Activity, Bell, ChevronRight
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
