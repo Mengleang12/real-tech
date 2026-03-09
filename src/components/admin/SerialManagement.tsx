@@ -524,6 +524,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
   const queryClient = useQueryClient();
   const [deleteSerialId, setDeleteSerialId] = useState<number | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [selectedPrintIds, setSelectedPrintIds] = useState<Set<number>>(new Set());
 
   // Fetch existing serials for this product
   const { data: existingData, isLoading: existingLoading } = useQuery({
@@ -799,20 +800,85 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
             </div>
           ) : existingSerials.length > 0 && (
             <div className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
-                Registered <span className="text-foreground/80 font-bold">{existingCount}</span>
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Registered <span className="text-foreground/80 font-bold">{existingCount}</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const availableSerials = existingSerials.filter((s: ProductSerial) => s.status === 'available');
+                    const allAvailableSelected = availableSerials.length > 0 && availableSerials.every((s: ProductSerial) => selectedPrintIds.has(s.id));
+                    return (
+                      <>
+                        {availableSerials.length > 0 && (
+                          <button
+                            type="button"
+                            className="text-[10px] font-medium text-primary hover:underline cursor-pointer"
+                            onClick={() => {
+                              if (allAvailableSelected) {
+                                setSelectedPrintIds(new Set());
+                              } else {
+                                setSelectedPrintIds(new Set(availableSerials.map((s: ProductSerial) => s.id)));
+                              }
+                            }}
+                          >
+                            {allAvailableSelected ? 'Deselect All' : 'Select All'}
+                          </button>
+                        )}
+                        {selectedPrintIds.size > 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 text-[10px] gap-1 px-2"
+                            onClick={() => {
+                              const toPrint = existingSerials
+                                .filter((s: ProductSerial) => selectedPrintIds.has(s.id))
+                                .map((s: ProductSerial) => ({
+                                  ...s,
+                                  product: selectedProduct ? { name: selectedProduct.name, icon_url: selectedProduct.icon_url || undefined } : s.product,
+                                  variant: selectedVariantId ? {
+                                    ...selectedProduct?.variants.find(v => v.id === selectedVariantId),
+                                    combination: selectedProduct?.variants.find(v => v.id === selectedVariantId)?.combination || {},
+                                  } as any : s.variant,
+                                }));
+                              printSerialLabels(toPrint);
+                              toast.success(`Printing ${toPrint.length} label${toPrint.length > 1 ? 's' : ''}`);
+                            }}
+                          >
+                            <Printer className="w-3 h-3" />
+                            Print {selectedPrintIds.size}
+                          </Button>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
               <div className="rounded-xl border border-border/60 overflow-hidden max-h-52 overflow-y-auto scrollbar-macos divide-y divide-border/40">
                 {existingSerials.map((serial: ProductSerial) => {
                   const cfg = statusConfig[serial.status] || statusConfig.available;
                   return (
-                    <div key={serial.id} className="flex items-center justify-between px-3 py-1.5 group hover:bg-muted/30 transition-colors">
+                    <div key={serial.id} className={`flex items-center justify-between px-3 py-1.5 group hover:bg-muted/30 transition-colors ${selectedPrintIds.has(serial.id) ? 'bg-primary/5' : ''}`}>
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                          serial.status === 'available' ? 'bg-emerald-500' :
-                          serial.status === 'sold' ? 'bg-muted-foreground/30' :
-                          serial.status === 'reserved' ? 'bg-amber-500' : 'bg-destructive'
-                        }`} />
+                        {serial.status === 'available' && (
+                          <Checkbox
+                            checked={selectedPrintIds.has(serial.id)}
+                            onCheckedChange={(checked) => {
+                              setSelectedPrintIds(prev => {
+                                const next = new Set(prev);
+                                if (checked) { next.add(serial.id); } else { next.delete(serial.id); }
+                                return next;
+                              });
+                            }}
+                            className="h-3.5 w-3.5"
+                          />
+                        )}
+                        {serial.status !== 'available' && (
+                          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                            serial.status === 'sold' ? 'bg-muted-foreground/30' :
+                            serial.status === 'reserved' ? 'bg-amber-500' : 'bg-destructive'
+                          }`} />
+                        )}
                         <span className="text-[13px] font-mono tracking-wide truncate">{serial.serial_number}</span>
                         <span className={`text-[9px] px-1.5 py-0 rounded-full font-medium ${cfg.color}`}>{cfg.label}</span>
                       </div>
