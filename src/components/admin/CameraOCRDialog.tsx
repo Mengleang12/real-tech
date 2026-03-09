@@ -185,7 +185,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
 
   // Called directly from user click — satisfies Safari gesture requirement
   const handleStartCamera = () => {
-    startCamera(facingMode);
+    startCamera("environment");
   };
 
   return (
