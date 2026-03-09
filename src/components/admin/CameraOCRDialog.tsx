@@ -90,6 +90,16 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     };
   }, [open, stopAllTracks]);
 
+  // Ensure stream is attached after video mounts (fixes first-open black screen on Safari)
+  useEffect(() => {
+    if (!capturing || !videoRef.current || !streamRef.current) return;
+    const video = videoRef.current;
+    if (video.srcObject !== streamRef.current) {
+      video.srcObject = streamRef.current;
+    }
+    void video.play().catch(() => {});
+  }, [capturing]);
+
   const stopCamera = useCallback(() => {
     stopAllTracks();
     setCapturing(false);
@@ -180,6 +190,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
   // CRITICAL: Called directly from user click — satisfies Safari gesture requirement
   // Do NOT call getUserMedia from useEffect/setTimeout — Safari will show black screen
   const handleStartCamera = async () => {
+    setFacingMode("environment");
     await startCamera("environment");
   };
 
