@@ -556,7 +556,7 @@ const InvoicesTab = () => {
     const logoUrl = branding.site_logo_url || '';
     const padSize = lw >= 80 ? '6mm' : lw >= 60 ? '4mm' : '2mm';
     const logoH = lw >= 80 ? '14mm' : lw >= 60 ? '10mm' : '7mm';
-    const senderSize = lw >= 80 ? '11px' : lw >= 60 ? '10px' : '8px';
+    const senderSize = lw >= 80 ? '14px' : lw >= 60 ? '12px' : '10px';
     const infoSize = lw >= 80 ? '13px' : lw >= 60 ? '11px' : '9px';
 
     const iframe = document.createElement("iframe");
