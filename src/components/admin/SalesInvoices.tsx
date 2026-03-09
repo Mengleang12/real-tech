@@ -856,8 +856,8 @@ const InvoicesTab = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <p className="font-medium text-sm text-foreground">{order.user?.full_name || "Walk-in"}</p>
-                        {order.user?.phone && <p className="text-xs text-muted-foreground mt-0.5">{order.user.phone}</p>}
+                        <p className="font-medium text-sm text-foreground">{order.customer?.full_name || order.user?.full_name || "Walk-in"}</p>
+                        {(order.customer?.phone || order.user?.phone) && <p className="text-xs text-muted-foreground mt-0.5">{order.customer?.phone || order.user?.phone}</p>}
                       </td>
                       <td className="px-4 py-3.5">
                         <div className="space-y-0.5 max-w-[200px]">
