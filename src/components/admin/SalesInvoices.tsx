@@ -556,8 +556,8 @@ const InvoicesTab = () => {
     const logoUrl = branding.site_logo_url || '';
     const padSize = lw >= 80 ? '6mm' : lw >= 60 ? '4mm' : '2mm';
     const logoH = lw >= 80 ? '14mm' : lw >= 60 ? '10mm' : '7mm';
-    const senderSize = lw >= 80 ? '9px' : lw >= 60 ? '8px' : '6.5px';
-    const infoSize = lw >= 80 ? '10px' : lw >= 60 ? '8px' : '7px';
+    const senderSize = lw >= 80 ? '11px' : lw >= 60 ? '10px' : '8px';
+    const infoSize = lw >= 80 ? '13px' : lw >= 60 ? '11px' : '9px';
 
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
@@ -572,9 +572,9 @@ const InvoicesTab = () => {
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font-family: -apple-system, 'Kantumruy Pro', sans-serif; padding: ${padSize}; display: flex; flex-direction: column; align-items: center; width: ${lw}mm; height: ${lh}mm; }
       .logo { height: ${logoH}; object-fit: contain; margin-bottom: 1mm; }
-      .sender { font-size: ${senderSize}; color: #333; text-align: center; margin-bottom: 1.5mm; font-weight: 500; }
+      .sender { font-size: ${senderSize}; color: #333; text-align: center; margin-bottom: 1.5mm; font-weight: 700; }
       .divider { width: 80%; border-top: 0.5px dashed #ccc; margin: 1mm 0; }
-      .customer { font-size: ${infoSize}; text-align: center; line-height: 1.5; color: #222; }
+      .customer { font-size: ${infoSize}; text-align: center; line-height: 1.5; color: #111; font-weight: 700; }
     </style></head><body>
       <div class="sender">ផ្ញើរ: 087 753939</div>
       <div class="divider"></div>
@@ -1337,14 +1337,14 @@ const InvoicesTab = () => {
                         key={opt.value}
                         type="button"
                         onClick={() => setLabelSize(opt.value)}
-                        className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg border text-sm font-bold transition-all cursor-pointer ${
+                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all cursor-pointer ${
                           active
                             ? 'border-primary/40 bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]'
                             : 'border-border/60 bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
                         }`}
                       >
-                        <StickyNote className="w-3.5 h-3.5" />
-                        {opt.label} <span className="text-xs opacity-50 font-semibold">{opt.sub}</span>
+                        <StickyNote className="w-3 h-3" />
+                        {opt.label} <span className="text-[9px] opacity-50">{opt.sub}</span>
                       </button>
                     );
                   })}
