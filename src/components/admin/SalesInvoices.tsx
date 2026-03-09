@@ -1016,15 +1016,18 @@ const InvoicesTab = () => {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Product</p>
                   <div className="space-y-2">
-                    {aggregateProductLines(selectedOrder.product_name).map((item, i) => (
+                    {(selectedOrder.items && selectedOrder.items.length > 0 ? selectedOrder.items : aggregateProductLines(selectedOrder.product_name).map(p => ({ product_name: p.name, quantity: p.quantity, variant_label: null as string | null }))).map((item, i) => (
                       <div key={i} className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center"><Package className="w-5 h-5 text-primary" /></div>
-                          <div><p className="font-medium text-sm">{item.name}</p><p className="text-xs text-muted-foreground">Qty: {item.quantity}</p></div>
+                          <div>
+                            <p className="font-medium text-sm">{item.product_name}</p>
+                            {item.variant_label && <p className="text-[10px] text-muted-foreground">{item.variant_label}</p>}
+                            <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                          </div>
                         </div>
                       </div>
                     ))}
-                    <div className="flex justify-end"><p className="font-bold text-lg">${amount.toFixed(2)}</p></div>
                   </div>
                 </div>
                 <Separator />
