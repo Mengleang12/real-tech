@@ -419,6 +419,7 @@ export interface AdminOrder {
     email?: string;
     full_name?: string;
     phone?: string;
+    address?: string;
   };
 }
 
