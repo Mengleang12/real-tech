@@ -72,15 +72,9 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     }
   }, [stopAllTracks]);
 
-  // Auto-start rear camera when dialog opens
+  // Cleanup when dialog closes — do NOT auto-start camera (Safari gesture requirement)
   useEffect(() => {
-    if (open) {
-      // Small delay to ensure dialog DOM is ready
-      const timer = setTimeout(() => {
-        startCamera("environment");
-      }, 100);
-      return () => clearTimeout(timer);
-    } else {
+    if (!open) {
       stopAllTracks();
       setCapturing(false);
       setCapturedImage(null);
@@ -94,7 +88,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
         streamRef.current = null;
       }
     };
-  }, [open, stopAllTracks, startCamera]);
+  }, [open, stopAllTracks]);
 
   const stopCamera = useCallback(() => {
     stopAllTracks();
@@ -183,9 +177,10 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     startCamera(facingMode);
   };
 
-  // Called directly from user click — satisfies Safari gesture requirement
-  const handleStartCamera = () => {
-    startCamera("environment");
+  // CRITICAL: Called directly from user click — satisfies Safari gesture requirement
+  // Do NOT call getUserMedia from useEffect/setTimeout — Safari will show black screen
+  const handleStartCamera = async () => {
+    await startCamera("environment");
   };
 
   return (
@@ -195,18 +190,22 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
         <DialogDescription className="sr-only">Use your camera to scan a serial number label</DialogDescription>
 
         <div className="flex flex-col min-h-0">
-          {/* Initial state — prompt user to start camera (gesture-based for Safari) */}
+          {/* Initial state — user must click to start camera (Safari gesture requirement) */}
           {!cameraReady && !capturedImage && (
             <div className="flex flex-col items-center justify-center gap-4 py-20 px-6">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 flex items-center justify-center">
-                <Loader2 className="w-7 h-7 text-primary/50 animate-spin" strokeWidth={1.5} />
+                <Camera className="w-7 h-7 text-primary/50" strokeWidth={1.5} />
               </div>
               <div className="text-center space-y-1">
-                <h3 className="text-sm font-semibold text-foreground">Opening Camera...</h3>
+                <h3 className="text-sm font-semibold text-foreground">Scan Serial Number</h3>
                 <p className="text-xs text-muted-foreground max-w-[220px]">
-                  Starting rear camera for serial number scanning
+                  Tap below to open the rear camera and scan a serial number
                 </p>
               </div>
+              <Button onClick={handleStartCamera} className="gap-2 rounded-xl h-11 px-6" size="lg">
+                <Camera className="w-4 h-4" />
+                Open Camera
+              </Button>
             </div>
           )}
 
