@@ -1337,14 +1337,14 @@ const InvoicesTab = () => {
                         key={opt.value}
                         type="button"
                         onClick={() => setLabelSize(opt.value)}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all cursor-pointer ${
+                        className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg border text-sm font-bold transition-all cursor-pointer ${
                           active
                             ? 'border-primary/40 bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]'
                             : 'border-border/60 bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
                         }`}
                       >
-                        <StickyNote className="w-3 h-3" />
-                        {opt.label} <span className="text-[9px] opacity-50">{opt.sub}</span>
+                        <StickyNote className="w-3.5 h-3.5" />
+                        {opt.label} <span className="text-xs opacity-50 font-semibold">{opt.sub}</span>
                       </button>
                     );
                   })}
