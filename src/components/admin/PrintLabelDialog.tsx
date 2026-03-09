@@ -7,16 +7,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Printer, Plus, Minus, Trash2, Loader2, Package, Ruler, Columns3, StickyNote } from "lucide-react";
-import { salesApi, type SaleProduct } from "@/lib/api";
+import { salesApi, serialsApi, type SaleProduct, type ProductSerial } from "@/lib/api";
 import JsBarcode from "jsbarcode";
 
 interface LabelItem {
   product: SaleProduct;
   variant_id?: number;
-  sku: string;
+  serial_number: string;
+  barcode: string;
   price: number;
   quantity: number;
-  label: string; // display name
+  label: string;
 }
 
 interface PrintLabelDialogProps {
@@ -28,6 +29,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState<SaleProduct[]>([]);
   const [loading, setLoading] = useState(false);
+  const [serialsLoading, setSerialsLoading] = useState(false);
   const [items, setItems] = useState<LabelItem[]>([]);
   const [labelCols, setLabelCols] = useState(3);
   const [labelWidth, setLabelWidth] = useState(30);
@@ -45,26 +47,65 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
     setLoading(false);
   }, []);
 
-  const addItem = (product: SaleProduct, variantId?: number) => {
+  const addItem = async (product: SaleProduct, variantId?: number) => {
     const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
-    const sku = variant?.sku || `P${product.id}`;
     const price = variant ? Number(variant.price_adjustment || 0) : (product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0) : 0);
-    const label = variant
+    const variantLabel = variant
       ? `${product.name} (${Object.values(variant.combination).join("/")})`
       : product.name;
 
-    const existing = items.find(i => i.product.id === product.id && i.variant_id === variantId);
-    if (existing) {
-      setItems(items.map(i =>
-        i.product.id === product.id && i.variant_id === variantId
-          ? { ...i, quantity: i.quantity + 1 }
-          : i
-      ));
-    } else {
-      setItems([...items, { product, variant_id: variantId, sku, price, quantity: 1, label }]);
-    }
     setSearch("");
     setProducts([]);
+    setSerialsLoading(true);
+
+    try {
+      // Fetch available serials for this product
+      const res = await serialsApi.getAll({
+        product_id: product.id,
+        status: 'available',
+        limit: 500,
+      });
+
+      const serials = res.serials.filter(s =>
+        !variantId || s.variant_id === variantId
+      );
+
+      if (serials.length === 0) {
+        toast.error("No available serial numbers found for this product");
+        setSerialsLoading(false);
+        return;
+      }
+
+      const newItems: LabelItem[] = serials
+        .filter(s => !items.some(existing => existing.serial_number === s.serial_number))
+        .map(s => {
+          const sVariant = s.variant_id ? product.variants.find(v => v.id === s.variant_id) : variant;
+          const sPrice = sVariant ? Number(sVariant.price_adjustment || 0) : price;
+          const sLabel = sVariant
+            ? `${product.name} (${Object.values(sVariant.combination).join("/")})`
+            : product.name;
+
+          return {
+            product,
+            variant_id: s.variant_id || variantId,
+            serial_number: s.serial_number,
+            barcode: s.barcode || s.serial_number,
+            price: sPrice,
+            quantity: 1,
+            label: sLabel,
+          };
+        });
+
+      if (newItems.length === 0) {
+        toast.info("All serials already added");
+      } else {
+        setItems(prev => [...prev, ...newItems]);
+        toast.success(`Added ${newItems.length} serial label${newItems.length > 1 ? 's' : ''}`);
+      }
+    } catch {
+      toast.error("Failed to fetch serial numbers");
+    }
+    setSerialsLoading(false);
   };
 
   const updateQty = (idx: number, delta: number) => {
@@ -83,17 +124,15 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       return;
     }
 
-    // Build print content
-    const allLabels: { sku: string; price: number; name: string; variant: string }[] = [];
+    const allLabels: { barcode: string; serial: string; price: number; name: string; variant: string }[] = [];
     items.forEach(item => {
       const variant = item.variant_id ? item.product.variants.find(v => v.id === item.variant_id) : null;
       const variantLabel = variant ? Object.values(variant.combination).join(" / ") : "";
       for (let i = 0; i < item.quantity; i++) {
-        allLabels.push({ sku: item.sku, price: item.price, name: item.product.name, variant: variantLabel });
+        allLabels.push({ barcode: item.barcode, serial: item.serial_number, price: item.price, name: item.product.name, variant: variantLabel });
       }
     });
 
-    // Create hidden iframe for printing
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
     iframe.style.top = "-10000px";
@@ -129,7 +168,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
           .product-name { font-size: ${labelHeight >= 30 ? '8pt' : '7pt'}; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
           .variant-text { font-size: ${labelHeight >= 30 ? '7pt' : '6pt'}; color: #666; text-align: center; margin-bottom: 0.5mm; }
           .price-text { font-size: ${labelHeight >= 30 ? '11pt' : '9pt'}; font-weight: 900; margin-top: 0.5mm; }
-          .sku-text { font-size: ${labelHeight >= 30 ? '6.5pt' : '5.5pt'}; color: #888; margin-top: 0.3mm; }
+          .serial-text { font-size: ${labelHeight >= 30 ? '6.5pt' : '5.5pt'}; color: #888; margin-top: 0.3mm; }
         </style>
       </head>
       <body id="grid">
@@ -140,17 +179,15 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
 
     const grid = doc.getElementById("grid")!;
 
-    allLabels.forEach(({ sku, price, name, variant }) => {
+    allLabels.forEach(({ barcode, serial, price, name, variant }) => {
       const labelDiv = doc.createElement("div");
       labelDiv.className = "label";
 
-      // Product name
       const nameDiv = doc.createElement("div");
       nameDiv.className = "product-name";
       nameDiv.textContent = name;
       labelDiv.appendChild(nameDiv);
 
-      // Variant
       if (variant) {
         const varDiv = doc.createElement("div");
         varDiv.className = "variant-text";
@@ -158,12 +195,12 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
         labelDiv.appendChild(varDiv);
       }
 
-      // Barcode - use higher width for better scannability
+      // Barcode using serial number
       const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
       labelDiv.appendChild(svg);
       try {
         const barcodeHeight = labelHeight >= 30 ? 35 : 28;
-        JsBarcode(svg, sku, {
+        JsBarcode(svg, barcode, {
           format: "CODE128",
           width: 2,
           height: barcodeHeight,
@@ -177,17 +214,15 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
         svg.remove();
       }
 
-      // Price
       const priceDiv = doc.createElement("div");
       priceDiv.className = "price-text";
       priceDiv.textContent = `$${price.toFixed(2)}`;
       labelDiv.appendChild(priceDiv);
 
-      // SKU
-      const skuDiv = doc.createElement("div");
-      skuDiv.className = "sku-text";
-      skuDiv.textContent = sku;
-      labelDiv.appendChild(skuDiv);
+      const serialDiv = doc.createElement("div");
+      serialDiv.className = "serial-text";
+      serialDiv.textContent = serial;
+      labelDiv.appendChild(serialDiv);
 
       grid.appendChild(labelDiv);
     });
@@ -208,14 +243,20 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
           value={search}
           onChange={e => handleSearch(e.target.value)}
           className="pl-9 h-9 text-sm"
+          disabled={serialsLoading}
         />
-        {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+        {(loading || serialsLoading) && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
         {loading && search.length >= 1 && (
           <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="w-4 h-4 animate-spin" /> Searching...
           </div>
         )}
-        {!loading && products.length > 0 && (
+        {serialsLoading && (
+          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading serial numbers...
+          </div>
+        )}
+        {!loading && !serialsLoading && products.length > 0 && (
           <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
             {products.map(p => (
               <div key={p.id}>
@@ -244,7 +285,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
             ))}
           </div>
         )}
-        {!loading && products.length === 0 && search.length >= 1 && (
+        {!loading && !serialsLoading && products.length === 0 && search.length >= 1 && (
           <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
             No products found
           </div>
@@ -302,7 +343,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       {items.length > 0 && (
         <div className="border border-border rounded-lg overflow-hidden">
           <div className="grid grid-cols-[1fr_100px_80px_32px] gap-1 px-3 py-2 bg-muted/50 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
-            <span>Product / SKU</span>
+            <span>Product / Serial</span>
             <span className="text-center">Labels</span>
             <span className="text-right">Price</span>
             <span />
@@ -311,7 +352,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
             <div key={idx} className="grid grid-cols-[1fr_100px_80px_32px] gap-1 px-3 py-2 items-center border-t border-border/50">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
-                <p className="text-[10px] text-muted-foreground font-mono">{item.sku}</p>
+                <p className="text-[10px] text-muted-foreground font-mono">{item.serial_number}</p>
               </div>
               <div className="flex items-center gap-0.5 justify-center">
                 <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => updateQty(idx, -1)}><Minus className="w-2.5 h-2.5" /></Button>
@@ -334,7 +375,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
               const variant = item.variant_id ? item.product.variants.find(v => v.id === item.variant_id) : null;
               const variantLabel = variant ? Object.values(variant.combination).join(" / ") : "";
               return (
-                <LabelPreview key={idx} sku={item.sku} price={item.price} name={item.product.name} variant={variantLabel} width={labelWidth} height={labelHeight} />
+                <LabelPreview key={idx} barcode={item.barcode} serial={item.serial_number} price={item.price} name={item.product.name} variant={variantLabel} width={labelWidth} height={labelHeight} />
               );
             })}
             {totalLabels > 6 && (
@@ -372,7 +413,7 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
 };
 
 // Single label preview component
-const LabelPreview = ({ sku, price, name, variant, width = 30, height = 20 }: { sku: string; price: number; name?: string; variant?: string; width?: number; height?: number }) => {
+const LabelPreview = ({ barcode, serial, price, name, variant, width = 30, height = 20 }: { barcode: string; serial: string; price: number; name?: string; variant?: string; width?: number; height?: number }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const pxW = Math.round(width * 3);
   const pxH = Math.round(height * 3);
@@ -380,7 +421,7 @@ const LabelPreview = ({ sku, price, name, variant, width = 30, height = 20 }: { 
   useEffect(() => {
     if (svgRef.current) {
       try {
-        JsBarcode(svgRef.current, sku, {
+        JsBarcode(svgRef.current, barcode, {
           format: "CODE128",
           width: 1.2,
           height: 20,
@@ -392,7 +433,7 @@ const LabelPreview = ({ sku, price, name, variant, width = 30, height = 20 }: { 
         });
       } catch { /* fallback */ }
     }
-  }, [sku]);
+  }, [barcode]);
 
   return (
     <div style={{ width: pxW, height: pxH }} className="border border-border rounded flex flex-col items-center justify-center bg-background px-1.5 py-0.5 overflow-hidden gap-0">
@@ -400,7 +441,7 @@ const LabelPreview = ({ sku, price, name, variant, width = 30, height = 20 }: { 
       {variant && <span className="text-[6px] text-muted-foreground text-center leading-tight">{variant}</span>}
       <svg ref={svgRef} style={{ maxWidth: pxW - 10 }} className="h-[16px]" />
       <span className="text-[9px] font-black leading-none">${price.toFixed(2)}</span>
-      <span className="text-[5px] text-muted-foreground font-mono leading-none">{sku}</span>
+      <span className="text-[5px] text-muted-foreground font-mono leading-none">{serial}</span>
     </div>
   );
 };
