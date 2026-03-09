@@ -535,7 +535,7 @@ class AdminUserController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Order updated successfully',
-                'order' => $sale->load(['customer:id,email,full_name,phone', 'items', 'attachments', 'payments']),
+                'order' => $sale->load(['customer:id,email,full_name,phone,address', 'items', 'attachments', 'payments']),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
