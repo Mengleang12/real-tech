@@ -21,7 +21,8 @@ export const Sidebar = ({ activeCategory, onCategoryChange, isOpen = false, onTo
   const location = useLocation();
   const { data: categories, isLoading } = useCategories();
 
-  const activeCategories = (categories || [])
+  const rawCategories = Array.isArray(categories) ? categories : [];
+  const activeCategories = rawCategories
     .filter(c => c.is_active)
     .sort((a, b) => a.sort_order - b.sort_order);
 
