@@ -546,7 +546,7 @@ class AdminUserController extends Controller
     // ─── Get Order Detail (with attachments & payments) ───────────────────
     public function getOrderDetail($orderId)
     {
-        $sale = Sale::with(['customer:id,email,full_name,phone', 'items', 'attachments', 'payments'])
+        $sale = Sale::with(['customer:id,email,full_name,phone,address', 'items', 'attachments', 'payments'])
             ->findOrFail($orderId);
 
         return response()->json([
