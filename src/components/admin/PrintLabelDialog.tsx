@@ -125,11 +125,11 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
             page-break-after: always;
           }
           .label:last-child { page-break-after: auto; }
-          .label svg { max-width: ${labelWidth - 4}mm; height: ${Math.floor(labelHeight * 0.3)}mm; }
-          .product-name { font-size: 7pt; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
-          .variant-text { font-size: 6pt; color: #666; text-align: center; margin-bottom: 0.5mm; }
-          .price-text { font-size: 9pt; font-weight: 900; margin-top: 0.5mm; }
-          .sku-text { font-size: 5.5pt; color: #888; margin-top: 0.3mm; }
+          .label svg { max-width: ${labelWidth - 4}mm; height: auto; }
+          .product-name { font-size: ${labelHeight >= 30 ? '8pt' : '7pt'}; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
+          .variant-text { font-size: ${labelHeight >= 30 ? '7pt' : '6pt'}; color: #666; text-align: center; margin-bottom: 0.5mm; }
+          .price-text { font-size: ${labelHeight >= 30 ? '11pt' : '9pt'}; font-weight: 900; margin-top: 0.5mm; }
+          .sku-text { font-size: ${labelHeight >= 30 ? '6.5pt' : '5.5pt'}; color: #888; margin-top: 0.3mm; }
         </style>
       </head>
       <body id="grid">
