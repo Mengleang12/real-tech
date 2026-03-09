@@ -49,9 +49,9 @@ function printSerialLabels(serials: PrintableSerial[]) {
     }
     .label:last-child { page-break-after: auto; }
     .product-name { font-size: 7pt; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
-    .variant-text { font-size: 6pt; color: #666; text-align: center; margin-bottom: 0.5mm; }
+    .variant-text { font-size: 6pt; color: #333; font-weight: 700; text-align: center; margin-bottom: 0.5mm; }
     .label svg { max-width: 36mm; height: 8mm; }
-    .serial-text { font-size: 6pt; font-family: monospace; text-align: center; margin-top: 0.3mm; letter-spacing: 0.5pt; }
+    .serial-text { font-size: 6pt; font-family: monospace; font-weight: 700; text-align: center; margin-top: 0.3mm; letter-spacing: 0.5pt; }
     .price-text { font-size: 9pt; font-weight: 900; margin-top: 0.5mm; }
   </style></head><body id="grid"></body></html>`);
   doc.close();
