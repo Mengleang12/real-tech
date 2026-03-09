@@ -733,16 +733,29 @@ const InvoicesTab = () => {
       <table>
         <thead><tr><th>Item</th><th>Qty</th><th class="r">Price</th>${hasDiscount ? '<th class="r">Disc.</th>' : ''}<th class="r">Total</th></tr></thead>
         <tbody>
-          ${aggregateProductLines(order.product_name).map((item, i, arr) => {
-            const isLast = i === arr.length - 1;
-            return `<tr>
-            <td class="name">${item.name}</td>
-            <td>${item.quantity}</td>
-            <td style="text-align:right">${i === 0 ? '$' + originalPrice.toFixed(2) : '—'}</td>
-            ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${i === 0 && itemDiscountAmount > 0 ? '-$' + itemDiscountAmount.toFixed(2) : '—'}</td>` : ''}
-            <td style="text-align:right;font-weight:600">${isLast ? '$' + amount.toFixed(2) : '—'}</td>
-          </tr>`;
-          }).join('')}
+          ${(order.items && order.items.length > 0 
+            ? order.items.map((item: any, i: number) => {
+                const isLast = i === order.items!.length - 1;
+                const variantText = item.variant_label ? `<div style="font-size:10px;color:#888;margin-top:1px">${item.variant_label}</div>` : '';
+                return `<tr>
+                <td class="name">${item.product_name}${variantText}</td>
+                <td>${item.quantity}</td>
+                <td style="text-align:right">$${parseFloat(item.unit_price).toFixed(2)}</td>
+                ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${parseFloat(item.discount) > 0 ? '-$' + parseFloat(item.discount).toFixed(2) : '—'}</td>` : ''}
+                <td style="text-align:right;font-weight:600">$${parseFloat(item.total_price).toFixed(2)}</td>
+              </tr>`;
+              })
+            : aggregateProductLines(order.product_name).map((item, i, arr) => {
+                const isLast = i === arr.length - 1;
+                return `<tr>
+                <td class="name">${item.name}</td>
+                <td>${item.quantity}</td>
+                <td style="text-align:right">${i === 0 ? '$' + originalPrice.toFixed(2) : '—'}</td>
+                ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${i === 0 && itemDiscountAmount > 0 ? '-$' + itemDiscountAmount.toFixed(2) : '—'}</td>` : ''}
+                <td style="text-align:right;font-weight:600">${isLast ? '$' + amount.toFixed(2) : '—'}</td>
+              </tr>`;
+              })
+          ).join('')}
         </tbody>
       </table>
 
