@@ -1110,6 +1110,11 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin: isAuthAdmin, isSuperAdmin: isAuthSuperAdmin, hasPermission } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [siteLogo, setSiteLogo] = useState<string>("");
+
+  useEffect(() => {
+    getInvoiceBranding().then(b => setSiteLogo(b.site_logo_url || ""));
+  }, []);
 
   // Legacy admin gets full admin access
   const isLegacyAdmin = authApi.isAuthenticated();
