@@ -72,9 +72,15 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     }
   }, [stopAllTracks]);
 
-  // Cleanup when dialog closes
+  // Auto-start rear camera when dialog opens
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      // Small delay to ensure dialog DOM is ready
+      const timer = setTimeout(() => {
+        startCamera("environment");
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
       stopAllTracks();
       setCapturing(false);
       setCapturedImage(null);
@@ -88,7 +94,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
         streamRef.current = null;
       }
     };
-  }, [open, stopAllTracks]);
+  }, [open, stopAllTracks, startCamera]);
 
   const stopCamera = useCallback(() => {
     stopAllTracks();
