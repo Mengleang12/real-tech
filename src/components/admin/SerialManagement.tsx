@@ -247,7 +247,19 @@ export const SerialManagement = () => {
                   const Icon = cfg.icon;
                   const variantLabel = serial.variant ? Object.values(serial.variant.combination).join(" / ") : null;
                   return (
-                    <tr key={serial.id} className="hover:bg-muted/30 transition-colors">
+                    <tr key={serial.id} className={`hover:bg-muted/30 transition-colors ${selectedIds.has(serial.id) ? 'bg-primary/5' : ''}`}>
+                      <td className="px-3 py-3">
+                        <Checkbox
+                          checked={selectedIds.has(serial.id)}
+                          onCheckedChange={(checked) => {
+                            setSelectedIds(prev => {
+                              const next = new Set(prev);
+                              if (checked) { next.add(serial.id); } else { next.delete(serial.id); }
+                              return next;
+                            });
+                          }}
+                        />
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {serial.product?.icon_url ? (
