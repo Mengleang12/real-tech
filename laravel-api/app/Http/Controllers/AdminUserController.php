@@ -250,7 +250,7 @@ class AdminUserController extends Controller
 
     public function allOrders(Request $request)
     {
-        $query = Sale::with(['customer:id,email,full_name,phone', 'items', 'payments']);
+        $query = Sale::with(['customer:id,email,full_name,phone,address', 'items', 'payments']);
         
         if ($request->status) {
             $query->where('status', $request->status);
@@ -535,7 +535,7 @@ class AdminUserController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Order updated successfully',
-                'order' => $sale->load(['customer:id,email,full_name,phone', 'items', 'attachments', 'payments']),
+                'order' => $sale->load(['customer:id,email,full_name,phone,address', 'items', 'attachments', 'payments']),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -546,7 +546,7 @@ class AdminUserController extends Controller
     // ─── Get Order Detail (with attachments & payments) ───────────────────
     public function getOrderDetail($orderId)
     {
-        $sale = Sale::with(['customer:id,email,full_name,phone', 'items', 'attachments', 'payments'])
+        $sale = Sale::with(['customer:id,email,full_name,phone,address', 'items', 'attachments', 'payments'])
             ->findOrFail($orderId);
 
         return response()->json([
