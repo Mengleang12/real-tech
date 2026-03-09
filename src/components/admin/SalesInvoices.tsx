@@ -570,25 +570,59 @@ const InvoicesTab = () => {
     doc.write(`<!DOCTYPE html><html><head><style>
       @page { size: ${lw}mm ${lh}mm; margin: 0; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font-family: -apple-system, 'Kantumruy Pro', sans-serif; padding: ${padSize}; display: flex; flex-direction: column; align-items: center; width: ${lw}mm; height: ${lh}mm; }
-      .logo { height: ${logoH}; object-fit: contain; margin-bottom: 1mm; }
-      .sender { font-size: ${senderSize}; color: #333; text-align: center; margin-bottom: 1.5mm; font-weight: 700; }
-      .divider { width: 80%; border-top: 0.5px dashed #ccc; margin: 1mm 0; }
-      .customer { font-size: ${infoSize}; text-align: center; line-height: 1.5; color: #111; font-weight: 700; }
+      body { font-family: -apple-system, 'Kantumruy Pro', sans-serif; padding: ${padSize}; display: flex; flex-direction: column; align-items: center; justify-content: center; width: ${lw}mm; height: ${lh}mm; overflow: hidden; }
+      .content { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .sender { color: #333; text-align: center; font-weight: 700; white-space: nowrap; }
+      .divider { width: 80%; border-top: 0.5px dashed #ccc; margin: 1mm 0; flex-shrink: 0; }
+      .customer { text-align: center; line-height: 1.4; color: #111; font-weight: 700; }
     </style></head><body>
-      <div class="sender">ផ្ញើរ: 087 753939</div>
-      <div class="divider"></div>
-      <div class="customer">
-        ${labelAddress ? `<div>${labelAddress}</div>` : ''}
-        ${(order.customer?.phone || order.user?.phone) ? `<div>${order.customer?.phone || order.user?.phone}</div>` : ''}
+      <div class="content" id="label-content">
+        <div class="sender" id="sender-text">ផ្ញើរ: 087 753939</div>
+        <div class="divider"></div>
+        <div class="customer" id="customer-text">
+          ${labelAddress ? `<div>${labelAddress}</div>` : ''}
+          ${(order.customer?.phone || order.user?.phone) ? `<div>${order.customer?.phone || order.user?.phone}</div>` : ''}
+        </div>
       </div>
+      <script>
+        function autoFitText() {
+          const container = document.getElementById('label-content');
+          const sender = document.getElementById('sender-text');
+          const customer = document.getElementById('customer-text');
+          if (!container) return;
+          
+          const containerH = container.offsetHeight;
+          const containerW = container.offsetWidth;
+          
+          // Auto-fit sender text
+          if (sender) {
+            let size = 40;
+            sender.style.fontSize = size + 'px';
+            while (size > 8 && (sender.scrollWidth > containerW || sender.scrollHeight > containerH * 0.35)) {
+              size -= 1;
+              sender.style.fontSize = size + 'px';
+            }
+          }
+          
+          // Auto-fit customer text
+          if (customer) {
+            let size = 36;
+            customer.style.fontSize = size + 'px';
+            while (size > 8 && (customer.scrollWidth > containerW || customer.scrollHeight > containerH * 0.55)) {
+              size -= 1;
+              customer.style.fontSize = size + 'px';
+            }
+          }
+        }
+        autoFitText();
+      </script>
     </body></html>`);
     doc.close();
 
     setTimeout(() => {
       iframe.contentWindow?.print();
       setTimeout(() => document.body.removeChild(iframe), 2000);
-    }, 400);
+    }, 500);
     setLabelOrder(null);
   };
 
