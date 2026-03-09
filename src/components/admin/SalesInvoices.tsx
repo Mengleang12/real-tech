@@ -737,8 +737,9 @@ const InvoicesTab = () => {
             ? order.items.map((item: any, i: number) => {
                 const isLast = i === order.items!.length - 1;
                 const variantText = item.variant_label ? `<div style="font-size:10px;color:#888;margin-top:2px;line-height:1">${item.variant_label}</div>` : '';
+                const serialText = item.serial_numbers ? `<div style="font-size:9px;color:#6b7280;margin-top:2px;line-height:1.3;font-family:monospace">SN: ${item.serial_numbers}</div>` : '';
                 return `<tr>
-                <td class="name">${item.product_name}${variantText}</td>
+                <td class="name">${item.product_name}${variantText}${serialText}</td>
                 <td>${item.quantity}</td>
                 <td style="text-align:right">$${parseFloat(item.unit_price).toFixed(2)}</td>
                 ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${parseFloat(item.discount) > 0 ? '-$' + parseFloat(item.discount).toFixed(2) : '—'}</td>` : ''}
