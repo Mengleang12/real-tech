@@ -77,7 +77,7 @@ const DialogContent = React.forwardRef<
             </DialogPrimitive.Close>
           </div>
           {/* Content area */}
-          <div className={cn("flex flex-col flex-1 min-h-0 overflow-y-auto scrollbar-hide", className?.includes("p-0") ? "p-0" : "p-6")}>
+          <div className={cn("flex flex-col flex-1 min-h-0 overflow-y-auto scrollbar-hide", className?.includes("p-0") ? "p-0" : "p-6")} style={{ WebkitOverflowScrolling: 'touch' }}>
             {children}
           </div>
         </DialogPrimitive.Content>
