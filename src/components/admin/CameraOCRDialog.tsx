@@ -72,9 +72,15 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     }
   }, [stopAllTracks]);
 
-  // Cleanup when dialog closes
+  // Auto-start rear camera when dialog opens
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      // Small delay to ensure dialog DOM is ready
+      const timer = setTimeout(() => {
+        startCamera("environment");
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
       stopAllTracks();
       setCapturing(false);
       setCapturedImage(null);
@@ -88,7 +94,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
         streamRef.current = null;
       }
     };
-  }, [open, stopAllTracks]);
+  }, [open, stopAllTracks, startCamera]);
 
   const stopCamera = useCallback(() => {
     stopAllTracks();
@@ -179,7 +185,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
 
   // Called directly from user click — satisfies Safari gesture requirement
   const handleStartCamera = () => {
-    startCamera(facingMode);
+    startCamera("environment");
   };
 
   return (
@@ -193,18 +199,14 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
           {!cameraReady && !capturedImage && (
             <div className="flex flex-col items-center justify-center gap-4 py-20 px-6">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 flex items-center justify-center">
-                <Camera className="w-7 h-7 text-primary/50" strokeWidth={1.5} />
+                <Loader2 className="w-7 h-7 text-primary/50 animate-spin" strokeWidth={1.5} />
               </div>
               <div className="text-center space-y-1">
-                <h3 className="text-sm font-semibold text-foreground">Scan Serial Number</h3>
+                <h3 className="text-sm font-semibold text-foreground">Opening Camera...</h3>
                 <p className="text-xs text-muted-foreground max-w-[220px]">
-                  Point your camera at the serial number label to scan it automatically
+                  Starting rear camera for serial number scanning
                 </p>
               </div>
-              <Button onClick={handleStartCamera} className="gap-2 rounded-xl h-11 px-6" size="lg">
-                <Camera className="w-4 h-4" />
-                Open Camera
-              </Button>
             </div>
           )}
 
