@@ -736,7 +736,7 @@ const InvoicesTab = () => {
           ${(order.items && order.items.length > 0 
             ? order.items.map((item: any, i: number) => {
                 const isLast = i === order.items!.length - 1;
-                const variantText = item.variant_label ? `<div style="font-size:9px;color:#999argin-top:1px">${item.variant_label}</div>` : '';
+                const variantText = item.variant_label ? `<div style="font-size:10px;color:#888;margin-top:2px;line-height:1">${item.variant_label}</div>` : '';
                 return `<tr>
                 <td class="name">${item.product_name}${variantText}</td>
                 <td>${item.quantity}</td>
