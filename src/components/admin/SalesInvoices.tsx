@@ -874,13 +874,13 @@ const InvoicesTab = () => {
                       <td className="px-4 py-3.5">
                         <div className="space-y-0.5 max-w-[200px]">
                           {(order.items && order.items.length > 0 ? order.items.slice(0, 2) : productLines.slice(0, 2)).map((item, i) => (
-                            <div key={i}>
+                            <div key={i} className="leading-tight">
                               <p className="text-sm text-foreground truncate">
                                 {'product_name' in item ? item.product_name : item.name}
                                 {('quantity' in item ? item.quantity : 0) > 1 && <span className="text-muted-foreground ml-1">×{item.quantity}</span>}
                               </p>
                               {'variant_label' in item && item.variant_label && (
-                                <p className="text-[9px] text-muted-foreground/60 truncate">{item.variant_label}</p>
+                                <p className="text-[10px] text-muted-foreground truncate leading-none mt-0.5">{item.variant_label}</p>
                               )}
                             </div>
                           ))}
