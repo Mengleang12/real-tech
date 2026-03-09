@@ -122,11 +122,33 @@ export const AnalyticsDashboard = () => {
     enabled: !!fromStr && !!toStr,
   });
 
+  // Fetch low stock products for alerts
+  const { data: stockData } = useQuery({
+    queryKey: ["admin-stock-alerts"],
+    queryFn: () => salesApi.getStockOverview({ limit: 50 }),
+  });
+
   const isLoading = analyticsLoading || salesLoading;
   const salesStats = salesData?.stats;
   const analyticsStats = analyticsData?.stats;
   const topProducts = salesData?.top_products || [];
   const recentSales = salesData?.recent_sales || [];
+
+  // Compute alerts
+  const lowStockProducts = (stockData?.products || []).filter(
+    (p: any) => {
+      const totalStock = p.total_variant_stock ?? p.stock_quantity ?? 0;
+      return totalStock > 0 && totalStock <= (p.low_stock_threshold || 5);
+    }
+  );
+  const outOfStockProducts = (stockData?.products || []).filter(
+    (p: any) => (p.total_variant_stock ?? p.stock_quantity ?? 0) === 0
+  );
+  const unpaidOrders = (analyticsData?.recent_orders || []).filter(
+    (o: any) => o.status === 'pending'
+  );
+
+  const totalAlerts = lowStockProducts.length + outOfStockProducts.length + unpaidOrders.length;
 
   // Chart data from sales API (has revenue + orders per date)
   const chartData = (salesData?.revenue_by_date || analyticsData?.revenue_by_date || []).map((d: any) => ({
