@@ -43,8 +43,6 @@ import { BrandManagement } from "@/components/admin/BrandManagement";
 import { AttributeManagement } from "@/components/admin/AttributeManagement";
 import { cn } from "@/lib/utils";
 import { SystemSettingsPanel } from "@/components/admin/SystemSettings";
-import { getInvoiceBranding, type InvoiceBranding } from "@/lib/invoice-branding";
-import realtechLogo from "@/assets/realtech-logo.png";
 import { SalesInvoices, InvoicesTab, StockManagement, SalesOverview } from "@/components/admin/SalesInvoices";
 import { PurchaseManagement } from "@/components/admin/PurchaseManagement";
 import { SupplierManagement } from "@/components/admin/SupplierManagement";
@@ -1110,11 +1108,6 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin: isAuthAdmin, isSuperAdmin: isAuthSuperAdmin, hasPermission } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [siteLogo, setSiteLogo] = useState<string>("");
-
-  useEffect(() => {
-    getInvoiceBranding().then(b => setSiteLogo(b.site_logo_url || ""));
-  }, []);
 
   // Legacy admin gets full admin access
   const isLegacyAdmin = authApi.isAuthenticated();
@@ -1153,22 +1146,8 @@ const AdminDashboard = () => {
         sidebarOpen ? "translate-x-0" : "-translate-x-full",
         "lg:translate-x-0 lg:static lg:flex"
       )}>
-        {/* Sidebar Logo */}
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="h-10 flex items-center">
-            <img 
-              src={siteLogo || realtechLogo} 
-              alt="Logo" 
-              className="h-10 max-w-[140px] object-contain" 
-            />
-          </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 rounded hover:bg-muted">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* User Info */}
-        <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-border flex items-center gap-3">
           {user?.avatar_url ? (
             <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
               <img src={user.avatar_url} alt="" className="w-full h-full object-cover border-2 border-border rounded-full" />
@@ -1186,6 +1165,9 @@ const AdminDashboard = () => {
               {isSuperAdmin ? "Super Admin" : isAdmin ? "Administrator" : "Moderator"}
             </p>
           </div>
+          <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden p-1 rounded hover:bg-muted">
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Nav Groups */}
