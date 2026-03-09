@@ -62,6 +62,15 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
   const data = await response.json();
   
   if (!response.ok) {
+    // If admin token expired/invalid, auto-logout and redirect to admin login
+    if (response.status === 401 && getApiKey()) {
+      localStorage.removeItem('admin_api_key');
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('admin_roles');
+      localStorage.removeItem('admin_token_time');
+      window.location.href = '/admin';
+      throw new Error('Session expired. Please login again.');
+    }
     throw new Error(data.error || data.message || 'API request failed');
   }
   
