@@ -125,11 +125,11 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
             page-break-after: always;
           }
           .label:last-child { page-break-after: auto; }
-          .label svg { max-width: ${labelWidth - 4}mm; height: ${Math.floor(labelHeight * 0.3)}mm; }
-          .product-name { font-size: 7pt; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
-          .variant-text { font-size: 6pt; color: #666; text-align: center; margin-bottom: 0.5mm; }
-          .price-text { font-size: 9pt; font-weight: 900; margin-top: 0.5mm; }
-          .sku-text { font-size: 5.5pt; color: #888; margin-top: 0.3mm; }
+          .label svg { max-width: ${labelWidth - 4}mm; height: auto; }
+          .product-name { font-size: ${labelHeight >= 30 ? '8pt' : '7pt'}; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
+          .variant-text { font-size: ${labelHeight >= 30 ? '7pt' : '6pt'}; color: #666; text-align: center; margin-bottom: 0.5mm; }
+          .price-text { font-size: ${labelHeight >= 30 ? '11pt' : '9pt'}; font-weight: 900; margin-top: 0.5mm; }
+          .sku-text { font-size: ${labelHeight >= 30 ? '6.5pt' : '5.5pt'}; color: #888; margin-top: 0.3mm; }
         </style>
       </head>
       <body id="grid">
@@ -158,16 +158,20 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
         labelDiv.appendChild(varDiv);
       }
 
-      // Barcode
+      // Barcode - use higher width for better scannability
       const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
       labelDiv.appendChild(svg);
       try {
+        const barcodeHeight = labelHeight >= 30 ? 35 : 28;
         JsBarcode(svg, sku, {
           format: "CODE128",
-          width: 1,
-          height: 22,
-          displayValue: false,
-          margin: 0,
+          width: 2,
+          height: barcodeHeight,
+          displayValue: true,
+          fontSize: labelHeight >= 30 ? 10 : 8,
+          textMargin: 1,
+          margin: 2,
+          font: "Arial",
         });
       } catch {
         svg.remove();
@@ -378,10 +382,13 @@ const LabelPreview = ({ sku, price, name, variant, width = 30, height = 20 }: { 
       try {
         JsBarcode(svgRef.current, sku, {
           format: "CODE128",
-          width: 0.8,
-          height: 16,
-          displayValue: false,
-          margin: 0,
+          width: 1.2,
+          height: 20,
+          displayValue: true,
+          fontSize: 7,
+          textMargin: 1,
+          margin: 1,
+          font: "Arial",
         });
       } catch { /* fallback */ }
     }
