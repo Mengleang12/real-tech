@@ -574,43 +574,53 @@ const InvoicesTab = () => {
       .content { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
       .sender { color: #333; text-align: center; font-weight: 700; white-space: nowrap; }
       .divider { width: 80%; border-top: 0.5px dashed #ccc; margin: 1mm 0; flex-shrink: 0; }
-      .customer { text-align: center; line-height: 1.4; color: #111; font-weight: 700; }
+      .address { text-align: center; line-height: 1.3; color: #111; font-weight: 700; }
+      .phone { text-align: center; color: #111; font-weight: 900; white-space: nowrap; }
     </style></head><body>
       <div class="content" id="label-content">
         <div class="sender" id="sender-text">ផ្ញើរ: 087 753939</div>
         <div class="divider"></div>
-        <div class="customer" id="customer-text">
-          ${labelAddress ? `<div>${labelAddress}</div>` : ''}
-          ${(order.customer?.phone || order.user?.phone) ? `<div>${order.customer?.phone || order.user?.phone}</div>` : ''}
-        </div>
+        ${labelAddress ? `<div class="address" id="address-text">${labelAddress}</div>` : ''}
+        ${(order.customer?.phone || order.user?.phone) ? `<div class="phone" id="phone-text">${order.customer?.phone || order.user?.phone}</div>` : ''}
       </div>
       <script>
         function autoFitText() {
           const container = document.getElementById('label-content');
           const sender = document.getElementById('sender-text');
-          const customer = document.getElementById('customer-text');
+          const address = document.getElementById('address-text');
+          const phone = document.getElementById('phone-text');
           if (!container) return;
           
           const containerH = container.offsetHeight;
           const containerW = container.offsetWidth;
           
           // Auto-fit sender text
+          let senderSize = 40;
           if (sender) {
-            let size = 40;
-            sender.style.fontSize = size + 'px';
-            while (size > 8 && (sender.scrollWidth > containerW || sender.scrollHeight > containerH * 0.4)) {
-              size -= 1;
-              sender.style.fontSize = size + 'px';
+            sender.style.fontSize = senderSize + 'px';
+            while (senderSize > 8 && (sender.scrollWidth > containerW || sender.scrollHeight > containerH * 0.3)) {
+              senderSize -= 1;
+              sender.style.fontSize = senderSize + 'px';
             }
           }
           
-          // Auto-fit customer text — same size as sender
-          if (customer) {
-            let size = sender ? parseInt(sender.style.fontSize) : 40;
-            customer.style.fontSize = size + 'px';
-            while (size > 8 && (customer.scrollWidth > containerW || customer.scrollHeight > containerH * 0.5)) {
+          // Auto-fit address text (smaller)
+          if (address) {
+            let size = Math.round(senderSize * 0.7);
+            address.style.fontSize = size + 'px';
+            while (size > 6 && (address.scrollWidth > containerW || address.scrollHeight > containerH * 0.3)) {
               size -= 1;
-              customer.style.fontSize = size + 'px';
+              address.style.fontSize = size + 'px';
+            }
+          }
+          
+          // Auto-fit phone — same size as sender
+          if (phone) {
+            let size = senderSize;
+            phone.style.fontSize = size + 'px';
+            while (size > 8 && (phone.scrollWidth > containerW || phone.scrollHeight > containerH * 0.3)) {
+              size -= 1;
+              phone.style.fontSize = size + 'px';
             }
           }
         }
