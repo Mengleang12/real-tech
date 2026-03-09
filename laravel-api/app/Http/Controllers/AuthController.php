@@ -24,7 +24,7 @@ class AuthController extends Controller
 
         // Generate token
         $token = Str::random(64);
-        $expiry = now()->addHours(24);
+        $expiry = now()->addDays(30);
 
         $admin->auth_token = $token;
         $admin->token_expiry = $expiry;
