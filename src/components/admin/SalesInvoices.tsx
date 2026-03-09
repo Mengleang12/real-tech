@@ -206,7 +206,7 @@ const StockManagement = () => {
   const [stockPage, setStockPage] = useState(1);
   const [editingStock, setEditingStock] = useState<{ productId: number; variantId?: number; qty: number } | null>(null);
   const [stockReason, setStockReason] = useState("");
-  const [serialProduct, setSerialProduct] = useState<{ id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string; stock_quantity?: number; price_adjustment?: number }> } | null>(null);
+  const [serialProduct, setSerialProduct] = useState<{ id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string; stock_quantity?: number; price_adjustment?: number; price_adjustment?: number }> } | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   // Debounce search
@@ -413,7 +413,7 @@ const StockManagement = () => {
                       id: product.id,
                       name: product.name,
                       icon_url: product.icon_url,
-                      variants: product.variants.map(v => ({ id: v.id, combination: v.combination, sku: v.sku, stock_quantity: v.stock_quantity })),
+                      variants: product.variants.map(v => ({ id: v.id, combination: v.combination, sku: v.sku, stock, price_adjustment: v.price_adjustment_quantity: v.stock_quantity })),
                     })}
                   >
                     <ScanBarcode className="w-3.5 h-3.5" />
