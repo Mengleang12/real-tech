@@ -244,6 +244,73 @@ export const AnalyticsDashboard = () => {
         </Popover>
       </div>
 
+      {/* Alerts Banner */}
+      {totalAlerts > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 mb-1">
+            <Bell className="w-4 h-4 text-amber-500" />
+            <h3 className="text-sm font-semibold">Alerts ({totalAlerts})</h3>
+          </div>
+
+          {outOfStockProducts.length > 0 && (
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+              <PackageCheck className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-destructive">Out of Stock ({outOfStockProducts.length})</p>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                  {outOfStockProducts.map((p: any) => p.name).join(", ")}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {lowStockProducts.length > 0 && (
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Low Stock ({lowStockProducts.length})</p>
+                <div className="mt-1 space-y-0.5">
+                  {lowStockProducts.slice(0, 5).map((p: any) => (
+                    <p key={p.id} className="text-xs text-muted-foreground flex items-center justify-between">
+                      <span className="truncate">{p.name}</span>
+                      <span className="font-medium text-amber-600 dark:text-amber-400 ml-2 shrink-0">
+                        {p.total_variant_stock ?? p.stock_quantity ?? 0} left
+                      </span>
+                    </p>
+                  ))}
+                  {lowStockProducts.length > 5 && (
+                    <p className="text-[11px] text-muted-foreground/70">+{lowStockProducts.length - 5} more</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {unpaidOrders.length > 0 && (
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Unpaid Orders ({unpaidOrders.length})</p>
+                <div className="mt-1 space-y-0.5">
+                  {unpaidOrders.slice(0, 5).map((o: any) => {
+                    const amt = typeof o.amount === 'string' ? parseFloat(o.amount) : o.amount;
+                    return (
+                      <p key={o.id} className="text-xs text-muted-foreground flex items-center justify-between">
+                        <span className="truncate">{o.product_name} — {o.customer?.full_name || 'Customer'}</span>
+                        <span className="font-medium text-amber-600 dark:text-amber-400 ml-2 shrink-0">${amt?.toFixed(2)}</span>
+                      </p>
+                    );
+                  })}
+                  {unpaidOrders.length > 5 && (
+                    <p className="text-[11px] text-muted-foreground/70">+{unpaidOrders.length - 5} more</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* KPI Stats Row 1 - Primary metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KPICard
