@@ -860,14 +860,19 @@ const InvoicesTab = () => {
                       </td>
                       <td className="px-4 py-3.5">
                         <div className="space-y-0.5 max-w-[200px]">
-                          {productLines.slice(0, 2).map((item, i) => (
-                            <p key={i} className="text-sm text-foreground truncate">
-                              {item.name}
-                              {item.quantity > 1 && <span className="text-muted-foreground ml-1">×{item.quantity}</span>}
-                            </p>
+                          {(order.items && order.items.length > 0 ? order.items.slice(0, 2) : productLines.slice(0, 2)).map((item, i) => (
+                            <div key={i}>
+                              <p className="text-sm text-foreground truncate">
+                                {'product_name' in item ? item.product_name : item.name}
+                                {('quantity' in item ? item.quantity : 0) > 1 && <span className="text-muted-foreground ml-1">×{item.quantity}</span>}
+                              </p>
+                              {'variant_label' in item && item.variant_label && (
+                                <p className="text-[10px] text-muted-foreground/70 truncate">{item.variant_label}</p>
+                              )}
+                            </div>
                           ))}
-                          {productLines.length > 2 && (
-                            <p className="text-xs text-muted-foreground">+{productLines.length - 2} more</p>
+                          {(order.items && order.items.length > 2 ? order.items.length - 2 : productLines.length > 2 ? productLines.length - 2 : 0) > 0 && (
+                            <p className="text-xs text-muted-foreground">+{(order.items?.length || productLines.length) - 2} more</p>
                           )}
                         </div>
                       </td>
