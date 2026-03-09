@@ -718,9 +718,9 @@ const InvoicesTab = () => {
       <div class="info-row">
         <div class="info-col">
           <div class="info-label">Customer</div>
-          <div class="info-name">${order.user?.full_name || "Walk-in Customer"}</div>
-          ${order.user?.phone ? `<div class="info-sub">${order.user.phone}</div>` : ''}
-          ${order.user?.email && order.user.email !== 'walkin@guest.local' ? `<div class="info-sub">${order.user.email}</div>` : ''}
+          <div class="info-name">${order.customer?.full_name || order.user?.full_name || "Walk-in Customer"}</div>
+          ${(order.customer?.phone || order.user?.phone) ? `<div class="info-sub">${order.customer?.phone || order.user?.phone}</div>` : ''}
+          ${(order.customer?.email || order.user?.email) && (order.customer?.email || order.user?.email) !== 'walkin@guest.local' ? `<div class="info-sub">${order.customer?.email || order.user?.email}</div>` : ''}
         </div>
         <div class="info-col" style="text-align:right">
           <div class="info-label">Status</div>
