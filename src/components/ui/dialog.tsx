@@ -61,7 +61,7 @@ const DialogContent = React.forwardRef<
           )}
         >
           {/* Header bar: title left, close right */}
-          <div className="flex items-center justify-between px-4 py-2.5 bg-muted/60 border-b border-border/50 shrink-0 min-h-[44px]">
+          <div className="flex items-center justify-between px-4 py-2.5 bg-muted/60 border-b border-border/50 shrink-0 min-h-[44px] pt-[max(0.625rem,env(safe-area-inset-top))] sm:pt-2.5">
             <DialogPrimitive.Title asChild>
               <span className="text-sm font-semibold leading-none tracking-tight truncate">
                 {title}
