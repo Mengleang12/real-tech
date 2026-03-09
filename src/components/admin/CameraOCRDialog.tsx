@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -23,7 +24,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
 
   const stopAllTracks = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     }
     if (videoRef.current) {
@@ -31,46 +32,64 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     }
   }, []);
 
-  const startCamera = useCallback(async (facing: "environment" | "user") => {
-    try {
-      stopAllTracks();
+  const startCamera = useCallback(
+    async (facing: "environment" | "user") => {
+      try {
+        stopAllTracks();
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        // Wait for video metadata to load before playing (Safari fix)
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        });
+        streamRef.current = stream;
+
+        let video = videoRef.current;
+        if (!video) {
+          await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+          video = videoRef.current;
+        }
+
+        if (!video) {
+          throw new Error("Video element is not ready");
+        }
+
+        video.srcObject = stream;
+
         await new Promise<void>((resolve, reject) => {
-          const video = videoRef.current!;
-          if (video.readyState >= 1) {
+          if (video!.readyState >= 1) {
             resolve();
             return;
           }
+
           const onReady = () => {
-            video.removeEventListener('loadedmetadata', onReady);
-            video.removeEventListener('error', onError);
+            video!.removeEventListener("loadedmetadata", onReady);
+            video!.removeEventListener("error", onError);
             resolve();
           };
+
           const onError = () => {
-            video.removeEventListener('loadedmetadata', onReady);
-            video.removeEventListener('error', onError);
-            reject(new Error('Video load error'));
+            video!.removeEventListener("loadedmetadata", onReady);
+            video!.removeEventListener("error", onError);
+            reject(new Error("Video load error"));
           };
-          video.addEventListener('loadedmetadata', onReady);
-          video.addEventListener('error', onError);
+
+          video!.addEventListener("loadedmetadata", onReady);
+          video!.addEventListener("error", onError);
         });
-        await videoRef.current.play();
+
+        await video.play();
+
+        setCapturing(true);
+        setCameraReady(true);
+        setCapturedImage(null);
+        setDetectedSerial(null);
+      } catch {
+        setCapturing(false);
+        setCameraReady(false);
+        toast.error("Cannot access camera. Please allow camera permission.");
       }
-      setCapturing(true);
-      setCameraReady(true);
-      setCapturedImage(null);
-      setDetectedSerial(null);
-    } catch {
-      toast.error("Cannot access camera. Please allow camera permission.");
-    }
-  }, [stopAllTracks]);
+    },
+    [stopAllTracks]
+  );
 
   // Cleanup when dialog closes
   useEffect(() => {
@@ -84,7 +103,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     }
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
       }
     };
@@ -122,15 +141,15 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
     setProcessing(true);
     setDetectedSerial(null);
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
-      const token = localStorage.getItem('admin_api_key') || localStorage.getItem('auth_token') || '';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.realtechcomputer.com";
+      const token = localStorage.getItem("admin_api_key") || localStorage.getItem("auth_token") || "";
 
       const response = await fetch(`${API_BASE_URL}/api/admin/ocr/scan-serial`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ image: imageDataUrl }),
       });
@@ -179,7 +198,13 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
 
   // CRITICAL: Called directly from user click — satisfies Safari gesture requirement
   const handleStartCamera = async () => {
-    setFacingMode("environment");
+    flushSync(() => {
+      setFacingMode("environment");
+      setCapturing(true);
+      setCameraReady(true);
+      setCapturedImage(null);
+      setDetectedSerial(null);
+    });
     await startCamera("environment");
   };
 
@@ -190,27 +215,6 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
         <DialogDescription className="sr-only">Use your camera to scan a serial number label</DialogDescription>
 
         <div className="flex flex-col min-h-0">
-          {/* 
-            CRITICAL: Video element is ALWAYS mounted (hidden when not active).
-            This ensures videoRef.current is available when startCamera() runs
-            from the click handler, so Safari can attach the stream and call play()
-            within the user gesture chain. Conditionally rendering <video> caused
-            black screen on Safari because videoRef was null during getUserMedia.
-          */}
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            {...{ 'webkit-playsinline': '' } as any}
-            className={
-              capturing && !capturedImage
-                ? "absolute inset-0 w-full h-full object-cover"
-                : "hidden"
-            }
-            style={{ WebkitTransform: 'translateZ(0)' }}
-          />
-
           {/* Initial state — user must click to start camera (Safari gesture requirement) */}
           {!cameraReady && !capturedImage && (
             <div className="flex flex-col items-center justify-center gap-4 py-20 px-6">
@@ -234,9 +238,18 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
           {(capturing || capturedImage) && (
             <div className="relative flex-1 flex flex-col min-h-0">
               {/* Camera feed */}
-              <div className="relative flex-1 bg-black" style={{ minHeight: '55vh' }}>
+              <div className="relative flex-1 bg-black" style={{ minHeight: "55vh" }}>
                 {!capturedImage ? (
                   <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      {...({ "webkit-playsinline": "" } as any)}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{ WebkitTransform: "translateZ(0)" }}
+                    />
                     {/* Scan overlay with corner brackets */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="relative w-[80%] h-[30%]">
