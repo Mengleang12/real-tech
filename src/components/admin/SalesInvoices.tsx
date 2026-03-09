@@ -179,7 +179,7 @@ const SalesOverview = () => {
                     <div key={sale.id} className="flex items-center justify-between">
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{saleProductSummary}</p>
-                        <p className="text-xs text-muted-foreground">{(sale as any).user?.full_name || (sale as any).user?.email || "Customer"}</p>
+                        <p className="text-xs text-muted-foreground">{(sale as any).customer?.full_name || (sale as any).user?.full_name || "Customer"}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold tabular-nums">${amt.toFixed(2)}</p>
