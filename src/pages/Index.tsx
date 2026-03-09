@@ -24,7 +24,7 @@ const Index = () => {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
 
   // Filter only active categories, sorted by sort_order
-  const activeCategories = (categories || [])
+  const activeCategories = (Array.isArray(categories) ? categories : [])
     .filter(c => c.is_active)
     .sort((a, b) => a.sort_order - b.sort_order);
 
