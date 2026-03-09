@@ -55,7 +55,7 @@ export const Header = ({ searchQuery, onSearchChange, onMenuToggle, isSidebarOpe
   };
 
   return (
-    <header className="sticky top-0 z-40 glass py-2">
+    <header className="glass py-2">
       <div className="flex items-center gap-2.5">
         {/* Mobile Menu Button */}
         {onMenuToggle && (

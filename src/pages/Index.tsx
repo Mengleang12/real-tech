@@ -120,7 +120,7 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="flex-1 min-w-0 flex flex-col">
-        <div className="px-4 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 sm:px-6 lg:px-8">
           <Header 
             searchQuery={searchQuery} 
             onSearchChange={setSearchQuery}
