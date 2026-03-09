@@ -598,17 +598,17 @@ const InvoicesTab = () => {
           if (sender) {
             let size = 40;
             sender.style.fontSize = size + 'px';
-            while (size > 8 && (sender.scrollWidth > containerW || sender.scrollHeight > containerH * 0.35)) {
+            while (size > 8 && (sender.scrollWidth > containerW || sender.scrollHeight > containerH * 0.4)) {
               size -= 1;
               sender.style.fontSize = size + 'px';
             }
           }
           
-          // Auto-fit customer text
+          // Auto-fit customer text — same size as sender
           if (customer) {
-            let size = 36;
+            let size = sender ? parseInt(sender.style.fontSize) : 40;
             customer.style.fontSize = size + 'px';
-            while (size > 8 && (customer.scrollWidth > containerW || customer.scrollHeight > containerH * 0.55)) {
+            while (size > 8 && (customer.scrollWidth > containerW || customer.scrollHeight > containerH * 0.5)) {
               size -= 1;
               customer.style.fontSize = size + 'px';
             }
