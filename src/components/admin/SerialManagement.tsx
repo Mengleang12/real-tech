@@ -18,16 +18,15 @@ import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
 
 // ─── Print Serial Label Utility ─────────────────────────────────────────────
-function printSerialLabel(serial: {
+type PrintableSerial = {
   serial_number: string;
   barcode?: string;
   product?: { name: string; icon_url?: string };
   variant?: { combination: Record<string, string>; price_adjustment?: number; sku?: string };
-}) {
-  const productName = serial.product?.name || "Product";
-  const variantLabel = serial.variant ? Object.values(serial.variant.combination).join(" / ") : "";
-  const price = serial.variant?.price_adjustment ?? 0;
-  const barcodeValue = serial.barcode || serial.serial_number;
+};
+
+function printSerialLabels(serials: PrintableSerial[]) {
+  if (serials.length === 0) return;
 
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
@@ -45,54 +44,67 @@ function printSerialLabel(serial: {
       width: 40mm; height: 30mm;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 1.5mm 2mm; overflow: hidden;
+      page-break-after: always;
     }
+    .label:last-child { page-break-after: auto; }
     .product-name { font-size: 7pt; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
     .variant-text { font-size: 6pt; color: #666; text-align: center; margin-bottom: 0.5mm; }
     .label svg { max-width: 36mm; height: 8mm; }
     .serial-text { font-size: 6pt; font-family: monospace; text-align: center; margin-top: 0.3mm; letter-spacing: 0.5pt; }
     .price-text { font-size: 9pt; font-weight: 900; margin-top: 0.5mm; }
-  </style></head><body><div class="label" id="label"></div></body></html>`);
+  </style></head><body id="grid"></body></html>`);
   doc.close();
 
-  const labelDiv = doc.getElementById("label")!;
+  const grid = doc.getElementById("grid")!;
 
-  // Product name
-  const nameDiv = doc.createElement("div");
-  nameDiv.className = "product-name";
-  nameDiv.textContent = productName;
-  labelDiv.appendChild(nameDiv);
+  serials.forEach(serial => {
+    const productName = serial.product?.name || "Product";
+    const variantLabel = serial.variant ? Object.values(serial.variant.combination).join(" / ") : "";
+    const price = serial.variant?.price_adjustment ?? 0;
+    const barcodeValue = serial.barcode || serial.serial_number;
 
-  // Variant
-  if (variantLabel) {
-    const varDiv = doc.createElement("div");
-    varDiv.className = "variant-text";
-    varDiv.textContent = variantLabel;
-    labelDiv.appendChild(varDiv);
-  }
+    const labelDiv = doc.createElement("div");
+    labelDiv.className = "label";
 
-  // Barcode
-  const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
-  labelDiv.appendChild(svg);
-  try {
-    JsBarcode(svg, barcodeValue, { format: "CODE128", width: 1, height: 20, displayValue: false, margin: 0 });
-  } catch { svg.remove(); }
+    const nameDiv = doc.createElement("div");
+    nameDiv.className = "product-name";
+    nameDiv.textContent = productName;
+    labelDiv.appendChild(nameDiv);
 
-  // Serial number text
-  const snDiv = doc.createElement("div");
-  snDiv.className = "serial-text";
-  snDiv.textContent = serial.serial_number;
-  labelDiv.appendChild(snDiv);
+    if (variantLabel) {
+      const varDiv = doc.createElement("div");
+      varDiv.className = "variant-text";
+      varDiv.textContent = variantLabel;
+      labelDiv.appendChild(varDiv);
+    }
 
-  // Price (always show)
-  const priceDiv = doc.createElement("div");
-  priceDiv.className = "price-text";
-  priceDiv.textContent = `$${Number(price).toFixed(2)}`;
-  labelDiv.appendChild(priceDiv);
+    const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
+    labelDiv.appendChild(svg);
+    try {
+      JsBarcode(svg, barcodeValue, { format: "CODE128", width: 1, height: 20, displayValue: false, margin: 0 });
+    } catch { svg.remove(); }
+
+    const snDiv = doc.createElement("div");
+    snDiv.className = "serial-text";
+    snDiv.textContent = serial.serial_number;
+    labelDiv.appendChild(snDiv);
+
+    const priceDiv = doc.createElement("div");
+    priceDiv.className = "price-text";
+    priceDiv.textContent = `$${Number(price).toFixed(2)}`;
+    labelDiv.appendChild(priceDiv);
+
+    grid.appendChild(labelDiv);
+  });
 
   setTimeout(() => {
     iframe.contentWindow?.print();
     setTimeout(() => document.body.removeChild(iframe), 2000);
   }, 300);
+}
+
+function printSerialLabel(serial: PrintableSerial) {
+  printSerialLabels([serial]);
 }
 
 const statusConfig = {
