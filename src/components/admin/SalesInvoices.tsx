@@ -736,7 +736,7 @@ const InvoicesTab = () => {
           ${(order.items && order.items.length > 0 
             ? order.items.map((item: any, i: number) => {
                 const isLast = i === order.items!.length - 1;
-                const variantText = item.variant_label ? `<div style="font-size:9px;color:#999margin-top:1px">${item.variant_label}</div>` : '';
+                const variantText = item.variant_label ? `<div style="font-size:9px;color:#999argin-top:1px">${item.variant_label}</div>` : '';
                 return `<tr>
                 <td class="name">${item.product_name}${variantText}</td>
                 <td>${item.quantity}</td>
@@ -880,7 +880,7 @@ const InvoicesTab = () => {
                                 {('quantity' in item ? item.quantity : 0) > 1 && <span className="text-muted-foreground ml-1">×{item.quantity}</span>}
                               </p>
                               {'variant_label' in item && item.variant_label && (
-                                <p className="text-[19px] text-muted-foreground/6 truncate">{item.variant_label}</p>
+                                <p className="text-[199px] text-muted-foreground/6runcate">{item.variant_label}</p>
                               )}
                             </div>
                           ))}
@@ -1035,7 +1035,7 @@ const InvoicesTab = () => {
                           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center"><Package className="w-5 h-5 text-primary" /></div>
                           <div>
                             <p className="font-medium text-sm">{item.product_name}</p>
-                            {item.variant_label && <p className="text-[10px] text-muted-foreground">{item.variant_label}</p>}
+                            {item.variant_label && <p className="text-[109px] text-muted-foreground/60{item.variant_label}</p>}
                             <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                           </div>
                         </div>
