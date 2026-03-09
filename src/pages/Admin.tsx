@@ -53,6 +53,7 @@ import { AddSaleDialog } from "@/components/admin/AddSaleDialog";
 import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabelDialog";
 import { SalesReport } from "@/components/admin/SalesReport";
 import { SerialManagement } from "@/components/admin/SerialManagement";
+import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -1246,6 +1247,7 @@ const AdminDashboard = () => {
             <Button variant="outline" size="sm" onClick={() => navigate("/")} className="hidden sm:flex gap-1.5">
               <ArrowLeft className="w-3.5 h-3.5" /> Store
             </Button>
+            <AdminNotificationBell />
             <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive">
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Logout</span>
