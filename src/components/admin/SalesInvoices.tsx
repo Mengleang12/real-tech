@@ -1028,8 +1028,8 @@ const InvoicesTab = () => {
                         </div>
                       </div>
                     ))}
+                    <div className="flex justify-end"><p className="font-bold text-lg">${amount.toFixed(2)}</p></div>
                   </div>
-                </div>
                 <Separator />
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div><p className="text-xs text-muted-foreground mb-1">Payment Method</p><p className="font-medium">ABA PayWay / KHQR</p></div>
