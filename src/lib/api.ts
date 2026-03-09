@@ -456,6 +456,7 @@ export interface SaleItemRecord {
   sale_id: string;
   product_id: number;
   variant_id?: number | null;
+  variant_label?: string | null;
   product_name: string;
   quantity: number;
   unit_price: string;

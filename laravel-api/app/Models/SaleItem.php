@@ -37,4 +37,22 @@ class SaleItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
+    }
+
+    /**
+     * Get a human-readable variant label from the variant's combination.
+     */
+    public function getVariantLabelAttribute(): ?string
+    {
+        if (!$this->variant) return null;
+        $combo = $this->variant->combination;
+        if (empty($combo)) return null;
+        return implode(' / ', array_values($combo));
+    }
+
+    protected $appends = ['variant_label'];
 }

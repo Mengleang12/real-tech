@@ -733,16 +733,29 @@ const InvoicesTab = () => {
       <table>
         <thead><tr><th>Item</th><th>Qty</th><th class="r">Price</th>${hasDiscount ? '<th class="r">Disc.</th>' : ''}<th class="r">Total</th></tr></thead>
         <tbody>
-          ${aggregateProductLines(order.product_name).map((item, i, arr) => {
-            const isLast = i === arr.length - 1;
-            return `<tr>
-            <td class="name">${item.name}</td>
-            <td>${item.quantity}</td>
-            <td style="text-align:right">${i === 0 ? '$' + originalPrice.toFixed(2) : '—'}</td>
-            ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${i === 0 && itemDiscountAmount > 0 ? '-$' + itemDiscountAmount.toFixed(2) : '—'}</td>` : ''}
-            <td style="text-align:right;font-weight:600">${isLast ? '$' + amount.toFixed(2) : '—'}</td>
-          </tr>`;
-          }).join('')}
+          ${(order.items && order.items.length > 0 
+            ? order.items.map((item: any, i: number) => {
+                const isLast = i === order.items!.length - 1;
+                const variantText = item.variant_label ? `<div style="font-size:10px;color:#888;margin-top:1px">${item.variant_label}</div>` : '';
+                return `<tr>
+                <td class="name">${item.product_name}${variantText}</td>
+                <td>${item.quantity}</td>
+                <td style="text-align:right">$${parseFloat(item.unit_price).toFixed(2)}</td>
+                ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${parseFloat(item.discount) > 0 ? '-$' + parseFloat(item.discount).toFixed(2) : '—'}</td>` : ''}
+                <td style="text-align:right;font-weight:600">$${parseFloat(item.total_price).toFixed(2)}</td>
+              </tr>`;
+              })
+            : aggregateProductLines(order.product_name).map((item, i, arr) => {
+                const isLast = i === arr.length - 1;
+                return `<tr>
+                <td class="name">${item.name}</td>
+                <td>${item.quantity}</td>
+                <td style="text-align:right">${i === 0 ? '$' + originalPrice.toFixed(2) : '—'}</td>
+                ${hasDiscount ? `<td style="text-align:right;color:#dc2626">${i === 0 && itemDiscountAmount > 0 ? '-$' + itemDiscountAmount.toFixed(2) : '—'}</td>` : ''}
+                <td style="text-align:right;font-weight:600">${isLast ? '$' + amount.toFixed(2) : '—'}</td>
+              </tr>`;
+              })
+          ).join('')}
         </tbody>
       </table>
 
@@ -860,14 +873,19 @@ const InvoicesTab = () => {
                       </td>
                       <td className="px-4 py-3.5">
                         <div className="space-y-0.5 max-w-[200px]">
-                          {productLines.slice(0, 2).map((item, i) => (
-                            <p key={i} className="text-sm text-foreground truncate">
-                              {item.name}
-                              {item.quantity > 1 && <span className="text-muted-foreground ml-1">×{item.quantity}</span>}
-                            </p>
+                          {(order.items && order.items.length > 0 ? order.items.slice(0, 2) : productLines.slice(0, 2)).map((item, i) => (
+                            <div key={i}>
+                              <p className="text-sm text-foreground truncate">
+                                {'product_name' in item ? item.product_name : item.name}
+                                {('quantity' in item ? item.quantity : 0) > 1 && <span className="text-muted-foreground ml-1">×{item.quantity}</span>}
+                              </p>
+                              {'variant_label' in item && item.variant_label && (
+                                <p className="text-[10px] text-muted-foreground/70 truncate">{item.variant_label}</p>
+                              )}
+                            </div>
                           ))}
-                          {productLines.length > 2 && (
-                            <p className="text-xs text-muted-foreground">+{productLines.length - 2} more</p>
+                          {(order.items && order.items.length > 2 ? order.items.length - 2 : productLines.length > 2 ? productLines.length - 2 : 0) > 0 && (
+                            <p className="text-xs text-muted-foreground">+{(order.items?.length || productLines.length) - 2} more</p>
                           )}
                         </div>
                       </td>
@@ -1011,11 +1029,15 @@ const InvoicesTab = () => {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Product</p>
                   <div className="space-y-2">
-                    {aggregateProductLines(selectedOrder.product_name).map((item, i) => (
+                    {(selectedOrder.items && selectedOrder.items.length > 0 ? selectedOrder.items : aggregateProductLines(selectedOrder.product_name).map(p => ({ product_name: p.name, quantity: p.quantity, variant_label: null as string | null }))).map((item, i) => (
                       <div key={i} className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center"><Package className="w-5 h-5 text-primary" /></div>
-                          <div><p className="font-medium text-sm">{item.name}</p><p className="text-xs text-muted-foreground">Qty: {item.quantity}</p></div>
+                          <div>
+                            <p className="font-medium text-sm">{item.product_name}</p>
+                            {item.variant_label && <p className="text-[10px] text-muted-foreground">{item.variant_label}</p>}
+                            <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                          </div>
                         </div>
                       </div>
                     ))}
