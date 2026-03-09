@@ -1004,9 +1004,9 @@ const InvoicesTab = () => {
                 <Separator />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Customer</p>
-                  <p className="font-medium">{selectedOrder.user?.full_name || "—"}</p>
-                  <p className="text-sm text-muted-foreground">{selectedOrder.user?.email || "—"}</p>
-                  {selectedOrder.user?.phone && <p className="text-sm text-muted-foreground">{selectedOrder.user.phone}</p>}
+                  <p className="font-medium">{selectedOrder.customer?.full_name || selectedOrder.user?.full_name || "—"}</p>
+                  <p className="text-sm text-muted-foreground">{selectedOrder.customer?.email || selectedOrder.user?.email || "—"}</p>
+                  {(selectedOrder.customer?.phone || selectedOrder.user?.phone) && <p className="text-sm text-muted-foreground">{selectedOrder.customer?.phone || selectedOrder.user?.phone}</p>}
                 </div>
                 <Separator />
                 <div>
