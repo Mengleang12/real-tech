@@ -581,7 +581,7 @@ const InvoicesTab = () => {
       <div class="divider"></div>
       <div class="customer">
         ${labelAddress ? `<div>${labelAddress}</div>` : ''}
-        ${order.user?.phone ? `<div>${order.user.phone}</div>` : ''}
+        ${(order.customer?.phone || order.user?.phone) ? `<div>${order.customer?.phone || order.user?.phone}</div>` : ''}
       </div>
     </body></html>`);
     doc.close();
