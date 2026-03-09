@@ -26,6 +26,10 @@ class AuthenticateAdmin
             ->first();
 
         if ($admin) {
+            // Renew token expiry on each authenticated request (sliding session)
+            $admin->token_expiry = now()->addDays(30);
+            $admin->save();
+
             $adminRoles = $admin->roles->pluck('role')->toArray();
             $permissions = RolePermission::getPermissionsForRoles($adminRoles);
 
