@@ -162,14 +162,30 @@ export const SerialManagement = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h3 className="text-lg font-semibold">Serial Numbers</h3>
           <p className="text-sm text-muted-foreground">Pre-enter serial numbers for products. Scan during sale for quick checkout.</p>
         </div>
-        <Button onClick={() => setAddOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" /> Add Serials
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => {
+                const selected = serials.filter(s => selectedIds.has(s.id));
+                printSerialLabels(selected);
+                toast.success(`Printing ${selected.length} label${selected.length > 1 ? 's' : ''}`);
+              }}
+            >
+              <Printer className="w-4 h-4" />
+              Print {selectedIds.size} Selected
+            </Button>
+          )}
+          <Button onClick={() => setAddOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" /> Add Serials
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
