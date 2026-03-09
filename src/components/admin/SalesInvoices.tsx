@@ -576,7 +576,6 @@ const InvoicesTab = () => {
       .divider { width: 80%; border-top: 0.5px dashed #ccc; margin: 1mm 0; }
       .customer { font-size: ${infoSize}; text-align: center; line-height: 1.5; color: #222; }
     </style></head><body>
-      ${logoUrl ? `<img class="logo" src="${logoUrl}" alt="Logo" />` : ''}
       <div class="sender">ផ្ញើរ: 087 753939</div>
       <div class="divider"></div>
       <div class="customer">
