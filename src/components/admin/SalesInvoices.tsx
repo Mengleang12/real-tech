@@ -880,7 +880,7 @@ const InvoicesTab = () => {
                                 {('quantity' in item ? item.quantity : 0) > 1 && <span className="text-muted-foreground ml-1">×{item.quantity}</span>}
                               </p>
                               {'variant_label' in item && item.variant_label && (
-                                <p className="text-[199px] text-muted-foreground/6runcate">{item.variant_label}</p>
+                                <p className="text-[9px] text-muted-foreground/60 truncate">{item.variant_label}</p>
                               )}
                             </div>
                           ))}
