@@ -54,8 +54,8 @@ const DialogContent = React.forwardRef<
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "duration-200",
-          "inset-0 rounded-none",
-          "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-full sm:rounded-xl sm:max-h-[85vh]",
+          "top-0 left-0 right-0 bottom-0 rounded-none",
+          "sm:top-[50%] sm:left-[50%] sm:right-auto sm:bottom-auto sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-full sm:rounded-xl sm:max-h-[85vh]",
           !className?.includes("max-w-") && "sm:max-w-lg",
           className,
           )}
@@ -77,7 +77,7 @@ const DialogContent = React.forwardRef<
             </DialogPrimitive.Close>
           </div>
           {/* Content area */}
-          <div className={cn("flex flex-col flex-1 min-h-0 overflow-y-auto scrollbar-hide", className?.includes("p-0") ? "p-0" : "p-6")}>
+          <div className={cn("flex flex-col flex-1 min-h-0 overflow-y-auto scrollbar-hide", className?.includes("p-0") ? "p-0" : "p-6")} style={{ WebkitOverflowScrolling: 'touch' }}>
             {children}
           </div>
         </DialogPrimitive.Content>
