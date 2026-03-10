@@ -1321,7 +1321,7 @@ const InvoicesTab = () => {
 
       {/* Print Customer Label Dialog */}
       <Dialog open={!!labelOrder} onOpenChange={(open) => { if (!open) setLabelOrder(null); }}>
-        <DialogContent className="max-w-sm max-sm:max-w-[100vw] max-sm:h-[100dvh] max-sm:rounded-none max-sm:m-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:data-[state=open]:slide-in-from-bottom p-0 gap-0 overflow-hidden">
+        <DialogContent className="sm:max-w-sm p-0 gap-0 overflow-hidden">
           {/* Header with gradient */}
           <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-primary/[0.06] via-transparent to-accent/30">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,hsl(var(--primary)/0.08),transparent_60%)]" />

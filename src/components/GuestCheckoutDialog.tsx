@@ -15,7 +15,7 @@ const GuestCheckoutDialog = ({ open, onOpenChange, onSelectAccount, onSelectGues
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-base">
             {language === "km" ? "របៀបបង់ប្រាក់" : "How would you like to checkout?"}

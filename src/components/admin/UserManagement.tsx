@@ -594,7 +594,7 @@ export const UserManagement = () => {
       </Dialog>
       {/* Customer Form Dialog */}
       <Dialog open={showCustomerForm} onOpenChange={setShowCustomerForm}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingCustomer ? "Edit Customer" : "New Customer"}</DialogTitle>
           </DialogHeader>

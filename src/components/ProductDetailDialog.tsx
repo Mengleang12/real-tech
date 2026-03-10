@@ -235,7 +235,7 @@ export const ProductDetailDialog = ({ app, open, onOpenChange }: ProductDetailDi
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0 overflow-hidden">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] p-0 gap-0 overflow-hidden">
           <ScrollArea className="max-h-[90vh]">
             <div className="p-6">
               {/* Header with App Icon and Name */}
