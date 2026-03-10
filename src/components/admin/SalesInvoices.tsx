@@ -323,7 +323,7 @@ const StockManagement = () => {
           <p className="text-xs text-muted-foreground/60 mt-1">Try adjusting your search or filter</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {stockProducts.map((product) => {
             const totalStock = product.variants.reduce((s, v) => s + v.stock_quantity, 0);
             const status = getStockStatus(totalStock);
