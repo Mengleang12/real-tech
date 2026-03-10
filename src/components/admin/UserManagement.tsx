@@ -542,7 +542,7 @@ export const UserManagement = () => {
 
       {/* Grant Product Dialog */}
       <Dialog open={showGrantDialog} onOpenChange={setShowGrantDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="w-5 h-5" /> Grant Product
