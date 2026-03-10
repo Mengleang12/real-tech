@@ -315,7 +315,7 @@ const StockManagement = () => {
 
       {/* Stock Cards */}
       {stockLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{[1,2,3,4].map(i => <div key={i} className="border border-border rounded-xl bg-card p-5 space-y-3"><Skeleton className="h-5 w-48" /><Skeleton className="h-3 w-64" /><Skeleton className="h-2 w-full" /></div>)}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">{[1,2,3,4].map(i => <div key={i} className="border border-border rounded-xl bg-card p-5 space-y-3"><Skeleton className="h-5 w-48" /><Skeleton className="h-3 w-64" /><Skeleton className="h-2 w-full" /></div>)}</div>
       ) : stockProducts.length === 0 ? (
         <div className="text-center py-16 border border-border rounded-xl bg-card">
           <Boxes className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
@@ -323,7 +323,7 @@ const StockManagement = () => {
           <p className="text-xs text-muted-foreground/60 mt-1">Try adjusting your search or filter</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {stockProducts.map((product) => {
             const totalStock = product.variants.reduce((s, v) => s + v.stock_quantity, 0);
             const status = getStockStatus(totalStock);
