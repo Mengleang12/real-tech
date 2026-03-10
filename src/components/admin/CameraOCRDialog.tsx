@@ -210,7 +210,7 @@ export const CameraOCRDialog = ({ open, onOpenChange, onSerialDetected }: Camera
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden">
         <DialogTitle className="sr-only">Scan Serial Number</DialogTitle>
         <DialogDescription className="sr-only">Use your camera to scan a serial number label</DialogDescription>
 
