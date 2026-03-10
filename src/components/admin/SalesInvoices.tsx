@@ -273,8 +273,9 @@ const StockManagement = () => {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
+          { label: 'Total Products', count: totalProducts, color: 'text-foreground', bg: 'bg-muted/50' },
           { label: 'In Stock', count: inStockCount, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5' },
           { label: 'Low Stock', count: lowStockCount, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/5' },
           { label: 'Out of Stock', count: outOfStockCount, color: 'text-destructive', bg: 'bg-destructive/5' },
