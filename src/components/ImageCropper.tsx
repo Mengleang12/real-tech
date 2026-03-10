@@ -102,7 +102,7 @@ export const ImageCropper = ({ isOpen, onClose, imageSrc, onCropComplete }: Imag
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <style>{circularCropStyles}</style>
         <DialogHeader>
           <DialogTitle>{t.cropImage}</DialogTitle>

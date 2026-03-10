@@ -382,7 +382,7 @@ export const UserManagement = () => {
 
       {/* Customer Detail Dialog */}
       <Dialog open={!!selectedUser} onOpenChange={(open) => { if (!open) setSelectedUser(null); }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           {selectedUser && (
             <>
               <DialogHeader>
@@ -542,7 +542,7 @@ export const UserManagement = () => {
 
       {/* Grant Product Dialog */}
       <Dialog open={showGrantDialog} onOpenChange={setShowGrantDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="w-5 h-5" /> Grant Product
@@ -594,7 +594,7 @@ export const UserManagement = () => {
       </Dialog>
       {/* Customer Form Dialog */}
       <Dialog open={showCustomerForm} onOpenChange={setShowCustomerForm}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingCustomer ? "Edit Customer" : "New Customer"}</DialogTitle>
           </DialogHeader>
