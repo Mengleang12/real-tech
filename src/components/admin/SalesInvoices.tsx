@@ -265,7 +265,7 @@ const StockManagement = () => {
   };
 
   // Summary counts
-  const totalProducts = stockProducts.length;
+  const totalUnits = stockProducts.reduce((sum, p) => sum + p.variants.reduce((s, v) => s + v.stock_quantity, 0), 0);
   const inStockCount = stockProducts.filter(p => p.variants.reduce((s, v) => s + v.stock_quantity, 0) > 5).length;
   const lowStockCount = stockProducts.filter(p => { const t = p.variants.reduce((s, v) => s + v.stock_quantity, 0); return t > 0 && t <= 5; }).length;
   const outOfStockCount = stockProducts.filter(p => p.variants.reduce((s, v) => s + v.stock_quantity, 0) <= 0).length;
@@ -275,7 +275,7 @@ const StockManagement = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total Products', count: totalProducts, color: 'text-foreground', bg: 'bg-muted/50' },
+          { label: 'Total Units', count: totalUnits, color: 'text-foreground', bg: 'bg-muted/50' },
           { label: 'In Stock', count: inStockCount, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5' },
           { label: 'Low Stock', count: lowStockCount, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/5' },
           { label: 'Out of Stock', count: outOfStockCount, color: 'text-destructive', bg: 'bg-destructive/5' },
