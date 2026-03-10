@@ -61,6 +61,11 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
   
   const data = await response.json();
   
+  // Refresh admin token time on every successful response (sliding session sync)
+  if (response.ok && getApiKey()) {
+    localStorage.setItem('admin_token_time', Date.now().toString());
+  }
+  
   if (!response.ok) {
     // If admin token expired/invalid, auto-logout and redirect to admin login
     if (response.status === 401 && getApiKey()) {
