@@ -1060,6 +1060,7 @@ export interface StockProduct {
   icon_url?: string;
   category?: string;
   brand?: string;
+  is_visible: boolean;
   variants: {
     id: number;
     combination: Record<string, string>;
