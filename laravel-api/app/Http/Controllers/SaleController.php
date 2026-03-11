@@ -464,7 +464,8 @@ class SaleController extends Controller
         $products = $query->orderBy('name')->paginate($perPage);
 
         $items = $products->getCollection()->map(function ($product) {
-            $variants = $product->variants->where('is_active', true);
+            // Show all variants in admin stock overview (including inactive)
+            $variants = $product->variants;
             $totalStock = $variants->count() > 0
                 ? $variants->sum('stock_quantity')
                 : ($product->stock_quantity ?? 0);
