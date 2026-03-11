@@ -678,7 +678,6 @@ class SaleController extends Controller
             }
         }
     }
-    }
 
     /**
      * Toggle product visibility in the store
