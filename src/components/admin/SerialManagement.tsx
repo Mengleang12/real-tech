@@ -702,25 +702,31 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
         <div className="px-5 pb-5 space-y-4">
           {/* ── Variant chips ── */}
           {selectedProduct.variants.length > 1 && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
+            <div className="grid gap-1.5 pt-1">
               {selectedProduct.variants.map(v => {
                 const isActive = v.id === selectedVariantId;
+                const label = Object.values(v.combination).join(" / ");
                 return (
                   <button
                     key={v.id}
                     onClick={() => onSelectVariant(v.id)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-200 cursor-pointer ${
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] border transition-all duration-200 cursor-pointer ${
                       isActive
-                        ? 'border-primary/40 bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]'
-                        : 'border-border/60 bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
+                        ? 'border-primary/30 bg-primary/[0.06] shadow-[0_0_0_1px_hsl(var(--primary)/0.1)]'
+                        : 'border-border/50 bg-card hover:bg-muted/50 hover:border-border'
                     }`}
                   >
                     {v.variant_image ? (
-                      <img src={v.variant_image} alt="" className="w-4 h-4 rounded-full object-cover flex-shrink-0 border border-border/40" />
+                      <img src={v.variant_image} alt="" className="w-7 h-7 rounded-lg object-cover flex-shrink-0 border border-border/40 shadow-sm" />
                     ) : v.display_color ? (
-                      <span className="w-3 h-3 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: v.display_color }} />
-                    ) : null}
-                    {Object.values(v.combination).join(" / ")}
+                      <span className="w-5 h-5 rounded-md flex-shrink-0 border border-border/30 shadow-sm" style={{ backgroundColor: v.display_color }} />
+                    ) : (
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                    )}
+                    <span className={`font-medium truncate ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>{label}</span>
+                    {isActive && (
+                      <span className="ml-auto text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Selected</span>
+                    )}
                   </button>
                 );
               })}
