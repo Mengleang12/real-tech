@@ -76,7 +76,7 @@ class UploadController extends Controller
     private function getAllowedMimes(string $type): array
     {
         return match ($type) {
-            'icons', 'screenshots' => [
+            'icons', 'screenshots', 'variants' => [
                 'image/jpeg',
                 'image/png',
                 'image/gif',
