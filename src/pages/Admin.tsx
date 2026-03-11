@@ -427,6 +427,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
                   <thead>
                     <tr className="bg-muted/50">
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant</th>
+                      <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs w-10">Color</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">SKU</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant Price</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Quantity</th>
