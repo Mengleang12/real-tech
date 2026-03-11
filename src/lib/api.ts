@@ -1152,6 +1152,14 @@ export const salesApi = {
     return apiRequest('admin/sales/stock/bulk', { method: 'POST', body: { updates } });
   },
 
+  toggleProductVisibility: async (productId: number): Promise<{ success: boolean; is_visible: boolean; message: string }> => {
+    return apiRequest(`admin/sales/stock/${productId}/visibility`, { method: 'PATCH' });
+  },
+
+  toggleVariantActive: async (productId: number, variantId: number): Promise<{ success: boolean; is_active: boolean; message: string }> => {
+    return apiRequest(`admin/sales/stock/${productId}/variants/${variantId}/toggle`, { method: 'PATCH' });
+  },
+
   searchCustomers: async (q: string): Promise<{ customers: SaleCustomer[] }> => {
     return apiRequest(`admin/sales/customers?q=${encodeURIComponent(q)}`);
   },
