@@ -488,6 +488,8 @@ export const AddSerialsForProductDialog = ({ open, onOpenChange, product }: {
       stock_quantity: v.stock_quantity ?? 0,
       price_adjustment: v.price_adjustment ?? 0,
       is_active: true,
+      display_color: v.display_color,
+      variant_image: v.variant_image,
     })),
   };
 
