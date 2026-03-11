@@ -413,24 +413,35 @@ const StockManagement = () => {
                         const label = Object.values(v.combination).join(" / ");
                         const vStatus = getStockStatus(v.stock_quantity);
                         return (
-                          <button
-                            key={v.id}
-                            onClick={() => setEditingStock({ productId: product.id, variantId: v.id, qty: v.stock_quantity })}
-                            className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg border transition-colors hover:bg-muted/80 cursor-pointer ${
-                              vStatus === 'out_of_stock' ? 'border-destructive/30 bg-destructive/5' :
-                              vStatus === 'low_stock' ? 'border-amber-500/30 bg-amber-500/5' :
-                              'border-border/60 bg-muted/30'
-                            }`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStockColor(vStatus)}`} />
-                            <span className="text-muted-foreground">{label}</span>
-                            <span className={`font-semibold tabular-nums ${
-                              vStatus === 'out_of_stock' ? 'text-destructive' :
-                              vStatus === 'low_stock' ? 'text-amber-600 dark:text-amber-400' :
-                              'text-foreground'
-                            }`}>{v.stock_quantity}</span>
-                            <Pencil className="w-2.5 h-2.5 text-muted-foreground/50" />
-                          </button>
+                          <div key={v.id} className={`inline-flex items-center gap-1 text-[11px] rounded-lg border transition-colors ${
+                            !v.is_active ? 'border-muted-foreground/20 bg-muted/20 opacity-50' :
+                            vStatus === 'out_of_stock' ? 'border-destructive/30 bg-destructive/5' :
+                            vStatus === 'low_stock' ? 'border-amber-500/30 bg-amber-500/5' :
+                            'border-border/60 bg-muted/30'
+                          }`}>
+                            <button
+                              onClick={() => setEditingStock({ productId: product.id, variantId: v.id, qty: v.stock_quantity })}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 hover:bg-muted/80 rounded-l-lg cursor-pointer"
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${v.is_active ? getStockColor(vStatus) : 'bg-muted-foreground/30'}`} />
+                              <span className="text-muted-foreground">{label}</span>
+                              <span className={`font-semibold tabular-nums ${
+                                !v.is_active ? 'text-muted-foreground' :
+                                vStatus === 'out_of_stock' ? 'text-destructive' :
+                                vStatus === 'low_stock' ? 'text-amber-600 dark:text-amber-400' :
+                                'text-foreground'
+                              }`}>{v.stock_quantity}</span>
+                              <Pencil className="w-2.5 h-2.5 text-muted-foreground/50" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); variantToggleMutation.mutate({ productId: product.id, variantId: v.id }); }}
+                              disabled={variantToggleMutation.isPending}
+                              className="px-1.5 py-1 hover:bg-muted/80 rounded-r-lg cursor-pointer border-l border-border/40"
+                              title={v.is_active ? "Hide variant" : "Show variant"}
+                            >
+                              {v.is_active ? <Eye className="w-3 h-3 text-muted-foreground/60" /> : <EyeOff className="w-3 h-3 text-muted-foreground/40" />}
+                            </button>
+                          </div>
                         );
                       })}
                     </div>
