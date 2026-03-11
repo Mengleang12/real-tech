@@ -418,7 +418,14 @@ const StockManagement = () => {
                         return (
                           <div
                             key={v.id}
-                            className={`rounded-xl border-2 p-2.5 transition-all ${
+                            onClick={() => setSerialProduct({
+                              id: product.id,
+                              name: product.name,
+                              icon_url: product.icon_url,
+                              defaultVariantId: v.id,
+                              variants: product.variants.map(pv => ({ id: pv.id, combination: pv.combination, sku: pv.sku, stock_quantity: pv.stock_quantity, price_adjustment: pv.price_adjustment, display_color: pv.display_color, variant_image: pv.variant_image })),
+                            })}
+                            className={`rounded-xl border-2 p-2.5 transition-all cursor-pointer hover:shadow-md ${
                               !v.is_active ? 'border-muted/40 bg-muted/10 opacity-45' :
                               v.display_color ? '' :
                               vStatus === 'out_of_stock' ? 'border-destructive/25 bg-destructive/[0.03]' :
