@@ -62,7 +62,7 @@ type ProductFormData = Omit<Partial<App>, 'screenshots' | 'videos' | 'attribute_
   screenshots?: string[];
   videos?: { title: string; youtube_url: string }[];
   attribute_values?: { attribute_id: number; value: string }[];
-  variants?: { combination: Record<string, string>; sku?: string; stock_quantity: number; price_adjustment: number; is_active: boolean }[];
+  variants?: { combination: Record<string, string>; sku?: string; stock_quantity: number; price_adjustment: number; is_active: boolean; display_color?: string }[];
 };
 
 interface ProductFormProps {
