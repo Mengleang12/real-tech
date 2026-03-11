@@ -424,7 +424,9 @@ const StockManagement = () => {
                               onClick={() => setEditingStock({ productId: product.id, variantId: v.id, qty: v.stock_quantity })}
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 hover:bg-muted/80 rounded-l-lg cursor-pointer"
                             >
-                              {v.display_color ? (
+                              {v.variant_image ? (
+                                <img src={v.variant_image} alt={label} className="w-5 h-5 rounded object-cover flex-shrink-0 border border-border/40" />
+                              ) : v.display_color ? (
                                 <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: v.display_color }} />
                               ) : (
                                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${v.is_active ? getStockColor(vStatus) : 'bg-muted-foreground/30'}`} />
