@@ -11,7 +11,7 @@ class UploadController extends Controller
     {
         $request->validate([
             'file' => 'required|file',
-            'type' => 'required|in:icons,screenshots,versions,general',
+            'type' => 'required|in:icons,screenshots,versions,variants,general',
         ]);
 
         $type = $request->type;
@@ -76,7 +76,7 @@ class UploadController extends Controller
     private function getAllowedMimes(string $type): array
     {
         return match ($type) {
-            'icons', 'screenshots' => [
+            'icons', 'screenshots', 'variants' => [
                 'image/jpeg',
                 'image/png',
                 'image/gif',
