@@ -415,10 +415,11 @@ const StockManagement = () => {
                         return (
                           <div key={v.id} className={`inline-flex items-center gap-1 text-[11px] rounded-lg border transition-colors ${
                             !v.is_active ? 'border-muted-foreground/20 bg-muted/20 opacity-50' :
+                            (v as any).display_color ? '' :
                             vStatus === 'out_of_stock' ? 'border-destructive/30 bg-destructive/5' :
                             vStatus === 'low_stock' ? 'border-amber-500/30 bg-amber-500/5' :
                             'border-border/60 bg-muted/30'
-                          }`}>
+                          }`} style={(v as any).display_color && v.is_active ? { borderColor: `${(v as any).display_color}40`, backgroundColor: `${(v as any).display_color}12` } : undefined}>
                             <button
                               onClick={() => setEditingStock({ productId: product.id, variantId: v.id, qty: v.stock_quantity })}
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 hover:bg-muted/80 rounded-l-lg cursor-pointer"
