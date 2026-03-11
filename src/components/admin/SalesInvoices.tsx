@@ -247,6 +247,27 @@ const StockManagement = () => {
     onError: () => toast.error("Failed to update stock"),
   });
 
+  const visibilityMutation = useMutation({
+    mutationFn: (productId: number) => salesApi.toggleProductVisibility(productId),
+    onSuccess: (data) => {
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: () => toast.error("Failed to toggle visibility"),
+  });
+
+  const variantToggleMutation = useMutation({
+    mutationFn: ({ productId, variantId }: { productId: number; variantId: number }) =>
+      salesApi.toggleVariantActive(productId, variantId),
+    onSuccess: (data) => {
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: () => toast.error("Failed to toggle variant"),
+  });
+
   const stockProducts = stockData?.products || [];
   const stockPagination = stockData?.pagination;
 
