@@ -62,7 +62,7 @@ type ProductFormData = Omit<Partial<App>, 'screenshots' | 'videos' | 'attribute_
   screenshots?: string[];
   videos?: { title: string; youtube_url: string }[];
   attribute_values?: { attribute_id: number; value: string }[];
-  variants?: { combination: Record<string, string>; sku?: string; stock_quantity: number; price_adjustment: number; is_active: boolean }[];
+  variants?: { combination: Record<string, string>; sku?: string; stock_quantity: number; price_adjustment: number; is_active: boolean; display_color?: string }[];
 };
 
 interface ProductFormProps {
@@ -96,8 +96,8 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
   const [selectedAttrs, setSelectedAttrs] = useState<Set<number>>(new Set());
   const [attrSearch, setAttrSearch] = useState("");
   const [attrDropdownOpen, setAttrDropdownOpen] = useState(false);
-  const [variants, setVariants] = useState<{ combination: Record<string, string>; sku: string; stock_quantity: number; price_adjustment: number; purchase_price: number; is_active: boolean }[]>(
-    app?.variants?.map(v => ({ combination: v.combination, sku: v.sku || '', stock_quantity: v.stock_quantity, price_adjustment: v.price_adjustment, purchase_price: v.purchase_price || 0, is_active: v.is_active })) || []
+  const [variants, setVariants] = useState<{ combination: Record<string, string>; sku: string; stock_quantity: number; price_adjustment: number; purchase_price: number; is_active: boolean; display_color: string }[]>(
+    app?.variants?.map(v => ({ combination: v.combination, sku: v.sku || '', stock_quantity: v.stock_quantity, price_adjustment: v.price_adjustment, purchase_price: v.purchase_price || 0, is_active: v.is_active, display_color: v.display_color || '' })) || []
   );
   const isInitialVariantLoad = useRef(!!app?.variants?.length);
 
@@ -153,6 +153,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
         price_adjustment: existing?.price_adjustment ?? 0,
         purchase_price: existing?.purchase_price ?? 0,
         is_active: existing?.is_active ?? true,
+        display_color: existing?.display_color || '',
       };
     });
     setVariants(newVariants);
@@ -426,6 +427,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
                   <thead>
                     <tr className="bg-muted/50">
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant</th>
+                      <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs w-10">Color</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">SKU</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant Price</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Quantity</th>
@@ -436,7 +438,25 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
                       const variantName = Object.values(variant.combination).join('-');
                       return (
                         <tr key={idx} className="hover:bg-muted/20">
-                          <td className="px-3 sm:px-4 py-2.5 text-sm font-medium">{variantName}</td>
+                          <td className="px-3 sm:px-4 py-2.5 text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              {variant.display_color && <span className="w-3 h-3 rounded-full border border-border shrink-0" style={{ backgroundColor: variant.display_color }} />}
+                              {variantName}
+                            </div>
+                          </td>
+                          <td className="px-3 sm:px-4 py-2.5">
+                            <input
+                              type="color"
+                              value={variant.display_color || '#cccccc'}
+                              onChange={e => {
+                                const next = [...variants];
+                                next[idx] = { ...next[idx], display_color: e.target.value };
+                                setVariants(next);
+                              }}
+                              className="w-7 h-7 rounded cursor-pointer border border-border bg-transparent p-0.5"
+                              title="Pick display color"
+                            />
+                          </td>
                           <td className="px-3 sm:px-4 py-2.5">
                             <div className="flex items-center gap-1">
                               <Input
