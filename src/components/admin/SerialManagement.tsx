@@ -464,13 +464,14 @@ const AddSerialsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange:
 };
 
 // ─── Add Serials For Product Dialog (pre-filled product from stock card) ─────
-export const AddSerialsForProductDialog = ({ open, onOpenChange, product }: {
+export const AddSerialsForProductDialog = ({ open, onOpenChange, product, defaultVariantId }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   product: { id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string; stock_quantity?: number; price_adjustment?: number; display_color?: string; variant_image?: string }> };
+  defaultVariantId?: number;
 }) => {
   const [selectedVariantId, setSelectedVariantId] = useState<number | undefined>(
-    product.variants.length > 0 ? product.variants[0].id : undefined
+    defaultVariantId ?? (product.variants.length > 0 ? product.variants[0].id : undefined)
   );
   const [serialInput, setSerialInput] = useState("");
   const [serialList, setSerialList] = useState<string[]>([]);
@@ -478,7 +479,7 @@ export const AddSerialsForProductDialog = ({ open, onOpenChange, product }: {
   // Reset when product changes
   useEffect(() => {
     if (open) {
-      setSelectedVariantId(product.variants.length > 0 ? product.variants[0].id : undefined);
+      setSelectedVariantId(defaultVariantId ?? (product.variants.length > 0 ? product.variants[0].id : undefined));
       setSerialInput("");
       setSerialList([]);
     }
