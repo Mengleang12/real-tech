@@ -581,6 +581,7 @@ const StockManagement = () => {
           open={!!serialProduct}
           onOpenChange={(v) => { if (!v) setSerialProduct(null); }}
           product={serialProduct}
+          defaultVariantId={serialProduct.defaultVariantId}
         />
       )}
     </div>

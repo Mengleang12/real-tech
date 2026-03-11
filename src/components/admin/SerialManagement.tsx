@@ -479,7 +479,7 @@ export const AddSerialsForProductDialog = ({ open, onOpenChange, product, defaul
   // Reset when product changes
   useEffect(() => {
     if (open) {
-      setSelectedVariantId(product.variants.length > 0 ? product.variants[0].id : undefined);
+      setSelectedVariantId(defaultVariantId ?? (product.variants.length > 0 ? product.variants[0].id : undefined));
       setSerialInput("");
       setSerialList([]);
     }
