@@ -213,6 +213,7 @@ export interface ProductVariant {
   is_active: boolean;
   is_default?: boolean;
   display_color?: string;
+  variant_image?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -1071,6 +1072,7 @@ export interface StockProduct {
     purchase_price?: number;
     is_active: boolean;
     display_color?: string;
+    variant_image?: string;
   }[];
 }
 
@@ -1093,6 +1095,8 @@ export interface SaleProduct {
     price_adjustment: number;
     purchase_price?: number;
     is_active: boolean;
+    display_color?: string;
+    variant_image?: string;
   }[];
 }
 

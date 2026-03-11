@@ -757,7 +757,7 @@ const ProductDetail = () => {
                                       type="button"
                                       onClick={() => setSelectedVariantIdx(selected ? null : idx)}
                                       disabled={vOOS}
-                                      className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                                      className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-all ${
                                         vOOS
                                           ? 'border-border/30 text-muted-foreground/40 line-through cursor-not-allowed'
                                           : selected
@@ -765,6 +765,11 @@ const ProductDetail = () => {
                                             : 'border-border hover:border-primary/50 text-foreground'
                                       }`}
                                     >
+                                      {v.variant_image ? (
+                                        <img src={v.variant_image} alt={label} className="w-5 h-5 rounded object-cover flex-shrink-0" />
+                                      ) : v.display_color ? (
+                                        <span className="w-3 h-3 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: v.display_color }} />
+                                      ) : null}
                                       {label}
                                       {Number(v.price_adjustment) > 0 && !vOOS && (
                                         <span className="ml-1 text-[10px] opacity-70">${Number(v.price_adjustment).toFixed(0)}</span>

@@ -62,7 +62,7 @@ type ProductFormData = Omit<Partial<App>, 'screenshots' | 'videos' | 'attribute_
   screenshots?: string[];
   videos?: { title: string; youtube_url: string }[];
   attribute_values?: { attribute_id: number; value: string }[];
-  variants?: { combination: Record<string, string>; sku?: string; stock_quantity: number; price_adjustment: number; is_active: boolean; display_color?: string }[];
+  variants?: { combination: Record<string, string>; sku?: string; stock_quantity: number; price_adjustment: number; is_active: boolean; display_color?: string; variant_image?: string }[];
 };
 
 interface ProductFormProps {
@@ -96,8 +96,8 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
   const [selectedAttrs, setSelectedAttrs] = useState<Set<number>>(new Set());
   const [attrSearch, setAttrSearch] = useState("");
   const [attrDropdownOpen, setAttrDropdownOpen] = useState(false);
-  const [variants, setVariants] = useState<{ combination: Record<string, string>; sku: string; stock_quantity: number; price_adjustment: number; purchase_price: number; is_active: boolean; display_color: string }[]>(
-    app?.variants?.map(v => ({ combination: v.combination, sku: v.sku || '', stock_quantity: v.stock_quantity, price_adjustment: v.price_adjustment, purchase_price: v.purchase_price || 0, is_active: v.is_active, display_color: v.display_color || '' })) || []
+  const [variants, setVariants] = useState<{ combination: Record<string, string>; sku: string; stock_quantity: number; price_adjustment: number; purchase_price: number; is_active: boolean; display_color: string; variant_image: string }[]>(
+    app?.variants?.map(v => ({ combination: v.combination, sku: v.sku || '', stock_quantity: v.stock_quantity, price_adjustment: v.price_adjustment, purchase_price: v.purchase_price || 0, is_active: v.is_active, display_color: v.display_color || '', variant_image: v.variant_image || '' })) || []
   );
   const isInitialVariantLoad = useRef(!!app?.variants?.length);
 
@@ -154,6 +154,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
         purchase_price: existing?.purchase_price ?? 0,
         is_active: existing?.is_active ?? true,
         display_color: existing?.display_color || '',
+        variant_image: existing?.variant_image || '',
       };
     });
     setVariants(newVariants);
@@ -428,6 +429,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
                     <tr className="bg-muted/50">
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs w-10">Color</th>
+                      <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs w-14">Image</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">SKU</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Variant Price</th>
                       <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-muted-foreground text-xs">Quantity</th>
@@ -456,6 +458,49 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
                               className="w-7 h-7 rounded cursor-pointer border border-border bg-transparent p-0.5"
                               title="Pick display color"
                             />
+                          </td>
+                          <td className="px-3 sm:px-4 py-2.5">
+                            <input
+                              id={`variant-image-input-${idx}`}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const token = localStorage.getItem('admin_api_key') || localStorage.getItem('auth_token') || '';
+                                const fd = new FormData();
+                                fd.append('file', file);
+                                fd.append('type', 'variants');
+                                try {
+                                  const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com'}/api/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }, body: fd });
+                                  if (!res.ok) throw new Error('Upload failed');
+                                  const data = await res.json();
+                                  const next = [...variants];
+                                  next[idx] = { ...next[idx], variant_image: data.url };
+                                  setVariants(next);
+                                } catch { toast.error('Upload failed'); }
+                                e.target.value = '';
+                              }}
+                            />
+                            {variant.variant_image ? (
+                              <div
+                                className="relative group w-10 h-10 rounded-lg border border-border overflow-hidden bg-background cursor-pointer"
+                                onClick={() => document.getElementById(`variant-image-input-${idx}`)?.click()}
+                              >
+                                <img src={variant.variant_image} alt="Variant" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Pencil className="w-3 h-3 text-white" />
+                                </div>
+                              </div>
+                            ) : (
+                              <div
+                                className="w-10 h-10 rounded-lg border-2 border-dashed border-border bg-background flex items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                                onClick={() => document.getElementById(`variant-image-input-${idx}`)?.click()}
+                              >
+                                <Plus className="w-3.5 h-3.5 text-muted-foreground" />
+                              </div>
+                            )}
                           </td>
                           <td className="px-3 sm:px-4 py-2.5">
                             <div className="flex items-center gap-1">
