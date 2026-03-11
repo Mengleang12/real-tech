@@ -491,6 +491,7 @@ class SaleController extends Controller
                         'stock_quantity' => $v->stock_quantity,
                         'price_adjustment' => $v->price_adjustment,
                         'is_active' => $v->is_active,
+                        'display_color' => $v->display_color,
                     ];
                 })->values(),
             ];
