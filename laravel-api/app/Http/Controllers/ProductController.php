@@ -242,6 +242,7 @@ class ProductController extends Controller
             'brand_id' => $request->has('brand_id') ? $request->brand_id : $product->brand_id,
             'is_featured' => $request->is_featured ?? $product->is_featured,
             'is_popular' => $request->is_popular ?? $product->is_popular,
+            'is_visible' => $request->has('is_visible') ? $request->is_visible : $product->is_visible,
         ]);
 
         if ($request->has('screenshots') && is_array($request->screenshots)) {
