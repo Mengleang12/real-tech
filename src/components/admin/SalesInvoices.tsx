@@ -408,45 +408,68 @@ const StockManagement = () => {
 
                   {/* Variants */}
                   {product.variants.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="grid gap-1.5">
                       {product.variants.map((v) => {
                         const label = Object.values(v.combination).join(" / ");
                         const vStatus = getStockStatus(v.stock_quantity);
+                        const stockPercent = Math.min(100, (v.stock_quantity / Math.max(totalStock, 1)) * 100);
                         return (
-                          <div key={v.id} className={`inline-flex items-center gap-1 text-[11px] rounded-lg border transition-colors ${
-                            !v.is_active ? 'border-muted-foreground/20 bg-muted/20 opacity-50' :
-                            v.display_color ? '' :
-                            vStatus === 'out_of_stock' ? 'border-destructive/30 bg-destructive/5' :
-                            vStatus === 'low_stock' ? 'border-amber-500/30 bg-amber-500/5' :
-                            'border-border/60 bg-muted/30'
-                          }`} style={v.display_color && v.is_active ? { borderColor: `${v.display_color}40`, backgroundColor: `${v.display_color}12` } : undefined}>
+                          <div key={v.id} className={`flex items-center gap-2.5 rounded-lg border px-2.5 py-1.5 transition-all ${
+                            !v.is_active ? 'border-muted-foreground/15 bg-muted/15 opacity-50' :
+                            v.display_color ? 'border-border/40' :
+                            vStatus === 'out_of_stock' ? 'border-destructive/20 bg-destructive/[0.03]' :
+                            vStatus === 'low_stock' ? 'border-amber-500/20 bg-amber-500/[0.03]' :
+                            'border-border/50 bg-muted/20'
+                          }`} style={v.display_color && v.is_active ? { borderColor: `${v.display_color}30`, backgroundColor: `${v.display_color}08` } : undefined}>
+                            {/* Variant Visual */}
+                            {v.variant_image ? (
+                              <img src={v.variant_image} alt={label} className="w-7 h-7 rounded-md object-cover flex-shrink-0 border border-border/40 shadow-sm" />
+                            ) : v.display_color ? (
+                              <span className="w-5 h-5 rounded-md flex-shrink-0 border border-border/30 shadow-sm" style={{ backgroundColor: v.display_color }} />
+                            ) : (
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${v.is_active ? getStockColor(vStatus) : 'bg-muted-foreground/30'}`} />
+                            )}
+                            {/* Label & stock bar */}
                             <button
                               onClick={() => setEditingStock({ productId: product.id, variantId: v.id, qty: v.stock_quantity })}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 hover:bg-muted/80 rounded-l-lg cursor-pointer"
+                              className="flex-1 min-w-0 text-left cursor-pointer group"
                             >
-                              {v.variant_image ? (
-                                <img src={v.variant_image} alt={label} className="w-5 h-5 rounded object-cover flex-shrink-0 border border-border/40" />
-                              ) : v.display_color ? (
-                                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: v.display_color }} />
-                              ) : (
-                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${v.is_active ? getStockColor(vStatus) : 'bg-muted-foreground/30'}`} />
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-medium text-foreground/80 truncate group-hover:text-foreground transition-colors">{label}</span>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <span className={`text-[11px] font-bold tabular-nums ${
+                                    !v.is_active ? 'text-muted-foreground' :
+                                    vStatus === 'out_of_stock' ? 'text-destructive' :
+                                    vStatus === 'low_stock' ? 'text-amber-600 dark:text-amber-400' :
+                                    'text-foreground'
+                                  }`}>{v.stock_quantity}</span>
+                                  <Pencil className="w-2.5 h-2.5 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
+                                </div>
+                              </div>
+                              {v.is_active && totalStock > 0 && (
+                                <div className="h-[3px] w-full rounded-full bg-border/30 mt-1 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-500 ${
+                                      v.display_color ? '' :
+                                      vStatus === 'out_of_stock' ? 'bg-destructive/60' :
+                                      vStatus === 'low_stock' ? 'bg-amber-500/60' : 'bg-emerald-500/60'
+                                    }`}
+                                    style={{
+                                      width: `${stockPercent}%`,
+                                      ...(v.display_color ? { backgroundColor: `${v.display_color}80` } : {}),
+                                    }}
+                                  />
+                                </div>
                               )}
-                              <span className="text-muted-foreground">{label}</span>
-                              <span className={`font-semibold tabular-nums ${
-                                !v.is_active ? 'text-muted-foreground' :
-                                vStatus === 'out_of_stock' ? 'text-destructive' :
-                                vStatus === 'low_stock' ? 'text-amber-600 dark:text-amber-400' :
-                                'text-foreground'
-                              }`}>{v.stock_quantity}</span>
-                              <Pencil className="w-2.5 h-2.5 text-muted-foreground/50" />
                             </button>
+                            {/* Toggle visibility */}
                             <button
                               onClick={(e) => { e.stopPropagation(); variantToggleMutation.mutate({ productId: product.id, variantId: v.id }); }}
                               disabled={variantToggleMutation.isPending}
-                              className="px-1.5 py-1 hover:bg-muted/80 rounded-r-lg cursor-pointer border-l border-border/40"
+                              className="p-1 hover:bg-muted/60 rounded-md cursor-pointer shrink-0 transition-colors"
                               title={v.is_active ? "Hide variant" : "Show variant"}
                             >
-                              {v.is_active ? <Eye className="w-3 h-3 text-muted-foreground/60" /> : <EyeOff className="w-3 h-3 text-muted-foreground/40" />}
+                              {v.is_active ? <Eye className="w-3 h-3 text-muted-foreground/50" /> : <EyeOff className="w-3 h-3 text-muted-foreground/30" />}
                             </button>
                           </div>
                         );
