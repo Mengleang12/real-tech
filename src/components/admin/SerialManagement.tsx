@@ -659,11 +659,22 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                     <Pencil className="w-3 h-3 mr-1" />Change
                   </Button>
                 </div>
-                {selectedVariantId && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {Object.values(selectedProduct.variants.find(v => v.id === selectedVariantId)?.combination || {}).join(" · ")}
-                  </p>
-                )}
+                {selectedVariantId && (() => {
+                  const sv = selectedProduct.variants.find(v => v.id === selectedVariantId);
+                  if (!sv) return null;
+                  return (
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {sv.variant_image ? (
+                        <img src={sv.variant_image} alt="" className="w-4 h-4 rounded object-cover flex-shrink-0 border border-border/40" />
+                      ) : sv.display_color ? (
+                        <span className="w-3 h-3 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: sv.display_color }} />
+                      ) : null}
+                      <p className="text-xs text-muted-foreground">
+                        {Object.values(sv.combination || {}).join(" · ")}
+                      </p>
+                    </div>
+                  );
+                })()}
                 {stockLimit !== Infinity && (
                   <div className="flex items-center gap-2.5 mt-2">
                     <div className="flex-1 h-1.5 rounded-full bg-border/40 overflow-hidden">
