@@ -295,6 +295,7 @@ class ProductController extends Controller
                         'purchase_price' => $variant['purchase_price'] ?? 0,
                         'is_active' => $variant['is_active'] ?? true,
                         'is_default' => $variant['is_default'] ?? false,
+                        'display_color' => $variant['display_color'] ?? null,
                     ]);
                 }
             }
