@@ -160,6 +160,7 @@ class ProductController extends Controller
             'brand_id' => $request->brand_id,
             'is_featured' => $request->is_featured ?? false,
             'is_popular' => $request->is_popular ?? false,
+            'is_visible' => $request->is_visible ?? true,
         ]);
 
         if ($request->has('screenshots') && is_array($request->screenshots)) {
