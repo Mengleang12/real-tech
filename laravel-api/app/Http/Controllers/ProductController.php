@@ -208,6 +208,7 @@ class ProductController extends Controller
                     'is_active' => $variant['is_active'] ?? true,
                     'is_default' => $variant['is_default'] ?? false,
                     'display_color' => $variant['display_color'] ?? null,
+                    'variant_image' => $variant['variant_image'] ?? null,
                 ]);
             }
         }
