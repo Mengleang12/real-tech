@@ -79,7 +79,7 @@ function AppRoutes() {
   // Show maintenance page to non-admin users, but allow /auth and /admin access
   if (maintenance.enabled && !isAdminOrModerator) {
     return (
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
+      <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
