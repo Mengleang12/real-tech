@@ -438,7 +438,25 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
                       const variantName = Object.values(variant.combination).join('-');
                       return (
                         <tr key={idx} className="hover:bg-muted/20">
-                          <td className="px-3 sm:px-4 py-2.5 text-sm font-medium">{variantName}</td>
+                          <td className="px-3 sm:px-4 py-2.5 text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              {variant.display_color && <span className="w-3 h-3 rounded-full border border-border shrink-0" style={{ backgroundColor: variant.display_color }} />}
+                              {variantName}
+                            </div>
+                          </td>
+                          <td className="px-3 sm:px-4 py-2.5">
+                            <input
+                              type="color"
+                              value={variant.display_color || '#cccccc'}
+                              onChange={e => {
+                                const next = [...variants];
+                                next[idx] = { ...next[idx], display_color: e.target.value };
+                                setVariants(next);
+                              }}
+                              className="w-7 h-7 rounded cursor-pointer border border-border bg-transparent p-0.5"
+                              title="Pick display color"
+                            />
+                          </td>
                           <td className="px-3 sm:px-4 py-2.5">
                             <div className="flex items-center gap-1">
                               <Input
