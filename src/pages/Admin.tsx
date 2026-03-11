@@ -96,8 +96,8 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
   const [selectedAttrs, setSelectedAttrs] = useState<Set<number>>(new Set());
   const [attrSearch, setAttrSearch] = useState("");
   const [attrDropdownOpen, setAttrDropdownOpen] = useState(false);
-  const [variants, setVariants] = useState<{ combination: Record<string, string>; sku: string; stock_quantity: number; price_adjustment: number; purchase_price: number; is_active: boolean }[]>(
-    app?.variants?.map(v => ({ combination: v.combination, sku: v.sku || '', stock_quantity: v.stock_quantity, price_adjustment: v.price_adjustment, purchase_price: v.purchase_price || 0, is_active: v.is_active })) || []
+  const [variants, setVariants] = useState<{ combination: Record<string, string>; sku: string; stock_quantity: number; price_adjustment: number; purchase_price: number; is_active: boolean; display_color: string }[]>(
+    app?.variants?.map(v => ({ combination: v.combination, sku: v.sku || '', stock_quantity: v.stock_quantity, price_adjustment: v.price_adjustment, purchase_price: v.purchase_price || 0, is_active: v.is_active, display_color: v.display_color || '' })) || []
   );
   const isInitialVariantLoad = useRef(!!app?.variants?.length);
 
