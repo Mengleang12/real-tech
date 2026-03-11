@@ -213,6 +213,7 @@ export interface ProductVariant {
   is_active: boolean;
   is_default?: boolean;
   display_color?: string;
+  variant_image?: string;
   created_at?: string;
   updated_at?: string;
 }

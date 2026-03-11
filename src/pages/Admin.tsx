@@ -154,6 +154,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
         purchase_price: existing?.purchase_price ?? 0,
         is_active: existing?.is_active ?? true,
         display_color: existing?.display_color || '',
+        variant_image: existing?.variant_image || '',
       };
     });
     setVariants(newVariants);
