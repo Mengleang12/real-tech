@@ -352,7 +352,7 @@ const StockManagement = () => {
             const price = product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0) : 0;
 
             return (
-              <div key={product.id} className="border border-border/60 rounded-xl bg-card overflow-hidden hover:shadow-sm transition-shadow">
+              <div key={product.id} className={`border border-border/60 rounded-xl bg-card overflow-hidden hover:shadow-sm transition-shadow ${!product.is_visible ? 'opacity-60' : ''}`}>
                 {/* Top bar color indicator */}
                 <div className={`h-0.5 ${getStockColor(status)}`} />
 
@@ -370,6 +370,7 @@ const StockManagement = () => {
                       <div className="flex items-center gap-2">
                         <h4 className="text-sm font-semibold text-foreground truncate">{product.name}</h4>
                         {getStockBadge(status)}
+                        {!product.is_visible && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30">Hidden</Badge>}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xs text-muted-foreground">{product.category || "Uncategorized"}</span>
@@ -377,11 +378,21 @@ const StockManagement = () => {
                         <span className="text-xs font-medium text-foreground">${price.toFixed(2)}</span>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className={`text-lg font-bold tabular-nums ${status === 'out_of_stock' ? 'text-destructive' : status === 'low_stock' ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
-                        {totalStock}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">total units</p>
+                    <div className="flex items-start gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => visibilityMutation.mutate(product.id)}
+                        disabled={visibilityMutation.isPending}
+                        className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                        title={product.is_visible ? "Hide from store" : "Show in store"}
+                      >
+                        {product.is_visible ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                      </button>
+                      <div className="text-right">
+                        <p className={`text-lg font-bold tabular-nums ${status === 'out_of_stock' ? 'text-destructive' : status === 'low_stock' ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
+                          {totalStock}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">total units</p>
+                      </div>
                     </div>
                   </div>
 
