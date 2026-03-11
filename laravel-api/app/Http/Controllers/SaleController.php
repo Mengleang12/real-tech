@@ -638,7 +638,7 @@ class SaleController extends Controller
     }
 
     /**
-     * Restore stock from sale_items when sale is deleted or cancelled
+     * Restore stock and serial numbers from sale_items when sale is deleted or cancelled
      */
     public static function restoreStock(Sale $sale): void
     {
@@ -648,6 +648,11 @@ class SaleController extends Controller
             // Fallback for old sales without sale_items
             $product = Product::find($sale->product_id);
             if (!$product) return;
+
+            // Restore serial if present on the sale record
+            if ($sale->serial_number) {
+                self::restoreSerials($sale->product_id, null, [$sale->serial_number]);
+            }
 
             $variants = ProductVariant::where('product_id', $sale->product_id)->where('is_active', true)->get();
             if ($variants->count() > 0) {
@@ -663,10 +668,18 @@ class SaleController extends Controller
             return;
         }
 
-        // Restore stock for each sale item
+        // Restore stock and serials for each sale item
         foreach ($saleItems as $saleItem) {
             $product = Product::find($saleItem->product_id);
             if (!$product) continue;
+
+            // Restore serial numbers back to product_serials table
+            if ($saleItem->serial_numbers) {
+                $serials = array_filter(array_map('trim', explode(',', $saleItem->serial_numbers)));
+                if (!empty($serials)) {
+                    self::restoreSerials($saleItem->product_id, $saleItem->variant_id, $serials);
+                }
+            }
 
             if ($saleItem->variant_id) {
                 $variant = ProductVariant::where('id', $saleItem->variant_id)
@@ -680,6 +693,39 @@ class SaleController extends Controller
                 $product->refresh();
                 $product->updateStockStatus();
             }
+        }
+    }
+
+    /**
+     * Recreate serial numbers in product_serials table
+     */
+    private static function restoreSerials(int $productId, ?int $variantId, array $serialNumbers): void
+    {
+        foreach ($serialNumbers as $sn) {
+            $sn = trim($sn);
+            if (!$sn) continue;
+
+            // Check if serial already exists (avoid duplicates)
+            $exists = \App\Models\ProductSerial::where('serial_number', $sn)
+                ->where('product_id', $productId)
+                ->exists();
+
+            if ($exists) continue;
+
+            // Generate unique barcode
+            $barcode = 'RT-' . strtoupper(\Illuminate\Support\Str::random(8));
+            while (\App\Models\ProductSerial::where('barcode', $barcode)->exists()) {
+                $barcode = 'RT-' . strtoupper(\Illuminate\Support\Str::random(8));
+            }
+
+            \App\Models\ProductSerial::create([
+                'product_id' => $productId,
+                'variant_id' => $variantId,
+                'serial_number' => $sn,
+                'barcode' => $barcode,
+                'status' => 'available',
+                'notes' => 'Restored from cancelled/deleted sale',
+            ]);
         }
     }
 
