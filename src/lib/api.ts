@@ -1070,6 +1070,7 @@ export interface StockProduct {
     price_adjustment: number;
     purchase_price?: number;
     is_active: boolean;
+    display_color?: string;
   }[];
 }
 
