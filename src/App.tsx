@@ -74,7 +74,7 @@ function AppRoutes() {
   }, []);
 
   // Wait for both auth and maintenance check
-  if (authLoading || checkingMaintenance) return null;
+  if (authLoading || checkingMaintenance) return <LoadingScreen />;
 
   // Show maintenance page to non-admin users, but allow /auth and /admin access
   if (maintenance.enabled && !isAdminOrModerator) {
