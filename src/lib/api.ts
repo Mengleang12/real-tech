@@ -212,6 +212,7 @@ export interface ProductVariant {
   purchase_price?: number;
   is_active: boolean;
   is_default?: boolean;
+  display_color?: string;
   created_at?: string;
   updated_at?: string;
 }
