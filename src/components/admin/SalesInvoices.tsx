@@ -206,7 +206,7 @@ const StockManagement = () => {
   const [stockPage, setStockPage] = useState(1);
   const [editingStock, setEditingStock] = useState<{ productId: number; variantId?: number; qty: number } | null>(null);
   const [stockReason, setStockReason] = useState("");
-  const [serialProduct, setSerialProduct] = useState<{ id: number; name: string; icon_url?: string; variants: Array<{ id: number; combination: Record<string, string>; sku?: string; stock_quantity?: number; price_adjustment?: number }> } | null>(null);
+  const [serialProduct, setSerialProduct] = useState<{ id: number; name: string; icon_url?: string; defaultVariantId?: number; variants: Array<{ id: number; combination: Record<string, string>; sku?: string; stock_quantity?: number; price_adjustment?: number; display_color?: string; variant_image?: string }> } | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   // Debounce search
