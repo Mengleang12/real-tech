@@ -477,6 +477,7 @@ class SaleController extends Controller
                 'price' => $product->price,
                 'category' => $product->categoryRelation?->name ?? $product->category,
                 'brand' => $product->brand?->name,
+                'is_visible' => (bool) $product->is_visible,
                 'stock_quantity' => $product->stock_quantity,
                 'low_stock_threshold' => $threshold,
                 'stock_status' => $totalStock <= 0 ? 'out_of_stock' : ($totalStock <= $threshold ? 'low_stock' : 'in_stock'),
