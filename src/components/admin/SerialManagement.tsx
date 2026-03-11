@@ -432,10 +432,17 @@ const AddSerialsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange:
                     {p.variants.length > 0 ? (
                       p.variants.map(v => (
                         <button key={`${p.id}-${v.id}`} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => selectProduct(p, v.id)}>
-                          {p.icon_url && <img src={p.icon_url} className="w-7 h-7 rounded object-cover" alt="" />}
+                          {v.variant_image ? (
+                            <img src={v.variant_image} className="w-7 h-7 rounded object-cover border border-border/40" alt="" />
+                          ) : p.icon_url ? (
+                            <img src={p.icon_url} className="w-7 h-7 rounded object-cover" alt="" />
+                          ) : null}
                           <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{p.name}</p>
-                            <p className="text-xs text-muted-foreground">{Object.values(v.combination).join(" / ")}{v.sku ? ` · ${v.sku}` : ''}</p>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              {v.display_color && <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: v.display_color }} />}
+                              <span>{Object.values(v.combination).join(" / ")}{v.sku ? ` · ${v.sku}` : ''}</span>
+                            </div>
                           </div>
                         </button>
                       ))
