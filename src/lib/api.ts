@@ -1071,6 +1071,7 @@ export interface StockProduct {
     purchase_price?: number;
     is_active: boolean;
     display_color?: string;
+    variant_image?: string;
   }[];
 }
 
