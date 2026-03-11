@@ -618,10 +618,17 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                           const price = Number(v.price_adjustment || 0);
                           return (
                             <button key={`${p.id}-${v.id}`} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center gap-3 transition-colors cursor-pointer" onClick={() => addToCart(p, v.id)}>
-                              {p.icon_url && <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />}
+                              {v.variant_image ? (
+                                <img src={v.variant_image} className="w-8 h-8 rounded object-cover shrink-0 border border-border/40" alt="" />
+                              ) : p.icon_url ? (
+                                <img src={p.icon_url} className="w-8 h-8 rounded object-cover shrink-0" alt="" />
+                              ) : null}
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-foreground truncate">{p.name} <span className="text-muted-foreground font-normal">#{p.id}</span></p>
-                                <p className="text-xs text-muted-foreground">{label}{v.sku ? ` · SKU: ${v.sku}` : ''} · Stock: {v.stock_quantity}</p>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                  {v.display_color && <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: v.display_color }} />}
+                                  <span>{label}{v.sku ? ` · SKU: ${v.sku}` : ''} · Stock: {v.stock_quantity}</span>
+                                </div>
                               </div>
                               <span className="text-xs font-semibold text-foreground">${price.toFixed(2)}</span>
                             </button>
