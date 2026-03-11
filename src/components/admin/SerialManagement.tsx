@@ -654,13 +654,24 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
 
           {selectedProduct && (
             <div className="flex items-start gap-3.5">
-              {selectedProduct.icon_url ? (
-                <img src={selectedProduct.icon_url} className="w-12 h-12 rounded-xl object-cover border border-border/40 shadow-sm ring-2 ring-background" alt="" />
-              ) : (
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center ring-2 ring-background shadow-sm">
-                  <Package className="w-5.5 h-5.5 text-primary" />
-                </div>
-              )}
+              {/* Show selected variant image if available, otherwise product icon */}
+              {(() => {
+                const sv = selectedVariantId ? selectedProduct.variants.find(v => v.id === selectedVariantId) : null;
+                if (sv?.variant_image) {
+                  return <img src={sv.variant_image} className="w-12 h-12 rounded-xl object-cover border border-border/40 shadow-sm ring-2 ring-background" alt="" />;
+                }
+                if (sv?.display_color) {
+                  return <span className="w-12 h-12 rounded-xl flex-shrink-0 border border-border/30 shadow-sm ring-2 ring-background" style={{ backgroundColor: sv.display_color }} />;
+                }
+                if (selectedProduct.icon_url) {
+                  return <img src={selectedProduct.icon_url} className="w-12 h-12 rounded-xl object-cover border border-border/40 shadow-sm ring-2 ring-background" alt="" />;
+                }
+                return (
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center ring-2 ring-background shadow-sm">
+                    <Package className="w-5.5 h-5.5 text-primary" />
+                  </div>
+                );
+              })()}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-base font-semibold truncate">{selectedProduct.name}</h3>
@@ -673,13 +684,12 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                   if (!sv) return null;
                   return (
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      {sv.variant_image ? (
-                        <img src={sv.variant_image} alt="" className="w-4 h-4 rounded object-cover flex-shrink-0 border border-border/40" />
-                      ) : sv.display_color ? (
+                      {sv.display_color && !sv.variant_image && (
                         <span className="w-3 h-3 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: sv.display_color }} />
-                      ) : null}
+                      )}
                       <p className="text-xs text-muted-foreground">
                         {Object.values(sv.combination || {}).join(" · ")}
+                        {sv.sku ? ` · ${sv.sku}` : ''}
                       </p>
                     </div>
                   );
