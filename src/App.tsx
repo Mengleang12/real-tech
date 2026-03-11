@@ -12,6 +12,7 @@ import { RequireCustomerAuth } from "@/components/RequireCustomerAuth";
 import { FlyToCartAnimation } from "@/components/FlyToCartAnimation";
 import { CartSheet } from "@/components/CartSheet";
 import { MaintenancePage } from "@/components/MaintenancePage";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import Index from "./pages/Index";
 
 // Lazy load non-critical pages
