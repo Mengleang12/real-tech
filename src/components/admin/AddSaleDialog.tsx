@@ -668,7 +668,16 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
                       <div className="grid grid-cols-[1fr_80px_100px_80px_32px] gap-1 px-3 py-2 items-center">
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{item.product.name}</p>
-                          {variantLabel && <p className="text-[10px] text-muted-foreground">{variantLabel}</p>}
+                          {variantLabel && (
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              {variant?.variant_image ? (
+                                <img src={variant.variant_image} alt="" className="w-3.5 h-3.5 rounded object-cover flex-shrink-0 border border-border/40" />
+                              ) : variant?.display_color ? (
+                                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: variant.display_color }} />
+                              ) : null}
+                              <span>{variantLabel}</span>
+                            </div>
+                          )}
                           <p className="text-[10px] text-muted-foreground">${item.unit_price.toFixed(2)} each</p>
                         </div>
                         <div className="flex items-center gap-0.5 justify-center">
