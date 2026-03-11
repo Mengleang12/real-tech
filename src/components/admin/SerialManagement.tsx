@@ -689,12 +689,17 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                   <button
                     key={v.id}
                     onClick={() => onSelectVariant(v.id)}
-                    className={`px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-200 cursor-pointer ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-200 cursor-pointer ${
                       isActive
                         ? 'border-primary/40 bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]'
                         : 'border-border/60 bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
                     }`}
                   >
+                    {v.variant_image ? (
+                      <img src={v.variant_image} alt="" className="w-4 h-4 rounded-full object-cover flex-shrink-0 border border-border/40" />
+                    ) : v.display_color ? (
+                      <span className="w-3 h-3 rounded-full flex-shrink-0 border border-border/40" style={{ backgroundColor: v.display_color }} />
+                    ) : null}
                     {Object.values(v.combination).join(" / ")}
                   </button>
                 );
