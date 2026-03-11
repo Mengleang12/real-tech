@@ -132,6 +132,7 @@ export interface Product {
   brand_id?: number;
   is_featured: boolean;
   is_popular: boolean;
+  is_visible: boolean;
   screenshots?: ProductScreenshot[];
   videos?: ProductVideo[];
   category_relation?: Category;
@@ -1059,6 +1060,7 @@ export interface StockProduct {
   icon_url?: string;
   category?: string;
   brand?: string;
+  is_visible: boolean;
   variants: {
     id: number;
     combination: Record<string, string>;
@@ -1148,6 +1150,14 @@ export const salesApi = {
 
   bulkUpdateStock: async (updates: { product_id: number; variant_id?: number; stock_quantity: number }[]): Promise<{ success: boolean; message: string; updated_count: number }> => {
     return apiRequest('admin/sales/stock/bulk', { method: 'POST', body: { updates } });
+  },
+
+  toggleProductVisibility: async (productId: number): Promise<{ success: boolean; is_visible: boolean; message: string }> => {
+    return apiRequest(`admin/sales/stock/${productId}/visibility`, { method: 'PATCH' });
+  },
+
+  toggleVariantActive: async (productId: number, variantId: number): Promise<{ success: boolean; is_active: boolean; message: string }> => {
+    return apiRequest(`admin/sales/stock/${productId}/variants/${variantId}/toggle`, { method: 'PATCH' });
   },
 
   searchCustomers: async (q: string): Promise<{ customers: SaleCustomer[] }> => {

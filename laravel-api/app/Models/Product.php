@@ -21,11 +21,13 @@ class Product extends Model
         'brand_id',
         'is_featured',
         'is_popular',
+        'is_visible',
     ];
 
     protected $casts = [
         'is_featured' => 'boolean',
         'is_popular' => 'boolean',
+        'is_visible' => 'boolean',
     ];
 
     public function screenshots(): HasMany

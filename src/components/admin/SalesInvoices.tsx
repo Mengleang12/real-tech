@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, ShoppingCart,
-  FileText, Eye, Package, CheckCircle, Clock, Printer, Pencil,
+  FileText, Eye, EyeOff, Package, CheckCircle, Clock, Printer, Pencil,
   AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield, CreditCard, Tag, ScanBarcode, StickyNote
 } from "lucide-react";
 import { AddSerialsForProductDialog } from "./SerialManagement";
@@ -247,6 +247,27 @@ const StockManagement = () => {
     onError: () => toast.error("Failed to update stock"),
   });
 
+  const visibilityMutation = useMutation({
+    mutationFn: (productId: number) => salesApi.toggleProductVisibility(productId),
+    onSuccess: (data) => {
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: () => toast.error("Failed to toggle visibility"),
+  });
+
+  const variantToggleMutation = useMutation({
+    mutationFn: ({ productId, variantId }: { productId: number; variantId: number }) =>
+      salesApi.toggleVariantActive(productId, variantId),
+    onSuccess: (data) => {
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: () => toast.error("Failed to toggle variant"),
+  });
+
   const stockProducts = stockData?.products || [];
   const stockPagination = stockData?.pagination;
 
@@ -331,7 +352,7 @@ const StockManagement = () => {
             const price = product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0) : 0;
 
             return (
-              <div key={product.id} className="border border-border/60 rounded-xl bg-card overflow-hidden hover:shadow-sm transition-shadow">
+              <div key={product.id} className={`border border-border/60 rounded-xl bg-card overflow-hidden hover:shadow-sm transition-shadow ${!product.is_visible ? 'opacity-60' : ''}`}>
                 {/* Top bar color indicator */}
                 <div className={`h-0.5 ${getStockColor(status)}`} />
 
@@ -349,6 +370,7 @@ const StockManagement = () => {
                       <div className="flex items-center gap-2">
                         <h4 className="text-sm font-semibold text-foreground truncate">{product.name}</h4>
                         {getStockBadge(status)}
+                        {!product.is_visible && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30">Hidden</Badge>}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xs text-muted-foreground">{product.category || "Uncategorized"}</span>
@@ -356,11 +378,21 @@ const StockManagement = () => {
                         <span className="text-xs font-medium text-foreground">${price.toFixed(2)}</span>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className={`text-lg font-bold tabular-nums ${status === 'out_of_stock' ? 'text-destructive' : status === 'low_stock' ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
-                        {totalStock}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">total units</p>
+                    <div className="flex items-start gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => visibilityMutation.mutate(product.id)}
+                        disabled={visibilityMutation.isPending}
+                        className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                        title={product.is_visible ? "Hide from store" : "Show in store"}
+                      >
+                        {product.is_visible ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                      </button>
+                      <div className="text-right">
+                        <p className={`text-lg font-bold tabular-nums ${status === 'out_of_stock' ? 'text-destructive' : status === 'low_stock' ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
+                          {totalStock}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">total units</p>
+                      </div>
                     </div>
                   </div>
 
@@ -381,24 +413,35 @@ const StockManagement = () => {
                         const label = Object.values(v.combination).join(" / ");
                         const vStatus = getStockStatus(v.stock_quantity);
                         return (
-                          <button
-                            key={v.id}
-                            onClick={() => setEditingStock({ productId: product.id, variantId: v.id, qty: v.stock_quantity })}
-                            className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg border transition-colors hover:bg-muted/80 cursor-pointer ${
-                              vStatus === 'out_of_stock' ? 'border-destructive/30 bg-destructive/5' :
-                              vStatus === 'low_stock' ? 'border-amber-500/30 bg-amber-500/5' :
-                              'border-border/60 bg-muted/30'
-                            }`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStockColor(vStatus)}`} />
-                            <span className="text-muted-foreground">{label}</span>
-                            <span className={`font-semibold tabular-nums ${
-                              vStatus === 'out_of_stock' ? 'text-destructive' :
-                              vStatus === 'low_stock' ? 'text-amber-600 dark:text-amber-400' :
-                              'text-foreground'
-                            }`}>{v.stock_quantity}</span>
-                            <Pencil className="w-2.5 h-2.5 text-muted-foreground/50" />
-                          </button>
+                          <div key={v.id} className={`inline-flex items-center gap-1 text-[11px] rounded-lg border transition-colors ${
+                            !v.is_active ? 'border-muted-foreground/20 bg-muted/20 opacity-50' :
+                            vStatus === 'out_of_stock' ? 'border-destructive/30 bg-destructive/5' :
+                            vStatus === 'low_stock' ? 'border-amber-500/30 bg-amber-500/5' :
+                            'border-border/60 bg-muted/30'
+                          }`}>
+                            <button
+                              onClick={() => setEditingStock({ productId: product.id, variantId: v.id, qty: v.stock_quantity })}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 hover:bg-muted/80 rounded-l-lg cursor-pointer"
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${v.is_active ? getStockColor(vStatus) : 'bg-muted-foreground/30'}`} />
+                              <span className="text-muted-foreground">{label}</span>
+                              <span className={`font-semibold tabular-nums ${
+                                !v.is_active ? 'text-muted-foreground' :
+                                vStatus === 'out_of_stock' ? 'text-destructive' :
+                                vStatus === 'low_stock' ? 'text-amber-600 dark:text-amber-400' :
+                                'text-foreground'
+                              }`}>{v.stock_quantity}</span>
+                              <Pencil className="w-2.5 h-2.5 text-muted-foreground/50" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); variantToggleMutation.mutate({ productId: product.id, variantId: v.id }); }}
+                              disabled={variantToggleMutation.isPending}
+                              className="px-1.5 py-1 hover:bg-muted/80 rounded-r-lg cursor-pointer border-l border-border/40"
+                              title={v.is_active ? "Hide variant" : "Show variant"}
+                            >
+                              {v.is_active ? <Eye className="w-3 h-3 text-muted-foreground/60" /> : <EyeOff className="w-3 h-3 text-muted-foreground/40" />}
+                            </button>
+                          </div>
                         );
                       })}
                     </div>

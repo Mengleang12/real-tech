@@ -464,7 +464,8 @@ class SaleController extends Controller
         $products = $query->orderBy('name')->paginate($perPage);
 
         $items = $products->getCollection()->map(function ($product) {
-            $variants = $product->variants->where('is_active', true);
+            // Show all variants in admin stock overview (including inactive)
+            $variants = $product->variants;
             $totalStock = $variants->count() > 0
                 ? $variants->sum('stock_quantity')
                 : ($product->stock_quantity ?? 0);
@@ -477,6 +478,7 @@ class SaleController extends Controller
                 'price' => $product->price,
                 'category' => $product->categoryRelation?->name ?? $product->category,
                 'brand' => $product->brand?->name,
+                'is_visible' => (bool) $product->is_visible,
                 'stock_quantity' => $product->stock_quantity,
                 'low_stock_threshold' => $threshold,
                 'stock_status' => $totalStock <= 0 ? 'out_of_stock' : ($totalStock <= $threshold ? 'low_stock' : 'in_stock'),
@@ -675,5 +677,61 @@ class SaleController extends Controller
                 $product->updateStockStatus();
             }
         }
+    }
+    }
+
+    /**
+     * Toggle product visibility in the store
+     */
+    public function toggleProductVisibility(Request $request, $productId)
+    {
+        $product = Product::find($productId);
+        if (!$product) {
+            return response()->json(['error' => 'Product not found'], 404);
+        }
+
+        $product->update(['is_visible' => !$product->is_visible]);
+
+        $this->logActivity($request, 'product_visibility_toggle', [
+            'product_id' => $productId,
+            'product_name' => $product->name,
+            'is_visible' => $product->is_visible,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'is_visible' => (bool) $product->is_visible,
+            'message' => $product->is_visible ? 'Product is now visible' : 'Product is now hidden',
+        ]);
+    }
+
+    /**
+     * Toggle variant active status
+     */
+    public function toggleVariantActive(Request $request, $productId, $variantId)
+    {
+        $variant = ProductVariant::where('id', $variantId)
+            ->where('product_id', $productId)
+            ->first();
+
+        if (!$variant) {
+            return response()->json(['error' => 'Variant not found'], 404);
+        }
+
+        $variant->update(['is_active' => !$variant->is_active]);
+
+        $product = Product::find($productId);
+        $this->logActivity($request, 'variant_visibility_toggle', [
+            'product_id' => $productId,
+            'product_name' => $product?->name,
+            'variant_id' => $variantId,
+            'is_active' => $variant->is_active,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'is_active' => (bool) $variant->is_active,
+            'message' => $variant->is_active ? 'Variant is now active' : 'Variant is now hidden',
+        ]);
     }
 }

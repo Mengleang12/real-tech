@@ -17,7 +17,8 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['screenshots', 'categoryRelation', 'brand', 'attributeValues.attribute', 'variants']);
+        $query = Product::with(['screenshots', 'categoryRelation', 'brand', 'attributeValues.attribute', 'variants'])
+            ->where('is_visible', true);
 
         if ($request->has('category_id') && is_numeric($request->category_id)) {
             $query->where('category_id', (int) $request->category_id);
@@ -159,6 +160,7 @@ class ProductController extends Controller
             'brand_id' => $request->brand_id,
             'is_featured' => $request->is_featured ?? false,
             'is_popular' => $request->is_popular ?? false,
+            'is_visible' => $request->is_visible ?? true,
         ]);
 
         if ($request->has('screenshots') && is_array($request->screenshots)) {
@@ -240,6 +242,7 @@ class ProductController extends Controller
             'brand_id' => $request->has('brand_id') ? $request->brand_id : $product->brand_id,
             'is_featured' => $request->is_featured ?? $product->is_featured,
             'is_popular' => $request->is_popular ?? $product->is_popular,
+            'is_visible' => $request->has('is_visible') ? $request->is_visible : $product->is_visible,
         ]);
 
         if ($request->has('screenshots') && is_array($request->screenshots)) {
