@@ -426,8 +426,8 @@ const StockManagement = () => {
                               'border-border/60 bg-card'
                             }`}
                             style={v.display_color && v.is_active ? {
-                              borderColor: `${v.display_color}40`,
-                              backgroundColor: `${v.display_color}0A`,
+                              borderColor: v.display_color,
+                              backgroundColor: `${v.display_color}12`,
                             } : undefined}
                           >
                             <div className="flex items-start gap-2.5">
