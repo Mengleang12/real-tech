@@ -132,6 +132,7 @@ export interface Product {
   brand_id?: number;
   is_featured: boolean;
   is_popular: boolean;
+  is_visible: boolean;
   screenshots?: ProductScreenshot[];
   videos?: ProductVideo[];
   category_relation?: Category;
