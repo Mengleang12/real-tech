@@ -365,7 +365,7 @@ const ProductDetail = () => {
     />
     <div className="min-h-screen bg-background">
       {/* Sidebar - matching home page */}
-      <aside className="fixed inset-y-0 left-0 z-50 w-[220px] bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex-col hidden lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-50 w-[220px] bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex-col hidden lg:flex pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
         {/* Logo */}
         <div className="h-[70px] flex items-center justify-center px-4 border-b border-sidebar-border/60">
           <Link to="/">
