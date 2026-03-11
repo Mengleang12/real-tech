@@ -17,7 +17,8 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['screenshots', 'categoryRelation', 'brand', 'attributeValues.attribute', 'variants']);
+        $query = Product::with(['screenshots', 'categoryRelation', 'brand', 'attributeValues.attribute', 'variants'])
+            ->where('is_visible', true);
 
         if ($request->has('category_id') && is_numeric($request->category_id)) {
             $query->where('category_id', (int) $request->category_id);
