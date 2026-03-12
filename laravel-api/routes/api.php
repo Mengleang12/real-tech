@@ -34,6 +34,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SliderController;
 use App\Http\Controllers\ProductSerialController;
 use App\Http\Controllers\OcrController;
+use App\Http\Controllers\AdminNoteController;
 
 /*
 |--------------------------------------------------------------------------
