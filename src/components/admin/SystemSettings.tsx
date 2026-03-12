@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { clearBrandingCache } from '@/lib/invoice-branding';
 import { Settings2, Globe, Shield, Database, Server, Loader2, Palette, ImageIcon, Phone, MapPin, Share2, FileText, Upload, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ interface SystemSettings {
   enable_analytics: boolean;
   invoice_footer_text: string;
   payment_qr_urls: string[];
+  payment_qr_size: number;
 }
 
 function hexToHsl(hex: string): string {
@@ -81,6 +83,7 @@ const defaultSettings: SystemSettings = {
   enable_analytics: true,
   invoice_footer_text: 'Thank you for your business!',
   payment_qr_urls: [],
+  payment_qr_size: 72,
 };
 
 function getAuthHeaders(): Record<string, string> {
@@ -180,6 +183,7 @@ export function SystemSettingsPanel() {
           enable_analytics: settings.enable_analytics,
           invoice_footer_text: settings.invoice_footer_text,
           payment_qr_urls: settings.payment_qr_urls,
+          payment_qr_size: settings.payment_qr_size,
         }),
       });
       if (!res.ok) {
@@ -458,6 +462,13 @@ export function SystemSettingsPanel() {
                   )}
                 </div>
                 <input ref={qrInputRef} type="file" accept="image/*" className="hidden" onChange={handleQrUpload} />
+              </div>
+              <div>
+                <Label className="text-xs">QR Size on Invoice (px)</Label>
+                <div className="flex items-center gap-3 mt-1">
+                  <NumberInput value={settings.payment_qr_size} onChange={v => update('payment_qr_size', v)} min={40} max={200} step={4} />
+                  <span className="text-xs text-muted-foreground">{settings.payment_qr_size}×{settings.payment_qr_size}px</span>
+                </div>
               </div>
             </div>
           </div>
