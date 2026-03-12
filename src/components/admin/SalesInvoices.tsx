@@ -840,7 +840,7 @@ const InvoicesTab = () => {
         .footer-thanks{font-size:11px;font-weight:600;color:#111827}
         .footer-brand{font-size:9px;color:#9ca3af;margin-top:2px}
         .qr-section{display:flex;justify-content:center;gap:12px;margin-top:8px}
-        .qr-section img{width:72px;height:72px;object-fit:contain;border:1px solid #e5e7eb;border-radius:6px;padding:2px;background:#fff}
+        .qr-section img{width:${branding.payment_qr_size || 72}px;height:${branding.payment_qr_size || 72}px;object-fit:contain;border:1px solid #e5e7eb;border-radius:6px;padding:2px;background:#fff}
         @media print{body{padding:0}.page{max-width:100%}}
       </style></head><body>
       <div class="page">
