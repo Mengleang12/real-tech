@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, Users, BarChart3, Bell, Shield, Activity, 
   UserX, Tag, Play, Home, Menu, Download, Star, TrendingUp, Settings2, Loader2, ClipboardPaste, ShieldAlert, DollarSign,
   FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw, FileText, Pencil,
-  ShoppingBag, Truck, Wand2, Image, User, Lock, Eye, EyeOff, ScanBarcode
+  ShoppingBag, Truck, Wand2, Image, User, Lock, Eye, EyeOff, ScanBarcode, StickyNote
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,7 @@ import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabel
 import { SalesReport } from "@/components/admin/SalesReport";
 import { SerialManagement } from "@/components/admin/SerialManagement";
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
+import { NotesManagement } from "@/components/admin/NotesManagement";
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -700,7 +701,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "sliders" | "users" | "staff_users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "sliders" | "users" | "staff_users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties" | "notes";
 
 interface NavItem {
   id: AdminTab;
@@ -762,6 +763,7 @@ const navGroups: NavGroup[] = [
       { id: "notifications", label: "Notifications", icon: Bell, permission: "notifications.manage" },
       { id: "activity", label: "Activity", icon: Activity, permission: "activity.view" },
       { id: "status", label: "Ban / Suspend", icon: UserX, permission: "user_status.manage" },
+      { id: "notes", label: "Notes", icon: StickyNote, permission: "activity.view" },
       { id: "settings", label: "Settings", icon: Settings2, permission: "settings.manage" },
     ],
   },
@@ -1345,6 +1347,7 @@ const AdminDashboard = () => {
           {activeTab === "coupons" && <CouponManagement />}
           {activeTab === "warranties" && <WarrantyManagement />}
           {activeTab === "settings" && <SystemSettingsPanel />}
+          {activeTab === "notes" && <NotesManagement />}
         </main>
       </div>
     </div>
