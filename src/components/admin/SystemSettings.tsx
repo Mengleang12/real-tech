@@ -31,6 +31,7 @@ interface SystemSettings {
   enable_analytics: boolean;
   invoice_footer_text: string;
   payment_qr_urls: string[];
+  payment_qr_size: number;
 }
 
 function hexToHsl(hex: string): string {
