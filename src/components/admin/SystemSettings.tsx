@@ -182,6 +182,7 @@ export function SystemSettingsPanel() {
           enable_analytics: settings.enable_analytics,
           invoice_footer_text: settings.invoice_footer_text,
           payment_qr_urls: settings.payment_qr_urls,
+          payment_qr_size: settings.payment_qr_size,
         }),
       });
       if (!res.ok) {
