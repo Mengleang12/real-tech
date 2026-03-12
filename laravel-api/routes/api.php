@@ -114,6 +114,12 @@ Route::middleware('auth.admin')->group(function () {
     // Activity logs
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index']);
 
+    // Admin notes
+    Route::get('/admin/notes', [AdminNoteController::class, 'index']);
+    Route::post('/admin/notes', [AdminNoteController::class, 'store']);
+    Route::put('/admin/notes/{id}', [AdminNoteController::class, 'update']);
+    Route::delete('/admin/notes/{id}', [AdminNoteController::class, 'destroy']);
+
 });
 
 // Admin-only routes (no moderator access)
