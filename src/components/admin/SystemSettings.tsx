@@ -462,6 +462,13 @@ export function SystemSettingsPanel() {
                 </div>
                 <input ref={qrInputRef} type="file" accept="image/*" className="hidden" onChange={handleQrUpload} />
               </div>
+              <div>
+                <Label className="text-xs">QR Size on Invoice (px)</Label>
+                <div className="flex items-center gap-3 mt-1">
+                  <NumberInput value={settings.payment_qr_size} onChange={v => update('payment_qr_size', v)} min={40} max={200} step={4} />
+                  <span className="text-xs text-muted-foreground">{settings.payment_qr_size}×{settings.payment_qr_size}px</span>
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
