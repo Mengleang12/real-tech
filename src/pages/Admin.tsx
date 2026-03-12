@@ -1347,6 +1347,7 @@ const AdminDashboard = () => {
           {activeTab === "coupons" && <CouponManagement />}
           {activeTab === "warranties" && <WarrantyManagement />}
           {activeTab === "settings" && <SystemSettingsPanel />}
+          {activeTab === "notes" && <NotesManagement />}
         </main>
       </div>
     </div>
