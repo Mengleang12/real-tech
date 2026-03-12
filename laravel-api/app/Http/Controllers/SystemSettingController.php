@@ -106,6 +106,7 @@ class SystemSettingController extends Controller
             'invoice_footer_text' => SystemSetting::getValue('invoice_footer_text', 'Thank you for your purchase!'),
             'default_currency' => SystemSetting::getValue('default_currency', 'USD'),
             'payment_qr_urls' => json_decode($qrRaw, true) ?: [],
+            'payment_qr_size' => (int) SystemSetting::getValue('payment_qr_size', '72'),
         ]);
     }
 
