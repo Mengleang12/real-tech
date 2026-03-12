@@ -11,6 +11,7 @@ export interface InvoiceBranding {
   invoice_footer_text: string;
   default_currency: string;
   payment_qr_urls: string[];
+  payment_qr_size: number;
 }
 
 const defaults: InvoiceBranding = {
