@@ -733,6 +733,7 @@ const navGroups: NavGroup[] = [
       { id: "stock", label: "Stock", icon: Boxes, permission: "orders.view" },
       { id: "warranties", label: "Warranty", icon: Shield, permission: "orders.view" },
       { id: "reports", label: "Reports", icon: TrendingUp, permission: "orders.view" },
+      { id: "notes", label: "Notes", icon: StickyNote, permission: "activity.view" },
     ],
   },
   {
