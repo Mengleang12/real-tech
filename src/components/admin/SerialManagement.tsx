@@ -729,10 +729,10 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
                           : 'border-border/50 bg-card hover:bg-muted/30 hover:border-border'
                     }`}
                     style={!isActive && v.display_color ? {
-                      borderColor: `${v.display_color}30`,
-                      backgroundColor: `${v.display_color}06`,
+                      borderColor: v.display_color,
+                      backgroundColor: `${v.display_color}0a`,
                     } : isActive && v.display_color ? {
-                      borderColor: `${v.display_color}60`,
+                      borderColor: v.display_color,
                       backgroundColor: `${v.display_color}12`,
                     } : undefined}
                   >
