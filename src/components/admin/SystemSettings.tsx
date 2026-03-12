@@ -82,6 +82,7 @@ const defaultSettings: SystemSettings = {
   enable_analytics: true,
   invoice_footer_text: 'Thank you for your business!',
   payment_qr_urls: [],
+  payment_qr_size: 72,
 };
 
 function getAuthHeaders(): Record<string, string> {
