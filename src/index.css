@@ -265,11 +265,15 @@
 }
 
 @layer utilities {
-  .scrollbar-hide {
+  .scrollbar-hide,
+  [data-radix-dialog-content] *,
+  [data-radix-dialog-content] {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
+  .scrollbar-hide::-webkit-scrollbar,
+  [data-radix-dialog-content] *::-webkit-scrollbar,
+  [data-radix-dialog-content]::-webkit-scrollbar {
     display: none;
   }
 
