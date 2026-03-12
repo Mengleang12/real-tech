@@ -25,6 +25,7 @@ const defaults: InvoiceBranding = {
   invoice_footer_text: 'Thank you for your purchase!',
   default_currency: 'USD',
   payment_qr_urls: [],
+  payment_qr_size: 72,
 };
 
 let cache: InvoiceBranding | null = null;
