@@ -1325,7 +1325,7 @@ const AdminDashboard = () => {
       </aside>
 
       {/* Change Password Dialog */}
-      <AdminDialog open={showChangePassword} onOpenChange={setShowChangePassword} title="Change Password" maxWidth="sm">
+      <AdminDialog open={showChangePassword} onOpenChange={setShowChangePassword} title="Change Password">
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Current Password</Label>
