@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Printer, Plus, Minus, Trash2, Loader2, Package, Ruler, Columns3, StickyNote } from "lucide-react";
+import { Printer, Plus, Minus, Trash2, Loader2, Package, Ruler, Columns3, StickyNote, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { salesApi, serialsApi, type SaleProduct, type ProductSerial } from "@/lib/api";
 import JsBarcode from "jsbarcode";
+import { initPrinterService, printLabels, isPrinterServiceAvailable, type PrinterStatus } from "@/lib/printer-service";
 
 interface LabelItem {
   product: SaleProduct;
