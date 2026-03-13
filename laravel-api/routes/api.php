@@ -88,6 +88,8 @@ Route::middleware('auth.admin')->group(function () {
     
     
     Route::post('/upload', [UploadController::class, 'store']);
+    Route::post('/admin/upload-avatar', [UploadController::class, 'uploadAdminAvatar']);
+    Route::put('/admin/profile', [AuthController::class, 'updateProfile']);
 
     // Categories management
     Route::post('/admin/categories', [CategoryController::class, 'store']);
