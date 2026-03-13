@@ -242,6 +242,48 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
         )}
       </div>
 
+      {/* Printer connection status */}
+      <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+        {checkingPrinter ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Detecting printer...
+          </div>
+        ) : printerStatus.available ? (
+          <>
+            <Wifi className="w-4 h-4 text-green-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-green-600">Printer Connected</span>
+              </div>
+              {printerStatus.printers.length > 1 ? (
+                <Select value={selectedPrinter} onValueChange={setSelectedPrinter}>
+                  <SelectTrigger className="h-7 mt-1 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {printerStatus.printers.map(p => (
+                      <SelectItem key={p} value={p}>{p}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-xs text-muted-foreground truncate">{selectedPrinter}</p>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <WifiOff className="w-4 h-4 text-destructive shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs font-medium text-destructive">Printer Not Detected</p>
+              <p className="text-[10px] text-muted-foreground">Install the Detonger P1P driver & connect the printer via USB</p>
+            </div>
+          </>
+        )}
+        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={checkPrinterService} disabled={checkingPrinter}>
+          <RefreshCw className={`w-3.5 h-3.5 ${checkingPrinter ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
+
       {/* Label settings */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
@@ -270,19 +312,6 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
               );
             })}
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Columns3 className="w-3.5 h-3.5 text-muted-foreground" />
-          <Label className="text-xs text-muted-foreground whitespace-nowrap">Columns</Label>
-          <Select value={labelCols.toString()} onValueChange={v => setLabelCols(Number(v))}>
-            <SelectTrigger className="h-8 w-20 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="3">3</SelectItem>
-              <SelectItem value="4">4</SelectItem>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="6">6</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
         {totalLabels > 0 && (
           <Badge variant="secondary" className="text-xs">{totalLabels} label{totalLabels > 1 ? "s" : ""}</Badge>
