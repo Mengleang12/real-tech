@@ -660,6 +660,8 @@ class AdminUserController extends Controller
             'email' => 'required|email|unique:customers,email',
             'full_name' => 'nullable|string|max:100',
             'phone' => 'nullable|string|max:20',
+            'telegram' => 'nullable|string|max:100',
+            'facebook_name' => 'nullable|string|max:100',
             'password' => 'required|string|min:6',
         ]);
 
@@ -667,6 +669,8 @@ class AdminUserController extends Controller
             'email' => $request->email,
             'full_name' => $request->full_name,
             'phone' => $request->phone,
+            'telegram' => $request->telegram,
+            'facebook_name' => $request->facebook_name,
             'password_hash' => bcrypt($request->password),
         ]);
 
