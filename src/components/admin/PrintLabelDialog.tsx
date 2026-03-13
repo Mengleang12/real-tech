@@ -35,7 +35,30 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
   const [labelCols, setLabelCols] = useState(3);
   const [labelWidth, setLabelWidth] = useState(30);
   const [labelHeight, setLabelHeight] = useState(20);
+  const [printing, setPrinting] = useState(false);
+  const [printerStatus, setPrinterStatus] = useState<PrinterStatus>({ available: false, printers: [] });
+  const [selectedPrinter, setSelectedPrinter] = useState<string>("");
+  const [checkingPrinter, setCheckingPrinter] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+
+  // Initialize printer service on mount
+  useEffect(() => {
+    checkPrinterService();
+  }, []);
+
+  const checkPrinterService = async () => {
+    setCheckingPrinter(true);
+    try {
+      const status = await initPrinterService();
+      setPrinterStatus(status);
+      if (status.available && status.printerName && !selectedPrinter) {
+        setSelectedPrinter(status.printerName);
+      }
+    } catch {
+      setPrinterStatus({ available: false, printers: [] });
+    }
+    setCheckingPrinter(false);
+  };
 
   const handleSearch = useCallback(async (q: string) => {
     setSearch(q);
