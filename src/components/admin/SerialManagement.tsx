@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
+import { initPrinterService, isPrinterServiceAvailable, printLabels, type LabelData } from "@/lib/printer-service";
 
 // ─── Print Serial Label Utility ─────────────────────────────────────────────
 type PrintableSerial = {
@@ -26,7 +27,43 @@ type PrintableSerial = {
   variant?: { combination: Record<string, string>; price_adjustment?: number; sku?: string };
 };
 
-function printSerialLabels(serials: PrintableSerial[]) {
+// Try to init printer service on load
+let printerInitPromise: Promise<any> | null = null;
+function ensurePrinterInit() {
+  if (!printerInitPromise) {
+    printerInitPromise = initPrinterService();
+  }
+  return printerInitPromise;
+}
+
+async function printSerialLabelsSDK(serials: PrintableSerial[]): Promise<boolean> {
+  const status = await ensurePrinterInit();
+  if (!status.available || !status.printerName) return false;
+
+  const labels: LabelData[] = serials.map(s => ({
+    name: s.product?.name || "Product",
+    variant: s.variant ? Object.values(s.variant.combination).join(" / ") : "",
+    barcode: s.barcode || s.serial_number,
+    serial: s.serial_number,
+    price: s.variant?.price_adjustment ?? 0,
+  }));
+
+  const result = await printLabels({
+    printerName: status.printerName,
+    labelWidth: 40,
+    labelHeight: 30,
+    labels,
+  });
+
+  if (result.success) {
+    toast.success(`Printed ${result.printed} label${result.printed > 1 ? 's' : ''} directly`);
+    return true;
+  }
+  console.warn("SDK print failed, falling back:", result.error);
+  return false;
+}
+
+function printSerialLabelsBrowser(serials: PrintableSerial[]) {
   if (serials.length === 0) return;
 
   const iframe = document.createElement("iframe");
@@ -102,6 +139,15 @@ function printSerialLabels(serials: PrintableSerial[]) {
     iframe.contentWindow?.print();
     setTimeout(() => document.body.removeChild(iframe), 2000);
   }, 300);
+}
+
+async function printSerialLabels(serials: PrintableSerial[]) {
+  if (serials.length === 0) return;
+  // Try SDK first, fall back to browser print dialog
+  const sdkSuccess = await printSerialLabelsSDK(serials);
+  if (!sdkSuccess) {
+    printSerialLabelsBrowser(serials);
+  }
 }
 
 function printSerialLabel(serial: PrintableSerial) {
