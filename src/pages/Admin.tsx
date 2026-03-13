@@ -1279,19 +1279,44 @@ const AdminDashboard = () => {
       )}>
         {/* Sidebar Header */}
         <div className="p-4 border-b border-border flex items-center gap-3">
-          {user?.avatar_url ? (
-            <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
-              <img src={user.avatar_url} alt="" className="w-full h-full object-cover border-2 border-border rounded-full" />
+          <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+          <button
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="relative shrink-0 group"
+            title="Change profile picture"
+          >
+            {(() => {
+              const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+              const avatarUrl = adminUser?.avatar_url;
+              return avatarUrl ? (
+                <div className="w-9 h-9 rounded-full overflow-hidden">
+                  <img src={avatarUrl} alt="" className="w-full h-full object-cover border-2 border-border rounded-full" />
+                </div>
+              ) : user?.avatar_url ? (
+                <div className="w-9 h-9 rounded-full overflow-hidden">
+                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover border-2 border-border rounded-full" />
+                </div>
+              ) : (
+                <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-sm font-semibold text-primary-foreground">
+                    {(user?.full_name || user?.email || "A").charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              );
+            })()}
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploadingAvatar ? (
+                <Loader2 className="w-4 h-4 text-white animate-spin" />
+              ) : (
+                <Camera className="w-3.5 h-3.5 text-white" />
+              )}
             </div>
-          ) : (
-            <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center shrink-0">
-              <span className="text-sm font-semibold text-primary-foreground">
-                {(user?.full_name || user?.email || "A").charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
+          </button>
           <div className="min-w-0">
-            <p className="font-semibold text-sm leading-none truncate">{user?.full_name || user?.email || "Admin"}</p>
+            <p className="font-semibold text-sm leading-none truncate">
+              {(() => { const au = JSON.parse(localStorage.getItem('admin_user') || '{}'); return au?.full_name || au?.username || user?.full_name || user?.email || "Admin"; })()}
+            </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {isSuperAdmin ? "Super Admin" : isAdmin ? "Administrator" : "Moderator"}
             </p>
