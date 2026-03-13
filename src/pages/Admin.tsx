@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, Users, BarChart3, Bell, Shield, Activity, 
   UserX, Tag, Play, Home, Menu, Download, Star, TrendingUp, Settings2, Loader2, ClipboardPaste, ShieldAlert, DollarSign,
   FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw, FileText, Pencil,
-  ShoppingBag, Truck, Wand2, Image, User, Lock, Eye, EyeOff, ScanBarcode, StickyNote
+  ShoppingBag, Truck, Wand2, Image, User, Lock, Eye, EyeOff, ScanBarcode, StickyNote, Camera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1198,6 +1198,46 @@ const AdminDashboard = () => {
   const [pwForm, setPwForm] = useState({ current: '', new: '', confirm: '' });
   const [pwLoading, setPwLoading] = useState(false);
   const [showPw, setShowPw] = useState({ current: false, new: false, confirm: false });
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const token = localStorage.getItem('admin_api_key') || '';
+    if (!token) return toast.error("Not authenticated");
+    
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
+      const response = await fetch(`${API_BASE_URL}/api/admin/upload-avatar`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error('Upload failed');
+      const data = await response.json();
+      
+      // Update localStorage admin_user
+      const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+      adminUser.avatar_url = data.url;
+      localStorage.setItem('admin_user', JSON.stringify(adminUser));
+      
+      toast.success("Profile picture updated!");
+      // Force re-render
+      window.location.reload();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to upload avatar");
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
 
   const handleLogout = async () => {
     authApi.logout();
@@ -1239,19 +1279,44 @@ const AdminDashboard = () => {
       )}>
         {/* Sidebar Header */}
         <div className="p-4 border-b border-border flex items-center gap-3">
-          {user?.avatar_url ? (
-            <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
-              <img src={user.avatar_url} alt="" className="w-full h-full object-cover border-2 border-border rounded-full" />
+          <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+          <button
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="relative shrink-0 group"
+            title="Change profile picture"
+          >
+            {(() => {
+              const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+              const avatarUrl = adminUser?.avatar_url;
+              return avatarUrl ? (
+                <div className="w-9 h-9 rounded-full overflow-hidden">
+                  <img src={avatarUrl} alt="" className="w-full h-full object-cover border-2 border-border rounded-full" />
+                </div>
+              ) : user?.avatar_url ? (
+                <div className="w-9 h-9 rounded-full overflow-hidden">
+                  <img src={user.avatar_url} alt="" className="w-full h-full object-cover border-2 border-border rounded-full" />
+                </div>
+              ) : (
+                <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-sm font-semibold text-primary-foreground">
+                    {(user?.full_name || user?.email || "A").charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              );
+            })()}
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploadingAvatar ? (
+                <Loader2 className="w-4 h-4 text-white animate-spin" />
+              ) : (
+                <Camera className="w-3.5 h-3.5 text-white" />
+              )}
             </div>
-          ) : (
-            <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center shrink-0">
-              <span className="text-sm font-semibold text-primary-foreground">
-                {(user?.full_name || user?.email || "A").charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
+          </button>
           <div className="min-w-0">
-            <p className="font-semibold text-sm leading-none truncate">{user?.full_name || user?.email || "Admin"}</p>
+            <p className="font-semibold text-sm leading-none truncate">
+              {(() => { const au = JSON.parse(localStorage.getItem('admin_user') || '{}'); return au?.full_name || au?.username || user?.full_name || user?.email || "Admin"; })()}
+            </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {isSuperAdmin ? "Super Admin" : isAdmin ? "Administrator" : "Moderator"}
             </p>
