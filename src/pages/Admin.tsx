@@ -1211,7 +1211,8 @@ const AdminDashboard = () => {
     if (pwForm.new.length < 4) return toast.error("Password must be at least 4 characters");
     setPwLoading(true);
     try {
-      const username = localStorage.getItem('admin_username') || 'admin';
+      const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+      const username = adminUser?.username || 'admin';
       await authApi.changePassword(username, pwForm.current, pwForm.new);
       toast.success("Password changed successfully");
       setShowChangePassword(false);
