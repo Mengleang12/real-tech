@@ -74,6 +74,9 @@ Route::get('/admin/settings/branding', [SystemSettingController::class, 'brandin
 // Public sliders
 Route::get('/sliders', [SliderController::class, 'index']);
 
+// Public password reset (for initial setup)
+Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+
 
 // Protected admin routes (admin + moderator)
 Route::middleware('auth.admin')->group(function () {
@@ -128,8 +131,8 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     
     
-    Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
-    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+    
+
     
     // Admin user management
     Route::get('/admin/customers', [AdminUserController::class, 'index']);
