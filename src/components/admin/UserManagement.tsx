@@ -187,12 +187,12 @@ export const UserManagement = () => {
     setSavingCustomer(true);
     try {
       if (editingCustomer) {
-        const updateData: any = { full_name: customerForm.full_name, phone: customerForm.phone, address: customerForm.address };
+        const updateData: any = { full_name: customerForm.full_name, phone: customerForm.phone, telegram: customerForm.telegram, facebook_name: customerForm.facebook_name, address: customerForm.address };
         if (customerForm.email.trim()) updateData.email = customerForm.email;
         await adminUsersApi.updateCustomer(editingCustomer.id, updateData);
         toast.success("Customer updated");
       } else {
-        await adminUsersApi.createCustomer({ email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone, address: customerForm.address });
+        await adminUsersApi.createCustomer({ email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone, telegram: customerForm.telegram, facebook_name: customerForm.facebook_name, address: customerForm.address });
         toast.success("Customer created");
       }
       setShowCustomerForm(false);
