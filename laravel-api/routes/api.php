@@ -75,7 +75,7 @@ Route::get('/admin/settings/branding', [SystemSettingController::class, 'brandin
 Route::get('/sliders', [SliderController::class, 'index']);
 
 // Public password reset (for initial setup)
-Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+Route::get('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
 
 // Protected admin routes (admin + moderator)
