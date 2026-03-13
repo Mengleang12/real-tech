@@ -131,8 +131,8 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     
     
-    Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
-    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+    
+
     
     // Admin user management
     Route::get('/admin/customers', [AdminUserController::class, 'index']);
