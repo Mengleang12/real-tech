@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Printer, Plus, Minus, Trash2, Loader2, Package, Ruler, Columns3, StickyNote } from "lucide-react";
+import { Printer, Plus, Minus, Trash2, Loader2, Package, Ruler, Columns3, StickyNote, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { salesApi, serialsApi, type SaleProduct, type ProductSerial } from "@/lib/api";
 import JsBarcode from "jsbarcode";
+import { initPrinterService, printLabels, isPrinterServiceAvailable, type PrinterStatus } from "@/lib/printer-service";
 
 interface LabelItem {
   product: SaleProduct;
@@ -34,7 +35,30 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
   const [labelCols, setLabelCols] = useState(3);
   const [labelWidth, setLabelWidth] = useState(30);
   const [labelHeight, setLabelHeight] = useState(20);
+  const [printing, setPrinting] = useState(false);
+  const [printerStatus, setPrinterStatus] = useState<PrinterStatus>({ available: false, printers: [] });
+  const [selectedPrinter, setSelectedPrinter] = useState<string>("");
+  const [checkingPrinter, setCheckingPrinter] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+
+  // Initialize printer service on mount
+  useEffect(() => {
+    checkPrinterService();
+  }, []);
+
+  const checkPrinterService = async () => {
+    setCheckingPrinter(true);
+    try {
+      const status = await initPrinterService();
+      setPrinterStatus(status);
+      if (status.available && status.printerName && !selectedPrinter) {
+        setSelectedPrinter(status.printerName);
+      }
+    } catch {
+      setPrinterStatus({ available: false, printers: [] });
+    }
+    setCheckingPrinter(false);
+  };
 
   const handleSearch = useCallback(async (q: string) => {
     setSearch(q);
@@ -118,9 +142,14 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
 
   const totalLabels = items.reduce((sum, i) => sum + i.quantity, 0);
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (items.length === 0) {
       toast.error("Add products to print labels");
+      return;
+    }
+
+    if (!printerStatus.available || !selectedPrinter) {
+      toast.error("No printer connected. Please install the Detonger driver and refresh.");
       return;
     }
 
@@ -133,104 +162,25 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       }
     });
 
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.top = "-10000px";
-    iframe.style.left = "-10000px";
-    document.body.appendChild(iframe);
+    setPrinting(true);
+    try {
+      const result = await printLabels({
+        printerName: selectedPrinter,
+        labelWidth,
+        labelHeight,
+        labels: allLabels,
+      });
 
-    const doc = iframe.contentDocument!;
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          @page {
-            size: ${labelWidth}mm ${labelHeight}mm;
-            margin: 0;
-          }
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: Arial, sans-serif; }
-          .label {
-            width: ${labelWidth}mm;
-            height: ${labelHeight}mm;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5mm 2mm;
-            overflow: hidden;
-            page-break-after: always;
-          }
-          .label:last-child { page-break-after: auto; }
-          .label svg { max-width: ${labelWidth - 4}mm; height: auto; }
-          .product-name { font-size: ${labelHeight >= 30 ? '8pt' : '7pt'}; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
-           .variant-text { font-size: ${labelHeight >= 30 ? '7pt' : '6pt'}; color: #333; font-weight: 700; text-align: center; margin-bottom: 0.5mm; }
-           .price-text { font-size: ${labelHeight >= 30 ? '13pt' : '11pt'}; font-weight: 900; margin-top: 0.5mm; }
-           .serial-text { font-size: ${labelHeight >= 30 ? '6.5pt' : '5.5pt'}; color: #333; font-weight: 700; margin-top: 0.3mm; }
-        </style>
-      </head>
-      <body id="grid">
-      </body>
-      </html>
-    `);
-    doc.close();
-
-    const grid = doc.getElementById("grid")!;
-
-    allLabels.forEach(({ barcode, serial, price, name, variant }) => {
-      const labelDiv = doc.createElement("div");
-      labelDiv.className = "label";
-
-      const nameDiv = doc.createElement("div");
-      nameDiv.className = "product-name";
-      nameDiv.textContent = name;
-      labelDiv.appendChild(nameDiv);
-
-      if (variant) {
-        const varDiv = doc.createElement("div");
-        varDiv.className = "variant-text";
-        varDiv.textContent = variant;
-        labelDiv.appendChild(varDiv);
+      if (result.success) {
+        toast.success(`Printed ${result.printed} label${result.printed !== 1 ? 's' : ''} successfully!`);
+      } else {
+        toast.error(result.error || "Print failed");
       }
-
-      // Barcode using serial number
-      const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
-      labelDiv.appendChild(svg);
-      try {
-        const barcodeHeight = labelHeight >= 30 ? 35 : 28;
-        JsBarcode(svg, barcode, {
-          format: "CODE128",
-          width: 2,
-          height: barcodeHeight,
-          displayValue: true,
-          fontSize: labelHeight >= 30 ? 10 : 8,
-          textMargin: 1,
-          margin: 2,
-          font: "Arial",
-        });
-      } catch {
-        svg.remove();
-      }
-
-      const priceDiv = doc.createElement("div");
-      priceDiv.className = "price-text";
-      priceDiv.textContent = `$${price.toFixed(2)}`;
-      labelDiv.appendChild(priceDiv);
-
-      const serialDiv = doc.createElement("div");
-      serialDiv.className = "serial-text";
-      serialDiv.textContent = serial;
-      labelDiv.appendChild(serialDiv);
-
-      grid.appendChild(labelDiv);
-    });
-
-    setTimeout(() => {
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 2000);
-    }, 300);
+    } catch (err: any) {
+      toast.error(err?.message || "Print failed");
+    } finally {
+      setPrinting(false);
+    }
   };
 
   const content = (
@@ -292,6 +242,48 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
         )}
       </div>
 
+      {/* Printer connection status */}
+      <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+        {checkingPrinter ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Detecting printer...
+          </div>
+        ) : printerStatus.available ? (
+          <>
+            <Wifi className="w-4 h-4 text-green-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-green-600">Printer Connected</span>
+              </div>
+              {printerStatus.printers.length > 1 ? (
+                <Select value={selectedPrinter} onValueChange={setSelectedPrinter}>
+                  <SelectTrigger className="h-7 mt-1 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {printerStatus.printers.map(p => (
+                      <SelectItem key={p} value={p}>{p}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-xs text-muted-foreground truncate">{selectedPrinter}</p>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <WifiOff className="w-4 h-4 text-destructive shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs font-medium text-destructive">Printer Not Detected</p>
+              <p className="text-[10px] text-muted-foreground">Install the Detonger P1P driver & connect the printer via USB</p>
+            </div>
+          </>
+        )}
+        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={checkPrinterService} disabled={checkingPrinter}>
+          <RefreshCw className={`w-3.5 h-3.5 ${checkingPrinter ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
+
       {/* Label settings */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
@@ -320,19 +312,6 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
               );
             })}
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Columns3 className="w-3.5 h-3.5 text-muted-foreground" />
-          <Label className="text-xs text-muted-foreground whitespace-nowrap">Columns</Label>
-          <Select value={labelCols.toString()} onValueChange={v => setLabelCols(Number(v))}>
-            <SelectTrigger className="h-8 w-20 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="3">3</SelectItem>
-              <SelectItem value="4">4</SelectItem>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="6">6</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
         {totalLabels > 0 && (
           <Badge variant="secondary" className="text-xs">{totalLabels} label{totalLabels > 1 ? "s" : ""}</Badge>
@@ -390,9 +369,9 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       {/* Actions */}
       <div className="flex justify-end gap-2">
         {onOpenChange && <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>}
-        <Button onClick={handlePrint} disabled={items.length === 0} className="gap-2">
-          <Printer className="w-4 h-4" />
-          Print {totalLabels} Label{totalLabels !== 1 ? "s" : ""}
+        <Button onClick={handlePrint} disabled={items.length === 0 || !printerStatus.available || printing} className="gap-2">
+          {printing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+          {printing ? "Printing..." : `Print ${totalLabels} Label${totalLabels !== 1 ? "s" : ""}`}
         </Button>
       </div>
     </div>
