@@ -1194,11 +1194,34 @@ const AdminDashboard = () => {
 
   const visibleNavItems = visibleGroups.flatMap(g => g.items);
   const [activeTab, setActiveTab] = useState<AdminTab>(visibleNavItems[0]?.id || "apps");
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [pwForm, setPwForm] = useState({ current: '', new: '', confirm: '' });
+  const [pwLoading, setPwLoading] = useState(false);
+  const [showPw, setShowPw] = useState({ current: false, new: false, confirm: false });
 
   const handleLogout = async () => {
     authApi.logout();
     await signOut();
     navigate("/");
+  };
+
+  const handleChangePassword = async () => {
+    if (!pwForm.current || !pwForm.new) return toast.error("Please fill all fields");
+    if (pwForm.new !== pwForm.confirm) return toast.error("Passwords don't match");
+    if (pwForm.new.length < 4) return toast.error("Password must be at least 4 characters");
+    setPwLoading(true);
+    try {
+      const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+      const username = adminUser?.username || 'admin';
+      await authApi.changePassword(username, pwForm.current, pwForm.new);
+      toast.success("Password changed successfully");
+      setShowChangePassword(false);
+      setPwForm({ current: '', new: '', confirm: '' });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to change password");
+    } finally {
+      setPwLoading(false);
+    }
   };
 
   const activeItem = visibleNavItems.find(n => n.id === activeTab);
@@ -1286,6 +1309,13 @@ const AdminDashboard = () => {
             <span>Back to Store</span>
           </button>
           <button
+            onClick={() => setShowChangePassword(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+          >
+            <Lock className="w-4 h-4" />
+            <span>Change Password</span>
+          </button>
+          <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
           >
@@ -1295,10 +1325,60 @@ const AdminDashboard = () => {
         </div>
       </aside>
 
-      {/* Sidebar overlay on mobile */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
+      {/* Change Password Dialog */}
+      <AdminDialog open={showChangePassword} onOpenChange={setShowChangePassword} title="Change Password">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Current Password</Label>
+            <div className="relative">
+              <Input
+                type={showPw.current ? "text" : "password"}
+                value={pwForm.current}
+                onChange={e => setPwForm(p => ({ ...p, current: e.target.value }))}
+                placeholder="Enter current password"
+              />
+              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShowPw(p => ({ ...p, current: !p.current }))}>
+                {showPw.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>New Password</Label>
+            <div className="relative">
+              <Input
+                type={showPw.new ? "text" : "password"}
+                value={pwForm.new}
+                onChange={e => setPwForm(p => ({ ...p, new: e.target.value }))}
+                placeholder="Enter new password"
+              />
+              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShowPw(p => ({ ...p, new: !p.new }))}>
+                {showPw.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Confirm New Password</Label>
+            <div className="relative">
+              <Input
+                type={showPw.confirm ? "text" : "password"}
+                value={pwForm.confirm}
+                onChange={e => setPwForm(p => ({ ...p, confirm: e.target.value }))}
+                placeholder="Confirm new password"
+              />
+              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShowPw(p => ({ ...p, confirm: !p.confirm }))}>
+                {showPw.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={() => setShowChangePassword(false)}>Cancel</Button>
+            <Button onClick={handleChangePassword} disabled={pwLoading}>
+              {pwLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Change Password
+            </Button>
+          </div>
+        </div>
+      </AdminDialog>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
