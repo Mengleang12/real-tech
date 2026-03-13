@@ -73,6 +73,29 @@ class UploadController extends Controller
         ]);
     }
 
+    public function uploadAdminAvatar(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:jpeg,png,gif,webp|max:5120',
+        ]);
+
+        $file = $request->file('file');
+        $extension = $file->getClientOriginalExtension();
+        $filename = 'admin_avatar_' . $request->user()->id . '_' . time() . '.' . $extension;
+        $path = $file->storeAs("uploads/avatars", $filename, 'public');
+
+        // Update admin user avatar_url
+        $user = $request->user();
+        $user->avatar_url = asset('storage/' . $path);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'url' => asset('storage/' . $path),
+            'filename' => $filename,
+        ]);
+    }
+
     private function getAllowedMimes(string $type): array
     {
         return match ($type) {
