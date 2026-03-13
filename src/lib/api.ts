@@ -390,6 +390,8 @@ export interface AdminUser {
   email: string;
   full_name?: string;
   phone?: string;
+  telegram?: string;
+  facebook_name?: string;
   avatar_url?: string;
   address?: string;
   created_at: string;
