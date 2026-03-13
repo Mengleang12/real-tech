@@ -1194,11 +1194,33 @@ const AdminDashboard = () => {
 
   const visibleNavItems = visibleGroups.flatMap(g => g.items);
   const [activeTab, setActiveTab] = useState<AdminTab>(visibleNavItems[0]?.id || "apps");
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [pwForm, setPwForm] = useState({ current: '', new: '', confirm: '' });
+  const [pwLoading, setPwLoading] = useState(false);
+  const [showPw, setShowPw] = useState({ current: false, new: false, confirm: false });
 
   const handleLogout = async () => {
     authApi.logout();
     await signOut();
     navigate("/");
+  };
+
+  const handleChangePassword = async () => {
+    if (!pwForm.current || !pwForm.new) return toast.error("Please fill all fields");
+    if (pwForm.new !== pwForm.confirm) return toast.error("Passwords don't match");
+    if (pwForm.new.length < 4) return toast.error("Password must be at least 4 characters");
+    setPwLoading(true);
+    try {
+      const username = localStorage.getItem('admin_username') || 'admin';
+      await authApi.changePassword(username, pwForm.current, pwForm.new);
+      toast.success("Password changed successfully");
+      setShowChangePassword(false);
+      setPwForm({ current: '', new: '', confirm: '' });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to change password");
+    } finally {
+      setPwLoading(false);
+    }
   };
 
   const activeItem = visibleNavItems.find(n => n.id === activeTab);
