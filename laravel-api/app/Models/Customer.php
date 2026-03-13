@@ -15,6 +15,8 @@ class Customer extends Authenticatable
         'password_hash',
         'full_name',
         'phone',
+        'telegram',
+        'facebook_name',
         'avatar_url',
         'address',
         'email_verified_at',

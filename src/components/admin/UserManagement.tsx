@@ -613,6 +613,16 @@ export const UserManagement = () => {
                 <Input value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} className="mt-1.5" placeholder="Phone number" />
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Telegram</Label>
+                <Input value={customerForm.telegram} onChange={e => setCustomerForm({ ...customerForm, telegram: e.target.value })} className="mt-1.5" placeholder="@username" />
+              </div>
+              <div>
+                <Label>Facebook Name</Label>
+                <Input value={customerForm.facebook_name} onChange={e => setCustomerForm({ ...customerForm, facebook_name: e.target.value })} className="mt-1.5" placeholder="Facebook name" />
+              </div>
+            </div>
             <div>
               <Label>Address</Label>
               <Textarea value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} className="mt-1.5 min-h-[60px]" placeholder="Customer address" rows={2} />
