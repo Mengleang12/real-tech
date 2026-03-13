@@ -369,9 +369,9 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       {/* Actions */}
       <div className="flex justify-end gap-2">
         {onOpenChange && <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>}
-        <Button onClick={handlePrint} disabled={items.length === 0} className="gap-2">
-          <Printer className="w-4 h-4" />
-          Print {totalLabels} Label{totalLabels !== 1 ? "s" : ""}
+        <Button onClick={handlePrint} disabled={items.length === 0 || !printerStatus.available || printing} className="gap-2">
+          {printing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+          {printing ? "Printing..." : `Print ${totalLabels} Label${totalLabels !== 1 ? "s" : ""}`}
         </Button>
       </div>
     </div>
