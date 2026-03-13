@@ -660,6 +660,8 @@ class AdminUserController extends Controller
             'email' => 'required|email|unique:customers,email',
             'full_name' => 'nullable|string|max:100',
             'phone' => 'nullable|string|max:20',
+            'telegram' => 'nullable|string|max:100',
+            'facebook_name' => 'nullable|string|max:100',
             'password' => 'required|string|min:6',
         ]);
 
@@ -667,6 +669,8 @@ class AdminUserController extends Controller
             'email' => $request->email,
             'full_name' => $request->full_name,
             'phone' => $request->phone,
+            'telegram' => $request->telegram,
+            'facebook_name' => $request->facebook_name,
             'password_hash' => bcrypt($request->password),
         ]);
 
@@ -690,6 +694,8 @@ class AdminUserController extends Controller
             'email' => 'nullable|email|unique:customers,email,' . $id,
             'full_name' => 'nullable|string|max:100',
             'phone' => 'nullable|string|max:20',
+            'telegram' => 'nullable|string|max:100',
+            'facebook_name' => 'nullable|string|max:100',
             'password' => 'nullable|string|min:6',
         ]);
 
@@ -697,6 +703,8 @@ class AdminUserController extends Controller
         if ($request->has('email')) $data['email'] = $request->email;
         if ($request->has('full_name')) $data['full_name'] = $request->full_name;
         if ($request->has('phone')) $data['phone'] = $request->phone;
+        if ($request->has('telegram')) $data['telegram'] = $request->telegram;
+        if ($request->has('facebook_name')) $data['facebook_name'] = $request->facebook_name;
         if ($request->filled('password')) $data['password_hash'] = bcrypt($request->password);
 
         $customer->update($data);

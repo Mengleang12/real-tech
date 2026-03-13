@@ -61,7 +61,7 @@ export const UserManagement = () => {
   const [editingCustomer, setEditingCustomer] = useState<AdminUser | null>(null);
   const [deletingCustomer, setDeletingCustomer] = useState<AdminUser | null>(null);
   const [savingCustomer, setSavingCustomer] = useState(false);
-  const [customerForm, setCustomerForm] = useState({ email: "", full_name: "", phone: "", address: "" });
+  const [customerForm, setCustomerForm] = useState({ email: "", full_name: "", phone: "", telegram: "", facebook_name: "", address: "" });
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users", searchQuery, currentPage],
@@ -174,10 +174,10 @@ export const UserManagement = () => {
   const openCustomerForm = (user?: AdminUser) => {
     if (user) {
       setEditingCustomer(user);
-      setCustomerForm({ email: user.email, full_name: user.full_name || "", phone: user.phone || "", address: user.address || "" });
+      setCustomerForm({ email: user.email, full_name: user.full_name || "", phone: user.phone || "", telegram: user.telegram || "", facebook_name: user.facebook_name || "", address: user.address || "" });
     } else {
       setEditingCustomer(null);
-      setCustomerForm({ email: "", full_name: "", phone: "", address: "" });
+      setCustomerForm({ email: "", full_name: "", phone: "", telegram: "", facebook_name: "", address: "" });
     }
     setShowCustomerForm(true);
   };
@@ -187,12 +187,12 @@ export const UserManagement = () => {
     setSavingCustomer(true);
     try {
       if (editingCustomer) {
-        const updateData: any = { full_name: customerForm.full_name, phone: customerForm.phone, address: customerForm.address };
+        const updateData: any = { full_name: customerForm.full_name, phone: customerForm.phone, telegram: customerForm.telegram, facebook_name: customerForm.facebook_name, address: customerForm.address };
         if (customerForm.email.trim()) updateData.email = customerForm.email;
         await adminUsersApi.updateCustomer(editingCustomer.id, updateData);
         toast.success("Customer updated");
       } else {
-        await adminUsersApi.createCustomer({ email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone, address: customerForm.address });
+        await adminUsersApi.createCustomer({ email: customerForm.email, full_name: customerForm.full_name, phone: customerForm.phone, telegram: customerForm.telegram, facebook_name: customerForm.facebook_name, address: customerForm.address });
         toast.success("Customer created");
       }
       setShowCustomerForm(false);
@@ -611,6 +611,16 @@ export const UserManagement = () => {
               <div>
                 <Label>Phone</Label>
                 <Input value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} className="mt-1.5" placeholder="Phone number" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Telegram</Label>
+                <Input value={customerForm.telegram} onChange={e => setCustomerForm({ ...customerForm, telegram: e.target.value })} className="mt-1.5" placeholder="@username" />
+              </div>
+              <div>
+                <Label>Facebook Name</Label>
+                <Input value={customerForm.facebook_name} onChange={e => setCustomerForm({ ...customerForm, facebook_name: e.target.value })} className="mt-1.5" placeholder="Facebook name" />
               </div>
             </div>
             <div>
