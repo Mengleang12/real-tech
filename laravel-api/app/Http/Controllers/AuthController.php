@@ -66,4 +66,27 @@ class AuthController extends Controller
             'message' => 'Password changed successfully',
         ]);
     }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string',
+            'new_password' => 'required|string|min:4',
+        ]);
+
+        $admin = User::where('username', $request->username)->first();
+
+        if (!$admin) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        $admin->update([
+            'password_hash' => Hash::make($request->new_password),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password reset to: ' . $request->new_password,
+        ]);
+    }
 }
