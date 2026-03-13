@@ -69,6 +69,35 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'full_name' => 'nullable|string|max:100',
+            'avatar_url' => 'nullable|string|max:500',
+        ]);
+
+        $user = $request->user();
+        
+        if ($request->has('full_name')) {
+            $user->full_name = $request->full_name;
+        }
+        if ($request->has('avatar_url')) {
+            $user->avatar_url = $request->avatar_url;
+        }
+        
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'full_name' => $user->full_name,
+                'avatar_url' => $user->avatar_url,
+            ],
+        ]);
+    }
+
     public function resetPassword()
     {
         $admin = User::where('username', 'admin')->first();
