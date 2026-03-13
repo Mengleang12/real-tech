@@ -61,7 +61,7 @@ export const UserManagement = () => {
   const [editingCustomer, setEditingCustomer] = useState<AdminUser | null>(null);
   const [deletingCustomer, setDeletingCustomer] = useState<AdminUser | null>(null);
   const [savingCustomer, setSavingCustomer] = useState(false);
-  const [customerForm, setCustomerForm] = useState({ email: "", full_name: "", phone: "", address: "" });
+  const [customerForm, setCustomerForm] = useState({ email: "", full_name: "", phone: "", telegram: "", facebook_name: "", address: "" });
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users", searchQuery, currentPage],
