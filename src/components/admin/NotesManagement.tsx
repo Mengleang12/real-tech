@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,25 @@ import {
   Truck, PackageCheck, Users, ListTodo, StickyNote, Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
+const getApiKey = () => localStorage.getItem('admin_api_key') || '';
+
+async function notesApi<T>(endpoint: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
+  const { method = 'GET', body } = options;
+  const res = await fetch(`${API_BASE_URL}/api/admin/notes${endpoint}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${getApiKey()}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.message || 'Request failed');
+  return data;
+}
 
 interface AdminNote {
   id: string;
@@ -50,20 +68,18 @@ export const NotesManagement = () => {
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  // Form state
   const [formTitle, setFormTitle] = useState("");
   const [formContent, setFormContent] = useState("");
   const [formCategory, setFormCategory] = useState("general");
 
   const fetchNotes = async () => {
     try {
-      const { data, error } = await supabase
-        .from("admin_notes" as any)
-        .select("*")
-        .order("is_pinned", { ascending: false })
-        .order("updated_at", { ascending: false });
-      if (error) throw error;
-      setNotes((data as any[]) || []);
+      const params = new URLSearchParams();
+      if (filterCategory !== "all") params.set("category", filterCategory);
+      if (search) params.set("search", search);
+      const query = params.toString() ? `?${params.toString()}` : "";
+      const data = await notesApi<AdminNote[]>(query);
+      setNotes(data || []);
     } catch (err: any) {
       toast.error(err.message || "Failed to load notes");
     } finally {
@@ -81,10 +97,7 @@ export const NotesManagement = () => {
     setIsCreating(false);
   };
 
-  const openCreate = () => {
-    resetForm();
-    setIsCreating(true);
-  };
+  const openCreate = () => { resetForm(); setIsCreating(true); };
 
   const openEdit = (note: AdminNote) => {
     setFormTitle(note.title);
@@ -95,24 +108,20 @@ export const NotesManagement = () => {
   };
 
   const handleSave = async () => {
-    if (!formTitle.trim()) {
-      toast.error("Title is required");
-      return;
-    }
+    if (!formTitle.trim()) { toast.error("Title is required"); return; }
     setSaving(true);
     try {
       if (editingNote) {
-        const { error } = await supabase
-          .from("admin_notes" as any)
-          .update({ title: formTitle.trim(), content: formContent.trim() || null, category: formCategory } as any)
-          .eq("id", editingNote.id);
-        if (error) throw error;
+        await notesApi(`/${editingNote.id}`, {
+          method: "PUT",
+          body: { title: formTitle.trim(), content: formContent.trim() || null, category: formCategory },
+        });
         toast.success("Note updated");
       } else {
-        const { error } = await supabase
-          .from("admin_notes" as any)
-          .insert({ title: formTitle.trim(), content: formContent.trim() || null, category: formCategory, user_id: user?.id } as any);
-        if (error) throw error;
+        await notesApi("", {
+          method: "POST",
+          body: { title: formTitle.trim(), content: formContent.trim() || null, category: formCategory },
+        });
         toast.success("Note created");
       }
       resetForm();
@@ -126,11 +135,7 @@ export const NotesManagement = () => {
 
   const togglePin = async (note: AdminNote) => {
     try {
-      const { error } = await supabase
-        .from("admin_notes" as any)
-        .update({ is_pinned: !note.is_pinned } as any)
-        .eq("id", note.id);
-      if (error) throw error;
+      await notesApi(`/${note.id}`, { method: "PUT", body: { is_pinned: !note.is_pinned } });
       fetchNotes();
     } catch (err: any) {
       toast.error(err.message || "Failed to update pin");
@@ -140,11 +145,7 @@ export const NotesManagement = () => {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      const { error } = await supabase
-        .from("admin_notes" as any)
-        .delete()
-        .eq("id", deleteId);
-      if (error) throw error;
+      await notesApi(`/${deleteId}`, { method: "DELETE" });
       toast.success("Note deleted");
       fetchNotes();
     } catch (err: any) {
@@ -232,16 +233,10 @@ export const NotesManagement = () => {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search notes..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 h-9"
-          />
+          <Input placeholder="Search notes..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
           {search && (
             <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
               <X className="w-3.5 h-3.5 text-muted-foreground" />
@@ -256,9 +251,7 @@ export const NotesManagement = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
-              {CATEGORIES.map(c => (
-                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-              ))}
+              {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button size="sm" onClick={openCreate} className="h-9 gap-1.5">
@@ -267,36 +260,19 @@ export const NotesManagement = () => {
         </div>
       </div>
 
-      {/* Create / Edit Form */}
       {isCreating && (
         <Card className="border-primary/30">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <Input
-                placeholder="Note title..."
-                value={formTitle}
-                onChange={e => setFormTitle(e.target.value)}
-                className="h-9 font-medium"
-                autoFocus
-              />
+              <Input placeholder="Note title..." value={formTitle} onChange={e => setFormTitle(e.target.value)} className="h-9 font-medium" autoFocus />
               <Select value={formCategory} onValueChange={setFormCategory}>
-                <SelectTrigger className="h-9 w-[130px]">
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="h-9 w-[130px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map(c => (
-                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                  ))}
+                  {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <Textarea
-              placeholder="Write your note here..."
-              value={formContent}
-              onChange={e => setFormContent(e.target.value)}
-              rows={4}
-              className="resize-none"
-            />
+            <Textarea placeholder="Write your note here..." value={formContent} onChange={e => setFormContent(e.target.value)} rows={4} className="resize-none" />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" size="sm" onClick={resetForm} disabled={saving}>Cancel</Button>
               <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5">
@@ -308,60 +284,35 @@ export const NotesManagement = () => {
         </Card>
       )}
 
-      {/* Category Quick Filters */}
       <div className="flex flex-wrap gap-1.5">
-        <button
-          onClick={() => setFilterCategory("all")}
-          className={cn(
-            "px-3 py-1 rounded-full text-xs font-medium transition-all",
-            filterCategory === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
-          )}
-        >
+        <button onClick={() => setFilterCategory("all")} className={cn("px-3 py-1 rounded-full text-xs font-medium transition-all", filterCategory === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent")}>
           All ({notes.length})
         </button>
         {CATEGORIES.map(c => {
           const count = notes.filter(n => n.category === c.value).length;
           if (count === 0) return null;
           return (
-            <button
-              key={c.value}
-              onClick={() => setFilterCategory(c.value)}
-              className={cn(
-                "px-3 py-1 rounded-full text-xs font-medium transition-all",
-                filterCategory === c.value ? "bg-primary text-primary-foreground" : cn(c.color, "hover:opacity-80")
-              )}
-            >
+            <button key={c.value} onClick={() => setFilterCategory(c.value)} className={cn("px-3 py-1 rounded-full text-xs font-medium transition-all", filterCategory === c.value ? "bg-primary text-primary-foreground" : cn(c.color, "hover:opacity-80"))}>
               {c.label} ({count})
             </button>
           );
         })}
       </div>
 
-      {/* Pinned Notes */}
       {pinnedNotes.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <Pin className="w-3 h-3" /> Pinned
-          </p>
-          <div className="grid gap-2">
-            {pinnedNotes.map(n => <NoteCard key={n.id} note={n} />)}
-          </div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Pin className="w-3 h-3" /> Pinned</p>
+          <div className="grid gap-2">{pinnedNotes.map(n => <NoteCard key={n.id} note={n} />)}</div>
         </div>
       )}
 
-      {/* Unpinned Notes */}
       {unpinnedNotes.length > 0 && (
         <div className="space-y-2">
-          {pinnedNotes.length > 0 && (
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Notes</p>
-          )}
-          <div className="grid gap-2">
-            {unpinnedNotes.map(n => <NoteCard key={n.id} note={n} />)}
-          </div>
+          {pinnedNotes.length > 0 && <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Notes</p>}
+          <div className="grid gap-2">{unpinnedNotes.map(n => <NoteCard key={n.id} note={n} />)}</div>
         </div>
       )}
 
-      {/* Empty State */}
       {filtered.length === 0 && !isCreating && (
         <div className="text-center py-16">
           <StickyNote className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
@@ -371,7 +322,6 @@ export const NotesManagement = () => {
         </div>
       )}
 
-      {/* Delete Confirm */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
