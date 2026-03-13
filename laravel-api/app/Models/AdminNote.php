@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class AdminNote extends Model
 {
+    use \Illuminate\Database\Eloquent\Concerns\HasUuids;
+
     protected $table = 'admin_notes';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'user_id',
