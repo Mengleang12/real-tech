@@ -1198,6 +1198,46 @@ const AdminDashboard = () => {
   const [pwForm, setPwForm] = useState({ current: '', new: '', confirm: '' });
   const [pwLoading, setPwLoading] = useState(false);
   const [showPw, setShowPw] = useState({ current: false, new: false, confirm: false });
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const token = localStorage.getItem('admin_api_key') || '';
+    if (!token) return toast.error("Not authenticated");
+    
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
+      const response = await fetch(`${API_BASE_URL}/api/admin/upload-avatar`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error('Upload failed');
+      const data = await response.json();
+      
+      // Update localStorage admin_user
+      const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+      adminUser.avatar_url = data.url;
+      localStorage.setItem('admin_user', JSON.stringify(adminUser));
+      
+      toast.success("Profile picture updated!");
+      // Force re-render
+      window.location.reload();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to upload avatar");
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
 
   const handleLogout = async () => {
     authApi.logout();
