@@ -142,9 +142,14 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
 
   const totalLabels = items.reduce((sum, i) => sum + i.quantity, 0);
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (items.length === 0) {
       toast.error("Add products to print labels");
+      return;
+    }
+
+    if (!printerStatus.available || !selectedPrinter) {
+      toast.error("No printer connected. Please install the Detonger driver and refresh.");
       return;
     }
 
@@ -157,104 +162,25 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
       }
     });
 
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.top = "-10000px";
-    iframe.style.left = "-10000px";
-    document.body.appendChild(iframe);
+    setPrinting(true);
+    try {
+      const result = await printLabels({
+        printerName: selectedPrinter,
+        labelWidth,
+        labelHeight,
+        labels: allLabels,
+      });
 
-    const doc = iframe.contentDocument!;
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          @page {
-            size: ${labelWidth}mm ${labelHeight}mm;
-            margin: 0;
-          }
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: Arial, sans-serif; }
-          .label {
-            width: ${labelWidth}mm;
-            height: ${labelHeight}mm;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5mm 2mm;
-            overflow: hidden;
-            page-break-after: always;
-          }
-          .label:last-child { page-break-after: auto; }
-          .label svg { max-width: ${labelWidth - 4}mm; height: auto; }
-          .product-name { font-size: ${labelHeight >= 30 ? '8pt' : '7pt'}; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
-           .variant-text { font-size: ${labelHeight >= 30 ? '7pt' : '6pt'}; color: #333; font-weight: 700; text-align: center; margin-bottom: 0.5mm; }
-           .price-text { font-size: ${labelHeight >= 30 ? '13pt' : '11pt'}; font-weight: 900; margin-top: 0.5mm; }
-           .serial-text { font-size: ${labelHeight >= 30 ? '6.5pt' : '5.5pt'}; color: #333; font-weight: 700; margin-top: 0.3mm; }
-        </style>
-      </head>
-      <body id="grid">
-      </body>
-      </html>
-    `);
-    doc.close();
-
-    const grid = doc.getElementById("grid")!;
-
-    allLabels.forEach(({ barcode, serial, price, name, variant }) => {
-      const labelDiv = doc.createElement("div");
-      labelDiv.className = "label";
-
-      const nameDiv = doc.createElement("div");
-      nameDiv.className = "product-name";
-      nameDiv.textContent = name;
-      labelDiv.appendChild(nameDiv);
-
-      if (variant) {
-        const varDiv = doc.createElement("div");
-        varDiv.className = "variant-text";
-        varDiv.textContent = variant;
-        labelDiv.appendChild(varDiv);
+      if (result.success) {
+        toast.success(`Printed ${result.printed} label${result.printed !== 1 ? 's' : ''} successfully!`);
+      } else {
+        toast.error(result.error || "Print failed");
       }
-
-      // Barcode using serial number
-      const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
-      labelDiv.appendChild(svg);
-      try {
-        const barcodeHeight = labelHeight >= 30 ? 35 : 28;
-        JsBarcode(svg, barcode, {
-          format: "CODE128",
-          width: 2,
-          height: barcodeHeight,
-          displayValue: true,
-          fontSize: labelHeight >= 30 ? 10 : 8,
-          textMargin: 1,
-          margin: 2,
-          font: "Arial",
-        });
-      } catch {
-        svg.remove();
-      }
-
-      const priceDiv = doc.createElement("div");
-      priceDiv.className = "price-text";
-      priceDiv.textContent = `$${price.toFixed(2)}`;
-      labelDiv.appendChild(priceDiv);
-
-      const serialDiv = doc.createElement("div");
-      serialDiv.className = "serial-text";
-      serialDiv.textContent = serial;
-      labelDiv.appendChild(serialDiv);
-
-      grid.appendChild(labelDiv);
-    });
-
-    setTimeout(() => {
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 2000);
-    }, 300);
+    } catch (err: any) {
+      toast.error(err?.message || "Print failed");
+    } finally {
+      setPrinting(false);
+    }
   };
 
   const content = (
