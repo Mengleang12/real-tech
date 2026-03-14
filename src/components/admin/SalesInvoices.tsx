@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { getInvoiceBranding } from "@/lib/invoice-branding";
 import { getWarrantyStatus, getWarrantyBadgeVariant, getWarrantyHtml } from "@/lib/warranty-utils";
 import { AddSaleDialog } from "./AddSaleDialog";
@@ -23,6 +23,7 @@ import {
   AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield, CreditCard, Tag, ScanBarcode, StickyNote
 } from "lucide-react";
 import { AddSerialsForProductDialog } from "./SerialManagement";
+import { initPrinterService, printCustomerLabel, isPrinterServiceAvailable, type PrinterStatus } from "@/lib/printer-service";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
   paid:      { variant: "default",     label: "Paid" },
@@ -606,6 +607,18 @@ const InvoicesTab = () => {
   const [paymentNote, setPaymentNote] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
   const scanInputRef = useRef<HTMLInputElement>(null);
+  const [printerStatus, setPrinterStatus] = useState<PrinterStatus>({ available: false, printers: [] });
+  const [selectedPrinter, setSelectedPrinter] = useState<string>("");
+
+  // Initialize printer service on mount
+  useEffect(() => {
+    initPrinterService().then((status) => {
+      setPrinterStatus(status);
+      if (status.available && status.printerName) {
+        setSelectedPrinter(status.printerName);
+      }
+    });
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -684,84 +697,36 @@ const InvoicesTab = () => {
     setScanLoading(false);
   };
 
-  // Direct print function that takes order and address as params (no dialog needed)
+  // Direct print function using Detonger SDK (no browser dialog)
   const printCustomerLabelDirect = async (order: AdminOrder, address: string) => {
     const [lw, lh] = labelSize.split('x').map(Number);
-    const branding = await getInvoiceBranding();
-    const logoUrl = branding.site_logo_url || '';
-    const padSize = lw >= 80 ? '6mm' : lw >= 60 ? '4mm' : '2mm';
+    const phone = order.customer?.phone || order.user?.phone || "";
 
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.top = "-10000px";
-    iframe.style.left = "-10000px";
-    document.body.appendChild(iframe);
+    if (!printerStatus.available || !selectedPrinter) {
+      toast.error("No label printer connected. Please install the Detonger driver and connect the printer.");
+      return;
+    }
 
-    const doc = iframe.contentDocument!;
-    doc.open();
-    doc.write(`<!DOCTYPE html><html><head><style>
-      @page { size: ${lw}mm ${lh}mm; margin: 0; }
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font-family: -apple-system, 'Kantumruy Pro', sans-serif; padding: ${padSize}; display: flex; flex-direction: column; align-items: center; justify-content: center; width: ${lw}mm; height: ${lh}mm; overflow: hidden; }
-      .content { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
-      .sender { color: #333; text-align: center; font-weight: 700; white-space: nowrap; }
-      .divider { width: 80%; border-top: 0.5px dashed #ccc; margin: 1mm 0; flex-shrink: 0; }
-      .address { text-align: center; line-height: 1.3; color: #111; font-weight: 700; }
-      .phone { text-align: center; color: #111; font-weight: 900; white-space: nowrap; }
-    </style></head><body>
-      <div class="content" id="label-content">
-        <div class="sender" id="sender-text">ផ្ញើរ: 087 753939</div>
-        <div class="divider"></div>
-        ${address ? `<div class="address" id="address-text">${address}</div>` : ''}
-        ${(order.customer?.phone || order.user?.phone) ? `<div class="phone" id="phone-text">${order.customer?.phone || order.user?.phone}</div>` : ''}
-      </div>
-      <script>
-        function autoFitText() {
-          const container = document.getElementById('label-content');
-          const sender = document.getElementById('sender-text');
-          const address = document.getElementById('address-text');
-          const phone = document.getElementById('phone-text');
-          if (!container) return;
-          
-          const containerH = container.offsetHeight;
-          const containerW = container.offsetWidth;
-          
-          let senderSize = 40;
-          if (sender) {
-            sender.style.fontSize = senderSize + 'px';
-            while (senderSize > 8 && (sender.scrollWidth > containerW || sender.scrollHeight > containerH * 0.3)) {
-              senderSize -= 1;
-              sender.style.fontSize = senderSize + 'px';
-            }
-          }
-          
-          if (address) {
-            let size = Math.round(senderSize * 0.7);
-            address.style.fontSize = size + 'px';
-            while (size > 6 && (address.scrollWidth > containerW || address.scrollHeight > containerH * 0.3)) {
-              size -= 1;
-              address.style.fontSize = size + 'px';
-            }
-          }
-          
-          if (phone) {
-            let size = senderSize;
-            phone.style.fontSize = size + 'px';
-            while (size > 8 && (phone.scrollWidth > containerW || phone.scrollHeight > containerH * 0.3)) {
-              size -= 1;
-              phone.style.fontSize = size + 'px';
-            }
-          }
-        }
-        autoFitText();
-      </script>
-    </body></html>`);
-    doc.close();
+    try {
+      const result = await printCustomerLabel({
+        printerName: selectedPrinter,
+        labelWidth: lw,
+        labelHeight: lh,
+        label: {
+          senderText: "ផ្ញើរ: 087 753939",
+          address: address,
+          phone: phone,
+        },
+      });
 
-    setTimeout(() => {
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 2000);
-    }, 500);
+      if (result.success) {
+        toast.success("Customer label printed!");
+      } else {
+        toast.error(result.error || "Print failed");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Print failed");
+    }
   };
 
   const handlePrintCustomerLabel = async () => {
