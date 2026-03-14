@@ -64,90 +64,14 @@ async function printSerialLabelsSDK(serials: PrintableSerial[]): Promise<boolean
   return false;
 }
 
-function printSerialLabelsBrowser(serials: PrintableSerial[]) {
-  if (serials.length === 0) return;
-
-  const iframe = document.createElement("iframe");
-  iframe.style.position = "fixed";
-  iframe.style.top = "-10000px";
-  iframe.style.left = "-10000px";
-  document.body.appendChild(iframe);
-
-  const doc = iframe.contentDocument!;
-  doc.open();
-  doc.write(`<!DOCTYPE html><html><head><style>
-    @page { size: 40mm 30mm; margin: 0; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; }
-    .label {
-      width: 40mm; height: 30mm;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 1.5mm 2mm; overflow: hidden;
-      page-break-after: always;
-    }
-    .label:last-child { page-break-after: auto; }
-    .product-name { font-size: 7pt; font-weight: 700; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; margin-bottom: 0.5mm; width: 100%; }
-    .variant-text { font-size: 6pt; color: #333; font-weight: 700; text-align: center; margin-bottom: 0.5mm; }
-    .label svg { max-width: 36mm; height: 8mm; }
-    .serial-text { font-size: 6pt; font-family: monospace; font-weight: 700; text-align: center; margin-top: 0.3mm; letter-spacing: 0.5pt; }
-    .price-text { font-size: 11pt; font-weight: 900; margin-top: 0.5mm; }
-  </style></head><body id="grid"></body></html>`);
-  doc.close();
-
-  const grid = doc.getElementById("grid")!;
-
-  serials.forEach(serial => {
-    const productName = serial.product?.name || "Product";
-    const variantLabel = serial.variant ? Object.values(serial.variant.combination).join(" / ") : "";
-    const price = serial.variant?.price_adjustment ?? 0;
-    const barcodeValue = serial.barcode || serial.serial_number;
-
-    const labelDiv = doc.createElement("div");
-    labelDiv.className = "label";
-
-    const nameDiv = doc.createElement("div");
-    nameDiv.className = "product-name";
-    nameDiv.textContent = productName;
-    labelDiv.appendChild(nameDiv);
-
-    if (variantLabel) {
-      const varDiv = doc.createElement("div");
-      varDiv.className = "variant-text";
-      varDiv.textContent = variantLabel;
-      labelDiv.appendChild(varDiv);
-    }
-
-    const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
-    labelDiv.appendChild(svg);
-    try {
-      JsBarcode(svg, barcodeValue, { format: "CODE128", width: 1, height: 20, displayValue: false, margin: 0 });
-    } catch { svg.remove(); }
-
-    const snDiv = doc.createElement("div");
-    snDiv.className = "serial-text";
-    snDiv.textContent = serial.serial_number;
-    labelDiv.appendChild(snDiv);
-
-    const priceDiv = doc.createElement("div");
-    priceDiv.className = "price-text";
-    priceDiv.textContent = `$${Number(price).toFixed(2)}`;
-    labelDiv.appendChild(priceDiv);
-
-    grid.appendChild(labelDiv);
-  });
-
-  setTimeout(() => {
-    iframe.contentWindow?.print();
-    setTimeout(() => document.body.removeChild(iframe), 2000);
-  }, 300);
-}
+// Browser fallback removed — all label printing goes through SDK directly
 
 async function printSerialLabels(serials: PrintableSerial[]) {
   if (serials.length === 0) return;
-  // Try SDK first, fall back to browser print dialog
+  // Print directly via SDK — no browser print dialog
   const sdkSuccess = await printSerialLabelsSDK(serials);
   if (!sdkSuccess) {
-    printSerialLabelsBrowser(serials);
+    toast.error("Label printer not available. Please check the printer connection in Settings → System.");
   }
 }
 
