@@ -71,6 +71,7 @@ class QuotationController extends Controller
                 'status' => $request->status ?? 'draft',
                 'discount_amount' => $request->discount_amount ?? 0,
                 'discount_type' => $request->discount_type,
+                'delivery_fee' => $request->delivery_fee ?? 0,
                 'currency' => $request->currency ?? 'USD',
                 'valid_until' => $request->valid_until,
                 'notes' => $request->notes,
