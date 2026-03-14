@@ -1383,6 +1383,13 @@ const AdminDashboard = () => {
             <span>Change Password</span>
           </button>
           <button
+            onClick={() => setShowSessions(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+          >
+            <Monitor className="w-4 h-4" />
+            <span>Active Sessions</span>
+          </button>
+          <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
           >
