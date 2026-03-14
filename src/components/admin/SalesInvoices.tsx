@@ -1005,7 +1005,7 @@ const InvoicesTab = () => {
       ) : (
         <Card className="overflow-hidden">
           <div
-            className="overflow-x-auto cursor-grab active:cursor-grabbing"
+            className="overflow-x-auto cursor-grab active:cursor-grabbing select-none"
             ref={scrollContainerRef}
             onMouseDown={(e) => {
               const el = scrollContainerRef.current;
