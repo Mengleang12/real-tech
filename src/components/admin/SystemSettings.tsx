@@ -113,18 +113,27 @@ export function SystemSettingsPanel() {
   const qrInputRef = useRef<HTMLInputElement>(null);
 
   // Printer state
+  const PREFERRED_PRINTER_KEY = 'label-printer-name';
   const [printerStatus, setPrinterStatus] = useState<PrinterStatus>({ available: false, printers: [] });
   const [checkingPrinter, setCheckingPrinter] = useState(false);
   const [testPrinting, setTestPrinting] = useState(false);
-  const [selectedPrinter, setSelectedPrinter] = useState('');
+  const [selectedPrinter, setSelectedPrinter] = useState(() => localStorage.getItem(PREFERRED_PRINTER_KEY) || '');
 
   const checkPrinterConnection = async () => {
     setCheckingPrinter(true);
     try {
       const status = await initPrinterService();
       setPrinterStatus(status);
-      if (status.available && status.printerName && !selectedPrinter) {
-        setSelectedPrinter(status.printerName);
+
+      if (status.available) {
+        const preferred = localStorage.getItem(PREFERRED_PRINTER_KEY);
+        const resolved = preferred && status.printers.includes(preferred)
+          ? preferred
+          : (status.printerName || status.printers[0] || '');
+        if (resolved) {
+          setSelectedPrinter(resolved);
+          localStorage.setItem(PREFERRED_PRINTER_KEY, resolved);
+        }
       }
       if (status.available) {
         toast.success(`Printer connected: ${status.printerName || 'Unknown'}`);

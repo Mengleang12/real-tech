@@ -19,7 +19,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
-import { initPrinterService, isPrinterServiceAvailable, printLabels, type LabelData } from "@/lib/printer-service";
+import { initPrinterService, printLabels, type LabelData } from "@/lib/printer-service";
 import { getGlobalLabelSize } from "@/lib/label-settings";
 import { useSerialRealtime, type SerialChangedEvent } from "@/hooks/useSerialRealtime";
 // ─── Print Serial Label Utility ─────────────────────────────────────────────
@@ -30,18 +30,23 @@ type PrintableSerial = {
   variant?: { combination: Record<string, string>; price_adjustment?: number; sku?: string };
 };
 
-// Try to init printer service on load
-let printerInitPromise: Promise<any> | null = null;
-function ensurePrinterInit() {
-  if (!printerInitPromise) {
-    printerInitPromise = initPrinterService();
+const PREFERRED_PRINTER_KEY = 'label-printer-name';
+
+async function resolvePrinterName(): Promise<string | null> {
+  const status = await initPrinterService();
+  if (!status.available) return null;
+
+  const preferred = localStorage.getItem(PREFERRED_PRINTER_KEY);
+  if (preferred && status.printers.includes(preferred)) {
+    return preferred;
   }
-  return printerInitPromise;
+
+  return status.printerName || status.printers[0] || null;
 }
 
 async function printSerialLabelsSDK(serials: PrintableSerial[]): Promise<boolean> {
-  const status = await ensurePrinterInit();
-  if (!status.available || !status.printerName) return false;
+  const printerName = await resolvePrinterName();
+  if (!printerName) return false;
 
   const labels: LabelData[] = serials.map(s => ({
     name: s.product?.name || "Product",
