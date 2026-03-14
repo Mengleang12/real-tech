@@ -1123,7 +1123,7 @@ const InvoicesTab = () => {
                             </Button>
                           )}
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handlePrint(order)} title="Print Invoice"><Printer className="w-3.5 h-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setLabelAddress(order.customer?.address || order.user?.address || "Cambodia"); setLabelOrder(order); }} title="Print Label"><Tag className="w-3.5 h-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => printCustomerLabelDirect(order, order.customer?.address || order.user?.address || "Cambodia")} title="Print Label"><Tag className="w-3.5 h-3.5" /></Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
