@@ -198,8 +198,9 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
 
     api.startJob({ width: labelWidth, height: labelHeight });
 
-    const padding = 1;
-    const contentWidth = labelWidth - padding * 2;
+    const paddingLeft = 1;
+    const paddingRight = 3;
+    const contentWidth = labelWidth - paddingLeft - paddingRight;
     const usableHeight = labelHeight - padding * 2;
 
     // Count how many sections we have
