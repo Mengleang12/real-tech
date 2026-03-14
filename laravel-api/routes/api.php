@@ -45,6 +45,9 @@ use App\Http\Controllers\AdminNoteController;
 // Public routes
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::get('/auth/verify', [AuthController::class, 'verify']);
+Route::get('/auth/sessions', [AuthController::class, 'sessions']);
+Route::post('/auth/sessions/revoke', [AuthController::class, 'revokeSession']);
+Route::post('/auth/sessions/revoke-all', [AuthController::class, 'revokeAllSessions']);
 Route::post('/auth/register', [UserController::class, 'register']);
 Route::post('/customers/login', [UserController::class, 'login']);
 

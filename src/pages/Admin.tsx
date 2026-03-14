@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, Users, BarChart3, Bell, Shield, Activity, 
   UserX, Tag, Play, Home, Menu, Download, Star, TrendingUp, Settings2, Loader2, ClipboardPaste, ShieldAlert, DollarSign,
   FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw, FileText, Pencil,
-  ShoppingBag, Truck, Wand2, Image, User, Lock, Eye, EyeOff, ScanBarcode, StickyNote, Camera
+  ShoppingBag, Truck, Wand2, Image, User, Lock, Eye, EyeOff, ScanBarcode, StickyNote, Camera, Monitor
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,7 @@ import { SalesReport } from "@/components/admin/SalesReport";
 import { SerialManagement } from "@/components/admin/SerialManagement";
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
 import { NotesManagement } from "@/components/admin/NotesManagement";
+import { ActiveSessions } from "@/components/admin/ActiveSessions";
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -1199,6 +1200,7 @@ const AdminDashboard = () => {
   const [pwLoading, setPwLoading] = useState(false);
   const [showPw, setShowPw] = useState({ current: false, new: false, confirm: false });
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [showSessions, setShowSessions] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1381,6 +1383,13 @@ const AdminDashboard = () => {
             <span>Change Password</span>
           </button>
           <button
+            onClick={() => setShowSessions(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+          >
+            <Monitor className="w-4 h-4" />
+            <span>Active Sessions</span>
+          </button>
+          <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
           >
@@ -1443,6 +1452,11 @@ const AdminDashboard = () => {
             </Button>
           </div>
         </div>
+      </AdminDialog>
+
+      {/* Active Sessions Dialog */}
+      <AdminDialog open={showSessions} onOpenChange={setShowSessions} title="Active Sessions">
+        <ActiveSessions />
       </AdminDialog>
 
       {/* Main Content */}
