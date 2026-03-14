@@ -1102,6 +1102,14 @@ export const serialsApi = {
   getByIds: async (ids: number[]): Promise<{ serials: ProductSerial[] }> => {
     return apiRequest('admin/serials/for-print', { method: 'POST', body: { ids } });
   },
+
+  getLatestId: async (): Promise<{ latest_id: number }> => {
+    return apiRequest('admin/serials/latest-id');
+  },
+
+  getSince: async (afterId: number): Promise<{ serials: ProductSerial[] }> => {
+    return apiRequest('admin/serials/since', { method: 'POST', body: { after_id: afterId } });
+  },
 };
 
 // Categories API

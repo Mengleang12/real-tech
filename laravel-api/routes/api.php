@@ -208,6 +208,8 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::delete('/admin/serials/{id}', [ProductSerialController::class, 'destroy']);
     Route::post('/admin/serials/lookup', [ProductSerialController::class, 'lookup']);
     Route::post('/admin/serials/print', [ProductSerialController::class, 'getForPrint']);
+    Route::get('/admin/serials/latest-id', [ProductSerialController::class, 'latestId']);
+    Route::post('/admin/serials/since', [ProductSerialController::class, 'since']);
 
     // Sales Reports
     Route::get('/admin/reports/product-sales', [SalesReportController::class, 'productSales']);

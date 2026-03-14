@@ -234,4 +234,33 @@ class ProductSerialController extends Controller
 
         return response()->json(['serials' => $serials]);
     }
+
+    /**
+     * Return the latest serial ID (for polling-based new serial detection).
+     */
+    public function latestId()
+    {
+        $latest = ProductSerial::orderByDesc('id')->first();
+        return response()->json(['latest_id' => $latest?->id ?? 0]);
+    }
+
+    /**
+     * Return serials added after a given ID (for auto-print on polling).
+     */
+    public function since(Request $request)
+    {
+        $afterId = (int) ($request->after_id ?? 0);
+        if ($afterId <= 0) {
+            return response()->json(['serials' => []]);
+        }
+
+        $serials = ProductSerial::with(['product:id,name,icon_url', 'variant:id,combination,sku,price_adjustment'])
+            ->where('id', '>', $afterId)
+            ->where('status', 'available')
+            ->orderBy('id')
+            ->limit(50)
+            ->get();
+
+        return response()->json(['serials' => $serials]);
+    }
 }
