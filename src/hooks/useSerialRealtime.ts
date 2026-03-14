@@ -93,7 +93,7 @@ export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) =
 
   // Polling fallback: check for new serials and auto-print
   useEffect(() => {
-    const pollInterval = connected === 'connected' ? 5000 : 1500;
+    const pollInterval = connected === 'connected' ? 3000 : 1000;
 
     const poll = async () => {
       // Always invalidate queries for UI freshness
