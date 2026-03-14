@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { clearBrandingCache } from '@/lib/invoice-branding';
+import { clearLabelSizeCache } from '@/lib/label-settings';
 import { Settings2, Globe, Shield, Database, Server, Loader2, Palette, ImageIcon, Phone, MapPin, Share2, FileText, Upload, X, Printer, Wifi, WifiOff, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { initPrinterService, isPrinterServiceAvailable, printLabels, type PrinterStatus } from '@/lib/printer-service';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,8 @@ interface SystemSettings {
   invoice_footer_text: string;
   payment_qr_urls: string[];
   payment_qr_size: number;
+  label_width: number;
+  label_height: number;
 }
 
 function hexToHsl(hex: string): string {
@@ -85,6 +88,8 @@ const defaultSettings: SystemSettings = {
   invoice_footer_text: 'Thank you for your business!',
   payment_qr_urls: [],
   payment_qr_size: 72,
+  label_width: 40,
+  label_height: 30,
 };
 
 function getAuthHeaders(): Record<string, string> {
@@ -142,8 +147,8 @@ export function SystemSettingsPanel() {
     try {
       const result = await printLabels({
         printerName: selectedPrinter,
-        labelWidth: 40,
-        labelHeight: 30,
+        labelWidth: settings.label_width || 40,
+        labelHeight: settings.label_height || 30,
         labels: [{
           name: 'Test Product',
           variant: 'Test Variant',
@@ -241,6 +246,8 @@ export function SystemSettingsPanel() {
           invoice_footer_text: settings.invoice_footer_text,
           payment_qr_urls: settings.payment_qr_urls,
           payment_qr_size: settings.payment_qr_size,
+          label_width: settings.label_width,
+          label_height: settings.label_height,
         }),
       });
       if (!res.ok) {
@@ -249,6 +256,7 @@ export function SystemSettingsPanel() {
       }
       applyPrimaryColor(settings.primary_color);
       clearBrandingCache();
+      clearLabelSizeCache();
       toast.success('Settings saved successfully');
     } catch (err: any) {
       toast.error(err.message || 'Failed to save settings');
@@ -680,12 +688,45 @@ export function SystemSettingsPanel() {
                 </div>
               )}
 
+              {/* Label paper size */}
+              {printerStatus.available && (
+                <div>
+                  <Label className="text-xs">Default Label Paper Size (mm)</Label>
+                  <div className="flex gap-2 mt-1.5">
+                    {[
+                      { w: 30, h: 20, label: '30×20' },
+                      { w: 40, h: 30, label: '40×30' },
+                      { w: 50, h: 30, label: '50×30' },
+                      { w: 50, h: 40, label: '50×40' },
+                      { w: 60, h: 40, label: '60×40' },
+                    ].map(opt => {
+                      const active = settings.label_width === opt.w && settings.label_height === opt.h;
+                      return (
+                        <button
+                          key={`${opt.w}x${opt.h}`}
+                          type="button"
+                          onClick={() => { update('label_width', opt.w); update('label_height', opt.h); }}
+                          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer ${
+                            active
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">This size is used globally for all label printing (serial labels, manual labels, etc.)</p>
+                </div>
+              )}
+
               {/* Test print */}
               {printerStatus.available && (
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">Test Print</p>
-                    <p className="text-xs text-muted-foreground">Print a sample 40×30mm label to verify connection</p>
+                    <p className="text-xs text-muted-foreground">Print a sample {settings.label_width}×{settings.label_height}mm label</p>
                   </div>
                   <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={handleTestPrint} disabled={testPrinting || !selectedPrinter}>
                     {testPrinting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}

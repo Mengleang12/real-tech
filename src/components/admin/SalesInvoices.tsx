@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getInvoiceBranding } from "@/lib/invoice-branding";
+import { getGlobalLabelSize } from "@/lib/label-settings";
 import { getWarrantyStatus, getWarrantyBadgeVariant, getWarrantyHtml } from "@/lib/warranty-utils";
 import { AddSaleDialog } from "./AddSaleDialog";
 import { InvoiceEditDialog } from "./InvoiceEditDialog";
@@ -670,6 +671,13 @@ const InvoicesTab = () => {
   const [labelOrder, setLabelOrder] = useState<AdminOrder | null>(null);
   const [labelAddress, setLabelAddress] = useState("Cambodia");
   const [labelSize, setLabelSize] = useState("40x30");
+
+  // Load global label size on mount
+  useEffect(() => {
+    getGlobalLabelSize().then(size => {
+      setLabelSize(`${size.width}x${size.height}`);
+    });
+  }, []);
 
   // Scan barcode to auto-print customer label (prints instantly, no dialog)
   const handleScanBarcode = async (scannedValue: string) => {

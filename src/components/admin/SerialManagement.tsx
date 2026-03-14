@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, isPrinterServiceAvailable, printLabels, type LabelData } from "@/lib/printer-service";
+import { getGlobalLabelSize } from "@/lib/label-settings";
 import { useSerialRealtime, type SerialChangedEvent } from "@/hooks/useSerialRealtime";
 // ─── Print Serial Label Utility ─────────────────────────────────────────────
 type PrintableSerial = {
@@ -49,10 +50,12 @@ async function printSerialLabelsSDK(serials: PrintableSerial[]): Promise<boolean
     price: s.variant?.price_adjustment ?? 0,
   }));
 
+  const labelSize = await getGlobalLabelSize();
+
   const result = await printLabels({
     printerName: status.printerName,
-    labelWidth: 40,
-    labelHeight: 30,
+    labelWidth: labelSize.width,
+    labelHeight: labelSize.height,
     labels,
   });
 

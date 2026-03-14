@@ -10,6 +10,7 @@ import { Printer, Plus, Minus, Trash2, Loader2, Package, Ruler, Columns3, Sticky
 import { salesApi, serialsApi, type SaleProduct, type ProductSerial } from "@/lib/api";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, printLabels, isPrinterServiceAvailable, type PrinterStatus } from "@/lib/printer-service";
+import { getGlobalLabelSize } from "@/lib/label-settings";
 
 interface LabelItem {
   product: SaleProduct;
@@ -41,9 +42,13 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
   const [checkingPrinter, setCheckingPrinter] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Initialize printer service on mount
+  // Initialize printer service and load global label size on mount
   useEffect(() => {
     checkPrinterService();
+    getGlobalLabelSize().then(size => {
+      setLabelWidth(size.width);
+      setLabelHeight(size.height);
+    });
   }, []);
 
   const checkPrinterService = async () => {
