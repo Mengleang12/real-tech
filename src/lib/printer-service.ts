@@ -191,7 +191,111 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
       const commitResult = await api.commitJob();
       if (commitResult?.statusCode === 0) {
         printed++;
-      }
+}
+
+/**
+ * Print a customer/shipping label directly to the Detonger printer via lpapi-dtpweb SDK.
+ * Layout: sender text (top), dashed line, address (middle), phone (bottom, bold).
+ */
+export async function printCustomerLabel(options: CustomerLabelPrintOptions): Promise<{ success: boolean; error?: string }> {
+  if (!api) {
+    return { success: false, error: "Print service not initialized. Please check the printer connection first." };
+  }
+
+  const { printerName, labelWidth, labelHeight, label } = options;
+
+  try {
+    const openResp = await api.openPrinter(printerName);
+    if (openResp.statusCode !== 0) {
+      return { success: false, error: `Failed to connect to printer "${printerName}": ${openResp.errMsg || 'Unknown error'}` };
+    }
+
+    api.startJob({ width: labelWidth, height: labelHeight });
+
+    const padding = 1.5;
+    const contentWidth = labelWidth - padding * 2;
+    const isLarge = labelHeight >= 30;
+
+    const senderFontHeight = isLarge ? 2.5 : 2;
+    const addressFontHeight = isLarge ? 3 : 2.5;
+    const phoneFontHeight = isLarge ? 4 : 3;
+
+    // Calculate total content height
+    let totalHeight = senderFontHeight + 1; // sender + gap
+    totalHeight += 0.5; // divider line
+    if (label.address) totalHeight += addressFontHeight + 1;
+    if (label.phone) totalHeight += phoneFontHeight;
+
+    let yPos = Math.max(padding, (labelHeight - totalHeight) / 2);
+
+    // Sender text (e.g. "ផ្ញើរ: 087 753939")
+    if (label.senderText) {
+      api.drawText({
+        text: label.senderText,
+        x: padding,
+        y: yPos,
+        width: contentWidth,
+        height: senderFontHeight + 1,
+        fontHeight: senderFontHeight,
+        fontStyle: 1, // bold
+        horizontalAlignment: 1, // center
+      });
+      yPos += senderFontHeight + 0.8;
+    }
+
+    // Dashed divider line
+    api.drawLine({
+      x: padding + contentWidth * 0.1,
+      y: yPos,
+      x2: padding + contentWidth * 0.9,
+      y2: yPos,
+      lineWidth: 0.3,
+      dashMode: 1,
+    });
+    yPos += 1;
+
+    // Address
+    if (label.address) {
+      api.drawText({
+        text: label.address,
+        x: padding,
+        y: yPos,
+        width: contentWidth,
+        height: addressFontHeight + 2,
+        fontHeight: addressFontHeight,
+        fontStyle: 1, // bold
+        horizontalAlignment: 1, // center
+      });
+      yPos += addressFontHeight + 1;
+    }
+
+    // Phone (large, bold)
+    if (label.phone) {
+      api.drawText({
+        text: label.phone,
+        x: padding,
+        y: yPos,
+        width: contentWidth,
+        height: phoneFontHeight + 1,
+        fontHeight: phoneFontHeight,
+        fontStyle: 1, // bold
+        horizontalAlignment: 1, // center
+      });
+    }
+
+    const commitResult = await api.commitJob();
+    await api.closePrinter();
+
+    if (commitResult?.statusCode === 0) {
+      return { success: true };
+    } else {
+      return { success: false, error: "Print command failed" };
+    }
+  } catch (err: any) {
+    try { await api.closePrinter(); } catch {}
+    return { success: false, error: err?.message || "Print failed" };
+  }
+}
     }
 
     // Close printer after all labels
