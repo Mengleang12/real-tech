@@ -48,7 +48,7 @@ async function printSerialLabelsSDK(serials: PrintableSerial[]): Promise<boolean
     variant: s.variant ? Object.values(s.variant.combination).join(" / ") : "",
     barcode: s.barcode || s.serial_number,
     serial: s.serial_number,
-    price: s.variant?.price_adjustment ?? 0,
+    price: parseFloat(String(s.variant?.price_adjustment || 0)),
   }));
 
   const labelSize = await getGlobalLabelSize();
