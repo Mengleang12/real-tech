@@ -34,6 +34,8 @@ interface SystemSettings {
   invoice_footer_text: string;
   payment_qr_urls: string[];
   payment_qr_size: number;
+  label_width: number;
+  label_height: number;
 }
 
 function hexToHsl(hex: string): string {
