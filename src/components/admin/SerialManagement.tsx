@@ -168,10 +168,15 @@ export const SerialManagement = () => {
   // Auto-print labels when serials are added from another device (e.g. phone scan)
   const handleRemoteSerialAdded = useCallback(async (event: SerialChangedEvent) => {
     try {
-      const { serials: newSerials } = await serialsApi.getByIds(event.serial_ids);
-      if (newSerials && newSerials.length > 0) {
-        toast.info(`Auto-printing ${newSerials.length} label(s) from remote scan...`);
-        await printSerialLabels(newSerials);
+      // Use serials from event if available (polling provides them), otherwise fetch
+      let serialsToPrint = event.serials;
+      if (!serialsToPrint || serialsToPrint.length === 0) {
+        const { serials: fetched } = await serialsApi.getByIds(event.serial_ids);
+        serialsToPrint = fetched;
+      }
+      if (serialsToPrint && serialsToPrint.length > 0) {
+        toast.info(`Auto-printing ${serialsToPrint.length} label(s) from remote scan...`);
+        await printSerialLabels(serialsToPrint);
       }
     } catch (err) {
       console.warn('Auto-print failed:', err);
