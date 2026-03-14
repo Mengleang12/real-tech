@@ -98,28 +98,8 @@ const statusConfig = {
 export const SerialManagement = () => {
   const queryClient = useQueryClient();
   
-  // Auto-print labels when serials are added from another device (e.g. phone scan)
-  const handleRemoteSerialAdded = useCallback(async (event: SerialChangedEvent) => {
-    // Respect auto-print toggle (shared via localStorage)
-    if (localStorage.getItem('serial-auto-print') === 'false') return;
-    try {
-      // Use serials from event if available (polling provides them), otherwise fetch
-      let serialsToPrint = event.serials;
-      if (!serialsToPrint || serialsToPrint.length === 0) {
-        const { serials: fetched } = await serialsApi.getByIds(event.serial_ids);
-        serialsToPrint = fetched;
-      }
-      if (serialsToPrint && serialsToPrint.length > 0) {
-        toast.info(`Auto-printing ${serialsToPrint.length} label(s) from remote scan...`);
-        await printSerialLabels(serialsToPrint);
-      }
-    } catch (err) {
-      console.warn('Auto-print failed:', err);
-    }
-  }, []);
-
-  // Listen for realtime serial changes from other devices via Laravel Reverb
-  const wsStatus = useSerialRealtime(handleRemoteSerialAdded);
+  // Auto-print is now handled at the AdminDashboard level so it works on any tab.
+  // This component only handles the serial list UI.
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
