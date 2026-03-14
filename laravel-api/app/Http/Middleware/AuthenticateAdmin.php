@@ -30,31 +30,18 @@ class AuthenticateAdmin
 
         if ($admin) {
             // Verify specific token is not expired (for multi-session)
+            // NOTE: We do NOT renew/save tokens here to avoid race conditions
+            // that overwrite concurrent sessions. Renewal is handled by /auth/verify.
             $decoded = json_decode($admin->auth_token, true);
             if (is_array($decoded)) {
-                $validToken = collect($decoded)->first(fn($t) => $t['token'] === $token && now()->lt($t['expiry']));
+                $validToken = collect($decoded)->first(fn($t) => $t['token'] === $token && isset($t['expiry']) && now()->lt($t['expiry']));
                 if (!$validToken) {
                     $admin = null; // Token expired, fall through
-                } else {
-                    // Sliding session: renew this token
-                    $decoded = array_map(function ($t) use ($token) {
-                        if ($t['token'] === $token) {
-                            $t['expiry'] = now()->addDays(30)->toISOString();
-                        }
-                        return $t;
-                    }, $decoded);
-                    $decoded = array_values(array_filter($decoded, fn($t) => isset($t['expiry']) && now()->lt($t['expiry'])));
-                    $admin->auth_token = json_encode($decoded);
-                    $admin->token_expiry = now()->addDays(30);
-                    $admin->save();
                 }
             } else {
                 // Legacy single token
                 if (!$admin->token_expiry || now()->gte($admin->token_expiry)) {
                     $admin = null;
-                } else {
-                    $admin->token_expiry = now()->addDays(30);
-                    $admin->save();
                 }
             }
         }
