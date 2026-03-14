@@ -256,6 +256,7 @@ export function SystemSettingsPanel() {
       }
       applyPrimaryColor(settings.primary_color);
       clearBrandingCache();
+      clearLabelSizeCache();
       toast.success('Settings saved successfully');
     } catch (err: any) {
       toast.error(err.message || 'Failed to save settings');
