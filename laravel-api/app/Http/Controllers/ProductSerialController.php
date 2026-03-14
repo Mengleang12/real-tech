@@ -110,7 +110,8 @@ class ProductSerialController extends Controller
             $created[] = $serial;
         }
 
-        event(new SerialChanged('added', $request->product_id, $request->variant_id));
+        $createdIds = array_map(fn($s) => $s->id, $created);
+        event(new SerialChanged('added', $request->product_id, $request->variant_id, $createdIds));
 
         return response()->json([
             'success' => true,
