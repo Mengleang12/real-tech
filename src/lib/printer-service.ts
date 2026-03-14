@@ -1,7 +1,7 @@
-import { DTPWeb } from "dtpweb";
+import { LPAPIFactory } from "lpapi-dtpweb";
 
-// Singleton printer API instance
-let printerApi: DTPWeb | null = null;
+// Singleton LPAPI instance
+let api: any = null;
 let serviceAvailable = false;
 
 export interface PrinterStatus {
@@ -11,53 +11,42 @@ export interface PrinterStatus {
 }
 
 /**
- * Initialize the dtpweb print service.
- * Must be called once before printing. The service requires the
- * Detonger Windows driver (which includes the dtpweb print helper) to be installed.
+ * Initialize the lpapi-dtpweb print service.
+ * Requires the Detonger/Dothantech printer driver (which includes the dtpweb print helper) installed on Windows.
  */
-export function initPrinterService(): Promise<PrinterStatus> {
-  return new Promise((resolve) => {
-    try {
-      DTPWeb.checkServer({
-        callback: (resp: any, api: any) => {
-          if (resp.statusCode === 0) {
-            printerApi = api;
-            serviceAvailable = true;
+export async function initPrinterService(): Promise<PrinterStatus> {
+  try {
+    api = LPAPIFactory.getInstance({ logLevel: 0 });
 
-            // Get list of available printers
-            const devices = api.getPrinters({ onlyLocal: true, onlySupported: true }) || [];
-            const printerNames = devices.map((d: any) => d.name || d.printerName || '');
+    const resp = await api.checkPlugin();
+    if (resp.statusCode === 0) {
+      serviceAvailable = true;
 
-            resolve({
-              available: true,
-              printerName: printerNames[0] || undefined,
-              printers: printerNames,
-            });
-          } else {
-            serviceAvailable = false;
-            resolve({ available: false, printers: [] });
-          }
-        },
-      });
+      // Get list of available printers
+      const devices = api.getPrinters() || [];
+      const printerNames = devices.map((d: any) => d.name || d.printerName || d.deviceId || '').filter(Boolean);
 
-      // Timeout after 3 seconds
-      setTimeout(() => {
-        if (!serviceAvailable) {
-          resolve({ available: false, printers: [] });
-        }
-      }, 3000);
-    } catch {
-      resolve({ available: false, printers: [] });
+      return {
+        available: true,
+        printerName: printerNames[0] || undefined,
+        printers: printerNames,
+      };
+    } else {
+      serviceAvailable = false;
+      return { available: false, printers: [] };
     }
-  });
+  } catch {
+    serviceAvailable = false;
+    return { available: false, printers: [] };
+  }
 }
 
 export function isPrinterServiceAvailable(): boolean {
-  return serviceAvailable && printerApi !== null;
+  return serviceAvailable && api !== null;
 }
 
-export function getApi(): DTPWeb | null {
-  return printerApi;
+export function getApi(): any {
+  return api;
 }
 
 export interface LabelData {
@@ -76,121 +65,117 @@ export interface PrintOptions {
 }
 
 /**
- * Print labels directly to the Detonger printer via dtpweb SDK.
+ * Print labels directly to the Detonger printer via lpapi-dtpweb SDK.
  * No browser print dialog is shown.
  */
-export function printLabels(options: PrintOptions): Promise<{ success: boolean; printed: number; error?: string }> {
-  return new Promise((resolve) => {
-    const api = printerApi;
-    if (!api) {
-      resolve({ success: false, printed: 0, error: "Print service not available. Please install the Detonger printer driver." });
-      return;
+export async function printLabels(options: PrintOptions): Promise<{ success: boolean; printed: number; error?: string }> {
+  if (!api) {
+    return { success: false, printed: 0, error: "Print service not initialized. Please check the printer connection first." };
+  }
+
+  const { printerName, labelWidth, labelHeight, labels } = options;
+
+  try {
+    // Open the printer
+    const openResp = await api.openPrinter(printerName);
+    if (openResp.statusCode !== 0) {
+      return { success: false, printed: 0, error: `Failed to connect to printer "${printerName}": ${openResp.errMsg || 'Unknown error'}` };
     }
 
-    const { printerName, labelWidth, labelHeight, labels } = options;
+    let printed = 0;
 
-    try {
-      api.openPrinter(printerName, (success: boolean) => {
-        if (!success) {
-          resolve({ success: false, printed: 0, error: `Failed to connect to printer "${printerName}"` });
-          return;
-        }
+    for (const label of labels) {
+      // Start a new label job
+      api.startJob({ width: labelWidth, height: labelHeight });
 
-        let printed = 0;
+      // Layout calculations (all in mm)
+      const padding = 1.5;
+      const contentWidth = labelWidth - padding * 2;
+      const isLarge = labelHeight >= 30;
 
-        for (const label of labels) {
-          // Start a new label job
-          api.startJob({ width: labelWidth, height: labelHeight });
+      let yPos = padding;
 
-          // Layout calculations (all in mm)
-          const padding = 1.5;
-          const contentWidth = labelWidth - padding * 2;
-          const isLarge = labelHeight >= 30;
-
-          let yPos = padding;
-
-          // Product name
-          const nameFontHeight = isLarge ? 2.5 : 2;
-          api.drawText({
-            text: label.name,
-            x: padding,
-            y: yPos,
-            width: contentWidth,
-            height: nameFontHeight + 1,
-            fontHeight: nameFontHeight,
-            fontStyle: 1, // Bold
-            horizontalAlignment: 1, // Center
-          });
-          yPos += nameFontHeight + 0.8;
-
-          // Variant
-          if (label.variant) {
-            const varFontHeight = isLarge ? 2 : 1.8;
-            api.drawText({
-              text: label.variant,
-              x: padding,
-              y: yPos,
-              width: contentWidth,
-              height: varFontHeight + 0.5,
-              fontHeight: varFontHeight,
-              horizontalAlignment: 1, // Center
-            });
-            yPos += varFontHeight + 0.5;
-          }
-
-          // Barcode
-          const barcodeHeight = isLarge ? labelHeight * 0.28 : labelHeight * 0.25;
-          api.draw1DBarcode({
-            text: label.barcode,
-            x: padding,
-            y: yPos,
-            width: contentWidth,
-            height: barcodeHeight,
-            textHeight: isLarge ? 2 : 1.5,
-            horizontalAlignment: 1, // Center
-          });
-          yPos += barcodeHeight + 1;
-
-          // Price
-          const priceFontHeight = isLarge ? 4 : 3.5;
-          api.drawText({
-            text: `$${label.price.toFixed(2)}`,
-            x: padding,
-            y: yPos,
-            width: contentWidth,
-            height: priceFontHeight + 0.5,
-            fontHeight: priceFontHeight,
-            fontStyle: 1, // Bold
-            horizontalAlignment: 1, // Center
-          });
-          yPos += priceFontHeight + 0.5;
-
-          // Serial number
-          const serialFontHeight = isLarge ? 1.8 : 1.5;
-          api.drawText({
-            text: label.serial,
-            x: padding,
-            y: yPos,
-            width: contentWidth,
-            height: serialFontHeight + 0.5,
-            fontHeight: serialFontHeight,
-            horizontalAlignment: 1, // Center
-          });
-
-          // Commit (print) this label
-          api.commitJob((result: any) => {
-            if (result) printed++;
-          });
-        }
-
-        // Close printer after all labels
-        setTimeout(() => {
-          api.closePrinter();
-          resolve({ success: true, printed: labels.length });
-        }, 500);
+      // Product name
+      const nameFontHeight = isLarge ? 2.5 : 2;
+      api.drawText({
+        text: label.name,
+        x: padding,
+        y: yPos,
+        width: contentWidth,
+        height: nameFontHeight + 1,
+        fontHeight: nameFontHeight,
+        fontStyle: 1, // Bold
+        horizontalAlignment: 1, // Center
       });
-    } catch (err: any) {
-      resolve({ success: false, printed: 0, error: err?.message || "Print failed" });
+      yPos += nameFontHeight + 0.8;
+
+      // Variant
+      if (label.variant) {
+        const varFontHeight = isLarge ? 2 : 1.8;
+        api.drawText({
+          text: label.variant,
+          x: padding,
+          y: yPos,
+          width: contentWidth,
+          height: varFontHeight + 0.5,
+          fontHeight: varFontHeight,
+          horizontalAlignment: 1, // Center
+        });
+        yPos += varFontHeight + 0.5;
+      }
+
+      // Barcode
+      const barcodeHeight = isLarge ? labelHeight * 0.28 : labelHeight * 0.25;
+      api.draw1DBarcode({
+        text: label.barcode,
+        x: padding,
+        y: yPos,
+        width: contentWidth,
+        height: barcodeHeight,
+        textHeight: isLarge ? 2 : 1.5,
+        horizontalAlignment: 1, // Center
+      });
+      yPos += barcodeHeight + 1;
+
+      // Price
+      const priceFontHeight = isLarge ? 4 : 3.5;
+      api.drawText({
+        text: `$${label.price.toFixed(2)}`,
+        x: padding,
+        y: yPos,
+        width: contentWidth,
+        height: priceFontHeight + 0.5,
+        fontHeight: priceFontHeight,
+        fontStyle: 1, // Bold
+        horizontalAlignment: 1, // Center
+      });
+      yPos += priceFontHeight + 0.5;
+
+      // Serial number
+      const serialFontHeight = isLarge ? 1.8 : 1.5;
+      api.drawText({
+        text: label.serial,
+        x: padding,
+        y: yPos,
+        width: contentWidth,
+        height: serialFontHeight + 0.5,
+        fontHeight: serialFontHeight,
+        horizontalAlignment: 1, // Center
+      });
+
+      // Commit (print) this label
+      const commitResult = await api.commitJob();
+      if (commitResult?.statusCode === 0) {
+        printed++;
+      }
     }
-  });
+
+    // Close printer after all labels
+    await api.closePrinter();
+
+    return { success: printed > 0, printed, error: printed === 0 ? "No labels were printed" : undefined };
+  } catch (err: any) {
+    try { await api.closePrinter(); } catch {}
+    return { success: false, printed: 0, error: err?.message || "Print failed" };
+  }
 }
