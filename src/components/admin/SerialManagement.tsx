@@ -558,6 +558,10 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
   const [deleteSerialId, setDeleteSerialId] = useState<number | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [selectedPrintIds, setSelectedPrintIds] = useState<Set<number>>(new Set());
+  const [autoPrint, setAutoPrint] = useState(() => {
+    const saved = localStorage.getItem('serial-auto-print');
+    return saved !== null ? saved === 'true' : true;
+  });
 
   // Fetch existing serials for this product
   const { data: existingData, isLoading: existingLoading } = useQuery({
