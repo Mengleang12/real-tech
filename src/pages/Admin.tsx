@@ -1630,11 +1630,21 @@ const AdminLoginForm = () => {
 const Admin = () => {
   const { user, loading, isAdminOrModerator } = useAuth();
   const navigate = useNavigate();
+  const [verifyingAdmin, setVerifyingAdmin] = useState(true);
+  const [isVerifiedAdmin, setIsVerifiedAdmin] = useState(false);
 
-  // Also check legacy admin auth for backward compatibility
-  const isLegacyAdmin = authApi.isAuthenticated();
+  useEffect(() => {
+    const verify = async () => {
+      if (authApi.isAuthenticated()) {
+        const valid = await authApi.verifyToken();
+        setIsVerifiedAdmin(valid);
+      }
+      setVerifyingAdmin(false);
+    };
+    verify();
+  }, []);
 
-  if (loading) {
+  if (loading || verifyingAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -1642,13 +1652,13 @@ const Admin = () => {
     );
   }
 
-  // If user is not logged in at all (no user auth and no legacy admin auth)
-  if (!user && !isLegacyAdmin) {
+  // If user is not logged in at all (no user auth and no verified admin auth)
+  if (!user && !isVerifiedAdmin) {
     return <AdminLoginForm />;
   }
 
-  // Legacy admin auth (backward compatible)
-  if (isLegacyAdmin) {
+  // Verified admin auth
+  if (isVerifiedAdmin) {
     return <AdminDashboard />;
   }
 

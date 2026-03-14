@@ -371,6 +371,37 @@ export const authApi = {
     }
     return true;
   },
+
+  verifyToken: async (): Promise<boolean> => {
+    const token = localStorage.getItem('admin_api_key');
+    if (!token) return false;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        // Token invalid on server — clear it
+        localStorage.removeItem('admin_api_key');
+        localStorage.removeItem('admin_user');
+        localStorage.removeItem('admin_roles');
+        localStorage.removeItem('admin_token_time');
+        localStorage.removeItem('admin_401_timestamps');
+        return false;
+      }
+      const data = await response.json();
+      if (data.success && data.user) {
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
+        localStorage.setItem('admin_roles', JSON.stringify(data.user.roles || []));
+        localStorage.setItem('admin_token_time', Date.now().toString());
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  },
   
   getUser: () => {
     const user = localStorage.getItem('admin_user');
