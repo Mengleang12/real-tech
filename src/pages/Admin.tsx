@@ -56,6 +56,7 @@ import { SerialManagement } from "@/components/admin/SerialManagement";
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
 import { NotesManagement } from "@/components/admin/NotesManagement";
 import { ActiveSessions } from "@/components/admin/ActiveSessions";
+import { QuotationManagement } from "@/components/admin/QuotationManagement";
 import { useAuth } from "@/contexts/AuthContext";
 
 
