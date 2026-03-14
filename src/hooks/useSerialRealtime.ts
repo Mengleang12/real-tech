@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getEcho } from "@/lib/echo";
+import { serialsApi } from "@/lib/api";
 
 export interface SerialChangedEvent {
   action: string;
@@ -13,6 +14,7 @@ export interface SerialChangedEvent {
 /**
  * Listen for serial number changes via Laravel Reverb WebSocket.
  * Falls back to polling if WebSocket is disconnected.
+ * Polling also detects NEW serials and triggers auto-print callback.
  */
 export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) => void) {
   const queryClient = useQueryClient();
@@ -20,11 +22,27 @@ export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) =
   const callbackRef = useRef(onSerialsAdded);
   callbackRef.current = onSerialsAdded;
 
+  // Track the latest known serial ID for polling-based new serial detection
+  const latestKnownIdRef = useRef<number>(0);
+  const initializedRef = useRef(false);
+
   const invalidateSerials = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
     queryClient.invalidateQueries({ queryKey: ["product-serials"] });
     queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
   }, [queryClient]);
+
+  // Initialize latest known ID on mount
+  useEffect(() => {
+    serialsApi.getLatestId()
+      .then(({ latest_id }) => {
+        latestKnownIdRef.current = latest_id;
+        initializedRef.current = true;
+      })
+      .catch(() => {
+        initializedRef.current = true;
+      });
+  }, []);
 
   // WebSocket listener
   useEffect(() => {
@@ -36,6 +54,14 @@ export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) =
 
       channel.listen('.serial.changed', (event: SerialChangedEvent) => {
         invalidateSerials();
+
+        // Update latest known ID from WebSocket events
+        if (event.serial_ids?.length > 0) {
+          const maxId = Math.max(...event.serial_ids);
+          if (maxId > latestKnownIdRef.current) {
+            latestKnownIdRef.current = maxId;
+          }
+        }
 
         if (event.action === 'added' && event.serial_ids?.length > 0 && callbackRef.current) {
           callbackRef.current(event);
@@ -65,12 +91,40 @@ export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) =
     };
   }, [queryClient, invalidateSerials]);
 
-  // Polling fallback: refresh every 5s when disconnected, every 15s when connected
+  // Polling fallback: check for new serials and auto-print
   useEffect(() => {
-    const interval = setInterval(() => {
-      invalidateSerials();
-    }, connected === 'connected' ? 15000 : 5000);
+    const pollInterval = connected === 'connected' ? 15000 : 3000;
 
+    const poll = async () => {
+      // Always invalidate queries for UI freshness
+      invalidateSerials();
+
+      // Check for new serials added since last known ID (for auto-print)
+      if (!initializedRef.current || !callbackRef.current) return;
+
+      try {
+        const { serials: newSerials } = await serialsApi.getSince(latestKnownIdRef.current);
+        if (newSerials && newSerials.length > 0) {
+          // Update latest known ID
+          const maxId = Math.max(...newSerials.map(s => s.id));
+          latestKnownIdRef.current = maxId;
+
+          // Trigger auto-print callback with synthetic event
+          const event: SerialChangedEvent = {
+            action: 'added',
+            product_id: newSerials[0].product_id,
+            variant_id: newSerials[0].variant_id ?? null,
+            serial_ids: newSerials.map(s => s.id),
+            timestamp: new Date().toISOString(),
+          };
+          callbackRef.current(event);
+        }
+      } catch {
+        // Silently fail polling check
+      }
+    };
+
+    const interval = setInterval(poll, pollInterval);
     return () => clearInterval(interval);
   }, [connected, invalidateSerials]);
 
