@@ -163,6 +163,10 @@ const statusConfig = {
 
 export const SerialManagement = () => {
   const queryClient = useQueryClient();
+  
+  // Listen for realtime serial changes from other devices via Laravel Reverb
+  useSerialRealtime();
+
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -185,7 +189,6 @@ export const SerialManagement = () => {
       page,
       limit: 30,
     }),
-    refetchInterval: 5000, // Poll every 5s for cross-device sync
   });
 
   const deleteMutation = useMutation({
