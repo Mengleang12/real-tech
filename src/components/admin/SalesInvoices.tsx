@@ -608,6 +608,10 @@ const InvoicesTab = () => {
   const [paymentNote, setPaymentNote] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
   const scanInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const scrollLeftStart = useRef(0);
   const [printerStatus, setPrinterStatus] = useState<PrinterStatus>({ available: false, printers: [] });
   const [selectedPrinter, setSelectedPrinter] = useState<string>("");
 
