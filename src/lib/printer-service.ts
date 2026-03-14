@@ -213,7 +213,7 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
     const gap = sections.length > 1 ? 1 : 0;
     const availableForText = usableHeight - gap * (sections.length - 1);
 
-    let yPos = padding;
+    let yPos = paddingLeft;
 
     for (let i = 0; i < sections.length; i++) {
       const sec = sections[i];
