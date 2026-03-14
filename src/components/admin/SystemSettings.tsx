@@ -245,6 +245,8 @@ export function SystemSettingsPanel() {
           invoice_footer_text: settings.invoice_footer_text,
           payment_qr_urls: settings.payment_qr_urls,
           payment_qr_size: settings.payment_qr_size,
+          label_width: settings.label_width,
+          label_height: settings.label_height,
         }),
       });
       if (!res.ok) {
