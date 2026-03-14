@@ -110,6 +110,7 @@ function AppRoutes() {
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/install" element={<Install />} />
+        <Route path="/quotation/:number" element={<QuotationView />} />
         <Route path="/:id" element={<ProductDetail />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
