@@ -18,6 +18,7 @@ import {
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, isPrinterServiceAvailable, printLabels, type LabelData } from "@/lib/printer-service";
+import { useSerialRealtime, broadcastSerialChange } from "@/hooks/useSerialRealtime";
 
 // ─── Print Serial Label Utility ─────────────────────────────────────────────
 type PrintableSerial = {
