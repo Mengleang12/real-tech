@@ -1200,6 +1200,7 @@ const AdminDashboard = () => {
   const [pwLoading, setPwLoading] = useState(false);
   const [showPw, setShowPw] = useState({ current: false, new: false, confirm: false });
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [showSessions, setShowSessions] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
