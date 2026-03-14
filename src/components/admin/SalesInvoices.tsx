@@ -931,7 +931,7 @@ const InvoicesTab = () => {
         const matchedWarranty = warrantiesList.find((w: any) => w.name === order.warranty_period);
         const durationDays = matchedWarranty?.duration_days || 0;
         const durationLabel = durationDays >= 365 ? (durationDays / 365) + ' Year' + (durationDays >= 730 ? 's' : '') : durationDays + ' Day' + (durationDays !== 1 ? 's' : '');
-        const policyText = matchedWarranty?.policy ? matchedWarranty.policy.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '').trim().replace(/\n/g, '<br>') : '';
+        const policyText = matchedWarranty?.policy ? matchedWarranty.policy : '';
         return `<div class="warranty-box"><div class="wlabel">Warranty — ${matchedWarranty ? durationLabel : order.warranty_period}</div>${policyText ? `<p style="margin-top:2px;line-height:1.4">${policyText}</p>` : ''}</div>`;
       })() : ''}
 
