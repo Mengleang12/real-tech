@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { serialsApi, salesApi, type ProductSerial, type SaleProduct } from "@/lib/api";
 import { AdminDialog } from "./AdminDialog";
