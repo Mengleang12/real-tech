@@ -49,10 +49,12 @@ async function printSerialLabelsSDK(serials: PrintableSerial[]): Promise<boolean
     price: s.variant?.price_adjustment ?? 0,
   }));
 
+  const labelSize = await getGlobalLabelSize();
+
   const result = await printLabels({
     printerName: status.printerName,
-    labelWidth: 40,
-    labelHeight: 30,
+    labelWidth: labelSize.width,
+    labelHeight: labelSize.height,
     labels,
   });
 
