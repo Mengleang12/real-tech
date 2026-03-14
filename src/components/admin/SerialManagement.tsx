@@ -13,8 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Search, Plus, Trash2, Loader2, Package, ChevronLeft, ChevronRight,
-  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban, Camera, Printer,
+  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban, Camera, Printer, Wifi, WifiOff,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, isPrinterServiceAvailable, printLabels, type LabelData } from "@/lib/printer-service";
@@ -165,7 +166,7 @@ export const SerialManagement = () => {
   const queryClient = useQueryClient();
   
   // Listen for realtime serial changes from other devices via Laravel Reverb
-  useSerialRealtime();
+  const wsStatus = useSerialRealtime();
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -214,7 +215,34 @@ export const SerialManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h3 className="text-lg font-semibold">Serial Numbers</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Serial Numbers</h3>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center">
+                  {wsStatus === 'connected' ? (
+                    <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                    </span>
+                  ) : wsStatus === 'connecting' ? (
+                    <span className="flex items-center gap-1 text-xs text-amber-500">
+                      <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs text-destructive">
+                      <span className="h-2 w-2 rounded-full bg-destructive"></span>
+                    </span>
+                  )}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">
+                {wsStatus === 'connected' ? 'Live sync active' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline — changes won\'t sync'}
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <p className="text-sm text-muted-foreground">Pre-enter serial numbers for products. Scan during sale for quick checkout.</p>
         </div>
         <div className="flex items-center gap-2">
