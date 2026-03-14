@@ -153,10 +153,16 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
     if (items.length === 0) { toast.error('Add at least one product'); return; }
     setSaving(true);
     try {
+      const resolvedName = customerType === "existing" && selectedCustomer ? selectedCustomer.full_name : customerName;
+      const resolvedPhone = customerType === "existing" && selectedCustomer ? (selectedCustomer.phone || '') : customerPhone;
+      const resolvedEmail = customerType === "existing" && selectedCustomer ? selectedCustomer.email : customerEmail;
+      const resolvedCustomerId = customerType === "existing" && selectedCustomer ? selectedCustomer.id : null;
+
       const data = {
-        customer_name: customerName || null,
-        customer_phone: customerPhone || null,
-        customer_email: customerEmail || null,
+        customer_id: resolvedCustomerId,
+        customer_name: resolvedName || null,
+        customer_phone: resolvedPhone || null,
+        customer_email: resolvedEmail || null,
         valid_until: validUntil ? format(validUntil, 'yyyy-MM-dd') : null,
         notes: notes || null,
         terms: terms || null,
