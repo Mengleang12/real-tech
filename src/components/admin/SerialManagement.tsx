@@ -186,6 +186,7 @@ export const SerialManagement = () => {
       page,
       limit: 30,
     }),
+    refetchInterval: 5000, // Poll every 5s for cross-device sync
   });
 
   const deleteMutation = useMutation({
