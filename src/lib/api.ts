@@ -64,6 +64,7 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
   // Refresh admin token time on every successful response (sliding session sync)
   if (response.ok && getApiKey()) {
     localStorage.setItem('admin_token_time', Date.now().toString());
+    localStorage.removeItem('admin_401_count'); // Reset 401 counter on success
   }
   
   if (!response.ok) {
