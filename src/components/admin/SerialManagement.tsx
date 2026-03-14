@@ -13,8 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Search, Plus, Trash2, Loader2, Package, ChevronLeft, ChevronRight,
-  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban, Camera, Printer,
+  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban, Camera, Printer, Wifi, WifiOff,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, isPrinterServiceAvailable, printLabels, type LabelData } from "@/lib/printer-service";
