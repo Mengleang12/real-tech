@@ -1509,6 +1509,7 @@ const AdminDashboard = () => {
           {activeTab === "warranties" && <WarrantyManagement />}
           {activeTab === "settings" && <SystemSettingsPanel />}
           {activeTab === "notes" && <NotesManagement />}
+          {activeTab === "quotations" && <QuotationManagement />}
         </main>
       </div>
     </div>
