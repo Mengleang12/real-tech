@@ -165,7 +165,7 @@ export const SerialManagement = () => {
   const queryClient = useQueryClient();
   
   // Listen for realtime serial changes from other devices via Laravel Reverb
-  useSerialRealtime();
+  const wsStatus = useSerialRealtime();
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
