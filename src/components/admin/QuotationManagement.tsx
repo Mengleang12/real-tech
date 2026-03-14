@@ -148,7 +148,7 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
   }, 0);
 
   const overallDisc = discountType === 'percent' ? subtotal * (discountAmount / 100) : discountAmount;
-  const total = Math.max(0, subtotal - overallDisc);
+  const total = Math.max(0, subtotal - overallDisc) + deliveryFee;
 
   const handleSave = async () => {
     if (items.length === 0) { toast.error('Add at least one product'); return; }
