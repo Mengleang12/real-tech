@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { serialsApi, salesApi, type ProductSerial, type SaleProduct } from "@/lib/api";
 import { AdminDialog } from "./AdminDialog";
@@ -14,14 +14,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Search, Plus, Trash2, Loader2, Package, ChevronLeft, ChevronRight,
-  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban, Camera, Printer, Wifi, WifiOff,
+  ScanBarcode, Pencil, AlertTriangle, CheckCircle2, XCircle, Ban, Camera, Printer,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, printLabels, type LabelData } from "@/lib/printer-service";
 import { getGlobalLabelSize } from "@/lib/label-settings";
-import { useSerialRealtime, type SerialChangedEvent } from "@/hooks/useSerialRealtime";
+
 // ─── Print Serial Label Utility ─────────────────────────────────────────────
 type PrintableSerial = {
   serial_number: string;
@@ -98,28 +98,8 @@ const statusConfig = {
 export const SerialManagement = () => {
   const queryClient = useQueryClient();
   
-  // Auto-print labels when serials are added from another device (e.g. phone scan)
-  const handleRemoteSerialAdded = useCallback(async (event: SerialChangedEvent) => {
-    // Respect auto-print toggle (shared via localStorage)
-    if (localStorage.getItem('serial-auto-print') === 'false') return;
-    try {
-      // Use serials from event if available (polling provides them), otherwise fetch
-      let serialsToPrint = event.serials;
-      if (!serialsToPrint || serialsToPrint.length === 0) {
-        const { serials: fetched } = await serialsApi.getByIds(event.serial_ids);
-        serialsToPrint = fetched;
-      }
-      if (serialsToPrint && serialsToPrint.length > 0) {
-        toast.info(`Auto-printing ${serialsToPrint.length} label(s) from remote scan...`);
-        await printSerialLabels(serialsToPrint);
-      }
-    } catch (err) {
-      console.warn('Auto-print failed:', err);
-    }
-  }, []);
-
-  // Listen for realtime serial changes from other devices via Laravel Reverb
-  const wsStatus = useSerialRealtime(handleRemoteSerialAdded);
+  // Auto-print is now handled at the AdminDashboard level so it works on any tab.
+  // This component only handles the serial list UI.
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -170,31 +150,6 @@ export const SerialManagement = () => {
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold">Serial Numbers</h3>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex items-center">
-                  {wsStatus === 'connected' ? (
-                    <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                      </span>
-                    </span>
-                  ) : wsStatus === 'connecting' ? (
-                    <span className="flex items-center gap-1 text-xs text-amber-500">
-                      <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-xs text-destructive">
-                      <span className="h-2 w-2 rounded-full bg-destructive"></span>
-                    </span>
-                  )}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="text-xs">
-                {wsStatus === 'connected' ? 'Live sync active' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline — changes won\'t sync'}
-              </TooltipContent>
-            </Tooltip>
           </div>
           <p className="text-sm text-muted-foreground">Pre-enter serial numbers for products. Scan during sale for quick checkout.</p>
         </div>
