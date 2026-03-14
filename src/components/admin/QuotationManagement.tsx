@@ -490,7 +490,7 @@ const printQuotation = async (quotation: Quotation) => {
       .summary-tbl{width:200px}
       .s-row{display:flex;justify-content:space-between;padding:4px 10px;font-size:12px;color:#6b7280}
       .s-row.disc{color:#dc2626}
-      .s-row.total{background:#111827;color:#fff;border-radius:4px;padding:8px 10px;font-size:14px;font-weight:700;margin-top:3px}
+      .s-row.total{background:#10d2c7;color:#fff;border-radius:4px;padding:8px 10px;font-size:14px;font-weight:700;margin-top:3px}
       .note-box{margin-top:6px;padding:6px 10px;background:#f8fafc;border-left:2px solid ${primaryColor};border-radius:4px}
       .note-box .nlabel{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:1px}
       .note-box p{font-size:10px;color:#374151;line-height:1.4}

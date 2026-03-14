@@ -829,7 +829,7 @@ const InvoicesTab = () => {
         .summary-tbl{width:200px}
         .s-row{display:flex;justify-content:space-between;padding:4px 10px;font-size:12px;color:#6b7280}
         .s-row.disc{color:#dc2626}
-        .s-row.total{background:#111827;color:#fff;border-radius:4px;padding:8px 10px;font-size:14px;font-weight:700;margin-top:3px}
+        .s-row.total{background:#10d2c7;color:#fff;border-radius:4px;padding:8px 10px;font-size:14px;font-weight:700;margin-top:3px}
         .warranty-box{margin-top:8px;padding:8px 12px;background:#f8fafc;border-radius:6px;font-size:10px}
         .warranty-box .wlabel{font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#9ca3af;font-size:9px;margin-bottom:2px}
         .note-box{margin-top:6px;padding:6px 10px;background:#f8fafc;border-left:2px solid ${branding.primary_color};border-radius:4px}
