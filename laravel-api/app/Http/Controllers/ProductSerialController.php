@@ -149,7 +149,11 @@ class ProductSerialController extends Controller
         $productId = $serial->product_id;
         $variantId = $serial->variant_id;
         $serial->delete();
-        event(new SerialChanged('deleted', $productId, $variantId));
+        try {
+            event(new SerialChanged('deleted', $productId, $variantId));
+        } catch (\Exception $e) {
+            \Log::warning('SerialChanged broadcast failed: ' . $e->getMessage());
+        }
         return response()->json(['success' => true]);
     }
 
