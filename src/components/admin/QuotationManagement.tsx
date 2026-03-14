@@ -95,6 +95,7 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
   const [terms, setTerms] = useState(quotation?.terms || '');
   const [discountAmount, setDiscountAmount] = useState(Number(quotation?.discount_amount || 0));
   const [discountType, setDiscountType] = useState(quotation?.discount_type || 'amount');
+  const [deliveryFee, setDeliveryFee] = useState<number>(Number(quotation?.delivery_fee || 0));
   const [saving, setSaving] = useState(false);
 
   // Product search
