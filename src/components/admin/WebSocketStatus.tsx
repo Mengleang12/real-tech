@@ -1,4 +1,4 @@
-import { Wifi, WifiOff } from "lucide-react";
+import { Radio, Wifi } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface WebSocketStatusProps {
@@ -10,20 +10,20 @@ export const WebSocketStatus = ({ status }: WebSocketStatusProps) => {
     connected: {
       color: "bg-emerald-500",
       pulse: true,
-      label: "WebSocket Connected",
+      label: "Live — WebSocket",
       Icon: Wifi,
     },
     connecting: {
       color: "bg-amber-500",
       pulse: true,
-      label: "WebSocket Connecting...",
-      Icon: Wifi,
+      label: "Connecting...",
+      Icon: Radio,
     },
     disconnected: {
-      color: "bg-red-500",
-      pulse: false,
-      label: "WebSocket Disconnected (polling active)",
-      Icon: WifiOff,
+      color: "bg-emerald-500",
+      pulse: true,
+      label: "Live — Polling (1s)",
+      Icon: Radio,
     },
   }[status];
 
