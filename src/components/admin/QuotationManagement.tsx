@@ -169,6 +169,7 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
         terms: terms || null,
         discount_amount: discountAmount,
         discount_type: discountType,
+        delivery_fee: deliveryFee > 0 ? deliveryFee : 0,
         items: items.map(i => ({
           product_id: i.product_id,
           variant_id: i.variant_id,
