@@ -110,6 +110,8 @@ class ProductSerialController extends Controller
             $created[] = $serial;
         }
 
+        event(new SerialChanged('added', $request->product_id, $request->variant_id));
+
         return response()->json([
             'success' => true,
             'message' => count($created) . ' serial(s) added' . (count($duplicates) > 0 ? ', ' . count($duplicates) . ' duplicate(s) skipped' : ''),
