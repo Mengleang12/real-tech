@@ -22,11 +22,33 @@ class AuthController extends Controller
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        // Generate token
+        // Generate a new token without invalidating existing ones
+        // Support multiple sessions by storing tokens as JSON array
         $token = Str::random(64);
         $expiry = now()->addDays(30);
 
-        $admin->auth_token = $token;
+        $existingTokens = [];
+        if ($admin->auth_token) {
+            // Try to parse as JSON array (multi-session), fall back to single token
+            $decoded = json_decode($admin->auth_token, true);
+            if (is_array($decoded)) {
+                // Filter out expired tokens
+                $existingTokens = array_filter($decoded, fn($t) => 
+                    isset($t['expiry']) && now()->lt($t['expiry'])
+                );
+            } else {
+                // Legacy single token — keep it if not expired
+                if ($admin->token_expiry && now()->lt($admin->token_expiry)) {
+                    $existingTokens[] = ['token' => $admin->auth_token, 'expiry' => $admin->token_expiry->toISOString()];
+                }
+            }
+        }
+
+        // Add new token, keep max 5 sessions
+        $existingTokens[] = ['token' => $token, 'expiry' => $expiry->toISOString()];
+        $existingTokens = array_slice(array_values($existingTokens), -5);
+
+        $admin->auth_token = json_encode($existingTokens);
         $admin->token_expiry = $expiry;
         $admin->save();
 
