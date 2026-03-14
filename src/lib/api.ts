@@ -67,14 +67,22 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
   }
   
   if (!response.ok) {
-    // If admin token expired/invalid, auto-logout and redirect to admin login
+    // If admin token expired/invalid, track consecutive 401s before auto-logout
     if (response.status === 401 && getApiKey()) {
-      localStorage.removeItem('admin_api_key');
-      localStorage.removeItem('admin_user');
-      localStorage.removeItem('admin_roles');
-      localStorage.removeItem('admin_token_time');
-      window.location.href = '/admin';
-      throw new Error('Session expired. Please login again.');
+      const failCount = parseInt(localStorage.getItem('admin_401_count') || '0', 10) + 1;
+      localStorage.setItem('admin_401_count', failCount.toString());
+      
+      // Only logout after 3 consecutive 401 failures to avoid logout on brief hiccups
+      if (failCount >= 3) {
+        localStorage.removeItem('admin_api_key');
+        localStorage.removeItem('admin_user');
+        localStorage.removeItem('admin_roles');
+        localStorage.removeItem('admin_token_time');
+        localStorage.removeItem('admin_401_count');
+        window.location.href = '/admin';
+        throw new Error('Session expired. Please login again.');
+      }
+      throw new Error(data.error || data.message || 'API request failed');
     }
     throw new Error(data.error || data.message || 'API request failed');
   }
