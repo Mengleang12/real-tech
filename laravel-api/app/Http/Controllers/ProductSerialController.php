@@ -136,7 +136,11 @@ class ProductSerialController extends Controller
      */
     public function destroy($id)
     {
-        ProductSerial::findOrFail($id)->delete();
+        $serial = ProductSerial::findOrFail($id);
+        $productId = $serial->product_id;
+        $variantId = $serial->variant_id;
+        $serial->delete();
+        event(new SerialChanged('deleted', $productId, $variantId));
         return response()->json(['success' => true]);
     }
 
