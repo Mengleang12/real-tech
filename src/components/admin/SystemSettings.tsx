@@ -98,6 +98,15 @@ function getAuthHeaders(): Record<string, string> {
   };
 }
 
+export function SystemSettingsPanel() {
+  const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadingQr, setUploadingQr] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const qrInputRef = useRef<HTMLInputElement>(null);
+
   // Printer state
   const [printerStatus, setPrinterStatus] = useState<PrinterStatus>({ available: false, printers: [] });
   const [checkingPrinter, setCheckingPrinter] = useState(false);
@@ -153,15 +162,6 @@ function getAuthHeaders(): Record<string, string> {
     }
     setTestPrinting(false);
   };
-
-export function SystemSettingsPanel() {
-  const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadingQr, setUploadingQr] = useState(false);
-  const logoInputRef = useRef<HTMLInputElement>(null);
-  const qrInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchSettings();
