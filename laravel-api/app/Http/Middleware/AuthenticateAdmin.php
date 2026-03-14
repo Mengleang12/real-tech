@@ -20,15 +20,46 @@ class AuthenticateAdmin
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // Try admin token (users table, formerly admins)
-        $admin = User::with('roles')->where('auth_token', $token)
-            ->where('token_expiry', '>', now())
+        // Try admin token (users table) — supports multi-session JSON token array
+        $admin = User::with('roles')
+            ->where(function ($q) use ($token) {
+                $q->where('auth_token', 'LIKE', '%"' . $token . '"%')
+                  ->orWhere('auth_token', $token);
+            })
             ->first();
 
         if ($admin) {
-            // Renew token expiry on each authenticated request (sliding session)
-            $admin->token_expiry = now()->addDays(30);
-            $admin->save();
+            // Verify specific token is not expired (for multi-session)
+            $decoded = json_decode($admin->auth_token, true);
+            if (is_array($decoded)) {
+                $validToken = collect($decoded)->first(fn($t) => $t['token'] === $token && now()->lt($t['expiry']));
+                if (!$validToken) {
+                    $admin = null; // Token expired, fall through
+                } else {
+                    // Sliding session: renew this token
+                    $decoded = array_map(function ($t) use ($token) {
+                        if ($t['token'] === $token) {
+                            $t['expiry'] = now()->addDays(30)->toISOString();
+                        }
+                        return $t;
+                    }, $decoded);
+                    $decoded = array_values(array_filter($decoded, fn($t) => isset($t['expiry']) && now()->lt($t['expiry'])));
+                    $admin->auth_token = json_encode($decoded);
+                    $admin->token_expiry = now()->addDays(30);
+                    $admin->save();
+                }
+            } else {
+                // Legacy single token
+                if (!$admin->token_expiry || now()->gte($admin->token_expiry)) {
+                    $admin = null;
+                } else {
+                    $admin->token_expiry = now()->addDays(30);
+                    $admin->save();
+                }
+            }
+        }
+
+        if ($admin) {
 
             $adminRoles = $admin->roles->pluck('role')->toArray();
             $permissions = RolePermission::getPermissionsForRoles($adminRoles);

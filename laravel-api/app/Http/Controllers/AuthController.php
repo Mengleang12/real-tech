@@ -22,11 +22,33 @@ class AuthController extends Controller
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        // Generate token
+        // Generate a new token without invalidating existing ones
+        // Support multiple sessions by storing tokens as JSON array
         $token = Str::random(64);
         $expiry = now()->addDays(30);
 
-        $admin->auth_token = $token;
+        $existingTokens = [];
+        if ($admin->auth_token) {
+            // Try to parse as JSON array (multi-session), fall back to single token
+            $decoded = json_decode($admin->auth_token, true);
+            if (is_array($decoded)) {
+                // Filter out expired tokens
+                $existingTokens = array_filter($decoded, fn($t) => 
+                    isset($t['expiry']) && now()->lt($t['expiry'])
+                );
+            } else {
+                // Legacy single token — keep it if not expired
+                if ($admin->token_expiry && now()->lt($admin->token_expiry)) {
+                    $existingTokens[] = ['token' => $admin->auth_token, 'expiry' => $admin->token_expiry->toISOString()];
+                }
+            }
+        }
+
+        // Add new token, keep max 5 sessions
+        $existingTokens[] = ['token' => $token, 'expiry' => $expiry->toISOString()];
+        $existingTokens = array_slice(array_values($existingTokens), -5);
+
+        $admin->auth_token = json_encode($existingTokens);
         $admin->token_expiry = $expiry;
         $admin->save();
 
@@ -105,12 +127,36 @@ class AuthController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $admin = User::with('roles')->where('auth_token', $token)
-            ->where('token_expiry', '>', now())
+        $admin = User::with('roles')
+            ->where(function ($q) use ($token) {
+                // Support JSON array of tokens or legacy single token
+                $q->where('auth_token', 'LIKE', '%"' . $token . '"%')
+                  ->orWhere('auth_token', $token);
+            })
             ->first();
 
         if (!$admin) {
             return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        // Verify this specific token isn't expired
+        $decoded = json_decode($admin->auth_token, true);
+        if (is_array($decoded)) {
+            $found = false;
+            $decoded = array_map(function ($t) use ($token, &$found) {
+                if ($t['token'] === $token) {
+                    $found = true;
+                    // Sliding session: renew this token's expiry
+                    $t['expiry'] = now()->addDays(30)->toISOString();
+                }
+                return $t;
+            }, $decoded);
+            if (!$found) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+            // Filter expired and save
+            $decoded = array_values(array_filter($decoded, fn($t) => isset($t['expiry']) && now()->lt($t['expiry'])));
+            $admin->auth_token = json_encode($decoded);
         }
 
         // Renew token expiry (sliding session)
