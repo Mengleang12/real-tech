@@ -810,7 +810,22 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
           {/* ── Scan / Input area ── */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Scan or Type</span>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Scan or Type</span>
+                <button
+                  onClick={() => {
+                    const next = !autoPrint;
+                    setAutoPrint(next);
+                    localStorage.setItem('serial-auto-print', String(next));
+                    toast.success(next ? 'Auto-print enabled' : 'Auto-print disabled');
+                  }}
+                  className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Switch checked={autoPrint} className="scale-[0.6] origin-left" />
+                  <Printer className="w-3 h-3" />
+                  <span>Auto Print</span>
+                </button>
+              </div>
               {stockLimit !== Infinity && (
                 <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                   (remainingSlots - serialList.length) <= 0
