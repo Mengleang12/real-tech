@@ -658,14 +658,12 @@ const InvoicesTab = () => {
   const [labelAddress, setLabelAddress] = useState("Cambodia");
   const [labelSize, setLabelSize] = useState("40x30");
 
-  // Scan barcode to auto-print customer label
+  // Scan barcode to auto-print customer label (prints instantly, no dialog)
   const handleScanBarcode = async (scannedValue: string) => {
     const trimmed = scannedValue.trim();
     if (!trimmed || scanLoading) return;
     setScanLoading(true);
     try {
-      // The invoice barcode is the first 8 chars of the order UUID uppercased
-      // Search orders matching the scanned value
       const res = await adminUsersApi.getAllOrders({ search: trimmed, limit: 5 });
       const matchedOrder = res.orders.find((o: AdminOrder) =>
         o.id.slice(0, 8).toUpperCase() === trimmed.toUpperCase() ||
@@ -673,9 +671,10 @@ const InvoicesTab = () => {
         o.id.startsWith(trimmed.toLowerCase())
       );
       if (matchedOrder) {
-        setLabelAddress(matchedOrder.customer?.address || matchedOrder.user?.address || "Cambodia");
-        setLabelOrder(matchedOrder);
-        toast.success(`Invoice found: #${matchedOrder.id.slice(0, 8).toUpperCase()}`);
+        const address = matchedOrder.customer?.address || matchedOrder.user?.address || "Cambodia";
+        toast.success(`Invoice found: #${matchedOrder.id.slice(0, 8).toUpperCase()} — printing label...`);
+        // Print instantly without opening dialog
+        await printCustomerLabelDirect(matchedOrder, address);
       } else {
         toast.error("No invoice found for this barcode");
       }
@@ -684,6 +683,10 @@ const InvoicesTab = () => {
     }
     setScanLoading(false);
   };
+
+  // Direct print function that takes order and address as params (no dialog needed)
+  const printCustomerLabelDirect = async (order: AdminOrder, address: string) => {
+    const [lw, lh] = labelSize.split('x').map(Number);
 
   const handlePrintCustomerLabel = async () => {
     if (!labelOrder) return;
