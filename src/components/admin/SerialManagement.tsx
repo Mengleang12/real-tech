@@ -675,6 +675,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       toast.success("Serial deleted");
       queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
       queryClient.invalidateQueries({ queryKey: ["product-serials", selectedProduct?.id, selectedVariantId] });
+      broadcastSerialChange();
     },
     onError: () => toast.error("Failed to delete"),
   });
