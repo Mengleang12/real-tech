@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { serialsApi, salesApi, type ProductSerial, type SaleProduct } from "@/lib/api";
 import { AdminDialog } from "./AdminDialog";
@@ -95,6 +95,8 @@ export const SerialManagement = () => {
   
   // Auto-print labels when serials are added from another device (e.g. phone scan)
   const handleRemoteSerialAdded = useCallback(async (event: SerialChangedEvent) => {
+    // Respect auto-print toggle (shared via localStorage)
+    if (localStorage.getItem('serial-auto-print') === 'false') return;
     try {
       // Use serials from event if available (polling provides them), otherwise fetch
       let serialsToPrint = event.serials;
@@ -808,7 +810,22 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
           {/* ── Scan / Input area ── */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Scan or Type</span>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Scan or Type</span>
+                <button
+                  onClick={() => {
+                    const next = !autoPrint;
+                    setAutoPrint(next);
+                    localStorage.setItem('serial-auto-print', String(next));
+                    toast.success(next ? 'Auto-print enabled' : 'Auto-print disabled');
+                  }}
+                  className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Switch checked={autoPrint} className="scale-[0.6] origin-left" />
+                  <Printer className="w-3 h-3" />
+                  <span>Auto Print</span>
+                </button>
+              </div>
               {stockLimit !== Infinity && (
                 <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                   (remainingSlots - serialList.length) <= 0
@@ -862,24 +879,9 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
           {serialList.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
-                    Pending <span className="text-primary font-bold">{serialList.length}</span>
-                  </span>
-                  <button
-                    onClick={() => {
-                      const next = !autoPrint;
-                      setAutoPrint(next);
-                      localStorage.setItem('serial-auto-print', String(next));
-                      toast.success(next ? 'Auto-print enabled' : 'Auto-print disabled');
-                    }}
-                    className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Switch checked={autoPrint} className="scale-[0.6] origin-left" />
-                    <Printer className="w-3 h-3" />
-                    <span>Auto Print</span>
-                  </button>
-                </div>
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Pending <span className="text-primary font-bold">{serialList.length}</span>
+                </span>
                 <Button
                   size="sm"
                   onClick={() => saveMutation.mutate()}
