@@ -179,13 +179,15 @@ class QuotationController extends Controller
                     $overallDiscount = $subtotal * ($discountAmount / 100);
                 }
 
+                $deliveryFee = $request->delivery_fee ?? $quotation->delivery_fee ?? 0;
                 $quotation->subtotal = $subtotal;
-                $quotation->total = max(0, $subtotal - $overallDiscount);
+                $quotation->delivery_fee = $deliveryFee;
+                $quotation->total = max(0, $subtotal - $overallDiscount) + $deliveryFee;
             }
 
             $quotation->fill($request->only([
                 'customer_id', 'customer_name', 'customer_phone', 'customer_email',
-                'status', 'discount_amount', 'discount_type', 'currency',
+                'status', 'discount_amount', 'discount_type', 'delivery_fee', 'currency',
                 'valid_until', 'notes', 'terms',
             ]));
 
