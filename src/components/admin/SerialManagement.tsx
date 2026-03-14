@@ -196,7 +196,7 @@ export const SerialManagement = () => {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<ProductSerial> }) => serialsApi.update(id, data),
-    onSuccess: () => { toast.success("Updated"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); broadcastSerialChange(); },
+    onSuccess: () => { toast.success("Updated"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); },
     onError: () => toast.error("Failed to update"),
   });
 
