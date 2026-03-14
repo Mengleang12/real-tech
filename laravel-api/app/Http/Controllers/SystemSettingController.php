@@ -29,6 +29,8 @@ class SystemSettingController extends Controller
         'invoice_footer_text',
         'payment_qr_urls',
         'payment_qr_size',
+        'label_width',
+        'label_height',
     ];
 
     // Keys that store JSON arrays

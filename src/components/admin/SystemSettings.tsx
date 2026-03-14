@@ -87,6 +87,8 @@ const defaultSettings: SystemSettings = {
   invoice_footer_text: 'Thank you for your business!',
   payment_qr_urls: [],
   payment_qr_size: 72,
+  label_width: 40,
+  label_height: 30,
 };
 
 function getAuthHeaders(): Record<string, string> {
