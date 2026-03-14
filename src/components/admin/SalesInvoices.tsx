@@ -658,14 +658,12 @@ const InvoicesTab = () => {
   const [labelAddress, setLabelAddress] = useState("Cambodia");
   const [labelSize, setLabelSize] = useState("40x30");
 
-  // Scan barcode to auto-print customer label
+  // Scan barcode to auto-print customer label (prints instantly, no dialog)
   const handleScanBarcode = async (scannedValue: string) => {
     const trimmed = scannedValue.trim();
     if (!trimmed || scanLoading) return;
     setScanLoading(true);
     try {
-      // The invoice barcode is the first 8 chars of the order UUID uppercased
-      // Search orders matching the scanned value
       const res = await adminUsersApi.getAllOrders({ search: trimmed, limit: 5 });
       const matchedOrder = res.orders.find((o: AdminOrder) =>
         o.id.slice(0, 8).toUpperCase() === trimmed.toUpperCase() ||
@@ -673,9 +671,10 @@ const InvoicesTab = () => {
         o.id.startsWith(trimmed.toLowerCase())
       );
       if (matchedOrder) {
-        setLabelAddress(matchedOrder.customer?.address || matchedOrder.user?.address || "Cambodia");
-        setLabelOrder(matchedOrder);
-        toast.success(`Invoice found: #${matchedOrder.id.slice(0, 8).toUpperCase()}`);
+        const address = matchedOrder.customer?.address || matchedOrder.user?.address || "Cambodia";
+        toast.success(`Invoice found: #${matchedOrder.id.slice(0, 8).toUpperCase()} — printing label...`);
+        // Print instantly without opening dialog
+        await printCustomerLabelDirect(matchedOrder, address);
       } else {
         toast.error("No invoice found for this barcode");
       }
@@ -685,16 +684,12 @@ const InvoicesTab = () => {
     setScanLoading(false);
   };
 
-  const handlePrintCustomerLabel = async () => {
-    if (!labelOrder) return;
-    const order = labelOrder;
+  // Direct print function that takes order and address as params (no dialog needed)
+  const printCustomerLabelDirect = async (order: AdminOrder, address: string) => {
     const [lw, lh] = labelSize.split('x').map(Number);
     const branding = await getInvoiceBranding();
     const logoUrl = branding.site_logo_url || '';
     const padSize = lw >= 80 ? '6mm' : lw >= 60 ? '4mm' : '2mm';
-    const logoH = lw >= 80 ? '14mm' : lw >= 60 ? '10mm' : '7mm';
-    const senderSize = lw >= 80 ? '14px' : lw >= 60 ? '12px' : '10px';
-    const infoSize = lw >= 80 ? '13px' : lw >= 60 ? '11px' : '9px';
 
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
@@ -717,7 +712,7 @@ const InvoicesTab = () => {
       <div class="content" id="label-content">
         <div class="sender" id="sender-text">ផ្ញើរ: 087 753939</div>
         <div class="divider"></div>
-        ${labelAddress ? `<div class="address" id="address-text">${labelAddress}</div>` : ''}
+        ${address ? `<div class="address" id="address-text">${address}</div>` : ''}
         ${(order.customer?.phone || order.user?.phone) ? `<div class="phone" id="phone-text">${order.customer?.phone || order.user?.phone}</div>` : ''}
       </div>
       <script>
@@ -731,7 +726,6 @@ const InvoicesTab = () => {
           const containerH = container.offsetHeight;
           const containerW = container.offsetWidth;
           
-          // Auto-fit sender text
           let senderSize = 40;
           if (sender) {
             sender.style.fontSize = senderSize + 'px';
@@ -741,7 +735,6 @@ const InvoicesTab = () => {
             }
           }
           
-          // Auto-fit address text (smaller)
           if (address) {
             let size = Math.round(senderSize * 0.7);
             address.style.fontSize = size + 'px';
@@ -751,7 +744,6 @@ const InvoicesTab = () => {
             }
           }
           
-          // Auto-fit phone — same size as sender
           if (phone) {
             let size = senderSize;
             phone.style.fontSize = size + 'px';
@@ -770,6 +762,11 @@ const InvoicesTab = () => {
       iframe.contentWindow?.print();
       setTimeout(() => document.body.removeChild(iframe), 2000);
     }, 500);
+  };
+
+  const handlePrintCustomerLabel = async () => {
+    if (!labelOrder) return;
+    await printCustomerLabelDirect(labelOrder, labelAddress);
     setLabelOrder(null);
   };
 
