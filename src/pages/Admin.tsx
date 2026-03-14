@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, Users, BarChart3, Bell, Shield, Activity, 
   UserX, Tag, Play, Home, Menu, Download, Star, TrendingUp, Settings2, Loader2, ClipboardPaste, ShieldAlert, DollarSign,
   FolderTree, Bookmark, SlidersHorizontal, Boxes, AlertTriangle, PackageCheck, RefreshCw, FileText, Pencil,
-  ShoppingBag, Truck, Wand2, Image, User, Lock, Eye, EyeOff, ScanBarcode, StickyNote, Camera
+  ShoppingBag, Truck, Wand2, Image, User, Lock, Eye, EyeOff, ScanBarcode, StickyNote, Camera, Monitor
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
