@@ -190,7 +190,7 @@ export const SerialManagement = () => {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => serialsApi.delete(id),
-    onSuccess: () => { toast.success("Serial deleted"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); broadcastSerialChange(); },
+    onSuccess: () => { toast.success("Serial deleted"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); },
     onError: () => toast.error("Failed to delete"),
   });
 
