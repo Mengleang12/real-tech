@@ -407,6 +407,58 @@ export const authApi = {
     const user = localStorage.getItem('admin_user');
     return user ? JSON.parse(user) : null;
   },
+
+  getSessions: async (): Promise<{ sessions: Array<{
+    id: string;
+    device: string;
+    browser: string;
+    os: string;
+    ip: string;
+    logged_in_at: string | null;
+    last_active: string | null;
+    is_current: boolean;
+  }> }> => {
+    const token = localStorage.getItem('admin_api_key');
+    if (!token) return { sessions: [] };
+    const response = await fetch(`${API_BASE_URL}/api/auth/sessions`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) return { sessions: [] };
+    return response.json();
+  },
+
+  revokeSession: async (sessionId: string): Promise<{ success: boolean }> => {
+    const token = localStorage.getItem('admin_api_key');
+    if (!token) throw new Error('Not authenticated');
+    const response = await fetch(`${API_BASE_URL}/api/auth/sessions/revoke`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ session_id: sessionId }),
+    });
+    if (!response.ok) throw new Error('Failed to revoke session');
+    return response.json();
+  },
+
+  revokeAllSessions: async (): Promise<{ success: boolean }> => {
+    const token = localStorage.getItem('admin_api_key');
+    if (!token) throw new Error('Not authenticated');
+    const response = await fetch(`${API_BASE_URL}/api/auth/sessions/revoke-all`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) throw new Error('Failed to revoke sessions');
+    return response.json();
+  },
 };
 
 // Upload API - Laravel endpoint
