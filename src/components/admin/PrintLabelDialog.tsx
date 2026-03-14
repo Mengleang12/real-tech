@@ -42,9 +42,13 @@ export const PrintLabelDialog = ({ open, onOpenChange }: PrintLabelDialogProps) 
   const [checkingPrinter, setCheckingPrinter] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Initialize printer service on mount
+  // Initialize printer service and load global label size on mount
   useEffect(() => {
     checkPrinterService();
+    getGlobalLabelSize().then(size => {
+      setLabelWidth(size.width);
+      setLabelHeight(size.height);
+    });
   }, []);
 
   const checkPrinterService = async () => {
