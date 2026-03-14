@@ -820,7 +820,7 @@ const InvoicesTab = () => {
         .s-pending{background:#fef9c3;color:#854d0e}
         .s-failed{background:#fee2e2;color:#991b1b}
         table{width:100%;border-collapse:collapse;margin:8px 0 0}
-        thead th{text-align:left;padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;border-bottom:1px solid #e5e7eb;background:#f9fafb}
+        thead th{text-align:left;padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#fff;border-bottom:1px solid #e5e7eb;background:#111827}
         thead th:last-child,thead th.r{text-align:right}
         tbody td{padding:6px 10px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6}
         tbody td:last-child{text-align:right;font-variant-numeric:tabular-nums}
