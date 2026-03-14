@@ -55,6 +55,7 @@ import { SalesReport } from "@/components/admin/SalesReport";
 import { SerialManagement } from "@/components/admin/SerialManagement";
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
 import { NotesManagement } from "@/components/admin/NotesManagement";
+import { ActiveSessions } from "@/components/admin/ActiveSessions";
 import { useAuth } from "@/contexts/AuthContext";
 
 
