@@ -198,62 +198,34 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
 
     api.startJob({ width: labelWidth, height: labelHeight });
 
-    const padding = 1.5;
+    const padding = 1;
     const contentWidth = labelWidth - padding * 2;
-    const isLarge = labelHeight >= 30;
+    const usableHeight = labelHeight - padding * 2;
 
-    const senderFontHeight = isLarge ? 2.5 : 2;
-    const addressFontHeight = isLarge ? 3 : 2.5;
-    const phoneFontHeight = isLarge ? 4 : 3;
+    // Count how many sections we have
+    const sections: { text: string; weight: number }[] = [];
+    if (label.senderText) sections.push({ text: label.senderText, weight: 1 });
+    if (label.address) sections.push({ text: label.address, weight: 1.4 });
+    if (label.phone) sections.push({ text: label.phone, weight: 1.2 });
 
-    let totalHeight = senderFontHeight + 1;
-    totalHeight += 0.5; // divider
-    if (label.address) totalHeight += addressFontHeight + 1;
-    if (label.phone) totalHeight += phoneFontHeight;
+    const totalWeight = sections.reduce((s, sec) => s + sec.weight, 0);
+    const gap = sections.length > 1 ? 1 : 0;
+    const availableForText = usableHeight - gap * (sections.length - 1);
 
-    let yPos = Math.max(padding, (labelHeight - totalHeight) / 2);
+    let yPos = padding;
 
-    // Sender text
-    if (label.senderText) {
+    for (let i = 0; i < sections.length; i++) {
+      const sec = sections[i];
+      const sectionHeight = (sec.weight / totalWeight) * availableForText;
+      const fontHeight = sectionHeight * 0.7;
+
       api.drawText({
-        text: label.senderText,
+        text: sec.text,
         x: padding, y: yPos, width: contentWidth,
-        height: senderFontHeight + 1, fontHeight: senderFontHeight,
-        fontStyle: 1, horizontalAlignment: 1,
+        height: sectionHeight, fontHeight: fontHeight,
+        fontStyle: 1, horizontalAlignment: 1, verticalAlignment: 1,
       });
-      yPos += senderFontHeight + 0.8;
-    }
-
-    // Dashed divider line
-    api.drawLine({
-      x: padding + contentWidth * 0.1,
-      y: yPos,
-      x2: padding + contentWidth * 0.9,
-      y2: yPos,
-      lineWidth: 0.3,
-      dashMode: 1,
-    });
-    yPos += 1;
-
-    // Address
-    if (label.address) {
-      api.drawText({
-        text: label.address,
-        x: padding, y: yPos, width: contentWidth,
-        height: addressFontHeight + 2, fontHeight: addressFontHeight,
-        fontStyle: 1, horizontalAlignment: 1,
-      });
-      yPos += addressFontHeight + 1;
-    }
-
-    // Phone (large, bold)
-    if (label.phone) {
-      api.drawText({
-        text: label.phone,
-        x: padding, y: yPos, width: contentWidth,
-        height: phoneFontHeight + 1, fontHeight: phoneFontHeight,
-        fontStyle: 1, horizontalAlignment: 1,
-      });
+      yPos += sectionHeight + gap;
     }
 
     const commitResult = await api.commitJob();
