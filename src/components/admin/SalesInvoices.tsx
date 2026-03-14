@@ -658,6 +658,33 @@ const InvoicesTab = () => {
   const [labelAddress, setLabelAddress] = useState("Cambodia");
   const [labelSize, setLabelSize] = useState("40x30");
 
+  // Scan barcode to auto-print customer label
+  const handleScanBarcode = async (scannedValue: string) => {
+    const trimmed = scannedValue.trim();
+    if (!trimmed || scanLoading) return;
+    setScanLoading(true);
+    try {
+      // The invoice barcode is the first 8 chars of the order UUID uppercased
+      // Search orders matching the scanned value
+      const res = await adminUsersApi.getAllOrders({ search: trimmed, limit: 5 });
+      const matchedOrder = res.orders.find((o: AdminOrder) =>
+        o.id.slice(0, 8).toUpperCase() === trimmed.toUpperCase() ||
+        o.id === trimmed ||
+        o.id.startsWith(trimmed.toLowerCase())
+      );
+      if (matchedOrder) {
+        setLabelAddress(matchedOrder.customer?.address || matchedOrder.user?.address || "Cambodia");
+        setLabelOrder(matchedOrder);
+        toast.success(`Invoice found: #${matchedOrder.id.slice(0, 8).toUpperCase()}`);
+      } else {
+        toast.error("No invoice found for this barcode");
+      }
+    } catch {
+      toast.error("Failed to look up invoice");
+    }
+    setScanLoading(false);
+  };
+
   const handlePrintCustomerLabel = async () => {
     if (!labelOrder) return;
     const order = labelOrder;
