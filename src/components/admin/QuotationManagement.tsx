@@ -73,7 +73,7 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
   const [customerSearch, setCustomerSearch] = useState("");
   const [customers, setCustomers] = useState<SaleCustomer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<SaleCustomer | null>(
-    quotation?.customer_id ? { id: quotation.customer_id, full_name: quotation.customer_name || '', email: quotation.customer_email || '', phone: quotation.customer_phone || '', address: '' } : null
+    quotation?.customer_id ? { id: quotation.customer_id, full_name: quotation.customer_name || '', email: quotation.customer_email || '', phone: quotation.customer_phone || '' } : null
   );
   const [customerLoading, setCustomerLoading] = useState(false);
   const [customerName, setCustomerName] = useState(quotation?.customer_name || '');
