@@ -595,6 +595,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       limit: 200,
     }),
     enabled: !!selectedProduct && open,
+    refetchInterval: open ? 5000 : false, // Poll every 5s when dialog is open
   });
 
   // Filter existing serials by variant
