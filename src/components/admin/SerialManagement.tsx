@@ -165,8 +165,21 @@ const statusConfig = {
 export const SerialManagement = () => {
   const queryClient = useQueryClient();
   
+  // Auto-print labels when serials are added from another device (e.g. phone scan)
+  const handleRemoteSerialAdded = useCallback(async (event: SerialChangedEvent) => {
+    try {
+      const { serials: newSerials } = await serialsApi.getByIds(event.serial_ids);
+      if (newSerials && newSerials.length > 0) {
+        toast.info(`Auto-printing ${newSerials.length} label(s) from remote scan...`);
+        await printSerialLabels(newSerials);
+      }
+    } catch (err) {
+      console.warn('Auto-print failed:', err);
+    }
+  }, []);
+
   // Listen for realtime serial changes from other devices via Laravel Reverb
-  const wsStatus = useSerialRealtime();
+  const wsStatus = useSerialRealtime(handleRemoteSerialAdded);
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
