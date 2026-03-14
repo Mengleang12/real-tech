@@ -660,7 +660,6 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
       queryClient.invalidateQueries({ queryKey: ["product-serials", selectedProduct?.id, selectedVariantId] });
       setSerialList([]);
-      broadcastSerialChange();
       // Don't close dialog - let user add more
     },
     onError: () => toast.error("Failed to add serials"),
