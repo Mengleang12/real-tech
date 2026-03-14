@@ -163,9 +163,6 @@ const statusConfig = {
 };
 
 export const SerialManagement = () => {
-  // Listen for realtime serial changes from other devices
-  useSerialRealtime();
-  
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
