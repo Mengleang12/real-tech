@@ -93,10 +93,25 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
       const contentWidth = labelWidth - padding * 2;
       const isLarge = labelHeight >= 30;
 
-      let yPos = padding;
+      const nameFontHeight = isLarge ? 2.5 : 2;
+      const varFontHeight = isLarge ? 2 : 1.8;
+      const barcodeHeight = isLarge ? labelHeight * 0.28 : labelHeight * 0.25;
+      const barcodeTextHeight = isLarge ? 2 : 1.5;
+      const priceFontHeight = isLarge ? 4 : 3.5;
+      const serialFontHeight = isLarge ? 1.8 : 1.5;
+
+      // Calculate total content height for vertical centering
+      let totalHeight = 0;
+      totalHeight += nameFontHeight + 0.8; // name + gap
+      if (label.variant) totalHeight += varFontHeight + 0.5; // variant + gap
+      totalHeight += barcodeHeight + 1; // barcode + gap
+      totalHeight += priceFontHeight + 0.5; // price + gap
+      totalHeight += serialFontHeight; // serial (no trailing gap)
+
+      // Center vertically
+      let yPos = Math.max(padding, (labelHeight - totalHeight) / 2);
 
       // Product name
-      const nameFontHeight = isLarge ? 2.5 : 2;
       api.drawText({
         text: label.name,
         x: padding,
@@ -104,14 +119,13 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
         width: contentWidth,
         height: nameFontHeight + 1,
         fontHeight: nameFontHeight,
-        fontStyle: 1, // Bold
-        horizontalAlignment: 1, // Center
+        fontStyle: 1,
+        horizontalAlignment: 1,
       });
       yPos += nameFontHeight + 0.8;
 
       // Variant
       if (label.variant) {
-        const varFontHeight = isLarge ? 2 : 1.8;
         api.drawText({
           text: label.variant,
           x: padding,
@@ -119,26 +133,24 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
           width: contentWidth,
           height: varFontHeight + 0.5,
           fontHeight: varFontHeight,
-          horizontalAlignment: 1, // Center
+          horizontalAlignment: 1,
         });
         yPos += varFontHeight + 0.5;
       }
 
       // Barcode
-      const barcodeHeight = isLarge ? labelHeight * 0.28 : labelHeight * 0.25;
       api.draw1DBarcode({
         text: label.barcode,
         x: padding,
         y: yPos,
         width: contentWidth,
         height: barcodeHeight,
-        textHeight: isLarge ? 2 : 1.5,
-        horizontalAlignment: 1, // Center
+        textHeight: barcodeTextHeight,
+        horizontalAlignment: 1,
       });
       yPos += barcodeHeight + 1;
 
       // Price
-      const priceFontHeight = isLarge ? 4 : 3.5;
       api.drawText({
         text: `$${label.price.toFixed(2)}`,
         x: padding,
@@ -146,13 +158,12 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
         width: contentWidth,
         height: priceFontHeight + 0.5,
         fontHeight: priceFontHeight,
-        fontStyle: 1, // Bold
-        horizontalAlignment: 1, // Center
+        fontStyle: 1,
+        horizontalAlignment: 1,
       });
       yPos += priceFontHeight + 0.5;
 
       // Serial number
-      const serialFontHeight = isLarge ? 1.8 : 1.5;
       api.drawText({
         text: label.serial,
         x: padding,
@@ -160,7 +171,7 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
         width: contentWidth,
         height: serialFontHeight + 0.5,
         fontHeight: serialFontHeight,
-        horizontalAlignment: 1, // Center
+        horizontalAlignment: 1,
       });
 
       // Commit (print) this label
