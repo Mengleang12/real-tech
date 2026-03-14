@@ -10,6 +10,7 @@ import { Printer, Plus, Minus, Trash2, Loader2, Package, Ruler, Columns3, Sticky
 import { salesApi, serialsApi, type SaleProduct, type ProductSerial } from "@/lib/api";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, printLabels, isPrinterServiceAvailable, type PrinterStatus } from "@/lib/printer-service";
+import { getGlobalLabelSize } from "@/lib/label-settings";
 
 interface LabelItem {
   product: SaleProduct;
