@@ -65,6 +65,7 @@
     "lpapi-dtpweb": "^1.5.260105",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
+    "pusher-js": "^8.4.0",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
