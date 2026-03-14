@@ -78,7 +78,7 @@ export interface CustomerLabelPrintOptions {
 }
 
 /**
- * Print labels directly to the Detonger printer via lpapi-dtpweb SDK.
+ * Print product labels directly to the Detonger printer via lpapi-dtpweb SDK.
  * No browser print dialog is shown.
  */
 export async function printLabels(options: PrintOptions): Promise<{ success: boolean; printed: number; error?: string }> {
@@ -89,7 +89,6 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
   const { printerName, labelWidth, labelHeight, labels } = options;
 
   try {
-    // Open the printer
     const openResp = await api.openPrinter(printerName);
     if (openResp.statusCode !== 0) {
       return { success: false, printed: 0, error: `Failed to connect to printer "${printerName}": ${openResp.errMsg || 'Unknown error'}` };
@@ -98,10 +97,8 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
     let printed = 0;
 
     for (const label of labels) {
-      // Start a new label job
       api.startJob({ width: labelWidth, height: labelHeight });
 
-      // Layout calculations (all in mm)
       const padding = 1.5;
       const contentWidth = labelWidth - padding * 2;
       const isLarge = labelHeight >= 30;
@@ -113,27 +110,21 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
       const priceFontHeight = isLarge ? 4 : 3.5;
       const serialFontHeight = isLarge ? 1.8 : 1.5;
 
-      // Calculate total content height for vertical centering
       let totalHeight = 0;
-      totalHeight += nameFontHeight + 0.8; // name + gap
-      if (label.variant) totalHeight += varFontHeight + 0.5; // variant + gap
-      totalHeight += barcodeHeight + 1; // barcode + gap
-      totalHeight += priceFontHeight + 0.5; // price + gap
-      totalHeight += serialFontHeight; // serial (no trailing gap)
+      totalHeight += nameFontHeight + 0.8;
+      if (label.variant) totalHeight += varFontHeight + 0.5;
+      totalHeight += barcodeHeight + 1;
+      totalHeight += priceFontHeight + 0.5;
+      totalHeight += serialFontHeight;
 
-      // Center vertically
       let yPos = Math.max(padding, (labelHeight - totalHeight) / 2);
 
       // Product name
       api.drawText({
         text: label.name,
-        x: padding,
-        y: yPos,
-        width: contentWidth,
-        height: nameFontHeight + 1,
-        fontHeight: nameFontHeight,
-        fontStyle: 1,
-        horizontalAlignment: 1,
+        x: padding, y: yPos, width: contentWidth,
+        height: nameFontHeight + 1, fontHeight: nameFontHeight,
+        fontStyle: 1, horizontalAlignment: 1,
       });
       yPos += nameFontHeight + 0.8;
 
@@ -141,11 +132,8 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
       if (label.variant) {
         api.drawText({
           text: label.variant,
-          x: padding,
-          y: yPos,
-          width: contentWidth,
-          height: varFontHeight + 0.5,
-          fontHeight: varFontHeight,
+          x: padding, y: yPos, width: contentWidth,
+          height: varFontHeight + 0.5, fontHeight: varFontHeight,
           horizontalAlignment: 1,
         });
         yPos += varFontHeight + 0.5;
@@ -154,11 +142,8 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
       // Barcode
       api.draw1DBarcode({
         text: label.barcode,
-        x: padding,
-        y: yPos,
-        width: contentWidth,
-        height: barcodeHeight,
-        textHeight: barcodeTextHeight,
+        x: padding, y: yPos, width: contentWidth,
+        height: barcodeHeight, textHeight: barcodeTextHeight,
         horizontalAlignment: 1,
       });
       yPos += barcodeHeight + 1;
@@ -166,31 +151,32 @@ export async function printLabels(options: PrintOptions): Promise<{ success: boo
       // Price
       api.drawText({
         text: `$${label.price.toFixed(2)}`,
-        x: padding,
-        y: yPos,
-        width: contentWidth,
-        height: priceFontHeight + 0.5,
-        fontHeight: priceFontHeight,
-        fontStyle: 1,
-        horizontalAlignment: 1,
+        x: padding, y: yPos, width: contentWidth,
+        height: priceFontHeight + 0.5, fontHeight: priceFontHeight,
+        fontStyle: 1, horizontalAlignment: 1,
       });
       yPos += priceFontHeight + 0.5;
 
       // Serial number
       api.drawText({
         text: label.serial,
-        x: padding,
-        y: yPos,
-        width: contentWidth,
-        height: serialFontHeight + 0.5,
-        fontHeight: serialFontHeight,
+        x: padding, y: yPos, width: contentWidth,
+        height: serialFontHeight + 0.5, fontHeight: serialFontHeight,
         horizontalAlignment: 1,
       });
 
-      // Commit (print) this label
       const commitResult = await api.commitJob();
       if (commitResult?.statusCode === 0) {
         printed++;
+      }
+    }
+
+    await api.closePrinter();
+    return { success: printed > 0, printed, error: printed === 0 ? "No labels were printed" : undefined };
+  } catch (err: any) {
+    try { await api.closePrinter(); } catch {}
+    return { success: false, printed: 0, error: err?.message || "Print failed" };
+  }
 }
 
 /**
@@ -220,25 +206,20 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
     const addressFontHeight = isLarge ? 3 : 2.5;
     const phoneFontHeight = isLarge ? 4 : 3;
 
-    // Calculate total content height
-    let totalHeight = senderFontHeight + 1; // sender + gap
-    totalHeight += 0.5; // divider line
+    let totalHeight = senderFontHeight + 1;
+    totalHeight += 0.5; // divider
     if (label.address) totalHeight += addressFontHeight + 1;
     if (label.phone) totalHeight += phoneFontHeight;
 
     let yPos = Math.max(padding, (labelHeight - totalHeight) / 2);
 
-    // Sender text (e.g. "ផ្ញើរ: 087 753939")
+    // Sender text
     if (label.senderText) {
       api.drawText({
         text: label.senderText,
-        x: padding,
-        y: yPos,
-        width: contentWidth,
-        height: senderFontHeight + 1,
-        fontHeight: senderFontHeight,
-        fontStyle: 1, // bold
-        horizontalAlignment: 1, // center
+        x: padding, y: yPos, width: contentWidth,
+        height: senderFontHeight + 1, fontHeight: senderFontHeight,
+        fontStyle: 1, horizontalAlignment: 1,
       });
       yPos += senderFontHeight + 0.8;
     }
@@ -258,13 +239,9 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
     if (label.address) {
       api.drawText({
         text: label.address,
-        x: padding,
-        y: yPos,
-        width: contentWidth,
-        height: addressFontHeight + 2,
-        fontHeight: addressFontHeight,
-        fontStyle: 1, // bold
-        horizontalAlignment: 1, // center
+        x: padding, y: yPos, width: contentWidth,
+        height: addressFontHeight + 2, fontHeight: addressFontHeight,
+        fontStyle: 1, horizontalAlignment: 1,
       });
       yPos += addressFontHeight + 1;
     }
@@ -273,13 +250,9 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
     if (label.phone) {
       api.drawText({
         text: label.phone,
-        x: padding,
-        y: yPos,
-        width: contentWidth,
-        height: phoneFontHeight + 1,
-        fontHeight: phoneFontHeight,
-        fontStyle: 1, // bold
-        horizontalAlignment: 1, // center
+        x: padding, y: yPos, width: contentWidth,
+        height: phoneFontHeight + 1, fontHeight: phoneFontHeight,
+        fontStyle: 1, horizontalAlignment: 1,
       });
     }
 
@@ -294,16 +267,5 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
   } catch (err: any) {
     try { await api.closePrinter(); } catch {}
     return { success: false, error: err?.message || "Print failed" };
-  }
-}
-    }
-
-    // Close printer after all labels
-    await api.closePrinter();
-
-    return { success: printed > 0, printed, error: printed === 0 ? "No labels were printed" : undefined };
-  } catch (err: any) {
-    try { await api.closePrinter(); } catch {}
-    return { success: false, printed: 0, error: err?.message || "Print failed" };
   }
 }
