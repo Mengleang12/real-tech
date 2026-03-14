@@ -481,7 +481,7 @@ const printQuotation = async (quotation: Quotation) => {
       .info-sub{font-size:10px;color:#6b7280}
       .qt-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${primaryColor};color:#fff}
       table{width:100%;border-collapse:collapse;margin:8px 0 0}
-      thead th{text-align:left;padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#fff;border-bottom:1px solid #e5e7eb;background:#111827}
+      thead th{text-align:left;padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#fff;border-bottom:1px solid #e5e7eb;background:#10d2c7}
       thead th:last-child,thead th.r{text-align:right}
       tbody td{padding:6px 10px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6}
       tbody td:last-child{text-align:right;font-variant-numeric:tabular-nums}
