@@ -56,6 +56,7 @@ import { SerialManagement } from "@/components/admin/SerialManagement";
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
 import { NotesManagement } from "@/components/admin/NotesManagement";
 import { ActiveSessions } from "@/components/admin/ActiveSessions";
+import { QuotationManagement } from "@/components/admin/QuotationManagement";
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -702,7 +703,7 @@ const ProductForm = ({ app, onSave, onCancel }: ProductFormProps) => {
 };
 
 // ─── Sidebar Nav ──────────────────────────────────────────────────────────────
-type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "sliders" | "users" | "staff_users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties" | "notes";
+type AdminTab = "analytics" | "apps" | "categories" | "brands" | "attributes" | "print_labels" | "sliders" | "users" | "staff_users" | "payments" | "sales" | "stock" | "invoices" | "purchases" | "suppliers" | "reports" | "roles" | "notifications" | "activity" | "status" | "coupons" | "reviews" | "settings" | "warranties" | "notes" | "quotations";
 
 interface NavItem {
   id: AdminTab;
@@ -728,6 +729,7 @@ const navGroups: NavGroup[] = [
     label: "Sales",
     items: [
       { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
+      { id: "quotations", label: "Quotations", icon: ClipboardPaste, permission: "orders.view" },
       { id: "purchases", label: "Purchase", icon: ShoppingBag, permission: "orders.view" },
       { id: "suppliers", label: "Suppliers", icon: Truck, permission: "orders.view" },
       
@@ -1507,6 +1509,7 @@ const AdminDashboard = () => {
           {activeTab === "warranties" && <WarrantyManagement />}
           {activeTab === "settings" && <SystemSettingsPanel />}
           {activeTab === "notes" && <NotesManagement />}
+          {activeTab === "quotations" && <QuotationManagement />}
         </main>
       </div>
     </div>

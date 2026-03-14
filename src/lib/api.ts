@@ -1547,3 +1547,86 @@ export const slidersApi = {
     return apiRequest('admin/sliders/reorder', { method: 'POST', body: { order } });
   },
 };
+
+// ─── Quotation Types ────────────────────────────────────────────────────────
+export interface QuotationItem {
+  id?: number;
+  quotation_id?: number;
+  product_id: number;
+  variant_id?: number | null;
+  product_name: string;
+  variant_label?: string | null;
+  quantity: number;
+  unit_price: number;
+  discount: number;
+  discount_type?: string | null;
+  line_total: number;
+}
+
+export interface Quotation {
+  id: number;
+  quotation_number: string;
+  customer_id?: number | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  customer_email?: string | null;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'converted';
+  subtotal: string;
+  discount_amount: string;
+  discount_type?: string | null;
+  total: string;
+  currency: string;
+  valid_until?: string | null;
+  notes?: string | null;
+  terms?: string | null;
+  converted_sale_id?: number | null;
+  created_by?: number | null;
+  created_at: string;
+  updated_at: string;
+  items: QuotationItem[];
+  customer?: { id: number; full_name: string; phone?: string; email?: string } | null;
+}
+
+// ─── Quotation API ──────────────────────────────────────────────────────────
+export const quotationsApi = {
+  getAll: async (params?: { status?: string; search?: string; page?: number; limit?: number }): Promise<{ quotations: Quotation[]; pagination: any }> => {
+    const query = new URLSearchParams();
+    if (params?.status) query.set('status', params.status);
+    if (params?.search) query.set('search', params.search);
+    if (params?.page) query.set('page', String(params.page));
+    if (params?.limit) query.set('limit', String(params.limit));
+    return apiRequest(`admin/quotations?${query.toString()}`);
+  },
+
+  get: async (id: number): Promise<{ quotation: Quotation }> => {
+    return apiRequest(`admin/quotations/${id}`);
+  },
+
+  create: async (data: any): Promise<{ quotation: Quotation }> => {
+    return apiRequest('admin/quotations', { method: 'POST', body: data });
+  },
+
+  update: async (id: number, data: any): Promise<{ quotation: Quotation }> => {
+    return apiRequest(`admin/quotations/${id}`, { method: 'PUT', body: data });
+  },
+
+  updateStatus: async (id: number, status: string): Promise<{ quotation: Quotation }> => {
+    return apiRequest(`admin/quotations/${id}/status`, { method: 'PUT', body: { status } });
+  },
+
+  delete: async (id: number): Promise<{ success: boolean }> => {
+    return apiRequest(`admin/quotations/${id}`, { method: 'DELETE' });
+  },
+
+  convertToSale: async (id: number): Promise<{ sale_data: any }> => {
+    return apiRequest(`admin/quotations/${id}/convert`, { method: 'POST' });
+  },
+
+  markConverted: async (id: number, saleId: string): Promise<{ success: boolean }> => {
+    return apiRequest(`admin/quotations/${id}/mark-converted`, { method: 'POST', body: { sale_id: saleId } });
+  },
+
+  publicView: async (number: string): Promise<{ quotation: Quotation; branding: any }> => {
+    return apiRequest(`quotations/view/${number}`, { requiresAuth: false });
+  },
+};
