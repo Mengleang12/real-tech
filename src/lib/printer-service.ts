@@ -222,7 +222,7 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
 
       api.drawText({
         text: sec.text,
-        x: padding, y: yPos, width: contentWidth,
+        x: paddingLeft, y: yPos, width: contentWidth,
         height: sectionHeight, fontHeight: fontHeight,
         fontStyle: 1, horizontalAlignment: 1, verticalAlignment: 1,
       });
