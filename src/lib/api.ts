@@ -1046,6 +1046,10 @@ export const serialsApi = {
   lookup: async (code: string): Promise<SerialLookupResult> => {
     return apiRequest('admin/serials/lookup', { method: 'POST', body: { code } });
   },
+
+  getByIds: async (ids: number[]): Promise<{ serials: ProductSerial[] }> => {
+    return apiRequest('admin/serials/for-print', { method: 'POST', body: { ids } });
+  },
 };
 
 // Categories API
