@@ -1476,9 +1476,6 @@ const AdminDashboard = () => {
             <h1 className="font-semibold text-base truncate">{activeItem?.label}</h1>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate("/")} className="hidden sm:flex gap-1.5">
-              <ArrowLeft className="w-3.5 h-3.5" /> Store
-            </Button>
             <WebSocketStatus status={wsStatus} />
             <AdminNotificationBell />
           </div>
