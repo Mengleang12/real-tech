@@ -390,7 +390,7 @@ class SaleController extends Controller
             ->limit(10)
             ->get();
 
-        $recentSales = Sale::with('user:id,email,full_name,phone')
+        $recentSales = Sale::with('customer:id,email,full_name,phone')
             ->where('status', 'paid')
             ->orderByDesc('paid_at')
             ->limit(10)
@@ -407,9 +407,9 @@ class SaleController extends Controller
                 ? $variants->sum('stock_quantity')
                 : ($product->stock_quantity ?? 0);
             $threshold = $product->low_stock_threshold ?? 5;
-            $price = $product->price ?? 0;
+            $variantPrice = $variants->count() > 0 ? (float) $variants->first()->price_adjustment : 0;
 
-            $totalStockValue += $totalStock * $price;
+            $totalStockValue += $totalStock * $variantPrice;
 
             if ($totalStock <= 0) {
                 $outOfStockCount++;
