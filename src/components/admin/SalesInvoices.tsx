@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getInvoiceBranding } from "@/lib/invoice-branding";
 import { getWarrantyStatus, getWarrantyBadgeVariant, getWarrantyHtml } from "@/lib/warranty-utils";
 import { AddSaleDialog } from "./AddSaleDialog";
@@ -604,6 +604,8 @@ const InvoicesTab = () => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
+  const [scanLoading, setScanLoading] = useState(false);
+  const scanInputRef = useRef<HTMLInputElement>(null);
 
   // Debounce search
   useEffect(() => {
@@ -655,6 +657,33 @@ const InvoicesTab = () => {
   const [labelOrder, setLabelOrder] = useState<AdminOrder | null>(null);
   const [labelAddress, setLabelAddress] = useState("Cambodia");
   const [labelSize, setLabelSize] = useState("40x30");
+
+  // Scan barcode to auto-print customer label
+  const handleScanBarcode = async (scannedValue: string) => {
+    const trimmed = scannedValue.trim();
+    if (!trimmed || scanLoading) return;
+    setScanLoading(true);
+    try {
+      // The invoice barcode is the first 8 chars of the order UUID uppercased
+      // Search orders matching the scanned value
+      const res = await adminUsersApi.getAllOrders({ search: trimmed, limit: 5 });
+      const matchedOrder = res.orders.find((o: AdminOrder) =>
+        o.id.slice(0, 8).toUpperCase() === trimmed.toUpperCase() ||
+        o.id === trimmed ||
+        o.id.startsWith(trimmed.toLowerCase())
+      );
+      if (matchedOrder) {
+        setLabelAddress(matchedOrder.customer?.address || matchedOrder.user?.address || "Cambodia");
+        setLabelOrder(matchedOrder);
+        toast.success(`Invoice found: #${matchedOrder.id.slice(0, 8).toUpperCase()}`);
+      } else {
+        toast.error("No invoice found for this barcode");
+      }
+    } catch {
+      toast.error("Failed to look up invoice");
+    }
+    setScanLoading(false);
+  };
 
   const handlePrintCustomerLabel = async () => {
     if (!labelOrder) return;
@@ -958,6 +987,22 @@ const InvoicesTab = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Search invoices..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+        </div>
+        <div className="relative w-full sm:w-[220px]">
+          <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            ref={scanInputRef}
+            placeholder="Scan invoice barcode..."
+            className="pl-9 pr-8"
+            disabled={scanLoading}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleScanBarcode((e.target as HTMLInputElement).value);
+                (e.target as HTMLInputElement).value = '';
+              }
+            }}
+          />
+          {scanLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
         </div>
         <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
           <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
