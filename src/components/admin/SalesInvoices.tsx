@@ -798,7 +798,7 @@ const InvoicesTab = () => {
         @page{size:A5;margin:8mm 10mm}
         body{font-family:'Inter',system-ui,sans-serif;width:100%;color:#1f2937;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:13px;line-height:1.45}
         .page{max-width:128mm;margin:0 auto;padding:4mm 0}
-        .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:2px solid #111827}
+        .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:2px solid #10d2c7}
         .brand{display:flex;align-items:center;gap:10px}
         .brand-icon{width:48px;height:48px;border-radius:6px;overflow:hidden;flex-shrink:0}
         .brand-icon img{width:100%;height:100%;object-fit:contain}
