@@ -67,9 +67,29 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
       discount_type: i.discount_type,
     })) || []
   );
+  const [customerType, setCustomerType] = useState<"walkin" | "existing" | "new">(
+    quotation?.customer_id ? "existing" : (quotation?.customer_name ? "new" : "walkin")
+  );
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [customers, setCustomers] = useState<SaleCustomer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<SaleCustomer | null>(
+    quotation?.customer_id ? { id: quotation.customer_id, full_name: quotation.customer_name || '', email: quotation.customer_email || '', phone: quotation.customer_phone || '', address: '' } : null
+  );
+  const [customerLoading, setCustomerLoading] = useState(false);
   const [customerName, setCustomerName] = useState(quotation?.customer_name || '');
   const [customerPhone, setCustomerPhone] = useState(quotation?.customer_phone || '');
   const [customerEmail, setCustomerEmail] = useState(quotation?.customer_email || '');
+
+  const handleSearchCustomers = useCallback(async (q: string) => {
+    setCustomerSearch(q);
+    if (q.length < 2) { setCustomers([]); return; }
+    setCustomerLoading(true);
+    try {
+      const res = await salesApi.searchCustomers(q);
+      setCustomers(res.customers);
+    } catch { /* ignore */ }
+    setCustomerLoading(false);
+  }, []);
   const [validUntil, setValidUntil] = useState<Date | undefined>(quotation?.valid_until ? new Date(quotation.valid_until) : undefined);
   const [notes, setNotes] = useState(quotation?.notes || '');
   const [terms, setTerms] = useState(quotation?.terms || '');
