@@ -23,6 +23,7 @@ import {
   AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield, CreditCard, Tag, ScanBarcode, StickyNote
 } from "lucide-react";
 import { AddSerialsForProductDialog } from "./SerialManagement";
+import { initPrinterService, printCustomerLabel, isPrinterServiceAvailable, type PrinterStatus } from "@/lib/printer-service";
 
 const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline" | "warning"; label: string }> = {
   paid:      { variant: "default",     label: "Paid" },
