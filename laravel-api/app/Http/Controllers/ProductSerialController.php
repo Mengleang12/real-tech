@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ProductSerial;
 use App\Models\Product;
+use App\Events\SerialChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
