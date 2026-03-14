@@ -146,8 +146,8 @@ export function SystemSettingsPanel() {
     try {
       const result = await printLabels({
         printerName: selectedPrinter,
-        labelWidth: 40,
-        labelHeight: 30,
+        labelWidth: settings.label_width || 40,
+        labelHeight: settings.label_height || 30,
         labels: [{
           name: 'Test Product',
           variant: 'Test Variant',
