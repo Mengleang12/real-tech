@@ -18,8 +18,7 @@ import {
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, isPrinterServiceAvailable, printLabels, type LabelData } from "@/lib/printer-service";
-
-
+import { useSerialRealtime } from "@/hooks/useSerialRealtime";
 // ─── Print Serial Label Utility ─────────────────────────────────────────────
 type PrintableSerial = {
   serial_number: string;
@@ -164,6 +163,10 @@ const statusConfig = {
 
 export const SerialManagement = () => {
   const queryClient = useQueryClient();
+  
+  // Listen for realtime serial changes from other devices via Laravel Reverb
+  useSerialRealtime();
+
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -186,7 +189,6 @@ export const SerialManagement = () => {
       page,
       limit: 30,
     }),
-    refetchInterval: 5000, // Poll every 5s for cross-device sync
   });
 
   const deleteMutation = useMutation({
@@ -595,7 +597,6 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       limit: 200,
     }),
     enabled: !!selectedProduct && open,
-    refetchInterval: open ? 5000 : false, // Poll every 5s when dialog is open
   });
 
   // Filter existing serials by variant

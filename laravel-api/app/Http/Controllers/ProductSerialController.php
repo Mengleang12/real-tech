@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ProductSerial;
 use App\Models\Product;
+use App\Events\SerialChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -109,6 +110,8 @@ class ProductSerialController extends Controller
             $created[] = $serial;
         }
 
+        event(new SerialChanged('added', $request->product_id, $request->variant_id));
+
         return response()->json([
             'success' => true,
             'message' => count($created) . ' serial(s) added' . (count($duplicates) > 0 ? ', ' . count($duplicates) . ' duplicate(s) skipped' : ''),
@@ -124,6 +127,7 @@ class ProductSerialController extends Controller
     {
         $serial = ProductSerial::findOrFail($id);
         $serial->update($request->only(['serial_number', 'barcode', 'status', 'notes', 'variant_id']));
+        event(new SerialChanged('updated', $serial->product_id, $serial->variant_id));
         return response()->json(['success' => true, 'serial' => $serial->fresh()]);
     }
 
@@ -132,7 +136,11 @@ class ProductSerialController extends Controller
      */
     public function destroy($id)
     {
-        ProductSerial::findOrFail($id)->delete();
+        $serial = ProductSerial::findOrFail($id);
+        $productId = $serial->product_id;
+        $variantId = $serial->variant_id;
+        $serial->delete();
+        event(new SerialChanged('deleted', $productId, $variantId));
         return response()->json(['success' => true]);
     }
 
