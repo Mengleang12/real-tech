@@ -642,7 +642,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       setSerialList([]);
 
       // Auto-print labels for newly created serials
-      if (res.created && res.created.length > 0) {
+      if (autoPrint && res.created && res.created.length > 0) {
         const toPrint: PrintableSerial[] = res.created.map((s: any) => ({
           id: s.id,
           serial_number: s.serial_number,
