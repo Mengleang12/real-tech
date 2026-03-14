@@ -79,6 +79,9 @@ Route::get('/admin/settings/branding', [SystemSettingController::class, 'brandin
 // Public sliders
 Route::get('/sliders', [SliderController::class, 'index']);
 
+// Public quotation view (shareable link)
+Route::get('/quotations/view/{number}', [QuotationController::class, 'publicView']);
+
 // Public password reset (for initial setup)
 Route::get('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
