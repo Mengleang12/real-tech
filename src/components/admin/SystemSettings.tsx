@@ -624,6 +624,77 @@ export function SystemSettingsPanel() {
               </div>
             </div>
           </div>
+
+          {/* Printer */}
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center gap-2">
+              <Printer className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium">Label Printer</h3>
+            </div>
+            <div className="p-4 space-y-4">
+              {/* Connection status */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20">
+                {checkingPrinter ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Detecting printer service...
+                  </div>
+                ) : printerStatus.available ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-green-600">Printer Connected</p>
+                      <p className="text-xs text-muted-foreground">
+                        {printerStatus.printers.length} printer{printerStatus.printers.length !== 1 ? 's' : ''} found
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-5 h-5 text-destructive shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-destructive">Not Connected</p>
+                      <p className="text-xs text-muted-foreground">Install the Detonger P1P driver and connect via USB</p>
+                    </div>
+                  </>
+                )}
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 shrink-0" onClick={checkPrinterConnection} disabled={checkingPrinter}>
+                  <RefreshCw className={`w-3.5 h-3.5 ${checkingPrinter ? 'animate-spin' : ''}`} />
+                  {checkingPrinter ? 'Checking...' : 'Check Connection'}
+                </Button>
+              </div>
+
+              {/* Printer selector */}
+              {printerStatus.available && printerStatus.printers.length > 0 && (
+                <div>
+                  <Label className="text-xs">Select Printer</Label>
+                  <select
+                    value={selectedPrinter}
+                    onChange={e => setSelectedPrinter(e.target.value)}
+                    className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    {printerStatus.printers.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Test print */}
+              {printerStatus.available && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Test Print</p>
+                    <p className="text-xs text-muted-foreground">Print a sample 40×30mm label to verify connection</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={handleTestPrint} disabled={testPrinting || !selectedPrinter}>
+                    {testPrinting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
+                    {testPrinting ? 'Printing...' : 'Print Test Label'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
