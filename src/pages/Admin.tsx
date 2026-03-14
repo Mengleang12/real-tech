@@ -729,6 +729,7 @@ const navGroups: NavGroup[] = [
     label: "Sales",
     items: [
       { id: "invoices", label: "Sale", icon: FileText, permission: "orders.view" },
+      { id: "quotations", label: "Quotations", icon: ClipboardPaste, permission: "orders.view" },
       { id: "purchases", label: "Purchase", icon: ShoppingBag, permission: "orders.view" },
       { id: "suppliers", label: "Suppliers", icon: Truck, permission: "orders.view" },
       
