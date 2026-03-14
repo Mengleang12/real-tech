@@ -687,7 +687,11 @@ export function SystemSettingsPanel() {
                   <Label className="text-xs">Select Printer</Label>
                   <select
                     value={selectedPrinter}
-                    onChange={e => setSelectedPrinter(e.target.value)}
+                    onChange={e => {
+                      const next = e.target.value;
+                      setSelectedPrinter(next);
+                      localStorage.setItem(PREFERRED_PRINTER_KEY, next);
+                    }}
                     className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
                   >
                     {printerStatus.printers.map(p => (
