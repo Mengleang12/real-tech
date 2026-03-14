@@ -463,7 +463,7 @@ const printQuotation = async (quotation: Quotation) => {
       @page{size:A5;margin:8mm 10mm}
       body{font-family:'Inter',system-ui,sans-serif;width:100%;color:#1f2937;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:13px;line-height:1.45}
       .page{max-width:128mm;margin:0 auto;padding:4mm 0}
-      .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:2px solid #111827}
+      .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:2px solid #10d2c7}
       .brand{display:flex;align-items:center;gap:10px}
       .brand-icon{width:48px;height:48px;border-radius:6px;overflow:hidden;flex-shrink:0}
       .brand-icon img{width:100%;height:100%;object-fit:contain}
@@ -481,7 +481,7 @@ const printQuotation = async (quotation: Quotation) => {
       .info-sub{font-size:10px;color:#6b7280}
       .qt-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${primaryColor};color:#fff}
       table{width:100%;border-collapse:collapse;margin:8px 0 0}
-      thead th{text-align:left;padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#fff;border-bottom:1px solid #e5e7eb;background:#111827}
+      thead th{text-align:left;padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#fff;border-bottom:1px solid #e5e7eb;background:#10d2c7}
       thead th:last-child,thead th.r{text-align:right}
       tbody td{padding:6px 10px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6}
       tbody td:last-child{text-align:right;font-variant-numeric:tabular-nums}
@@ -490,7 +490,7 @@ const printQuotation = async (quotation: Quotation) => {
       .summary-tbl{width:200px}
       .s-row{display:flex;justify-content:space-between;padding:4px 10px;font-size:12px;color:#6b7280}
       .s-row.disc{color:#dc2626}
-      .s-row.total{background:#111827;color:#fff;border-radius:4px;padding:8px 10px;font-size:14px;font-weight:700;margin-top:3px}
+      .s-row.total{background:#10d2c7;color:#fff;border-radius:4px;padding:8px 10px;font-size:14px;font-weight:700;margin-top:3px}
       .note-box{margin-top:6px;padding:6px 10px;background:#f8fafc;border-left:2px solid ${primaryColor};border-radius:4px}
       .note-box .nlabel{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:1px}
       .note-box p{font-size:10px;color:#374151;line-height:1.4}
