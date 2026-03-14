@@ -201,7 +201,7 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
     const paddingLeft = 1;
     const paddingRight = 3;
     const contentWidth = labelWidth - paddingLeft - paddingRight;
-    const usableHeight = labelHeight - padding * 2;
+    const usableHeight = labelHeight - paddingLeft * 2;
 
     // Count how many sections we have
     const sections: { text: string; weight: number }[] = [];
