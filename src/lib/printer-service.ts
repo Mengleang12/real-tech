@@ -198,9 +198,10 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
 
     api.startJob({ width: labelWidth, height: labelHeight });
 
-    const padding = 1;
-    const contentWidth = labelWidth - padding * 2;
-    const usableHeight = labelHeight - padding * 2;
+    const paddingLeft = 1;
+    const paddingRight = 3;
+    const contentWidth = labelWidth - paddingLeft - paddingRight;
+    const usableHeight = labelHeight - paddingLeft * 2;
 
     // Count how many sections we have
     const sections: { text: string; weight: number }[] = [];
@@ -212,7 +213,7 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
     const gap = sections.length > 1 ? 1 : 0;
     const availableForText = usableHeight - gap * (sections.length - 1);
 
-    let yPos = padding;
+    let yPos = paddingLeft;
 
     for (let i = 0; i < sections.length; i++) {
       const sec = sections[i];
@@ -221,7 +222,7 @@ export async function printCustomerLabel(options: CustomerLabelPrintOptions): Pr
 
       api.drawText({
         text: sec.text,
-        x: padding, y: yPos, width: contentWidth,
+        x: paddingLeft, y: yPos, width: contentWidth,
         height: sectionHeight, fontHeight: fontHeight,
         fontStyle: 1, horizontalAlignment: 1, verticalAlignment: 1,
       });
