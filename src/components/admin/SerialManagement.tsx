@@ -92,9 +92,27 @@ const statusConfig = {
 
 export const SerialManagement = () => {
   const queryClient = useQueryClient();
+
+  // Shared auto-print toggle (persisted in localStorage)
+  const [autoPrint, setAutoPrint] = useState(() => {
+    const saved = localStorage.getItem('serial-auto-print');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const autoPrintRef = useRef(autoPrint);
+  useEffect(() => { autoPrintRef.current = autoPrint; }, [autoPrint]);
+
+  const toggleAutoPrint = useCallback(() => {
+    setAutoPrint(prev => {
+      const next = !prev;
+      localStorage.setItem('serial-auto-print', String(next));
+      toast.success(next ? 'Auto-print enabled' : 'Auto-print disabled');
+      return next;
+    });
+  }, []);
   
   // Auto-print labels when serials are added from another device (e.g. phone scan)
   const handleRemoteSerialAdded = useCallback(async (event: SerialChangedEvent) => {
+    if (!autoPrintRef.current) return; // respect toggle
     try {
       // Use serials from event if available (polling provides them), otherwise fetch
       let serialsToPrint = event.serials;
