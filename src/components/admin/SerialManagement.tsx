@@ -19,7 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, isPrinterServiceAvailable, printLabels, type LabelData } from "@/lib/printer-service";
-import { useSerialRealtime } from "@/hooks/useSerialRealtime";
+import { useSerialRealtime, type SerialChangedEvent } from "@/hooks/useSerialRealtime";
 // ─── Print Serial Label Utility ─────────────────────────────────────────────
 type PrintableSerial = {
   serial_number: string;
