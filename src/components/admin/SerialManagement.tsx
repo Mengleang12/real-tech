@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { serialsApi, salesApi, type ProductSerial, type SaleProduct } from "@/lib/api";
 import { AdminDialog } from "./AdminDialog";
@@ -19,7 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, isPrinterServiceAvailable, printLabels, type LabelData } from "@/lib/printer-service";
-import { useSerialRealtime } from "@/hooks/useSerialRealtime";
+import { useSerialRealtime, type SerialChangedEvent } from "@/hooks/useSerialRealtime";
 // ─── Print Serial Label Utility ─────────────────────────────────────────────
 type PrintableSerial = {
   serial_number: string;
@@ -165,8 +165,21 @@ const statusConfig = {
 export const SerialManagement = () => {
   const queryClient = useQueryClient();
   
+  // Auto-print labels when serials are added from another device (e.g. phone scan)
+  const handleRemoteSerialAdded = useCallback(async (event: SerialChangedEvent) => {
+    try {
+      const { serials: newSerials } = await serialsApi.getByIds(event.serial_ids);
+      if (newSerials && newSerials.length > 0) {
+        toast.info(`Auto-printing ${newSerials.length} label(s) from remote scan...`);
+        await printSerialLabels(newSerials);
+      }
+    } catch (err) {
+      console.warn('Auto-print failed:', err);
+    }
+  }, []);
+
   // Listen for realtime serial changes from other devices via Laravel Reverb
-  const wsStatus = useSerialRealtime();
+  const wsStatus = useSerialRealtime(handleRemoteSerialAdded);
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
