@@ -111,7 +111,11 @@ class ProductSerialController extends Controller
         }
 
         $createdIds = array_map(fn($s) => $s->id, $created);
-        event(new SerialChanged('added', $request->product_id, $request->variant_id, $createdIds));
+        try {
+            event(new SerialChanged('added', $request->product_id, $request->variant_id, $createdIds));
+        } catch (\Exception $e) {
+            \Log::warning('SerialChanged broadcast failed: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
@@ -128,7 +132,11 @@ class ProductSerialController extends Controller
     {
         $serial = ProductSerial::findOrFail($id);
         $serial->update($request->only(['serial_number', 'barcode', 'status', 'notes', 'variant_id']));
-        event(new SerialChanged('updated', $serial->product_id, $serial->variant_id));
+        try {
+            event(new SerialChanged('updated', $serial->product_id, $serial->variant_id));
+        } catch (\Exception $e) {
+            \Log::warning('SerialChanged broadcast failed: ' . $e->getMessage());
+        }
         return response()->json(['success' => true, 'serial' => $serial->fresh()]);
     }
 
@@ -141,7 +149,11 @@ class ProductSerialController extends Controller
         $productId = $serial->product_id;
         $variantId = $serial->variant_id;
         $serial->delete();
-        event(new SerialChanged('deleted', $productId, $variantId));
+        try {
+            event(new SerialChanged('deleted', $productId, $variantId));
+        } catch (\Exception $e) {
+            \Log::warning('SerialChanged broadcast failed: ' . $e->getMessage());
+        }
         return response()->json(['success' => true]);
     }
 
