@@ -5,8 +5,8 @@ import Pusher from 'pusher-js';
 (window as any).Pusher = Pusher;
 
 // Reverb connection config - these are public keys, safe in frontend
-const REVERB_APP_KEY = import.meta.env.VITE_REVERB_APP_KEY || 'my-app-key';
-const REVERB_HOST = import.meta.env.VITE_REVERB_HOST || 'localhost';
+const REVERB_APP_KEY = import.meta.env.VITE_REVERB_APP_KEY || 'a3f7b2c9e1d4056f8a9b3c7e2f1d0a5b';
+const REVERB_HOST = import.meta.env.VITE_REVERB_HOST || 'api.realtechcomputer.com';
 const REVERB_PORT = import.meta.env.VITE_REVERB_PORT || 8080;
 const REVERB_SCHEME = import.meta.env.VITE_REVERB_SCHEME || 'http';
 
