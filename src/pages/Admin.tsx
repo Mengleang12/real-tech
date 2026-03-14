@@ -1183,7 +1183,51 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin: isAuthAdmin, isSuperAdmin: isAuthSuperAdmin, hasPermission } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const wsStatus = useSerialRealtime();
+  // ── Auto-print serial labels from any tab ──
+  const handleRemoteSerialAdded = useCallback(async (event: SerialChangedEvent) => {
+    if (localStorage.getItem('serial-auto-print') === 'false') return;
+    try {
+      let serialsToPrint = event.serials;
+      if (!serialsToPrint || serialsToPrint.length === 0) {
+        const { serials: fetched } = await serialsApi.getByIds(event.serial_ids);
+        serialsToPrint = fetched;
+      }
+      if (serialsToPrint && serialsToPrint.length > 0) {
+        toast.info(`Auto-printing ${serialsToPrint.length} label(s) from remote scan...`);
+
+        const printerStatus = await initPrinterService();
+        const preferred = localStorage.getItem('label-printer-name');
+        const printerName = (preferred && printerStatus.printers.includes(preferred))
+          ? preferred
+          : printerStatus.printerName || printerStatus.printers[0];
+
+        if (!printerName || !printerStatus.available) {
+          toast.error("Label printer not available. Check Settings → System.");
+          return;
+        }
+
+        const labelSize = await getGlobalLabelSize();
+        const labels: LabelData[] = serialsToPrint.map((s: any) => ({
+          name: s.product?.name || "Product",
+          variant: s.variant ? Object.values(s.variant.combination).join(" / ") : "",
+          barcode: s.barcode || s.serial_number,
+          serial: s.serial_number,
+          price: parseFloat(String(s.variant?.price_adjustment || 0)),
+        }));
+
+        const result = await printLabels({ printerName, labelWidth: labelSize.width, labelHeight: labelSize.height, labels });
+        if (result.success) {
+          toast.success(`Printed ${result.printed} label(s) directly`);
+        } else {
+          toast.error(`Print failed: ${result.error}`);
+        }
+      }
+    } catch (err) {
+      console.warn('Auto-print failed:', err);
+    }
+  }, []);
+
+  const wsStatus = useSerialRealtime(handleRemoteSerialAdded);
 
   // Legacy admin gets full admin access
   const isLegacyAdmin = authApi.isAuthenticated();
