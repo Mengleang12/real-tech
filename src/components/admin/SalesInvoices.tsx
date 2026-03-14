@@ -931,11 +931,11 @@ const InvoicesTab = () => {
         const matchedWarranty = warrantiesList.find((w: any) => w.name === order.warranty_period);
         const durationDays = matchedWarranty?.duration_days || 0;
         const durationLabel = durationDays >= 365 ? (durationDays / 365) + ' Year' + (durationDays >= 730 ? 's' : '') : durationDays + ' Day' + (durationDays !== 1 ? 's' : '');
-        const policyText = matchedWarranty?.policy ? matchedWarranty.policy.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '').trim().replace(/\n/g, '<br>') : '';
+        const policyText = matchedWarranty?.policy ? matchedWarranty.policy : '';
         return `<div class="warranty-box"><div class="wlabel">Warranty — ${matchedWarranty ? durationLabel : order.warranty_period}</div>${policyText ? `<p style="margin-top:2px;line-height:1.4">${policyText}</p>` : ''}</div>`;
       })() : ''}
 
-      ${order.notes ? `<div class="note-box"><div class="nlabel">Note</div><p>${order.notes}</p></div>` : ''}
+      ${order.notes ? `<div class="note-box"><div class="nlabel">Note</div><p>${order.notes.replace(/\n/g, '<br>')}</p></div>` : ''}
 
       ${(branding.payment_qr_urls || []).length > 0 ? `<div class="qr-section">${branding.payment_qr_urls.map((url: string) => `<img src="${url}" alt="Payment QR" />`).join('')}</div>` : ''}
 

@@ -549,8 +549,8 @@ const printQuotation = async (quotation: Quotation) => {
       </div>
     </div>
 
-    ${quotation.notes ? `<div class="note-box"><div class="nlabel">Notes</div><p>${quotation.notes}</p></div>` : ''}
-    ${quotation.terms ? `<div class="note-box"><div class="nlabel">Terms & Conditions</div><p>${quotation.terms}</p></div>` : ''}
+    ${quotation.notes ? `<div class="note-box"><div class="nlabel">Notes</div><p>${quotation.notes.replace(/\n/g, '<br>')}</p></div>` : ''}
+    ${quotation.terms ? `<div class="note-box"><div class="nlabel">Terms & Conditions</div><p>${quotation.terms.replace(/\n/g, '<br>')}</p></div>` : ''}
 
     <div class="footer">
       <div class="footer-thanks">Thank you for your interest!</div>
