@@ -672,6 +672,13 @@ const InvoicesTab = () => {
   const [labelAddress, setLabelAddress] = useState("Cambodia");
   const [labelSize, setLabelSize] = useState("40x30");
 
+  // Load global label size on mount
+  useEffect(() => {
+    getGlobalLabelSize().then(size => {
+      setLabelSize(`${size.width}x${size.height}`);
+    });
+  }, []);
+
   // Scan barcode to auto-print customer label (prints instantly, no dialog)
   const handleScanBarcode = async (scannedValue: string) => {
     const trimmed = scannedValue.trim();
