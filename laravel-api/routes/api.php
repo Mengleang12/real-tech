@@ -276,6 +276,16 @@ Route::middleware('auth.admin:admin_only')->group(function () {
     Route::put('/admin/sliders/{id}', [SliderController::class, 'update']);
     Route::delete('/admin/sliders/{id}', [SliderController::class, 'destroy']);
     Route::post('/admin/sliders/reorder', [SliderController::class, 'reorder']);
+
+    // Quotation management
+    Route::get('/admin/quotations', [QuotationController::class, 'index']);
+    Route::get('/admin/quotations/{id}', [QuotationController::class, 'show']);
+    Route::post('/admin/quotations', [QuotationController::class, 'store']);
+    Route::put('/admin/quotations/{id}', [QuotationController::class, 'update']);
+    Route::put('/admin/quotations/{id}/status', [QuotationController::class, 'updateStatus']);
+    Route::delete('/admin/quotations/{id}', [QuotationController::class, 'destroy']);
+    Route::post('/admin/quotations/{id}/convert', [QuotationController::class, 'convertToSale']);
+    Route::post('/admin/quotations/{id}/mark-converted', [QuotationController::class, 'markConverted']);
 });
 
 // Protected user routes
