@@ -132,7 +132,11 @@ class ProductSerialController extends Controller
     {
         $serial = ProductSerial::findOrFail($id);
         $serial->update($request->only(['serial_number', 'barcode', 'status', 'notes', 'variant_id']));
-        event(new SerialChanged('updated', $serial->product_id, $serial->variant_id));
+        try {
+            event(new SerialChanged('updated', $serial->product_id, $serial->variant_id));
+        } catch (\Exception $e) {
+            \Log::warning('SerialChanged broadcast failed: ' . $e->getMessage());
+        }
         return response()->json(['success' => true, 'serial' => $serial->fresh()]);
     }
 
