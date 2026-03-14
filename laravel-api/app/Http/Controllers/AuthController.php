@@ -9,6 +9,35 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    private function parseUserAgent(string $ua): array
+    {
+        $device = 'Unknown';
+        $browser = 'Unknown';
+        $os = 'Unknown';
+
+        // Detect OS
+        if (preg_match('/Windows NT/i', $ua)) $os = 'Windows';
+        elseif (preg_match('/Macintosh|Mac OS/i', $ua)) $os = 'macOS';
+        elseif (preg_match('/Android/i', $ua)) $os = 'Android';
+        elseif (preg_match('/iPhone|iPad|iPod/i', $ua)) $os = 'iOS';
+        elseif (preg_match('/Linux/i', $ua)) $os = 'Linux';
+        elseif (preg_match('/CrOS/i', $ua)) $os = 'Chrome OS';
+
+        // Detect Browser
+        if (preg_match('/Edg\//i', $ua)) $browser = 'Edge';
+        elseif (preg_match('/OPR|Opera/i', $ua)) $browser = 'Opera';
+        elseif (preg_match('/Chrome/i', $ua)) $browser = 'Chrome';
+        elseif (preg_match('/Safari/i', $ua) && !preg_match('/Chrome/i', $ua)) $browser = 'Safari';
+        elseif (preg_match('/Firefox/i', $ua)) $browser = 'Firefox';
+
+        // Detect Device Type
+        if (preg_match('/Mobile|Android.*Mobile|iPhone/i', $ua)) $device = 'Mobile';
+        elseif (preg_match('/iPad|Android(?!.*Mobile)|Tablet/i', $ua)) $device = 'Tablet';
+        else $device = 'Desktop';
+
+        return compact('device', 'browser', 'os');
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -22,30 +51,48 @@ class AuthController extends Controller
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        // Generate a new token without invalidating existing ones
-        // Support multiple sessions by storing tokens as JSON array
+        // Generate a new token
         $token = Str::random(64);
         $expiry = now()->addDays(30);
 
+        // Parse device info
+        $ua = $request->userAgent() ?? 'Unknown';
+        $deviceInfo = $this->parseUserAgent($ua);
+
         $existingTokens = [];
         if ($admin->auth_token) {
-            // Try to parse as JSON array (multi-session), fall back to single token
             $decoded = json_decode($admin->auth_token, true);
             if (is_array($decoded)) {
-                // Filter out expired tokens
                 $existingTokens = array_filter($decoded, fn($t) => 
                     isset($t['expiry']) && now()->lt($t['expiry'])
                 );
             } else {
-                // Legacy single token — keep it if not expired
                 if ($admin->token_expiry && now()->lt($admin->token_expiry)) {
-                    $existingTokens[] = ['token' => $admin->auth_token, 'expiry' => $admin->token_expiry->toISOString()];
+                    $existingTokens[] = [
+                        'token' => $admin->auth_token,
+                        'expiry' => $admin->token_expiry->toISOString(),
+                        'device' => 'Unknown',
+                        'browser' => 'Unknown',
+                        'os' => 'Unknown',
+                        'ip' => 'Unknown',
+                        'logged_in_at' => now()->toISOString(),
+                        'last_active' => now()->toISOString(),
+                    ];
                 }
             }
         }
 
-        // Add new token, keep max 5 sessions
-        $existingTokens[] = ['token' => $token, 'expiry' => $expiry->toISOString()];
+        // Add new token with device metadata
+        $existingTokens[] = [
+            'token' => $token,
+            'expiry' => $expiry->toISOString(),
+            'device' => $deviceInfo['device'],
+            'browser' => $deviceInfo['browser'],
+            'os' => $deviceInfo['os'],
+            'ip' => $request->ip() ?? 'Unknown',
+            'logged_in_at' => now()->toISOString(),
+            'last_active' => now()->toISOString(),
+        ];
         $existingTokens = array_slice(array_values($existingTokens), -5);
 
         $admin->auth_token = json_encode($existingTokens);
@@ -129,7 +176,6 @@ class AuthController extends Controller
 
         $admin = User::with('roles')
             ->where(function ($q) use ($token) {
-                // Support JSON array of tokens or legacy single token
                 $q->where('auth_token', 'LIKE', '%"' . $token . '"%')
                   ->orWhere('auth_token', $token);
             })
@@ -143,11 +189,15 @@ class AuthController extends Controller
         $decoded = json_decode($admin->auth_token, true);
         if (is_array($decoded)) {
             $found = false;
-            $decoded = array_map(function ($t) use ($token, &$found) {
+            $decoded = array_map(function ($t) use ($token, $request, &$found) {
                 if ($t['token'] === $token) {
                     $found = true;
-                    // Sliding session: renew this token's expiry
                     $t['expiry'] = now()->addDays(30)->toISOString();
+                    $t['last_active'] = now()->toISOString();
+                    // Update IP if changed
+                    if ($request->ip()) {
+                        $t['ip'] = $request->ip();
+                    }
                 }
                 return $t;
             }, $decoded);
@@ -159,7 +209,6 @@ class AuthController extends Controller
             $admin->auth_token = json_encode($decoded);
         }
 
-        // Renew token expiry (sliding session)
         $admin->token_expiry = now()->addDays(30);
         $admin->save();
 
@@ -175,6 +224,119 @@ class AuthController extends Controller
                 'roles' => $roles,
             ],
         ]);
+    }
+
+    public function sessions(Request $request)
+    {
+        $token = $request->bearerToken();
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $admin = User::where(function ($q) use ($token) {
+                $q->where('auth_token', 'LIKE', '%"' . $token . '"%')
+                  ->orWhere('auth_token', $token);
+            })
+            ->first();
+
+        if (!$admin) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $decoded = json_decode($admin->auth_token, true);
+        if (!is_array($decoded)) {
+            return response()->json(['sessions' => []]);
+        }
+
+        // Filter expired sessions
+        $sessions = array_values(array_filter($decoded, fn($t) => isset($t['expiry']) && now()->lt($t['expiry'])));
+
+        // Return sessions without exposing full tokens — use a short identifier
+        $result = array_map(function ($s) use ($token) {
+            return [
+                'id' => substr($s['token'], 0, 8),
+                'device' => $s['device'] ?? 'Unknown',
+                'browser' => $s['browser'] ?? 'Unknown',
+                'os' => $s['os'] ?? 'Unknown',
+                'ip' => $s['ip'] ?? 'Unknown',
+                'logged_in_at' => $s['logged_in_at'] ?? null,
+                'last_active' => $s['last_active'] ?? $s['expiry'],
+                'is_current' => $s['token'] === $token,
+            ];
+        }, $sessions);
+
+        return response()->json(['sessions' => array_values($result)]);
+    }
+
+    public function revokeSession(Request $request)
+    {
+        $token = $request->bearerToken();
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'session_id' => 'required|string',
+        ]);
+
+        $admin = User::where(function ($q) use ($token) {
+                $q->where('auth_token', 'LIKE', '%"' . $token . '"%')
+                  ->orWhere('auth_token', $token);
+            })
+            ->first();
+
+        if (!$admin) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $decoded = json_decode($admin->auth_token, true);
+        if (!is_array($decoded)) {
+            return response()->json(['error' => 'Session not found'], 404);
+        }
+
+        $sessionId = $request->session_id;
+
+        // Remove the session matching the short ID (first 8 chars of token)
+        $filtered = array_values(array_filter($decoded, function ($s) use ($sessionId, $token) {
+            // Don't allow revoking current session via this endpoint
+            if ($s['token'] === $token) return true;
+            return substr($s['token'], 0, 8) !== $sessionId;
+        }));
+
+        $admin->auth_token = json_encode($filtered);
+        $admin->save();
+
+        return response()->json(['success' => true, 'message' => 'Session revoked']);
+    }
+
+    public function revokeAllSessions(Request $request)
+    {
+        $token = $request->bearerToken();
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $admin = User::where(function ($q) use ($token) {
+                $q->where('auth_token', 'LIKE', '%"' . $token . '"%')
+                  ->orWhere('auth_token', $token);
+            })
+            ->first();
+
+        if (!$admin) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $decoded = json_decode($admin->auth_token, true);
+        if (!is_array($decoded)) {
+            return response()->json(['success' => true]);
+        }
+
+        // Keep only the current session
+        $current = array_values(array_filter($decoded, fn($s) => $s['token'] === $token));
+        $admin->auth_token = json_encode($current);
+        $admin->save();
+
+        return response()->json(['success' => true, 'message' => 'All other sessions revoked']);
     }
 
     public function resetPassword()
