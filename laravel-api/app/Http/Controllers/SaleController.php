@@ -390,7 +390,7 @@ class SaleController extends Controller
             ->limit(10)
             ->get();
 
-        $recentSales = Sale::with('user:id,email,full_name,phone')
+        $recentSales = Sale::with('customer:id,email,full_name,phone')
             ->where('status', 'paid')
             ->orderByDesc('paid_at')
             ->limit(10)
