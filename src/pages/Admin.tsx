@@ -1454,6 +1454,11 @@ const AdminDashboard = () => {
         </div>
       </AdminDialog>
 
+      {/* Active Sessions Dialog */}
+      <AdminDialog open={showSessions} onOpenChange={setShowSessions} title="Active Sessions">
+        <ActiveSessions />
+      </AdminDialog>
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
