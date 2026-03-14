@@ -111,7 +111,11 @@ class ProductSerialController extends Controller
         }
 
         $createdIds = array_map(fn($s) => $s->id, $created);
-        event(new SerialChanged('added', $request->product_id, $request->variant_id, $createdIds));
+        try {
+            event(new SerialChanged('added', $request->product_id, $request->variant_id, $createdIds));
+        } catch (\Exception $e) {
+            \Log::warning('SerialChanged broadcast failed: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
