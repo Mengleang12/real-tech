@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { clearBrandingCache } from '@/lib/invoice-branding';
-import { Settings2, Globe, Shield, Database, Server, Loader2, Palette, ImageIcon, Phone, MapPin, Share2, FileText, Upload, X } from 'lucide-react';
+import { Settings2, Globe, Shield, Database, Server, Loader2, Palette, ImageIcon, Phone, MapPin, Share2, FileText, Upload, X, Printer, Wifi, WifiOff, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { initPrinterService, isPrinterServiceAvailable, printLabels, type PrinterStatus } from '@/lib/printer-service';
 import { Input } from '@/components/ui/input';
 import { NumberInput } from '@/components/ui/number-input';
 import { Label } from '@/components/ui/label';
