@@ -636,7 +636,23 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
       queryClient.invalidateQueries({ queryKey: ["product-serials", selectedProduct?.id, selectedVariantId] });
       setSerialList([]);
-      // Don't close dialog - let user add more
+
+      // Auto-print labels for newly created serials
+      if (res.created && res.created.length > 0) {
+        const toPrint: PrintableSerial[] = res.created.map((s: any) => ({
+          id: s.id,
+          serial_number: s.serial_number,
+          barcode: s.barcode,
+          status: s.status,
+          product: selectedProduct ? { name: selectedProduct.name, icon_url: selectedProduct.icon_url || undefined } : undefined,
+          variant: selectedVariantId ? {
+            ...selectedProduct?.variants.find(v => v.id === selectedVariantId),
+            combination: selectedProduct?.variants.find(v => v.id === selectedVariantId)?.combination || {},
+          } as any : undefined,
+        }));
+        toast.info(`Auto-printing ${toPrint.length} label${toPrint.length > 1 ? 's' : ''}...`);
+        printSerialLabels(toPrint);
+      }
     },
     onError: () => toast.error("Failed to add serials"),
   });
