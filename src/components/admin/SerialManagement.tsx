@@ -215,7 +215,34 @@ export const SerialManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h3 className="text-lg font-semibold">Serial Numbers</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Serial Numbers</h3>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center">
+                  {wsStatus === 'connected' ? (
+                    <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                    </span>
+                  ) : wsStatus === 'connecting' ? (
+                    <span className="flex items-center gap-1 text-xs text-amber-500">
+                      <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs text-destructive">
+                      <span className="h-2 w-2 rounded-full bg-destructive"></span>
+                    </span>
+                  )}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">
+                {wsStatus === 'connected' ? 'Live sync active' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline — changes won\'t sync'}
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <p className="text-sm text-muted-foreground">Pre-enter serial numbers for products. Scan during sale for quick checkout.</p>
         </div>
         <div className="flex items-center gap-2">
