@@ -64,6 +64,19 @@ export interface PrintOptions {
   labels: LabelData[];
 }
 
+export interface CustomerLabelData {
+  senderText: string;
+  address: string;
+  phone: string;
+}
+
+export interface CustomerLabelPrintOptions {
+  printerName: string;
+  labelWidth: number;  // mm
+  labelHeight: number; // mm
+  label: CustomerLabelData;
+}
+
 /**
  * Print labels directly to the Detonger printer via lpapi-dtpweb SDK.
  * No browser print dialog is shown.
