@@ -421,114 +421,150 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
 const printQuotation = async (quotation: Quotation) => {
   const branding = await getInvoiceBranding();
   const items = quotation.items || [];
+  const primaryColor = branding.primary_color || '#2563eb';
+
+  const hasItemDiscount = items.some(i => Number(i.discount) > 0);
 
   const itemRows = items.map(item => {
     const disc = item.discount_type === 'percent'
       ? Number(item.unit_price) * item.quantity * (Number(item.discount) / 100)
       : Number(item.discount || 0);
-    return `
-      <tr>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px;">
-          ${item.product_name}${item.variant_label ? `<br><span style="color:#888;font-size:10px;">${item.variant_label}</span>` : ''}
-        </td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px;text-align:center;">${item.quantity}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px;text-align:right;">$${Number(item.unit_price).toFixed(2)}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px;text-align:right;">${disc > 0 ? `-$${disc.toFixed(2)}` : '-'}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px;text-align:right;font-weight:600;">$${Number(item.line_total).toFixed(2)}</td>
-      </tr>
-    `;
+    return `<tr>
+      <td class="name">${item.product_name}${item.variant_label ? `<div style="font-size:10px;color:#888;margin-top:2px;line-height:1">${item.variant_label}</div>` : ''}</td>
+      <td>${item.quantity}</td>
+      <td style="text-align:right">$${Number(item.unit_price).toFixed(2)}</td>
+      ${hasItemDiscount ? `<td style="text-align:right;color:#dc2626">${disc > 0 ? '-$' + disc.toFixed(2) : '—'}</td>` : ''}
+      <td style="text-align:right;font-weight:600">$${Number(item.line_total).toFixed(2)}</td>
+    </tr>`;
   }).join('');
 
-  const primaryColor = branding.primary_color || '#2563eb';
   const overallDisc = Number(quotation.discount_amount || 0);
   const overallDiscDisplay = quotation.discount_type === 'percent'
     ? Number(quotation.subtotal) * (overallDisc / 100)
     : overallDisc;
+  const deliveryFee = Number(quotation.delivery_fee || 0);
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Quotation ${quotation.quotation_number}</title>
-      <style>
-        @page { size: A5; margin: 10mm; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; color: #333; font-size: 12px; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-        .logo-section { display: flex; align-items: center; gap: 10px; }
-        .logo-section img { max-height: 40px; }
-        .qt-badge { background: ${primaryColor}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: ${primaryColor}10; color: ${primaryColor}; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px; text-align: left; }
-        .summary { margin-top: 15px; text-align: right; }
-        .total-row { font-size: 18px; font-weight: bold; color: ${primaryColor}; }
-        .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; font-size: 10px; color: #888; }
-        @media print { body { padding: 0; } }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="logo-section">
-          ${branding.site_logo_url ? `<img src="${branding.site_logo_url}" alt="Logo">` : ''}
-          <div>
-            <div style="font-weight:700;font-size:14px;">${branding.site_name || 'Realtech Computer'}</div>
-            ${branding.site_tagline ? `<div style="font-size:10px;color:#888;">${branding.site_tagline}</div>` : ''}
-          </div>
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "none";
+  iframe.style.left = "-9999px";
+  document.body.appendChild(iframe);
+  const doc = iframe.contentDocument || iframe.contentWindow?.document;
+  if (!doc) { document.body.removeChild(iframe); return; }
+  doc.open();
+
+  doc.write(`<!DOCTYPE html><html><head><title>Quotation ${quotation.quotation_number}</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      *{margin:0;padding:0;box-sizing:border-box}
+      @page{size:A5;margin:8mm 10mm}
+      body{font-family:'Inter',system-ui,sans-serif;width:100%;color:#1f2937;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:13px;line-height:1.45}
+      .page{max-width:128mm;margin:0 auto;padding:4mm 0}
+      .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:2px solid #111827}
+      .brand{display:flex;align-items:center;gap:10px}
+      .brand-icon{width:48px;height:48px;border-radius:6px;overflow:hidden;flex-shrink:0}
+      .brand-icon img{width:100%;height:100%;object-fit:contain}
+      .brand-name{font-size:16px;font-weight:700;color:#111827}
+      .brand-sub{font-size:10px;color:#6b7280;line-height:1.3}
+      .inv-meta{text-align:right}
+      .inv-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6b7280}
+      .inv-number{font-size:14px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums;margin-top:2px}
+      .inv-barcode{margin-top:4px;text-align:right}
+      .inv-barcode svg{height:28px;width:auto}
+      .info-row{display:flex;justify-content:space-between;gap:12px;margin:10px 0;padding:8px 12px;background:#f8fafc;border-radius:6px}
+      .info-col{flex:1}
+      .info-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#9ca3af;margin-bottom:2px}
+      .info-name{font-size:12px;font-weight:600;color:#111827}
+      .info-sub{font-size:10px;color:#6b7280}
+      .qt-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${primaryColor};color:#fff}
+      table{width:100%;border-collapse:collapse;margin:8px 0 0}
+      thead th{text-align:left;padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#fff;border-bottom:1px solid #e5e7eb;background:#111827}
+      thead th:last-child,thead th.r{text-align:right}
+      tbody td{padding:6px 10px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6}
+      tbody td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+      tbody td.name{font-weight:600;color:#111827}
+      .summary{display:flex;justify-content:flex-end;margin-top:6px}
+      .summary-tbl{width:200px}
+      .s-row{display:flex;justify-content:space-between;padding:4px 10px;font-size:12px;color:#6b7280}
+      .s-row.disc{color:#dc2626}
+      .s-row.total{background:#111827;color:#fff;border-radius:4px;padding:8px 10px;font-size:14px;font-weight:700;margin-top:3px}
+      .note-box{margin-top:6px;padding:6px 10px;background:#f8fafc;border-left:2px solid ${primaryColor};border-radius:4px}
+      .note-box .nlabel{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:1px}
+      .note-box p{font-size:10px;color:#374151;line-height:1.4}
+      .footer{text-align:center;margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb}
+      .footer-thanks{font-size:11px;font-weight:600;color:#111827}
+      .footer-brand{font-size:9px;color:#9ca3af;margin-top:2px}
+      @media print{body{padding:0}.page{max-width:100%}}
+    </style></head><body>
+    <div class="page">
+
+    <div class="header">
+      <div class="brand">
+        ${branding.site_logo_url
+          ? `<div class="brand-icon"><img src="${branding.site_logo_url}" alt="${branding.site_name}" /></div>`
+          : `<div class="brand-icon" style="background:${primaryColor};color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;border-radius:6px">${branding.site_name.charAt(0)}</div>`
+        }
+        <div>
+          <div class="brand-name">${branding.site_name}</div>
+          ${branding.site_tagline ? `<div class="brand-sub">${branding.site_tagline}</div>` : ''}
+          ${branding.support_phone ? `<div class="brand-sub">${branding.support_phone}</div>` : ''}
+          <div class="brand-sub">${format(new Date(quotation.created_at), 'dd MMM yyyy')}</div>
         </div>
-        <div style="text-align:right;">
-          <span class="qt-badge">QUOTATION</span>
-          <div style="margin-top:6px;font-weight:600;font-size:13px;">${quotation.quotation_number}</div>
-          <div style="font-size:10px;color:#888;">Date: ${format(new Date(quotation.created_at), 'dd MMM yyyy')}</div>
-          ${quotation.valid_until ? `<div style="font-size:10px;color:#e65100;">Valid until: ${format(new Date(quotation.valid_until), 'dd MMM yyyy')}</div>` : ''}
-        </div>
       </div>
-
-      ${quotation.customer_name ? `
-      <div style="margin-bottom:15px;padding:10px;background:#f8f9fa;border-radius:8px;">
-        <div style="font-size:10px;color:#888;margin-bottom:3px;">QUOTATION FOR</div>
-        <div style="font-weight:600;">${quotation.customer_name}</div>
-        ${quotation.customer_phone ? `<div style="font-size:11px;color:#666;">${quotation.customer_phone}</div>` : ''}
-        ${quotation.customer_email ? `<div style="font-size:11px;color:#666;">${quotation.customer_email}</div>` : ''}
+      <div class="inv-meta">
+        <div class="inv-title">Quotation</div>
+        <div class="inv-number">${quotation.quotation_number}</div>
+        <div class="inv-barcode"><svg id="qt-barcode"></svg></div>
+        ${quotation.valid_until ? `<div style="font-size:10px;color:#e65100;margin-top:2px">Valid until: ${format(new Date(quotation.valid_until), 'dd MMM yyyy')}</div>` : ''}
       </div>
-      ` : ''}
+    </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th style="text-align:center;">Qty</th>
-            <th style="text-align:right;">Price</th>
-            <th style="text-align:right;">Discount</th>
-            <th style="text-align:right;">Total</th>
-          </tr>
-        </thead>
-        <tbody>${itemRows}</tbody>
-      </table>
-
-      <div class="summary">
-        <div style="margin-bottom:3px;">Subtotal: <strong>$${Number(quotation.subtotal).toFixed(2)}</strong></div>
-        ${overallDiscDisplay > 0 ? `<div style="color:#e53e3e;margin-bottom:3px;">Discount: -$${overallDiscDisplay.toFixed(2)}</div>` : ''}
-        <div class="total-row">Total: $${Number(quotation.total).toFixed(2)}</div>
+    <div class="info-row">
+      <div class="info-col">
+        <div class="info-label">Quotation For</div>
+        <div class="info-name">${quotation.customer_name || 'Walk-in Customer'}</div>
+        ${quotation.customer_phone ? `<div class="info-sub">${quotation.customer_phone}</div>` : ''}
+        ${quotation.customer_email ? `<div class="info-sub">${quotation.customer_email}</div>` : ''}
       </div>
-
-      ${quotation.notes ? `<div style="margin-top:15px;padding:10px;background:#fffbeb;border-radius:8px;font-size:11px;"><strong>Notes:</strong> ${quotation.notes}</div>` : ''}
-      ${quotation.terms ? `<div style="margin-top:8px;padding:10px;background:#f0f9ff;border-radius:8px;font-size:11px;"><strong>Terms:</strong> ${quotation.terms}</div>` : ''}
-
-      <div class="footer">
-        ${branding.support_phone ? `Phone: ${branding.support_phone} · ` : ''}
-        ${branding.support_email ? `Email: ${branding.support_email} · ` : ''}
-        ${branding.site_address ? branding.site_address : ''}
+      <div class="info-col" style="text-align:right">
+        <div class="info-label">Status</div>
+        <div style="margin-top:2px"><span class="qt-badge">${quotation.status.toUpperCase()}</span></div>
       </div>
-    </body>
-    </html>
-  `;
+    </div>
 
-  const printWindow = window.open('', '_blank', 'width=600,height=800');
-  if (printWindow) {
-    printWindow.document.write(html);
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 500);
-  }
+    <table>
+      <thead><tr><th>Item</th><th>Qty</th><th class="r">Price</th>${hasItemDiscount ? '<th class="r">Disc.</th>' : ''}<th class="r">Total</th></tr></thead>
+      <tbody>${itemRows}</tbody>
+    </table>
+
+    <div class="summary">
+      <div class="summary-tbl">
+        <div class="s-row"><span>Subtotal</span><span>$${Number(quotation.subtotal).toFixed(2)}</span></div>
+        ${overallDiscDisplay > 0 ? `<div class="s-row disc"><span>Discount</span><span>-$${overallDiscDisplay.toFixed(2)}</span></div>` : ''}
+        ${deliveryFee > 0 ? `<div class="s-row"><span>Delivery</span><span>+$${deliveryFee.toFixed(2)}</span></div>` : ''}
+        <div class="s-row total"><span>Grand Total</span><span>$${Number(quotation.total).toFixed(2)} ${quotation.currency}</span></div>
+      </div>
+    </div>
+
+    ${quotation.notes ? `<div class="note-box"><div class="nlabel">Notes</div><p>${quotation.notes}</p></div>` : ''}
+    ${quotation.terms ? `<div class="note-box"><div class="nlabel">Terms & Conditions</div><p>${quotation.terms}</p></div>` : ''}
+
+    <div class="footer">
+      <div class="footer-thanks">Thank you for your interest!</div>
+      <div class="footer-brand">${branding.site_name}${branding.support_email ? ` · ${branding.support_email}` : ''}${branding.site_address ? ` · ${branding.site_address}` : ''}</div>
+    </div>
+
+    </div>
+    <script>try{JsBarcode("#qt-barcode","${quotation.quotation_number}",{format:"CODE128",height:28,width:1.2,displayValue:false,margin:0})}catch(e){}<\/script>
+    </body></html>`);
+  doc.close();
+  iframe.onload = () => {
+    iframe.contentWindow?.print();
+    setTimeout(() => document.body.removeChild(iframe), 1000);
+  };
 };
 
 // ─── Main QuotationManagement Component ─────────────────────────────────────
