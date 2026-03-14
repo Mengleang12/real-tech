@@ -26,6 +26,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Install = lazy(() => import("./pages/Install"));
+const QuotationView = lazy(() => import("./pages/QuotationView"));
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
 
