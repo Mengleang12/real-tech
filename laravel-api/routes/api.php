@@ -35,6 +35,7 @@ use App\Http\Controllers\SliderController;
 use App\Http\Controllers\ProductSerialController;
 use App\Http\Controllers\OcrController;
 use App\Http\Controllers\AdminNoteController;
+use App\Http\Controllers\QuotationController;
 
 /*
 |--------------------------------------------------------------------------
