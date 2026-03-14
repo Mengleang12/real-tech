@@ -608,6 +608,10 @@ const InvoicesTab = () => {
   const [paymentNote, setPaymentNote] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
   const scanInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const scrollLeftStart = useRef(0);
   const [printerStatus, setPrinterStatus] = useState<PrinterStatus>({ available: false, printers: [] });
   const [selectedPrinter, setSelectedPrinter] = useState<string>("");
 
@@ -1000,7 +1004,27 @@ const InvoicesTab = () => {
         </div>
       ) : (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto cursor-grab active:cursor-grabbing"
+            ref={scrollContainerRef}
+            onMouseDown={(e) => {
+              const el = scrollContainerRef.current;
+              if (!el) return;
+              isDragging.current = true;
+              dragStartX.current = e.pageX - el.offsetLeft;
+              scrollLeftStart.current = el.scrollLeft;
+            }}
+            onMouseMove={(e) => {
+              if (!isDragging.current) return;
+              e.preventDefault();
+              const el = scrollContainerRef.current;
+              if (!el) return;
+              const x = e.pageX - el.offsetLeft;
+              el.scrollLeft = scrollLeftStart.current - (x - dragStartX.current);
+            }}
+            onMouseUp={() => { isDragging.current = false; }}
+            onMouseLeave={() => { isDragging.current = false; }}
+          >
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
