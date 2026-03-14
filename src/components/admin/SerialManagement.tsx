@@ -144,10 +144,10 @@ function printSerialLabelsBrowser(serials: PrintableSerial[]) {
 
 async function printSerialLabels(serials: PrintableSerial[]) {
   if (serials.length === 0) return;
-  // Try SDK first, fall back to browser print dialog
+  // Print directly via SDK — no browser print dialog
   const sdkSuccess = await printSerialLabelsSDK(serials);
   if (!sdkSuccess) {
-    printSerialLabelsBrowser(serials);
+    toast.error("Label printer not available. Please check the printer connection in Settings → System.");
   }
 }
 
