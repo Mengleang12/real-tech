@@ -193,13 +193,13 @@ export const SerialManagement = () => {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => serialsApi.delete(id),
-    onSuccess: () => { toast.success("Serial deleted"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); },
+    onSuccess: () => { toast.success("Serial deleted"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); broadcastSerialChange(); },
     onError: () => toast.error("Failed to delete"),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<ProductSerial> }) => serialsApi.update(id, data),
-    onSuccess: () => { toast.success("Updated"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); },
+    onSuccess: () => { toast.success("Updated"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); broadcastSerialChange(); },
     onError: () => toast.error("Failed to update"),
   });
 
