@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getEcho } from "@/lib/echo";
 
@@ -12,7 +12,7 @@ export interface SerialChangedEvent {
 
 /**
  * Listen for serial number changes via Laravel Reverb WebSocket.
- * Returns connection status and accepts an optional callback for 'added' events.
+ * Falls back to polling if WebSocket is disconnected.
  */
 export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) => void) {
   const queryClient = useQueryClient();
@@ -20,6 +20,13 @@ export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) =
   const callbackRef = useRef(onSerialsAdded);
   callbackRef.current = onSerialsAdded;
 
+  const invalidateSerials = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
+    queryClient.invalidateQueries({ queryKey: ["product-serials"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
+  }, [queryClient]);
+
+  // WebSocket listener
   useEffect(() => {
     let channel: ReturnType<ReturnType<typeof getEcho>['channel']> | null = null;
 
@@ -28,16 +35,13 @@ export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) =
       channel = echo.channel('serials');
 
       channel.listen('.serial.changed', (event: SerialChangedEvent) => {
-        queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
-        queryClient.invalidateQueries({ queryKey: ["product-serials"] });
-        queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
+        invalidateSerials();
 
         if (event.action === 'added' && event.serial_ids?.length > 0 && callbackRef.current) {
           callbackRef.current(event);
         }
       });
 
-      // Monitor connection state via the underlying Pusher connector
       const connector = (echo as any).connector?.pusher;
       if (connector) {
         connector.connection.bind('connected', () => setConnected('connected'));
@@ -59,7 +63,16 @@ export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) =
         }
       } catch {}
     };
-  }, [queryClient]);
+  }, [queryClient, invalidateSerials]);
+
+  // Polling fallback: refresh every 5s when disconnected, every 15s when connected
+  useEffect(() => {
+    const interval = setInterval(() => {
+      invalidateSerials();
+    }, connected === 'connected' ? 15000 : 5000);
+
+    return () => clearInterval(interval);
+  }, [connected, invalidateSerials]);
 
   return connected;
 }
