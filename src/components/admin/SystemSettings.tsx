@@ -641,9 +641,9 @@ export function SystemSettingsPanel() {
                   </div>
                 ) : printerStatus.available ? (
                   <>
-                    <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-green-600">Printer Connected</p>
+                      <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Printer Connected</p>
                       <p className="text-xs text-muted-foreground">
                         {printerStatus.printers.length} printer{printerStatus.printers.length !== 1 ? 's' : ''} found
                       </p>
