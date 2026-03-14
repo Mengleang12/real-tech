@@ -98,6 +98,62 @@ function getAuthHeaders(): Record<string, string> {
   };
 }
 
+  // Printer state
+  const [printerStatus, setPrinterStatus] = useState<PrinterStatus>({ available: false, printers: [] });
+  const [checkingPrinter, setCheckingPrinter] = useState(false);
+  const [testPrinting, setTestPrinting] = useState(false);
+  const [selectedPrinter, setSelectedPrinter] = useState('');
+
+  const checkPrinterConnection = async () => {
+    setCheckingPrinter(true);
+    try {
+      const status = await initPrinterService();
+      setPrinterStatus(status);
+      if (status.available && status.printerName && !selectedPrinter) {
+        setSelectedPrinter(status.printerName);
+      }
+      if (status.available) {
+        toast.success(`Printer connected: ${status.printerName || 'Unknown'}`);
+      } else {
+        toast.error('No printer detected. Make sure the Detonger driver is installed and the printer is connected.');
+      }
+    } catch {
+      setPrinterStatus({ available: false, printers: [] });
+      toast.error('Failed to detect printer');
+    }
+    setCheckingPrinter(false);
+  };
+
+  const handleTestPrint = async () => {
+    if (!printerStatus.available || !selectedPrinter) {
+      toast.error('Connect a printer first');
+      return;
+    }
+    setTestPrinting(true);
+    try {
+      const result = await printLabels({
+        printerName: selectedPrinter,
+        labelWidth: 40,
+        labelHeight: 30,
+        labels: [{
+          name: 'Test Product',
+          variant: 'Test Variant',
+          barcode: '1234567890',
+          serial: 'SN-TEST-001',
+          price: 99.99,
+        }],
+      });
+      if (result.success) {
+        toast.success('Test label printed successfully!');
+      } else {
+        toast.error(result.error || 'Test print failed');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Test print failed');
+    }
+    setTestPrinting(false);
+  };
+
 export function SystemSettingsPanel() {
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
