@@ -68,20 +68,30 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
   }
   
   if (!response.ok) {
-    // If admin token expired/invalid, track consecutive 401s before auto-logout
+    // If admin token expired/invalid, track 401s with time window before auto-logout
     if (response.status === 401 && getApiKey()) {
-      const failCount = parseInt(localStorage.getItem('admin_401_count') || '0', 10) + 1;
-      localStorage.setItem('admin_401_count', failCount.toString());
-      
-      // Only logout after 3 consecutive 401 failures to avoid logout on brief hiccups
-      if (failCount >= 3) {
-        localStorage.removeItem('admin_api_key');
-        localStorage.removeItem('admin_user');
-        localStorage.removeItem('admin_roles');
-        localStorage.removeItem('admin_token_time');
-        localStorage.removeItem('admin_401_count');
-        window.location.href = '/admin';
-        throw new Error('Session expired. Please login again.');
+      try {
+        const now = Date.now();
+        const raw = localStorage.getItem('admin_401_timestamps');
+        let timestamps: number[] = raw ? JSON.parse(raw) : [];
+        timestamps.push(now);
+        // Only keep 401s from the last 30 seconds
+        timestamps = timestamps.filter(t => now - t < 30000);
+        localStorage.setItem('admin_401_timestamps', JSON.stringify(timestamps));
+        
+        // Only logout after 5+ unique 401 failures within 30 seconds
+        if (timestamps.length >= 5) {
+          localStorage.removeItem('admin_api_key');
+          localStorage.removeItem('admin_user');
+          localStorage.removeItem('admin_roles');
+          localStorage.removeItem('admin_token_time');
+          localStorage.removeItem('admin_401_timestamps');
+          window.location.href = '/admin';
+          throw new Error('Session expired. Please login again.');
+        }
+      } catch (e) {
+        // If JSON parse fails, reset
+        localStorage.removeItem('admin_401_timestamps');
       }
       throw new Error(data.error || data.message || 'API request failed');
     }
