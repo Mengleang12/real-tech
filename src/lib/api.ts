@@ -1575,6 +1575,7 @@ export interface Quotation {
   discount_amount: string;
   discount_type?: string | null;
   total: string;
+  delivery_fee?: string | null;
   currency: string;
   valid_until?: string | null;
   notes?: string | null;

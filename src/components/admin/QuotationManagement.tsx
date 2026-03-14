@@ -95,6 +95,7 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
   const [terms, setTerms] = useState(quotation?.terms || '');
   const [discountAmount, setDiscountAmount] = useState(Number(quotation?.discount_amount || 0));
   const [discountType, setDiscountType] = useState(quotation?.discount_type || 'amount');
+  const [deliveryFee, setDeliveryFee] = useState<number>(Number(quotation?.delivery_fee || 0));
   const [saving, setSaving] = useState(false);
 
   // Product search
@@ -147,7 +148,7 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
   }, 0);
 
   const overallDisc = discountType === 'percent' ? subtotal * (discountAmount / 100) : discountAmount;
-  const total = Math.max(0, subtotal - overallDisc);
+  const total = Math.max(0, subtotal - overallDisc) + deliveryFee;
 
   const handleSave = async () => {
     if (items.length === 0) { toast.error('Add at least one product'); return; }
@@ -168,6 +169,7 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
         terms: terms || null,
         discount_amount: discountAmount,
         discount_type: discountType,
+        delivery_fee: deliveryFee > 0 ? deliveryFee : 0,
         items: items.map(i => ({
           product_id: i.product_id,
           variant_id: i.variant_id,
@@ -345,8 +347,8 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
           </div>
         )}
 
-        {/* Discount & Validity */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* Discount, Delivery & Validity */}
+        <div className="grid grid-cols-4 gap-3">
           <div>
             <Label className="text-xs">Overall Discount</Label>
             <div className="flex gap-1 mt-1">
@@ -358,6 +360,13 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
                   <SelectItem value="percent">%</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs">Delivery Fee</Label>
+            <div className="relative mt-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">$</span>
+              <Input type="number" step="0.01" min={0} value={deliveryFee || ''} onChange={e => setDeliveryFee(parseFloat(e.target.value) || 0)} className="h-9 pl-7" placeholder="0.00" />
             </div>
           </div>
           <div>
@@ -378,6 +387,7 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
             <div className="text-right space-y-0.5">
               <p className="text-xs text-muted-foreground">Subtotal: ${subtotal.toFixed(2)}</p>
               {overallDisc > 0 && <p className="text-xs text-destructive">Discount: -${overallDisc.toFixed(2)}</p>}
+              {deliveryFee > 0 && <p className="text-xs text-muted-foreground">Delivery: +${deliveryFee.toFixed(2)}</p>}
               <p className="text-lg font-bold">${total.toFixed(2)}</p>
             </div>
           </div>

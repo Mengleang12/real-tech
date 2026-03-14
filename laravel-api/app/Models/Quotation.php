@@ -8,7 +8,7 @@ class Quotation extends Model
 {
     protected $fillable = [
         'quotation_number', 'customer_id', 'customer_name', 'customer_phone', 'customer_email',
-        'status', 'subtotal', 'discount_amount', 'discount_type', 'total', 'currency',
+        'status', 'subtotal', 'discount_amount', 'discount_type', 'total', 'delivery_fee', 'currency',
         'valid_until', 'notes', 'terms', 'converted_sale_id', 'created_by',
     ];
 

@@ -71,6 +71,7 @@ class QuotationController extends Controller
                 'status' => $request->status ?? 'draft',
                 'discount_amount' => $request->discount_amount ?? 0,
                 'discount_type' => $request->discount_type,
+                'delivery_fee' => $request->delivery_fee ?? 0,
                 'currency' => $request->currency ?? 'USD',
                 'valid_until' => $request->valid_until,
                 'notes' => $request->notes,
@@ -115,11 +116,13 @@ class QuotationController extends Controller
                 $overallDiscount = $subtotal * ($overallDiscount / 100);
             }
 
-            $total = max(0, $subtotal - $overallDiscount);
+            $deliveryFee = $request->delivery_fee ?? 0;
+            $total = max(0, $subtotal - $overallDiscount) + $deliveryFee;
 
             $quotation->update([
                 'subtotal' => $subtotal,
                 'total' => $total,
+                'delivery_fee' => $deliveryFee,
             ]);
 
             return response()->json([
@@ -176,13 +179,15 @@ class QuotationController extends Controller
                     $overallDiscount = $subtotal * ($discountAmount / 100);
                 }
 
+                $deliveryFee = $request->delivery_fee ?? $quotation->delivery_fee ?? 0;
                 $quotation->subtotal = $subtotal;
-                $quotation->total = max(0, $subtotal - $overallDiscount);
+                $quotation->delivery_fee = $deliveryFee;
+                $quotation->total = max(0, $subtotal - $overallDiscount) + $deliveryFee;
             }
 
             $quotation->fill($request->only([
                 'customer_id', 'customer_name', 'customer_phone', 'customer_email',
-                'status', 'discount_amount', 'discount_type', 'currency',
+                'status', 'discount_amount', 'discount_type', 'delivery_fee', 'currency',
                 'valid_until', 'notes', 'terms',
             ]));
 
