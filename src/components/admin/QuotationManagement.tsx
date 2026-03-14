@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { quotationsApi, salesApi, type Quotation, type SaleProduct } from "@/lib/api";
+import { quotationsApi, salesApi, type Quotation, type SaleProduct, type SaleCustomer } from "@/lib/api";
 import { getInvoiceBranding } from "@/lib/invoice-branding";
 import { AdminDialog } from "./AdminDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import {
   Search, Plus, Trash2, Loader2, Package, ChevronLeft, ChevronRight,
   FileText, Eye, Printer, Send, CheckCircle, XCircle, ArrowRight, CalendarIcon,
-  Copy, Share2, MoreHorizontal, Clock
+  Copy, Share2, MoreHorizontal, Clock, Users, UserPlus, X, ClipboardPaste
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import JsBarcode from "jsbarcode";
@@ -67,9 +67,29 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
       discount_type: i.discount_type,
     })) || []
   );
+  const [customerType, setCustomerType] = useState<"walkin" | "existing" | "new">(
+    quotation?.customer_id ? "existing" : (quotation?.customer_name ? "new" : "walkin")
+  );
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [customers, setCustomers] = useState<SaleCustomer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<SaleCustomer | null>(
+    quotation?.customer_id ? { id: quotation.customer_id, full_name: quotation.customer_name || '', email: quotation.customer_email || '', phone: quotation.customer_phone || '' } : null
+  );
+  const [customerLoading, setCustomerLoading] = useState(false);
   const [customerName, setCustomerName] = useState(quotation?.customer_name || '');
   const [customerPhone, setCustomerPhone] = useState(quotation?.customer_phone || '');
   const [customerEmail, setCustomerEmail] = useState(quotation?.customer_email || '');
+
+  const handleSearchCustomers = useCallback(async (q: string) => {
+    setCustomerSearch(q);
+    if (q.length < 2) { setCustomers([]); return; }
+    setCustomerLoading(true);
+    try {
+      const res = await salesApi.searchCustomers(q);
+      setCustomers(res.customers);
+    } catch { /* ignore */ }
+    setCustomerLoading(false);
+  }, []);
   const [validUntil, setValidUntil] = useState<Date | undefined>(quotation?.valid_until ? new Date(quotation.valid_until) : undefined);
   const [notes, setNotes] = useState(quotation?.notes || '');
   const [terms, setTerms] = useState(quotation?.terms || '');
@@ -133,10 +153,16 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
     if (items.length === 0) { toast.error('Add at least one product'); return; }
     setSaving(true);
     try {
+      const resolvedName = customerType === "existing" && selectedCustomer ? selectedCustomer.full_name : customerName;
+      const resolvedPhone = customerType === "existing" && selectedCustomer ? (selectedCustomer.phone || '') : customerPhone;
+      const resolvedEmail = customerType === "existing" && selectedCustomer ? selectedCustomer.email : customerEmail;
+      const resolvedCustomerId = customerType === "existing" && selectedCustomer ? selectedCustomer.id : null;
+
       const data = {
-        customer_name: customerName || null,
-        customer_phone: customerPhone || null,
-        customer_email: customerEmail || null,
+        customer_id: resolvedCustomerId,
+        customer_name: resolvedName || null,
+        customer_phone: resolvedPhone || null,
+        customer_email: resolvedEmail || null,
         valid_until: validUntil ? format(validUntil, 'yyyy-MM-dd') : null,
         notes: notes || null,
         terms: terms || null,
@@ -172,20 +198,88 @@ const QuotationFormDialog = ({ quotation, open, onOpenChange, onSaved }: Quotati
   return (
     <AdminDialog open={open} onOpenChange={onOpenChange} title={quotation ? 'Edit Quotation' : 'New Quotation'} size="4xl">
       <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-        {/* Customer Info */}
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <Label className="text-xs">Customer Name</Label>
-            <Input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Customer name" className="mt-1 h-9" />
+        {/* Customer Section */}
+        <div className="rounded-lg border border-border p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold">Customer</Label>
+            <div className="flex gap-1.5">
+              <Button size="sm" variant={customerType === "walkin" ? "default" : "outline"} onClick={() => { setCustomerType("walkin"); setSelectedCustomer(null); }} className="h-7 text-xs gap-1 px-2.5">
+                <Users className="w-3 h-3" /> Walk-in
+              </Button>
+              <Button size="sm" variant={customerType === "existing" ? "default" : "outline"} onClick={() => setCustomerType("existing")} className="h-7 text-xs gap-1 px-2.5">
+                <Search className="w-3 h-3" /> Existing
+              </Button>
+              <Button size="sm" variant={customerType === "new" ? "default" : "outline"} onClick={() => setCustomerType("new")} className="h-7 text-xs gap-1 px-2.5">
+                <UserPlus className="w-3 h-3" /> New
+              </Button>
+            </div>
           </div>
-          <div>
-            <Label className="text-xs">Phone</Label>
-            <Input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="Phone" className="mt-1 h-9" />
-          </div>
-          <div>
-            <Label className="text-xs">Email</Label>
-            <Input value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} placeholder="Email" className="mt-1 h-9" />
-          </div>
+
+          {customerType === "walkin" && (
+            <p className="text-xs text-muted-foreground">Walk-in customer — no customer info attached</p>
+          )}
+
+          {customerType === "existing" && (
+            <>
+              {selectedCustomer ? (
+                <div className="flex items-center justify-between p-2.5 rounded-md border border-border bg-muted/30">
+                  <div>
+                    <p className="text-sm font-medium">{selectedCustomer.full_name}</p>
+                    <p className="text-xs text-muted-foreground">{selectedCustomer.email}{selectedCustomer.phone ? ` · ${selectedCustomer.phone}` : ""}</p>
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setSelectedCustomer(null)}><X className="w-3.5 h-3.5" /></Button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, email or phone..."
+                    value={customerSearch}
+                    onChange={(e) => handleSearchCustomers(e.target.value)}
+                    className="pl-9 h-9 text-sm"
+                  />
+                  {customerLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+                  {customerLoading && customerSearch.length >= 2 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Searching customers...
+                    </div>
+                  )}
+                  {!customerLoading && customers.length > 0 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      {customers.map(c => (
+                        <button key={c.id} className="w-full text-left px-3 py-2 hover:bg-muted text-sm transition-colors cursor-pointer" onClick={() => { setSelectedCustomer(c); setCustomers([]); setCustomerSearch(""); }}>
+                          <p className="font-medium text-foreground">{c.full_name}</p>
+                          <p className="text-xs text-muted-foreground">{c.email}{c.phone ? ` · ${c.phone}` : ""}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {!customerLoading && customers.length === 0 && customerSearch.length >= 2 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
+                      No customers found
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {customerType === "new" && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="relative">
+                <Input placeholder="Name *" value={customerName} onChange={e => setCustomerName(e.target.value)} className="h-9 text-sm pr-8" />
+                <button type="button" className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Paste" onClick={async () => { try { const t = await navigator.clipboard.readText(); if (t.trim()) setCustomerName(t.trim()); } catch { toast.error("Cannot access clipboard"); } }}><ClipboardPaste className="w-3 h-3" /></button>
+              </div>
+              <div className="relative">
+                <Input placeholder="Phone" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="h-9 text-sm pr-8" />
+                <button type="button" className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Paste" onClick={async () => { try { const t = await navigator.clipboard.readText(); if (t.trim()) setCustomerPhone(t.trim()); } catch { toast.error("Cannot access clipboard"); } }}><ClipboardPaste className="w-3 h-3" /></button>
+              </div>
+              <div className="relative">
+                <Input placeholder="Email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} className="h-9 text-sm pr-8" />
+                <button type="button" className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Paste" onClick={async () => { try { const t = await navigator.clipboard.readText(); if (t.trim()) setCustomerEmail(t.trim()); } catch { toast.error("Cannot access clipboard"); } }}><ClipboardPaste className="w-3 h-3" /></button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Product Search */}
