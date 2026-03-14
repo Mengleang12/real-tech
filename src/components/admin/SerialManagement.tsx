@@ -18,7 +18,7 @@ import {
 import { CameraOCRDialog } from "./CameraOCRDialog";
 import JsBarcode from "jsbarcode";
 import { initPrinterService, isPrinterServiceAvailable, printLabels, type LabelData } from "@/lib/printer-service";
-import { useSerialRealtime, broadcastSerialChange } from "@/hooks/useSerialRealtime";
+
 
 // ─── Print Serial Label Utility ─────────────────────────────────────────────
 type PrintableSerial = {
@@ -163,9 +163,6 @@ const statusConfig = {
 };
 
 export const SerialManagement = () => {
-  // Listen for realtime serial changes from other devices
-  useSerialRealtime();
-  
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -189,17 +186,18 @@ export const SerialManagement = () => {
       page,
       limit: 30,
     }),
+    refetchInterval: 5000, // Poll every 5s for cross-device sync
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => serialsApi.delete(id),
-    onSuccess: () => { toast.success("Serial deleted"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); broadcastSerialChange(); },
+    onSuccess: () => { toast.success("Serial deleted"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); },
     onError: () => toast.error("Failed to delete"),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<ProductSerial> }) => serialsApi.update(id, data),
-    onSuccess: () => { toast.success("Updated"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); broadcastSerialChange(); },
+    onSuccess: () => { toast.success("Updated"); queryClient.invalidateQueries({ queryKey: ["admin-serials"] }); },
     onError: () => toast.error("Failed to update"),
   });
 
@@ -597,6 +595,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       limit: 200,
     }),
     enabled: !!selectedProduct && open,
+    refetchInterval: open ? 5000 : false, // Poll every 5s when dialog is open
   });
 
   // Filter existing serials by variant
@@ -663,7 +662,6 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       queryClient.invalidateQueries({ queryKey: ["admin-stock"] });
       queryClient.invalidateQueries({ queryKey: ["product-serials", selectedProduct?.id, selectedVariantId] });
       setSerialList([]);
-      broadcastSerialChange();
       // Don't close dialog - let user add more
     },
     onError: () => toast.error("Failed to add serials"),
@@ -675,7 +673,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       toast.success("Serial deleted");
       queryClient.invalidateQueries({ queryKey: ["admin-serials"] });
       queryClient.invalidateQueries({ queryKey: ["product-serials", selectedProduct?.id, selectedVariantId] });
-      broadcastSerialChange();
+      
     },
     onError: () => toast.error("Failed to delete"),
   });
