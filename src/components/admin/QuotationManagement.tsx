@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import {
   Search, Plus, Trash2, Loader2, Package, ChevronLeft, ChevronRight,
   FileText, Eye, Printer, Send, CheckCircle, XCircle, ArrowRight, CalendarIcon,
-  Copy, Share2, MoreHorizontal, Clock
+  Copy, Share2, MoreHorizontal, Clock, Users, UserPlus, X, ClipboardPaste
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import JsBarcode from "jsbarcode";
