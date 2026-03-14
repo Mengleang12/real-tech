@@ -54,6 +54,8 @@ import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabel
 import { SalesReport } from "@/components/admin/SalesReport";
 import { SerialManagement } from "@/components/admin/SerialManagement";
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
+import { WebSocketStatus } from "@/components/admin/WebSocketStatus";
+import { useSerialRealtime } from "@/hooks/useSerialRealtime";
 import { NotesManagement } from "@/components/admin/NotesManagement";
 import { ActiveSessions } from "@/components/admin/ActiveSessions";
 import { QuotationManagement } from "@/components/admin/QuotationManagement";
@@ -1178,6 +1180,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin: isAuthAdmin, isSuperAdmin: isAuthSuperAdmin, hasPermission } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const wsStatus = useSerialRealtime();
 
   // Legacy admin gets full admin access
   const isLegacyAdmin = authApi.isAuthenticated();
@@ -1476,6 +1479,7 @@ const AdminDashboard = () => {
             <Button variant="outline" size="sm" onClick={() => navigate("/")} className="hidden sm:flex gap-1.5">
               <ArrowLeft className="w-3.5 h-3.5" /> Store
             </Button>
+            <WebSocketStatus status={wsStatus} />
             <AdminNotificationBell />
           </div>
         </header>
