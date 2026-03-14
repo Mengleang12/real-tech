@@ -98,6 +98,39 @@ class AuthController extends Controller
         ]);
     }
 
+    public function verify(Request $request)
+    {
+        $token = $request->bearerToken();
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $admin = User::with('roles')->where('auth_token', $token)
+            ->where('token_expiry', '>', now())
+            ->first();
+
+        if (!$admin) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        // Renew token expiry (sliding session)
+        $admin->token_expiry = now()->addDays(30);
+        $admin->save();
+
+        $roles = $admin->roles->pluck('role')->toArray();
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $admin->id,
+                'username' => $admin->username,
+                'full_name' => $admin->full_name,
+                'avatar_url' => $admin->avatar_url,
+                'roles' => $roles,
+            ],
+        ]);
+    }
+
     public function resetPassword()
     {
         $admin = User::where('username', 'admin')->first();
