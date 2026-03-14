@@ -116,8 +116,8 @@ class AnalyticsController extends Controller
         $sortDir = $request->input('sort_dir', 'desc');
         $perPage = $request->input('limit', 50);
 
-        // Get all products
-        $productsQuery = Product::select('id', 'name', 'icon_url');
+        // Get all products with their variants
+        $productsQuery = Product::select('id', 'name', 'icon_url')->with('variants:id,product_id,price_adjustment,stock_quantity');
         if ($search) {
             $productsQuery->where('name', 'like', "%{$search}%");
         }
@@ -126,6 +126,10 @@ class AnalyticsController extends Controller
         $result = [];
 
         foreach ($products as $product) {
+            // Derive price and stock from variants
+            $currentPrice = $product->variants->count() > 0 ? (float) $product->variants->first()->price_adjustment : 0;
+            $stockQuantity = $product->variants->sum('stock_quantity');
+
             // Purchase cost: sum of (unit_cost * quantity) from purchase_items for completed/received purchases
             $purchaseData = PurchaseItem::where('product_id', $product->id)
                 ->whereHas('purchase', function ($q) {
@@ -152,7 +156,6 @@ class AnalyticsController extends Controller
                 $productItemCost = $purchase->items->where('product_id', $product->id)->sum('total_cost');
                 $ratio = $productItemCost / $purchaseTotal;
 
-                // Proportional share of delivery_fee + other_expense + expenses
                 $expenseSum = $purchase->delivery_fee + $purchase->other_expense + $purchase->expenses->sum('amount');
                 $totalExpenses += $expenseSum * $ratio;
             }
@@ -170,9 +173,9 @@ class AnalyticsController extends Controller
 
             $totalRevenue = (float) ($saleData->total_revenue ?? 0);
             $totalSold = (int) ($saleData->total_sold ?? 0);
-            $avgSalePrice = $totalSold > 0 ? $totalRevenue / $totalSold : (float) $product->price;
+            $avgSalePrice = $totalSold > 0 ? $totalRevenue / $totalSold : $currentPrice;
 
-            // COGS = avg cost per unit × units sold (correct profit formula)
+            // COGS = avg cost per unit × units sold
             $cogs = $avgCostPerUnit * $totalSold;
             $profit = $totalRevenue - $cogs;
             $margin = $totalRevenue > 0 ? ($profit / $totalRevenue) * 100 : 0;
@@ -181,8 +184,8 @@ class AnalyticsController extends Controller
                 'product_id' => $product->id,
                 'product_name' => $product->name,
                 'icon_url' => $product->icon_url,
-                'current_price' => (float) $product->price,
-                'stock_quantity' => $product->stock_quantity,
+                'current_price' => $currentPrice,
+                'stock_quantity' => $stockQuantity,
                 'total_purchase_cost' => round($totalLandedCost, 2),
                 'total_purchase_qty' => (int) $totalPurchaseQty,
                 'avg_cost_per_unit' => round($avgCostPerUnit, 2),
