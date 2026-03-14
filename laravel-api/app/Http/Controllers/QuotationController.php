@@ -116,11 +116,13 @@ class QuotationController extends Controller
                 $overallDiscount = $subtotal * ($overallDiscount / 100);
             }
 
-            $total = max(0, $subtotal - $overallDiscount);
+            $deliveryFee = $request->delivery_fee ?? 0;
+            $total = max(0, $subtotal - $overallDiscount) + $deliveryFee;
 
             $quotation->update([
                 'subtotal' => $subtotal,
                 'total' => $total,
+                'delivery_fee' => $deliveryFee,
             ]);
 
             return response()->json([
