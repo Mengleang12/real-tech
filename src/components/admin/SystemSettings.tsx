@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { clearBrandingCache } from '@/lib/invoice-branding';
-import { Settings2, Globe, Shield, Database, Server, Loader2, Palette, ImageIcon, Phone, MapPin, Share2, FileText, Upload, X } from 'lucide-react';
+import { Settings2, Globe, Shield, Database, Server, Loader2, Palette, ImageIcon, Phone, MapPin, Share2, FileText, Upload, X, Printer, Wifi, WifiOff, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { initPrinterService, isPrinterServiceAvailable, printLabels, type PrinterStatus } from '@/lib/printer-service';
 import { Input } from '@/components/ui/input';
 import { NumberInput } from '@/components/ui/number-input';
 import { Label } from '@/components/ui/label';
@@ -105,6 +106,62 @@ export function SystemSettingsPanel() {
   const [uploadingQr, setUploadingQr] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const qrInputRef = useRef<HTMLInputElement>(null);
+
+  // Printer state
+  const [printerStatus, setPrinterStatus] = useState<PrinterStatus>({ available: false, printers: [] });
+  const [checkingPrinter, setCheckingPrinter] = useState(false);
+  const [testPrinting, setTestPrinting] = useState(false);
+  const [selectedPrinter, setSelectedPrinter] = useState('');
+
+  const checkPrinterConnection = async () => {
+    setCheckingPrinter(true);
+    try {
+      const status = await initPrinterService();
+      setPrinterStatus(status);
+      if (status.available && status.printerName && !selectedPrinter) {
+        setSelectedPrinter(status.printerName);
+      }
+      if (status.available) {
+        toast.success(`Printer connected: ${status.printerName || 'Unknown'}`);
+      } else {
+        toast.error('No printer detected. Make sure the Detonger driver is installed and the printer is connected.');
+      }
+    } catch {
+      setPrinterStatus({ available: false, printers: [] });
+      toast.error('Failed to detect printer');
+    }
+    setCheckingPrinter(false);
+  };
+
+  const handleTestPrint = async () => {
+    if (!printerStatus.available || !selectedPrinter) {
+      toast.error('Connect a printer first');
+      return;
+    }
+    setTestPrinting(true);
+    try {
+      const result = await printLabels({
+        printerName: selectedPrinter,
+        labelWidth: 40,
+        labelHeight: 30,
+        labels: [{
+          name: 'Test Product',
+          variant: 'Test Variant',
+          barcode: '1234567890',
+          serial: 'SN-TEST-001',
+          price: 99.99,
+        }],
+      });
+      if (result.success) {
+        toast.success('Test label printed successfully!');
+      } else {
+        toast.error(result.error || 'Test print failed');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Test print failed');
+    }
+    setTestPrinting(false);
+  };
 
   useEffect(() => {
     fetchSettings();
@@ -565,6 +622,77 @@ export function SystemSettingsPanel() {
                 </div>
                 <Switch checked={settings.enable_analytics} onCheckedChange={v => toggleAndSave('enable_analytics', v)} />
               </div>
+            </div>
+          </div>
+
+          {/* Printer */}
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center gap-2">
+              <Printer className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium">Label Printer</h3>
+            </div>
+            <div className="p-4 space-y-4">
+              {/* Connection status */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20">
+                {checkingPrinter ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Detecting printer service...
+                  </div>
+                ) : printerStatus.available ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Printer Connected</p>
+                      <p className="text-xs text-muted-foreground">
+                        {printerStatus.printers.length} printer{printerStatus.printers.length !== 1 ? 's' : ''} found
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-5 h-5 text-destructive shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-destructive">Not Connected</p>
+                      <p className="text-xs text-muted-foreground">Install the Detonger P1P driver and connect via USB</p>
+                    </div>
+                  </>
+                )}
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 shrink-0" onClick={checkPrinterConnection} disabled={checkingPrinter}>
+                  <RefreshCw className={`w-3.5 h-3.5 ${checkingPrinter ? 'animate-spin' : ''}`} />
+                  {checkingPrinter ? 'Checking...' : 'Check Connection'}
+                </Button>
+              </div>
+
+              {/* Printer selector */}
+              {printerStatus.available && printerStatus.printers.length > 0 && (
+                <div>
+                  <Label className="text-xs">Select Printer</Label>
+                  <select
+                    value={selectedPrinter}
+                    onChange={e => setSelectedPrinter(e.target.value)}
+                    className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    {printerStatus.printers.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Test print */}
+              {printerStatus.available && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Test Print</p>
+                    <p className="text-xs text-muted-foreground">Print a sample 40×30mm label to verify connection</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={handleTestPrint} disabled={testPrinting || !selectedPrinter}>
+                    {testPrinting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
+                    {testPrinting ? 'Printing...' : 'Print Test Label'}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </TabsContent>
