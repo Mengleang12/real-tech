@@ -607,6 +607,18 @@ const InvoicesTab = () => {
   const [paymentNote, setPaymentNote] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
   const scanInputRef = useRef<HTMLInputElement>(null);
+  const [printerStatus, setPrinterStatus] = useState<PrinterStatus>({ available: false, printers: [] });
+  const [selectedPrinter, setSelectedPrinter] = useState<string>("");
+
+  // Initialize printer service on mount
+  useEffect(() => {
+    initPrinterService().then((status) => {
+      setPrinterStatus(status);
+      if (status.available && status.printerName) {
+        setSelectedPrinter(status.printerName);
+      }
+    });
+  }, []);
 
   // Debounce search
   useEffect(() => {
