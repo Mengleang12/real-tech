@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { quotationsApi, salesApi, type Quotation, type SaleProduct } from "@/lib/api";
+import { quotationsApi, salesApi, type Quotation, type SaleProduct, type SaleCustomer } from "@/lib/api";
 import { getInvoiceBranding } from "@/lib/invoice-branding";
 import { AdminDialog } from "./AdminDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
