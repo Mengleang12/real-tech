@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -558,6 +559,10 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
   const [deleteSerialId, setDeleteSerialId] = useState<number | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [selectedPrintIds, setSelectedPrintIds] = useState<Set<number>>(new Set());
+  const [autoPrint, setAutoPrint] = useState(() => {
+    const saved = localStorage.getItem('serial-auto-print');
+    return saved !== null ? saved === 'true' : true;
+  });
 
   // Fetch existing serials for this product
   const { data: existingData, isLoading: existingLoading } = useQuery({
@@ -638,7 +643,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       setSerialList([]);
 
       // Auto-print labels for newly created serials
-      if (res.created && res.created.length > 0) {
+      if (autoPrint && res.created && res.created.length > 0) {
         const toPrint: PrintableSerial[] = res.created.map((s: any) => ({
           id: s.id,
           serial_number: s.serial_number,
@@ -857,9 +862,24 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
           {serialList.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
-                  Pending <span className="text-primary font-bold">{serialList.length}</span>
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    Pending <span className="text-primary font-bold">{serialList.length}</span>
+                  </span>
+                  <button
+                    onClick={() => {
+                      const next = !autoPrint;
+                      setAutoPrint(next);
+                      localStorage.setItem('serial-auto-print', String(next));
+                      toast.success(next ? 'Auto-print enabled' : 'Auto-print disabled');
+                    }}
+                    className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Switch checked={autoPrint} className="scale-[0.6] origin-left" />
+                    <Printer className="w-3 h-3" />
+                    <span>Auto Print</span>
+                  </button>
+                </div>
                 <Button
                   size="sm"
                   onClick={() => saveMutation.mutate()}
