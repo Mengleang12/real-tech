@@ -31,6 +31,7 @@ interface SystemSettings {
   facebook_url: string;
   telegram_url: string;
   instagram_url: string;
+  tiktok_url: string;
   enable_analytics: boolean;
   invoice_footer_text: string;
   payment_qr_urls: string[];
