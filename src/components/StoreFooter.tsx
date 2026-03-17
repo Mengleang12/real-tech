@@ -66,10 +66,10 @@ export function StoreFooter() {
       <div className="bg-card/60 backdrop-blur-xl border-t border-border/30">
         {/* Main content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-10">
             
             {/* Brand column */}
-            <div className="sm:col-span-2 lg:col-span-1">
+            <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl overflow-hidden bg-background shadow-sm border border-border/50">
                   <img
@@ -90,10 +90,15 @@ export function StoreFooter() {
                   ? 'យើងផ្តល់ដំណោះស្រាយបច្ចេកវិទ្យា និងសេវាកម្មដំឡើងកម្មវិធីដែលអ្នកអាចទុកចិត្តបាន។'
                   : 'Your trusted partner for tech solutions, software installation services, and digital products.'}
               </p>
+            </div>
 
-              {/* Social icons */}
-              {socialLinks.length > 0 && (
-                <div className="flex items-center gap-2 mt-5">
+            {/* Social Media */}
+            {socialLinks.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">
+                  {language === 'km' ? 'បណ្ដាញសង្គម' : 'Follow Us'}
+                </h4>
+                <div className="flex flex-wrap items-center gap-2">
                   {socialLinks.map((s) => {
                     const Icon = s.icon;
                     return (
@@ -110,8 +115,8 @@ export function StoreFooter() {
                     );
                   })}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Contact Info */}
             <div>
