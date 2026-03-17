@@ -31,6 +31,7 @@ interface SystemSettings {
   facebook_url: string;
   telegram_url: string;
   instagram_url: string;
+  tiktok_url: string;
   enable_analytics: boolean;
   invoice_footer_text: string;
   payment_qr_urls: string[];
@@ -84,6 +85,7 @@ const defaultSettings: SystemSettings = {
   facebook_url: '',
   telegram_url: '',
   instagram_url: '',
+  tiktok_url: '',
   enable_analytics: true,
   invoice_footer_text: 'Thank you for your business!',
   payment_qr_urls: [],
@@ -251,6 +253,7 @@ export function SystemSettingsPanel() {
           facebook_url: settings.facebook_url,
           telegram_url: settings.telegram_url,
           instagram_url: settings.instagram_url,
+          tiktok_url: settings.tiktok_url,
           enable_analytics: settings.enable_analytics,
           invoice_footer_text: settings.invoice_footer_text,
           payment_qr_urls: settings.payment_qr_urls,
@@ -495,6 +498,10 @@ export function SystemSettingsPanel() {
               <div>
                 <Label className="text-xs">Instagram</Label>
                 <Input value={settings.instagram_url} onChange={e => update('instagram_url', e.target.value)} className="mt-1" placeholder="https://instagram.com/..." />
+              </div>
+              <div>
+                <Label className="text-xs">TikTok</Label>
+                <Input value={settings.tiktok_url} onChange={e => update('tiktok_url', e.target.value)} className="mt-1" placeholder="https://tiktok.com/@..." />
               </div>
             </div>
           </div>

@@ -25,6 +25,7 @@ class SystemSettingController extends Controller
         'facebook_url',
         'telegram_url',
         'instagram_url',
+        'tiktok_url',
         'enable_analytics',
         'invoice_footer_text',
         'payment_qr_urls',
@@ -109,6 +110,10 @@ class SystemSettingController extends Controller
             'default_currency' => SystemSetting::getValue('default_currency', 'USD'),
             'payment_qr_urls' => json_decode($qrRaw, true) ?: [],
             'payment_qr_size' => (int) SystemSetting::getValue('payment_qr_size', '72'),
+            'facebook_url' => SystemSetting::getValue('facebook_url', ''),
+            'telegram_url' => SystemSetting::getValue('telegram_url', ''),
+            'instagram_url' => SystemSetting::getValue('instagram_url', ''),
+            'tiktok_url' => SystemSetting::getValue('tiktok_url', ''),
         ]);
     }
 
