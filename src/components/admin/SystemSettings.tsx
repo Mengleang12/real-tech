@@ -85,6 +85,7 @@ const defaultSettings: SystemSettings = {
   facebook_url: '',
   telegram_url: '',
   instagram_url: '',
+  tiktok_url: '',
   enable_analytics: true,
   invoice_footer_text: 'Thank you for your business!',
   payment_qr_urls: [],
