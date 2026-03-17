@@ -499,6 +499,10 @@ export function SystemSettingsPanel() {
                 <Label className="text-xs">Instagram</Label>
                 <Input value={settings.instagram_url} onChange={e => update('instagram_url', e.target.value)} className="mt-1" placeholder="https://instagram.com/..." />
               </div>
+              <div>
+                <Label className="text-xs">TikTok</Label>
+                <Input value={settings.tiktok_url} onChange={e => update('tiktok_url', e.target.value)} className="mt-1" placeholder="https://tiktok.com/@..." />
+              </div>
             </div>
           </div>
 
