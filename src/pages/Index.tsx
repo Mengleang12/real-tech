@@ -145,6 +145,8 @@ const Index = () => {
           <PageTransition transitionKey={`${activeCategory}-${searchQuery}`}>
             {renderContent()}
           </PageTransition>
+
+          <StoreFooter />
         </div>
       </main>
 
