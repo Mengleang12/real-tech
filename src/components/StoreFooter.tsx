@@ -193,14 +193,19 @@ export function StoreFooter() {
                   rel="noopener noreferrer"
                   className="block rounded-xl overflow-hidden border border-border/50 group relative"
                 >
-                  <div className="h-[120px] bg-muted/40 flex items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
-                    <div className="text-center z-10">
-                      <MapPin className="w-6 h-6 text-primary mx-auto mb-1 group-hover:scale-110 transition-transform" />
-                      <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors font-medium">
-                        {language === 'km' ? 'មើលផែនទី' : 'View on Google Maps'}
-                      </span>
-                    </div>
+                  <iframe
+                    title="Store Location"
+                    src={`https://www.google.com/maps?q=${encodeURIComponent(branding.site_address || branding.site_name)}&output=embed`}
+                    className="w-full h-[150px] pointer-events-none"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    style={{ border: 0 }}
+                  />
+                  <div className="absolute inset-0 bg-transparent group-hover:bg-primary/5 transition-colors flex items-end justify-center pb-2">
+                    <span className="text-[10px] bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-muted-foreground group-hover:text-primary transition-colors font-medium shadow-sm">
+                      <MapPin className="w-3 h-3 inline mr-1 -mt-0.5" />
+                      {language === 'km' ? 'បើកក្នុង Google Maps' : 'Open in Google Maps'}
+                    </span>
                   </div>
                 </a>
               </div>
