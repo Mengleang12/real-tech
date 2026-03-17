@@ -14,6 +14,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PackageOpen } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
+import { StoreFooter } from "@/components/StoreFooter";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -144,6 +145,8 @@ const Index = () => {
           <PageTransition transitionKey={`${activeCategory}-${searchQuery}`}>
             {renderContent()}
           </PageTransition>
+
+          <StoreFooter />
         </div>
       </main>
 
