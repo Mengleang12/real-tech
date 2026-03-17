@@ -181,37 +181,19 @@ export function StoreFooter() {
               </ul>
             </div>
 
-            {/* Business Hours + Map */}
-            <div>
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">
-                {language === 'km' ? 'ម៉ោងបើកបិទ' : 'Business Hours'}
-              </h4>
-              <ul className="space-y-2">
-                {[
-                  { day: language === 'km' ? 'ច័ន្ទ - សុក្រ' : 'Mon – Fri', time: '8:00 AM – 6:00 PM' },
-                  { day: language === 'km' ? 'សៅរ៍' : 'Saturday', time: '8:00 AM – 5:00 PM' },
-                  { day: language === 'km' ? 'អាទិត្យ' : 'Sunday', time: language === 'km' ? 'បិទ' : 'Closed' },
-                ].map((row) => (
-                  <li key={row.day} className="flex items-center gap-2">
-                    <Clock className="w-3 h-3 text-muted-foreground/60 shrink-0" />
-                    <span className="text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground/80">{row.day}</span>
-                      <span className="mx-1.5 text-border">·</span>
-                      {row.time}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Mini map link */}
-              {branding.site_address && (
+            {/* Map */}
+            {branding.site_address && (
+              <div>
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">
+                  {language === 'km' ? 'ទីតាំង' : 'Location'}
+                </h4>
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branding.site_address || branding.site_name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-4 block rounded-xl overflow-hidden border border-border/50 group relative"
+                  className="block rounded-xl overflow-hidden border border-border/50 group relative"
                 >
-                  <div className="h-[100px] bg-muted/40 flex items-center justify-center relative overflow-hidden">
+                  <div className="h-[120px] bg-muted/40 flex items-center justify-center relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
                     <div className="text-center z-10">
                       <MapPin className="w-6 h-6 text-primary mx-auto mb-1 group-hover:scale-110 transition-transform" />
@@ -221,8 +203,8 @@ export function StoreFooter() {
                     </div>
                   </div>
                 </a>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
