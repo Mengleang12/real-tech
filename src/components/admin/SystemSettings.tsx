@@ -253,6 +253,7 @@ export function SystemSettingsPanel() {
           facebook_url: settings.facebook_url,
           telegram_url: settings.telegram_url,
           instagram_url: settings.instagram_url,
+          tiktok_url: settings.tiktok_url,
           enable_analytics: settings.enable_analytics,
           invoice_footer_text: settings.invoice_footer_text,
           payment_qr_urls: settings.payment_qr_urls,
