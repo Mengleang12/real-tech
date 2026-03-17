@@ -25,6 +25,7 @@ class SystemSettingController extends Controller
         'facebook_url',
         'telegram_url',
         'instagram_url',
+        'tiktok_url',
         'enable_analytics',
         'invoice_footer_text',
         'payment_qr_urls',
