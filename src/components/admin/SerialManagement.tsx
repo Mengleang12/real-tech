@@ -521,10 +521,6 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
   const [deleteSerialId, setDeleteSerialId] = useState<number | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [selectedPrintIds, setSelectedPrintIds] = useState<Set<number>>(new Set());
-  const [autoPrint, setAutoPrint] = useState(() => {
-    const saved = localStorage.getItem('serial-auto-print');
-    return saved !== null ? saved === 'true' : true;
-  });
 
   // Fetch existing serials for this product
   const { data: existingData, isLoading: existingLoading } = useQuery({
@@ -604,22 +600,7 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
       queryClient.invalidateQueries({ queryKey: ["product-serials", selectedProduct?.id, selectedVariantId] });
       setSerialList([]);
 
-      // Auto-print labels for newly created serials
-      if (autoPrint && res.created && res.created.length > 0) {
-        const toPrint: PrintableSerial[] = res.created.map((s: any) => ({
-          id: s.id,
-          serial_number: s.serial_number,
-          barcode: s.barcode,
-          status: s.status,
-          product: selectedProduct ? { name: selectedProduct.name, icon_url: selectedProduct.icon_url || undefined } : undefined,
-          variant: selectedVariantId ? {
-            ...selectedProduct?.variants.find(v => v.id === selectedVariantId),
-            combination: selectedProduct?.variants.find(v => v.id === selectedVariantId)?.combination || {},
-          } as any : undefined,
-        }));
-        toast.info(`Auto-printing ${toPrint.length} label${toPrint.length > 1 ? 's' : ''}...`);
-        printSerialLabels(toPrint);
-      }
+      // Auto-print removed
     },
     onError: () => toast.error("Failed to add serials"),
   });
@@ -772,19 +753,6 @@ const SerialInputDialog = ({ open, onOpenChange, selectedProduct, selectedVarian
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Scan or Type</span>
-                <button
-                  onClick={() => {
-                    const next = !autoPrint;
-                    setAutoPrint(next);
-                    localStorage.setItem('serial-auto-print', String(next));
-                    toast.success(next ? 'Auto-print enabled' : 'Auto-print disabled');
-                  }}
-                  className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Switch checked={autoPrint} className="scale-[0.6] origin-left" />
-                  <Printer className="w-3 h-3" />
-                  <span>Auto Print</span>
-                </button>
               </div>
               {stockLimit !== Infinity && (
                 <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
