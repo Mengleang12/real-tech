@@ -1016,19 +1016,13 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
   const handlePrint = async () => {
     const branding = await getInvoiceBranding();
     const amount = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount;
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText = "position:fixed;width:0;height:0;border:none;left:-9999px";
-    document.body.appendChild(iframe);
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) { document.body.removeChild(iframe); return; }
-    doc.open();
     const originalPrice = order.original_price ? parseFloat(order.original_price) : amount;
     const itemDiscount = order.item_discount ? parseFloat(order.item_discount) : 0;
     const saleDiscountVal = order.sale_discount ? parseFloat(order.sale_discount) : 0;
     const itemDiscountLabel = order.item_discount_type === 'percent' ? `${itemDiscount}%` : `$${itemDiscount.toFixed(2)}`;
     const saleDiscountLabel = order.sale_discount_type === 'percent' ? `${saleDiscountVal}%` : `$${saleDiscountVal.toFixed(2)}`;
 
-    doc.write(`<!DOCTYPE html><html><head><title>Invoice #${order.id.slice(0, 8).toUpperCase()}</title>
+    const htmlContent = `<!DOCTYPE html><html><head><title>Invoice #${order.id.slice(0, 8).toUpperCase()}</title>
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         *{margin:0;padding:0;box-sizing:border-box}
@@ -1108,12 +1102,39 @@ const BottomActions = ({ order, onClose }: { order: AdminOrder; onClose: () => v
       ${order.notes ? `<div style="margin-top:${order.warranty_period ? '12' : '24'}px;padding:16px 20px;background:#f9fafb;border-radius:10px;border-left:3px solid ${branding.primary_color}"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px">Note</div><div style="font-size:13px;color:#374151;line-height:1.6">${order.notes}</div></div>` : ''}
       <div class="divider"></div>
       <div class="footer"><div class="footer-thanks">${branding.invoice_footer_text}</div><div class="footer-brand">${branding.site_name}${branding.support_email ? ` — ${branding.support_email}` : ''}</div></div>
-      </body></html>`);
-    doc.close();
-    iframe.onload = () => {
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 1000);
-    };
+      </body></html>`;
+
+    // Use window.open for Safari/iOS compatibility (iframe.print() is blocked without user gesture)
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.open();
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      // Wait for fonts/images to load, then trigger print
+      printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+      };
+      // Fallback if onload already fired
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 500);
+    } else {
+      // Popup blocked — fall back to iframe method
+      const iframe = document.createElement("iframe");
+      iframe.style.cssText = "position:fixed;width:0;height:0;border:none;left:-9999px";
+      document.body.appendChild(iframe);
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc) { document.body.removeChild(iframe); return; }
+      doc.open();
+      doc.write(htmlContent);
+      doc.close();
+      iframe.onload = () => {
+        iframe.contentWindow?.print();
+        setTimeout(() => document.body.removeChild(iframe), 1000);
+      };
+    }
   };
 
   return (
