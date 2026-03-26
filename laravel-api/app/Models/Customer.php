@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -43,6 +44,11 @@ class Customer extends Authenticatable
     public function status(): HasOne
     {
         return $this->hasOne(UserStatus::class, 'customer_id');
+    }
+
+    public function roles(): HasMany
+    {
+        return $this->hasMany(UserRole::class, 'customer_id');
     }
 
     public function activityLogs(): HasMany
