@@ -38,6 +38,7 @@ interface SystemSettings {
   payment_qr_size: number;
   label_width: number;
   label_height: number;
+  google_maps_api_key: string;
 }
 
 function hexToHsl(hex: string): string {
