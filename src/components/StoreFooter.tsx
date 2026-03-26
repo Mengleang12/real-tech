@@ -201,14 +201,23 @@ export function StoreFooter() {
                   rel="noopener noreferrer"
                   className="block rounded-xl overflow-hidden border border-border/50 group relative"
                 >
-                  <iframe
-                    title="Store Location"
-                    src={`https://www.google.com/maps?q=${encodeURIComponent(branding.site_address || branding.site_name)}&output=embed`}
-                    className="w-full h-[150px] pointer-events-none"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    style={{ border: 0 }}
-                  />
+                  {branding.google_maps_api_key ? (
+                    <iframe
+                      title="Store Location"
+                      src={`https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(branding.google_maps_api_key)}&q=${encodeURIComponent(branding.site_address)}`}
+                      className="w-full h-[150px] pointer-events-none"
+                      loading="lazy"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="w-full h-[150px] bg-muted/30 flex items-center justify-center">
+                      <div className="text-center">
+                        <MapPin className="w-6 h-6 text-muted-foreground mx-auto mb-1" />
+                        <p className="text-xs text-muted-foreground">{branding.site_address}</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-transparent group-hover:bg-primary/5 transition-colors flex items-end justify-center pb-2">
                     <span className="text-[10px] bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-muted-foreground group-hover:text-primary transition-colors font-medium shadow-sm">
                       <MapPin className="w-3 h-3 inline mr-1 -mt-0.5" />
