@@ -38,6 +38,7 @@ interface SystemSettings {
   payment_qr_size: number;
   label_width: number;
   label_height: number;
+  google_maps_api_key: string;
 }
 
 function hexToHsl(hex: string): string {
@@ -92,6 +93,7 @@ const defaultSettings: SystemSettings = {
   payment_qr_size: 72,
   label_width: 40,
   label_height: 30,
+  google_maps_api_key: '',
 };
 
 function getAuthHeaders(): Record<string, string> {
@@ -260,6 +262,7 @@ export function SystemSettingsPanel() {
           payment_qr_size: settings.payment_qr_size,
           label_width: settings.label_width,
           label_height: settings.label_height,
+          google_maps_api_key: settings.google_maps_api_key,
         }),
       });
       if (!res.ok) {
@@ -477,6 +480,44 @@ export function SystemSettingsPanel() {
                 <Label className="text-xs flex items-center gap-1.5"><MapPin className="w-3 h-3" /> Business Address</Label>
                 <Textarea value={settings.site_address} onChange={e => update('site_address', e.target.value)} className="mt-1 min-h-[60px]" placeholder="Street, City, Country" />
               </div>
+            </div>
+          </div>
+
+          {/* Google Maps */}
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium">Google Maps</h3>
+            </div>
+            <div className="p-4 space-y-3">
+              <div>
+                <Label className="text-xs">Google Maps API Key</Label>
+                <Input
+                  type="password"
+                  value={settings.google_maps_api_key}
+                  onChange={e => update('google_maps_api_key', e.target.value)}
+                  className="mt-1 font-mono text-sm"
+                  placeholder="AIzaSy..."
+                />
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  Required for the interactive map in the store footer. Get your key from the <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google Cloud Console</a>. Enable the "Maps Embed API".
+                </p>
+              </div>
+              {settings.google_maps_api_key && settings.site_address && (
+                <div>
+                  <Label className="text-xs mb-1.5 block">Preview</Label>
+                  <div className="rounded-lg overflow-hidden border border-border">
+                    <iframe
+                      title="Map Preview"
+                      src={`https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(settings.google_maps_api_key)}&q=${encodeURIComponent(settings.site_address)}`}
+                      className="w-full h-[180px]"
+                      loading="lazy"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
