@@ -23,6 +23,7 @@ interface BrandingData {
   telegram_url: string;
   instagram_url: string;
   tiktok_url: string;
+  google_maps_api_key: string;
 }
 
 const defaults: BrandingData = {
