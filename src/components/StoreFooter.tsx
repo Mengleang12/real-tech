@@ -37,6 +37,7 @@ const defaults: BrandingData = {
   telegram_url: '',
   instagram_url: '',
   tiktok_url: '',
+  google_maps_api_key: '',
 };
 
 export function StoreFooter() {
