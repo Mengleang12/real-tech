@@ -32,6 +32,7 @@ class SystemSettingController extends Controller
         'payment_qr_size',
         'label_width',
         'label_height',
+        'google_maps_api_key',
     ];
 
     // Keys that store JSON arrays
