@@ -262,6 +262,7 @@ export function SystemSettingsPanel() {
           payment_qr_size: settings.payment_qr_size,
           label_width: settings.label_width,
           label_height: settings.label_height,
+          google_maps_api_key: settings.google_maps_api_key,
         }),
       });
       if (!res.ok) {
