@@ -93,6 +93,7 @@ const defaultSettings: SystemSettings = {
   payment_qr_size: 72,
   label_width: 40,
   label_height: 30,
+  google_maps_api_key: '',
 };
 
 function getAuthHeaders(): Record<string, string> {
