@@ -633,10 +633,13 @@ class SaleController extends Controller
                 $variant->decrement('stock_quantity');
             }
         } else {
-            if ($product->stock_quantity > 0) {
-                $product->decrement('stock_quantity');
-                $product->refresh();
-                $product->updateStockStatus();
+            // Stock is at variant level only — deduct from first active variant
+            $variant = ProductVariant::where('product_id', $sale->product_id)
+                ->where('is_active', true)
+                ->where('stock_quantity', '>', 0)
+                ->first();
+            if ($variant) {
+                $variant->decrement('stock_quantity');
             }
         }
     }
