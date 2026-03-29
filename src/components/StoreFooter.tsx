@@ -204,7 +204,7 @@ export function StoreFooter() {
                     <iframe
                       title="Store Location"
                       src={`https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(branding.google_maps_api_key)}&q=${encodeURIComponent(branding.site_address || branding.site_name)}`}
-                      className="w-full h-[200px] pointer-events-none"
+                      className="w-full h-[300px] pointer-events-none"
                       loading="lazy"
                       style={{ border: 0 }}
                       allowFullScreen
