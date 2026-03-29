@@ -554,17 +554,8 @@ class SaleController extends Controller
                 'reason' => $request->reason,
             ]);
         } else {
-            $oldQty = $product->stock_quantity;
-            $product->update(['stock_quantity' => $request->stock_quantity]);
-            $product->updateStockStatus();
-
-            $this->logActivity($request, 'stock_update', [
-                'product_id' => $productId,
-                'product_name' => $product->name,
-                'old_quantity' => $oldQty,
-                'new_quantity' => $request->stock_quantity,
-                'reason' => $request->reason,
-            ]);
+            // Stock is managed at variant level only — require variant_id
+            return response()->json(['error' => 'variant_id is required for stock updates'], 422);
         }
 
         return response()->json([
