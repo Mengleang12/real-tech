@@ -1178,7 +1178,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin: isAuthAdmin, isSuperAdmin: isAuthSuperAdmin, hasPermission } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const wsStatus = useSerialRealtime();
+  
 
   // Legacy admin gets full admin access
   const isLegacyAdmin = authApi.isAuthenticated();
