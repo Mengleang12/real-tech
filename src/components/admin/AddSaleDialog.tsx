@@ -183,29 +183,33 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   // Add product to cart
   const addToCart = (product: SaleProduct, variantId?: number) => {
     const stock = getAvailableStock(product, variantId);
-    const exists = cart.find(c => c.product.id === product.id && c.variant_id === variantId);
-    const currentQty = exists ? exists.quantity : 0;
 
     if (stock <= 0) {
       toast.error(`${product.name} is out of stock`);
       return;
     }
-    if (currentQty >= stock) {
-      toast.error(`Only ${stock} in stock for ${product.name}`);
-      return;
-    }
 
-    if (exists) {
-      setCart(cart.map(c =>
-        c.product.id === product.id && c.variant_id === variantId
-          ? { ...c, quantity: c.quantity + 1 }
-          : c
-      ));
-    } else {
-      const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
-      const price = variant ? Number(variant.price_adjustment || 0) : (product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0) : 0);
-      setCart([...cart, { product, variant_id: variantId, quantity: 1, unit_price: price, discount: 0, discount_type: "amount", serial_numbers: [] }]);
-    }
+    setCart(prev => {
+      const exists = prev.find(c => c.product.id === product.id && c.variant_id === variantId);
+      const currentQty = exists ? exists.quantity : 0;
+
+      if (currentQty >= stock) {
+        toast.error(`Only ${stock} in stock for ${product.name}`);
+        return prev;
+      }
+
+      if (exists) {
+        return prev.map(c =>
+          c.product.id === product.id && c.variant_id === variantId
+            ? { ...c, quantity: c.quantity + 1 }
+            : c
+        );
+      } else {
+        const variant = variantId ? product.variants.find(v => v.id === variantId) : null;
+        const price = variant ? Number(variant.price_adjustment || 0) : (product.variants.length > 0 ? Number(product.variants[0].price_adjustment || 0) : 0);
+        return [...prev, { product, variant_id: variantId, quantity: 1, unit_price: price, discount: 0, discount_type: "amount", serial_numbers: [] }];
+      }
+    });
     setProductSearch("");
     setProducts([]);
   };
