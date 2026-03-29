@@ -171,7 +171,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
     setProductSearch("");
     setProducts([]);
     setTimeout(() => searchInputRef.current?.focus(), 100);
-  }, [cart]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   // Get available stock for a product/variant
