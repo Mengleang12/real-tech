@@ -215,7 +215,7 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   };
 
   const updateQty = (idx: number, delta: number) => {
-    setCart(cart.map((c, i) => {
+    setCart(prev => prev.map((c, i) => {
       if (i !== idx) return c;
       const stock = getAvailableStock(c.product, c.variant_id);
       const newQty = Math.max(1, c.quantity + delta);
