@@ -54,8 +54,6 @@ import { PrintLabelDialog, PrintLabelsPage } from "@/components/admin/PrintLabel
 import { SalesReport } from "@/components/admin/SalesReport";
 import { SerialManagement } from "@/components/admin/SerialManagement";
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
-import { WebSocketStatus } from "@/components/admin/WebSocketStatus";
-import { useSerialRealtime } from "@/hooks/useSerialRealtime";
 import { NotesManagement } from "@/components/admin/NotesManagement";
 import { ActiveSessions } from "@/components/admin/ActiveSessions";
 import { QuotationManagement } from "@/components/admin/QuotationManagement";
