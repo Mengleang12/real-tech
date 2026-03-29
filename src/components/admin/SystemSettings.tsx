@@ -265,6 +265,7 @@ export function SystemSettingsPanel() {
           label_width: settings.label_width,
           label_height: settings.label_height,
           google_maps_api_key: settings.google_maps_api_key,
+          youtube_video_url: settings.youtube_video_url,
         }),
       });
       if (!res.ok) {
