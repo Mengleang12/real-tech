@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapPin, Phone, Mail, Facebook, Send, Instagram, ExternalLink, ChevronRight } from 'lucide-react';
+import { MapPin, Phone, Mail, Facebook, Send, Instagram, ChevronRight, Play } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import realtechLogo from '@/assets/realtech-logo.png';
 
