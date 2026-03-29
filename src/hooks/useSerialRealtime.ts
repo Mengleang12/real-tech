@@ -13,8 +13,7 @@ export interface SerialChangedEvent {
 }
 
 /**
- * Polls the backend for new serials and triggers a callback when new ones appear.
- * WebSocket (Reverb) is attempted but not relied upon.
+ * Listens for new serials via WebSocket and triggers a callback when new ones appear.
  */
 export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) => void) {
   const queryClient = useQueryClient();
