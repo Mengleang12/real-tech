@@ -39,6 +39,7 @@ interface SystemSettings {
   label_width: number;
   label_height: number;
   google_maps_api_key: string;
+  youtube_video_url: string;
 }
 
 function hexToHsl(hex: string): string {
@@ -94,6 +95,7 @@ const defaultSettings: SystemSettings = {
   label_width: 40,
   label_height: 30,
   google_maps_api_key: '',
+  youtube_video_url: '',
 };
 
 function getAuthHeaders(): Record<string, string> {
@@ -263,6 +265,7 @@ export function SystemSettingsPanel() {
           label_width: settings.label_width,
           label_height: settings.label_height,
           google_maps_api_key: settings.google_maps_api_key,
+          youtube_video_url: settings.youtube_video_url,
         }),
       });
       if (!res.ok) {
@@ -518,6 +521,18 @@ export function SystemSettingsPanel() {
                   </div>
                 </div>
               )}
+              <div>
+                <Label className="text-xs">YouTube Video URL</Label>
+                <Input
+                  value={settings.youtube_video_url}
+                  onChange={e => update('youtube_video_url', e.target.value)}
+                  className="mt-1 text-sm"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  YouTube video link shown under the map in the footer (e.g. store location video tour).
+                </p>
+              </div>
             </div>
           </div>
 
