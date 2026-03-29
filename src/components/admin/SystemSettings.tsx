@@ -95,6 +95,7 @@ const defaultSettings: SystemSettings = {
   label_width: 40,
   label_height: 30,
   google_maps_api_key: '',
+  youtube_video_url: '',
 };
 
 function getAuthHeaders(): Record<string, string> {
