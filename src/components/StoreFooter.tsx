@@ -85,11 +85,10 @@ export function StoreFooter() {
       <div className="bg-card/50 backdrop-blur-xl border-t border-border/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
           
-          {/* Top: Brand + Map side by side on large screens */}
-          <div className={`grid grid-cols-1 ${hasMap ? 'lg:grid-cols-3' : ''} gap-8 mb-8`}>
-            
-            {/* Brand info */}
-            <div className={hasMap ? 'lg:col-span-2' : ''}>
+          {/* Brand info */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-11 h-11 rounded-xl overflow-hidden bg-background shadow-sm border border-border/40 flex items-center justify-center shrink-0">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-11 h-11 rounded-xl overflow-hidden bg-background shadow-sm border border-border/40 flex items-center justify-center shrink-0">
                   <img
