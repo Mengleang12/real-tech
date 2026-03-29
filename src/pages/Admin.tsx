@@ -1474,7 +1474,7 @@ const AdminDashboard = () => {
             <h1 className="font-semibold text-base truncate">{activeItem?.label}</h1>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <WebSocketStatus status={wsStatus} />
+            
             <AdminNotificationBell />
           </div>
         </header>
