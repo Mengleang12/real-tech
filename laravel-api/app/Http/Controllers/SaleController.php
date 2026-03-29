@@ -160,14 +160,11 @@ class SaleController extends Controller
                     $firstProductId = $product->id;
                 }
 
-                // Deduct stock in bulk
+                // Deduct stock from variant
                 if ($variant) {
                     $variant->decrement('stock_quantity', $qty);
-                } else {
-                    $product->decrement('stock_quantity', $qty);
-                    $product->refresh();
-                    $product->updateStockStatus();
                 }
+                // Note: stock_quantity lives on variants only (products table no longer has it)
             }
 
             // Build comma-separated serial numbers (filter out nulls)
