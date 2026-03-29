@@ -231,32 +231,34 @@ export const AddSaleDialog = ({ open, onOpenChange }: AddSaleDialogProps) => {
   const addSerialNumber = (cartIdx: number, value: string) => {
     const trimmed = value.trim();
     if (!trimmed) return;
-    // Check duplicate across ALL cart items
-    const allSerials = cart.flatMap(c => c.serial_numbers);
-    if (allSerials.includes(trimmed)) {
-      toast.error(`Serial number "${trimmed}" is already added`);
-      return;
-    }
-    setCart(cart.map((c, i) => {
-      if (i !== cartIdx) return c;
-      if (c.serial_numbers.length >= c.quantity) return c;
-      return { ...c, serial_numbers: [...c.serial_numbers, trimmed] };
-    }));
+    setCart(prev => {
+      // Check duplicate across ALL cart items
+      const allSerials = prev.flatMap(c => c.serial_numbers);
+      if (allSerials.includes(trimmed)) {
+        toast.error(`Serial number "${trimmed}" is already added`);
+        return prev;
+      }
+      return prev.map((c, i) => {
+        if (i !== cartIdx) return c;
+        if (c.serial_numbers.length >= c.quantity) return c;
+        return { ...c, serial_numbers: [...c.serial_numbers, trimmed] };
+      });
+    });
   };
 
   const removeSerialNumber = (cartIdx: number, serialIdx: number) => {
-    setCart(cart.map((c, i) => {
+    setCart(prev => prev.map((c, i) => {
       if (i !== cartIdx) return c;
       return { ...c, serial_numbers: c.serial_numbers.filter((_, si) => si !== serialIdx) };
     }));
   };
 
   const updateItemDiscount = (idx: number, value: number, type: "amount" | "percent") => {
-    setCart(cart.map((c, i) => i === idx ? { ...c, discount: value, discount_type: type } : c));
+    setCart(prev => prev.map((c, i) => i === idx ? { ...c, discount: value, discount_type: type } : c));
   };
 
   const removeFromCart = (idx: number) => {
-    setCart(cart.filter((_, i) => i !== idx));
+    setCart(prev => prev.filter((_, i) => i !== idx));
   };
 
   // Calculate line total after per-item discount
