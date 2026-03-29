@@ -110,7 +110,14 @@ class SaleController extends Controller
                 $qty = $item['quantity'];
                 $variant = isset($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
 
-                $availableStock = $variant ? ($variant->stock_quantity ?? 0) : ($product->stock_quantity ?? 0);
+                if (!$variant) {
+                    // All stock is at variant level; if no variant specified, sum all variant stock
+                    $availableStock = ProductVariant::where('product_id', $item['product_id'])
+                        ->where('is_active', true)
+                        ->sum('stock_quantity');
+                } else {
+                    $availableStock = $variant->stock_quantity ?? 0;
+                }
 
                 if ($availableStock < $qty) {
                     $name = $product->name . ($variant ? ' (' . ($variant->sku ?? 'variant') . ')' : '');
