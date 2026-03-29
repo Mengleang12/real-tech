@@ -110,7 +110,14 @@ class SaleController extends Controller
                 $qty = $item['quantity'];
                 $variant = isset($item['variant_id']) ? ProductVariant::find($item['variant_id']) : null;
 
-                $availableStock = $variant ? ($variant->stock_quantity ?? 0) : ($product->stock_quantity ?? 0);
+                if (!$variant) {
+                    // All stock is at variant level; if no variant specified, sum all variant stock
+                    $availableStock = ProductVariant::where('product_id', $item['product_id'])
+                        ->where('is_active', true)
+                        ->sum('stock_quantity');
+                } else {
+                    $availableStock = $variant->stock_quantity ?? 0;
+                }
 
                 if ($availableStock < $qty) {
                     $name = $product->name . ($variant ? ' (' . ($variant->sku ?? 'variant') . ')' : '');
@@ -153,14 +160,11 @@ class SaleController extends Controller
                     $firstProductId = $product->id;
                 }
 
-                // Deduct stock in bulk
+                // Deduct stock from variant
                 if ($variant) {
                     $variant->decrement('stock_quantity', $qty);
-                } else {
-                    $product->decrement('stock_quantity', $qty);
-                    $product->refresh();
-                    $product->updateStockStatus();
                 }
+                // Note: stock_quantity lives on variants only (products table no longer has it)
             }
 
             // Build comma-separated serial numbers (filter out nulls)
@@ -550,17 +554,8 @@ class SaleController extends Controller
                 'reason' => $request->reason,
             ]);
         } else {
-            $oldQty = $product->stock_quantity;
-            $product->update(['stock_quantity' => $request->stock_quantity]);
-            $product->updateStockStatus();
-
-            $this->logActivity($request, 'stock_update', [
-                'product_id' => $productId,
-                'product_name' => $product->name,
-                'old_quantity' => $oldQty,
-                'new_quantity' => $request->stock_quantity,
-                'reason' => $request->reason,
-            ]);
+            // Stock is managed at variant level only — require variant_id
+            return response()->json(['error' => 'variant_id is required for stock updates'], 422);
         }
 
         return response()->json([
@@ -593,12 +588,7 @@ class SaleController extends Controller
                     $updated++;
                 }
             } else {
-                $product = Product::find($update['product_id']);
-                if ($product) {
-                    $product->update(['stock_quantity' => $update['stock_quantity']]);
-                    $product->updateStockStatus();
-                    $updated++;
-                }
+                // Skip — stock updates require variant_id
             }
         }
 
@@ -629,10 +619,13 @@ class SaleController extends Controller
                 $variant->decrement('stock_quantity');
             }
         } else {
-            if ($product->stock_quantity > 0) {
-                $product->decrement('stock_quantity');
-                $product->refresh();
-                $product->updateStockStatus();
+            // Stock is at variant level only — deduct from first active variant
+            $variant = ProductVariant::where('product_id', $sale->product_id)
+                ->where('is_active', true)
+                ->where('stock_quantity', '>', 0)
+                ->first();
+            if ($variant) {
+                $variant->decrement('stock_quantity');
             }
         }
     }
@@ -654,16 +647,11 @@ class SaleController extends Controller
                 self::restoreSerials($sale->product_id, null, [$sale->serial_number]);
             }
 
-            $variants = ProductVariant::where('product_id', $sale->product_id)->where('is_active', true)->get();
-            if ($variants->count() > 0) {
-                $variant = $variants->first();
-                if ($variant) {
-                    $variant->increment('stock_quantity');
-                }
-            } else {
-                $product->increment('stock_quantity');
-                $product->refresh();
-                $product->updateStockStatus();
+            $variant = ProductVariant::where('product_id', $sale->product_id)
+                ->where('is_active', true)
+                ->first();
+            if ($variant) {
+                $variant->increment('stock_quantity');
             }
             return;
         }
@@ -689,9 +677,13 @@ class SaleController extends Controller
                     $variant->increment('stock_quantity', $saleItem->quantity);
                 }
             } else {
-                $product->increment('stock_quantity', $saleItem->quantity);
-                $product->refresh();
-                $product->updateStockStatus();
+                // No variant specified — restore to first active variant
+                $variant = ProductVariant::where('product_id', $saleItem->product_id)
+                    ->where('is_active', true)
+                    ->first();
+                if ($variant) {
+                    $variant->increment('stock_quantity', $saleItem->quantity);
+                }
             }
         }
     }
