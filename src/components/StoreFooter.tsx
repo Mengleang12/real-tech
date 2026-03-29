@@ -229,7 +229,7 @@ export function StoreFooter() {
                     <iframe
                       title="Store Video"
                       src={youtubeEmbedUrl}
-                      className="w-full h-[200px]"
+                      className="w-full h-[300px]"
                       loading="lazy"
                       style={{ border: 0 }}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
