@@ -8,7 +8,7 @@ export interface SerialChangedEvent {
   variant_id: number | null;
   serial_ids: number[];
   timestamp: string;
-  /** Full serial objects when available (from polling) — avoids a second fetch */
+  /** Full serial objects when available — avoids a second fetch */
   serials?: any[];
 }
 
