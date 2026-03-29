@@ -661,16 +661,11 @@ class SaleController extends Controller
                 self::restoreSerials($sale->product_id, null, [$sale->serial_number]);
             }
 
-            $variants = ProductVariant::where('product_id', $sale->product_id)->where('is_active', true)->get();
-            if ($variants->count() > 0) {
-                $variant = $variants->first();
-                if ($variant) {
-                    $variant->increment('stock_quantity');
-                }
-            } else {
-                $product->increment('stock_quantity');
-                $product->refresh();
-                $product->updateStockStatus();
+            $variant = ProductVariant::where('product_id', $sale->product_id)
+                ->where('is_active', true)
+                ->first();
+            if ($variant) {
+                $variant->increment('stock_quantity');
             }
             return;
         }
