@@ -39,6 +39,7 @@ interface SystemSettings {
   label_width: number;
   label_height: number;
   google_maps_api_key: string;
+  youtube_video_url: string;
 }
 
 function hexToHsl(hex: string): string {
