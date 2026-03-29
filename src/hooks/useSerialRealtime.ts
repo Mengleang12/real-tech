@@ -100,61 +100,6 @@ export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) =
     };
   }, [invalidateSerials]);
 
-  // Fast polling: check for new serials every 1s
-  useEffect(() => {
-    let active = true;
-
-    const poll = async () => {
-      if (!active) return;
-
-      invalidateSerials();
-
-      // Check for new serials for auto-print
-      if (initializedRef.current && callbackRef.current) {
-        try {
-          const { serials: newSerials } = await serialsApi.getSince(latestKnownIdRef.current);
-          if (newSerials && newSerials.length > 0) {
-            // Filter out serials already handled by WebSocket
-            const unprinted = newSerials.filter(s => !printedIdsRef.current.has(s.id));
-            
-            // Update latest known ID
-            const maxId = Math.max(...newSerials.map(s => s.id));
-            latestKnownIdRef.current = maxId;
-
-            if (unprinted.length > 0) {
-              // Mark as printed
-              unprinted.forEach(s => printedIdsRef.current.add(s.id));
-
-              // Trigger callback with full serial data included
-              const event: SerialChangedEvent = {
-                action: 'added',
-                product_id: unprinted[0].product_id,
-                variant_id: unprinted[0].variant_id ?? null,
-                serial_ids: unprinted.map(s => s.id),
-                timestamp: new Date().toISOString(),
-                serials: unprinted,
-              };
-              callbackRef.current(event);
-            }
-          }
-        } catch {
-          // Silent fail
-        }
-      }
-
-      if (active) {
-        setTimeout(poll, 1000);
-      }
-    };
-
-    // Start polling
-    const timeout = setTimeout(poll, 1000);
-    return () => {
-      active = false;
-      clearTimeout(timeout);
-    };
-  }, [invalidateSerials]);
-
   // Clean up printed IDs set periodically to avoid memory leak
   useEffect(() => {
     const interval = setInterval(() => {
