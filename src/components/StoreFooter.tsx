@@ -188,7 +188,7 @@ export function StoreFooter() {
 
           {/* Map & Video Row */}
           {(hasMap || youtubeEmbedUrl) && (
-            <div className={`grid grid-cols-1 ${hasMap && youtubeEmbedUrl ? 'sm:grid-cols-2' : ''} gap-4 mb-8`}>
+            <div className="grid grid-cols-1 gap-4 mb-8">
               {hasMap && (
                 <div>
                   <h4 className="text-[11px] font-semibold text-foreground/70 uppercase tracking-widest mb-2.5">
