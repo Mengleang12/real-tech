@@ -68,7 +68,15 @@ export function StoreFooter() {
 
   const hasContact = branding.support_phone || branding.support_email || branding.site_address;
   const hasMap = !!branding.google_maps_api_key;
+  const hasVideo = !!branding.youtube_video_url;
   const currentYear = new Date().getFullYear();
+
+  // Extract YouTube embed URL
+  const getYouTubeEmbedUrl = (url: string) => {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? `https://www.youtube.com/embed/${match[1]}` : null;
+  };
+  const youtubeEmbedUrl = hasVideo ? getYouTubeEmbedUrl(branding.youtube_video_url) : null;
 
   return (
     <footer className="relative mt-16">
