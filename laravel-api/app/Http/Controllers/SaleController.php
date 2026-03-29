@@ -588,12 +588,7 @@ class SaleController extends Controller
                     $updated++;
                 }
             } else {
-                $product = Product::find($update['product_id']);
-                if ($product) {
-                    $product->update(['stock_quantity' => $update['stock_quantity']]);
-                    $product->updateStockStatus();
-                    $updated++;
-                }
+                // Skip — stock updates require variant_id
             }
         }
 
