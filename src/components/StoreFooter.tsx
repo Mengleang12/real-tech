@@ -23,6 +23,7 @@ interface BrandingData {
   instagram_url: string;
   tiktok_url: string;
   google_maps_api_key: string;
+  youtube_video_url: string;
 }
 
 const defaults: BrandingData = {
@@ -37,6 +38,7 @@ const defaults: BrandingData = {
   instagram_url: '',
   tiktok_url: '',
   google_maps_api_key: '',
+  youtube_video_url: '',
 };
 
 export function StoreFooter() {
