@@ -691,9 +691,13 @@ class SaleController extends Controller
                     $variant->increment('stock_quantity', $saleItem->quantity);
                 }
             } else {
-                $product->increment('stock_quantity', $saleItem->quantity);
-                $product->refresh();
-                $product->updateStockStatus();
+                // No variant specified — restore to first active variant
+                $variant = ProductVariant::where('product_id', $saleItem->product_id)
+                    ->where('is_active', true)
+                    ->first();
+                if ($variant) {
+                    $variant->increment('stock_quantity', $saleItem->quantity);
+                }
             }
         }
     }
