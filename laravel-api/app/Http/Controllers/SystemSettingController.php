@@ -33,6 +33,7 @@ class SystemSettingController extends Controller
         'label_width',
         'label_height',
         'google_maps_api_key',
+        'youtube_video_url',
     ];
 
     // Keys that store JSON arrays
