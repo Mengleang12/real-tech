@@ -81,7 +81,7 @@ export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) =
           }
         }
       } catch (e) {
-        console.warn('WebSocket unavailable, using polling only');
+        console.warn('WebSocket unavailable');
         setConnected('disconnected');
       }
     };
