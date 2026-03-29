@@ -20,9 +20,9 @@ export const WebSocketStatus = ({ status }: WebSocketStatusProps) => {
       Icon: Radio,
     },
     disconnected: {
-      color: "bg-emerald-500",
-      pulse: true,
-      label: "Live — Polling (1s)",
+      color: "bg-red-500",
+      pulse: false,
+      label: "Disconnected",
       Icon: Radio,
     },
   }[status];
