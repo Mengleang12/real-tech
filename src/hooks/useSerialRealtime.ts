@@ -62,7 +62,7 @@ export function useSerialRealtime(onSerialsAdded?: (event: SerialChangedEvent) =
             if (maxId > latestKnownIdRef.current) {
               latestKnownIdRef.current = maxId;
             }
-            // Mark as printed via WS to avoid duplicate prints from polling
+            // Mark as handled via WS to avoid duplicates
             event.serial_ids.forEach(id => printedIdsRef.current.add(id));
           }
 
