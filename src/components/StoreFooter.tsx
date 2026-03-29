@@ -192,37 +192,62 @@ export function StoreFooter() {
                 )}
               </div>
             </div>
-
-            {/* Map */}
-            {hasMap && (
-              <div>
-                <h4 className="text-[11px] font-semibold text-foreground/70 uppercase tracking-widest mb-3">
-                  {language === 'km' ? 'ទីតាំង' : 'Our Location'}
-                </h4>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branding.site_address || branding.site_name)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block rounded-xl overflow-hidden border border-border/40 group relative"
-                >
-                  <iframe
-                    title="Store Location"
-                    src={`https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(branding.google_maps_api_key)}&q=${encodeURIComponent(branding.site_address || branding.site_name)}`}
-                    className="w-full h-[180px] pointer-events-none"
-                    loading="lazy"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                  />
-                  <div className="absolute inset-0 bg-transparent group-hover:bg-primary/5 transition-colors flex items-end justify-center pb-2">
-                    <span className="text-[10px] bg-background/80 backdrop-blur-sm px-2.5 py-1 rounded-full text-muted-foreground group-hover:text-primary transition-colors font-medium shadow-sm">
-                      <MapPin className="w-3 h-3 inline mr-1 -mt-0.5" />
-                      {language === 'km' ? 'បើកក្នុង Google Maps' : 'Open in Google Maps'}
-                    </span>
-                  </div>
-                </a>
-              </div>
-            )}
           </div>
+
+          {/* Map & Video Row */}
+          {(hasMap || youtubeEmbedUrl) && (
+            <div className={`grid grid-cols-1 ${hasMap && youtubeEmbedUrl ? 'sm:grid-cols-2' : ''} gap-4 mb-8`}>
+              {hasMap && (
+                <div>
+                  <h4 className="text-[11px] font-semibold text-foreground/70 uppercase tracking-widest mb-2.5">
+                    <MapPin className="w-3 h-3 inline mr-1 -mt-0.5" />
+                    {language === 'km' ? 'ទីតាំងហាង' : 'Store Location'}
+                  </h4>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branding.site_address || branding.site_name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-xl overflow-hidden border border-border/40 group relative"
+                  >
+                    <iframe
+                      title="Store Location"
+                      src={`https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(branding.google_maps_api_key)}&q=${encodeURIComponent(branding.site_address || branding.site_name)}`}
+                      className="w-full h-[200px] pointer-events-none"
+                      loading="lazy"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                    />
+                    <div className="absolute inset-0 bg-transparent group-hover:bg-primary/5 transition-colors flex items-end justify-center pb-2">
+                      <span className="text-[10px] bg-background/80 backdrop-blur-sm px-2.5 py-1 rounded-full text-muted-foreground group-hover:text-primary transition-colors font-medium shadow-sm">
+                        <MapPin className="w-3 h-3 inline mr-1 -mt-0.5" />
+                        {language === 'km' ? 'បើកក្នុង Google Maps' : 'Open in Google Maps'}
+                      </span>
+                    </div>
+                  </a>
+                </div>
+              )}
+
+              {youtubeEmbedUrl && (
+                <div>
+                  <h4 className="text-[11px] font-semibold text-foreground/70 uppercase tracking-widest mb-2.5">
+                    <Play className="w-3 h-3 inline mr-1 -mt-0.5" />
+                    {language === 'km' ? 'វីដេអូទីតាំង' : 'Video Location'}
+                  </h4>
+                  <div className="rounded-xl overflow-hidden border border-border/40">
+                    <iframe
+                      title="Store Video"
+                      src={youtubeEmbedUrl}
+                      className="w-full h-[200px]"
+                      loading="lazy"
+                      style={{ border: 0 }}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Bottom bar */}

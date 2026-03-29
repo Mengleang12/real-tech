@@ -117,6 +117,7 @@ class SystemSettingController extends Controller
             'instagram_url' => SystemSetting::getValue('instagram_url', ''),
             'tiktok_url' => SystemSetting::getValue('tiktok_url', ''),
             'google_maps_api_key' => SystemSetting::getValue('google_maps_api_key', ''),
+            'youtube_video_url' => SystemSetting::getValue('youtube_video_url', ''),
         ]);
     }
 

@@ -521,6 +521,18 @@ export function SystemSettingsPanel() {
                   </div>
                 </div>
               )}
+              <div>
+                <Label className="text-xs">YouTube Video URL</Label>
+                <Input
+                  value={settings.youtube_video_url}
+                  onChange={e => update('youtube_video_url', e.target.value)}
+                  className="mt-1 text-sm"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  YouTube video link shown under the map in the footer (e.g. store location video tour).
+                </p>
+              </div>
             </div>
           </div>
 
