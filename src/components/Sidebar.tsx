@@ -1,4 +1,4 @@
-import { LayoutGrid, X, ShoppingCart, CreditCard, Settings, LogIn, Package } from "lucide-react";
+import { LayoutGrid, X, ShoppingCart, CreditCard, Settings, LogIn, Package, MapPin } from "lucide-react";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
