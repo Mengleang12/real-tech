@@ -27,7 +27,7 @@ export const Sidebar = ({ activeCategory, onCategoryChange, isOpen = false, onTo
     const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
     fetch(`${API_BASE_URL}/api/admin/settings/branding`)
       .then(r => r.ok ? r.json() : {})
-      .then(d => setContactInfo({ support_phone: d.support_phone, telegram_url: d.telegram_url }))
+      .then((d: Record<string, string>) => setContactInfo({ support_phone: d.support_phone, telegram_url: d.telegram_url }))
       .catch(() => {});
   }, []);
 
