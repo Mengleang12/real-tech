@@ -156,6 +156,17 @@ export const CategoryManagement = () => {
               <Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="mt-1.5" />
             </div>
             <div>
+              <Label>Icon</Label>
+              <div className="mt-1.5">
+                <FileUpload
+                  type="icons"
+                  currentUrl={formData.icon_url}
+                  onUpload={(url) => setFormData({ ...formData, icon_url: url })}
+                  label=""
+                />
+              </div>
+            </div>
+            <div>
               <Label>Sort Order</Label>
               <Input type="number" value={formData.sort_order} onChange={e => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })} className="mt-1.5" />
             </div>
