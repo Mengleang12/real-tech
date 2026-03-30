@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Loader2, Search, GripVertical } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2, Search, GripVertical, Image as ImageIcon } from "lucide-react";
+import { FileUpload } from "@/components/FileUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,7 +122,10 @@ export const CategoryManagement = () => {
             <tbody className="divide-y divide-border">
               {categories.map(cat => (
                 <tr key={cat.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3 font-medium">{cat.name}</td>
+                  <td className="px-4 py-3 font-medium flex items-center gap-2">
+                    {cat.icon_url ? <img src={cat.icon_url} alt="" className="w-6 h-6 rounded object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground/40" />}
+                    {cat.name}
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{cat.name_km || "—"}</td>
                   <td className="px-4 py-3">
                     <Badge variant={cat.is_active ? "default" : "secondary"}>{cat.is_active ? "Active" : "Inactive"}</Badge>
@@ -153,6 +157,17 @@ export const CategoryManagement = () => {
             <div>
               <Label>Description</Label>
               <Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="mt-1.5" />
+            </div>
+            <div>
+              <Label>Icon</Label>
+              <div className="mt-1.5">
+                <FileUpload
+                  type="icons"
+                  currentUrl={formData.icon_url}
+                  onUpload={(url) => setFormData({ ...formData, icon_url: url })}
+                  label=""
+                />
+              </div>
             </div>
             <div>
               <Label>Sort Order</Label>
