@@ -608,10 +608,10 @@ const ProductDetail = () => {
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">{displayName}</h1>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
                         <Link
-                          to={`/?category=${appData.category}`}
+                          to={`/?category=${appData.category_relation?.slug || appData.category}`}
                           className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          {categoryLabels[appData.category] || appData.category}
+                          {language === "km" && appData.category_relation?.name_km ? appData.category_relation.name_km : appData.category_relation?.name || appData.category}
                         </Link>
                       </div>
                     </div>
