@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Loader2, Search, GripVertical } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2, Search, GripVertical, Image as ImageIcon } from "lucide-react";
+import { FileUpload } from "@/components/FileUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
