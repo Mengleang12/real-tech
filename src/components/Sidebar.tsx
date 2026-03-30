@@ -1,4 +1,4 @@
-import { LayoutGrid, X, ShoppingCart, CreditCard, Settings, LogIn, Package, MapPin } from "lucide-react";
+import { LayoutGrid, X, ShoppingCart, CreditCard, Settings, LogIn, Package, MapPin, Phone, Send } from "lucide-react";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useCategories } from "@/hooks/useCategories";
 import realtechLogo from "@/assets/realtech-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useEffect } from "react";
 
 interface SidebarProps {
   activeCategory: string;
@@ -20,6 +21,15 @@ export const Sidebar = ({ activeCategory, onCategoryChange, isOpen = false, onTo
   const { user } = useAuth();
   const location = useLocation();
   const { data: categories, isLoading } = useCategories();
+  const [contactInfo, setContactInfo] = useState<{ support_phone?: string; telegram_url?: string }>({});
+
+  useEffect(() => {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
+    fetch(`${API_BASE_URL}/api/admin/settings/branding`)
+      .then(r => r.ok ? r.json() : {})
+      .then((d: Record<string, string>) => setContactInfo({ support_phone: d.support_phone, telegram_url: d.telegram_url }))
+      .catch(() => {});
+  }, []);
 
   const rawCategories = Array.isArray(categories) ? categories : [];
   const activeCategories = rawCategories
@@ -127,8 +137,30 @@ export const Sidebar = ({ activeCategory, onCategoryChange, isOpen = false, onTo
             className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-left text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
           >
             <MapPin className="w-[16px] h-[16px] shrink-0 opacity-80" />
-            <span className="flex-1 truncate">{language === "km" ? "ទំនាក់ទំនងហាង" : "Store Contact"}</span>
+            <span className="flex-1 truncate">{language === "km" ? "ទីតាំងហាង" : "Store Location"}</span>
           </button>
+          {contactInfo.support_phone && (
+            <a
+              href={`tel:${contactInfo.support_phone}`}
+              onClick={() => onToggle?.()}
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-left text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
+            >
+              <Phone className="w-[16px] h-[16px] shrink-0 opacity-80" />
+              <span className="flex-1 truncate">{contactInfo.support_phone}</span>
+            </a>
+          )}
+          {contactInfo.telegram_url && (
+            <a
+              href={contactInfo.telegram_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onToggle?.()}
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-left text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
+            >
+              <Send className="w-[16px] h-[16px] shrink-0 opacity-80" />
+              <span className="flex-1 truncate">Telegram</span>
+            </a>
+          )}
         </div>
 
         {/* User Menu */}
