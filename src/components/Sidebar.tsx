@@ -21,6 +21,15 @@ export const Sidebar = ({ activeCategory, onCategoryChange, isOpen = false, onTo
   const { user } = useAuth();
   const location = useLocation();
   const { data: categories, isLoading } = useCategories();
+  const [contactInfo, setContactInfo] = useState<{ support_phone?: string; telegram_url?: string }>({});
+
+  useEffect(() => {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.realtechcomputer.com';
+    fetch(`${API_BASE_URL}/api/admin/settings/branding`)
+      .then(r => r.ok ? r.json() : {})
+      .then(d => setContactInfo({ support_phone: d.support_phone, telegram_url: d.telegram_url }))
+      .catch(() => {});
+  }, []);
 
   const rawCategories = Array.isArray(categories) ? categories : [];
   const activeCategories = rawCategories
