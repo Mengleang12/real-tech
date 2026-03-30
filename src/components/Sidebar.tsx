@@ -111,6 +111,26 @@ export const Sidebar = ({ activeCategory, onCategoryChange, isOpen = false, onTo
           )}
         </div>
 
+        {/* Store Contact */}
+        <div className="space-y-0.5">
+          <p className="px-2.5 py-1 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider select-none">
+            {language === "km" ? "ទំនាក់ទំនង" : "Contact"}
+          </p>
+          <button
+            onClick={() => {
+              const footer = document.getElementById("store-footer-contact");
+              if (footer) {
+                footer.scrollIntoView({ behavior: "smooth" });
+                onToggle?.();
+              }
+            }}
+            className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-left text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
+          >
+            <MapPin className="w-[16px] h-[16px] shrink-0 opacity-80" />
+            <span className="flex-1 truncate">{language === "km" ? "ទំនាក់ទំនងហាង" : "Store Contact"}</span>
+          </button>
+        </div>
+
         {/* User Menu */}
         {user && (
           <div className="space-y-0.5">
