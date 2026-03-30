@@ -1,4 +1,4 @@
-import { LayoutGrid, X, ShoppingCart, CreditCard, Settings, LogIn, Package, MapPin } from "lucide-react";
+import { LayoutGrid, X, ShoppingCart, CreditCard, Settings, LogIn, Package, MapPin, Phone, Send } from "lucide-react";
 import { useLanguage, useTranslations } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useCategories } from "@/hooks/useCategories";
 import realtechLogo from "@/assets/realtech-logo.png";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useEffect } from "react";
 
 interface SidebarProps {
   activeCategory: string;
