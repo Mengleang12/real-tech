@@ -562,10 +562,10 @@ const ProductDetail = () => {
             {appData && (
               <>
                 <Link 
-                  to={`/?category=${appData.category}`} 
+                  to={`/?category=${appData.category_relation?.slug || appData.category}`} 
                   className="hover:text-foreground transition-colors"
                 >
-                  {categoryLabels[appData.category] || appData.category}
+                  {language === "km" && appData.category_relation?.name_km ? appData.category_relation.name_km : appData.category_relation?.name || appData.category}
                 </Link>
                 <span>/</span>
                 <span className="text-foreground">{displayName}</span>
