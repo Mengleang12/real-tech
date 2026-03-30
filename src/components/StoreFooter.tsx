@@ -79,7 +79,7 @@ export function StoreFooter() {
   const youtubeEmbedUrl = hasVideo ? getYouTubeEmbedUrl(branding.youtube_video_url) : null;
 
   return (
-    <footer className="relative mt-16">
+    <footer id="store-footer-contact" className="relative mt-16">
       <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
       <div className="bg-card/50 backdrop-blur-xl border-t border-border/20">
