@@ -137,8 +137,30 @@ export const Sidebar = ({ activeCategory, onCategoryChange, isOpen = false, onTo
             className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-left text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
           >
             <MapPin className="w-[16px] h-[16px] shrink-0 opacity-80" />
-            <span className="flex-1 truncate">{language === "km" ? "ទំនាក់ទំនងហាង" : "Store Contact"}</span>
+            <span className="flex-1 truncate">{language === "km" ? "ទីតាំងហាង" : "Store Location"}</span>
           </button>
+          {contactInfo.support_phone && (
+            <a
+              href={`tel:${contactInfo.support_phone}`}
+              onClick={() => onToggle?.()}
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-left text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
+            >
+              <Phone className="w-[16px] h-[16px] shrink-0 opacity-80" />
+              <span className="flex-1 truncate">{contactInfo.support_phone}</span>
+            </a>
+          )}
+          {contactInfo.telegram_url && (
+            <a
+              href={contactInfo.telegram_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onToggle?.()}
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-all text-left text-sidebar-foreground hover:bg-accent/70 hover:text-foreground"
+            >
+              <Send className="w-[16px] h-[16px] shrink-0 opacity-80" />
+              <span className="flex-1 truncate">Telegram</span>
+            </a>
+          )}
         </div>
 
         {/* User Menu */}
