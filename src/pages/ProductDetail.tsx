@@ -345,12 +345,6 @@ const ProductDetail = () => {
     );
   }
 
-  const categoryLabels: Record<string, string> = {
-    programs: translations.programs,
-    games: translations.games,
-    extensions: translations.extensions,
-    os: translations.os
-  };
 
   return (
     <>
