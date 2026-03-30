@@ -39,9 +39,19 @@ const DateRangePicker = ({ from, to, onChange }: {
     onChange(newFrom, newTo);
   };
 
+  const handleToday = () => {
+    const today = format(new Date(), "yyyy-MM-dd");
+    setDateFrom(new Date(today));
+    setDateTo(new Date(today));
+    onChange(today, today);
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="flex items-center gap-1">
+        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToday}>
+          Today
+        </Button>
         {[1, 3, 6, 12].map(m => (
           <Button key={m} variant="outline" size="sm" className="h-8 text-xs" onClick={() => handlePreset(m)}>
             {m}M
