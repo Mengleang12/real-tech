@@ -1299,7 +1299,7 @@ export const salesApi = {
 export const reportsApi = {
   productSales: async (from: string, to: string): Promise<{
     monthly: { product_id: number; product_name: string; month: string; quantity: number; revenue: number }[];
-    summary: { product_id: number; product_name: string; icon_url?: string; total_quantity: number; total_revenue: number; avg_price: number }[];
+    summary: { product_id: number; product_name: string; icon_url?: string; total_quantity: number; total_revenue: number; avg_price: number; variants?: { variant_id: number; variant_label: string; sku?: string; total_quantity: number; total_revenue: number; avg_price: number }[] }[];
     period: { from: string; to: string };
   }> => {
     return apiRequest(`admin/reports/product-sales?from=${from}&to=${to}`);
