@@ -100,6 +100,7 @@ const ProductSalesTab = ({ from, to }: { from: string; to: string }) => {
   type SortField = "product_name" | "total_quantity" | "total_revenue" | "avg_price";
   const [sortBy, setSortBy] = useState<SortField>("total_revenue");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [expandedProducts, setExpandedProducts] = useState<Set<number>>(new Set());
 
   const summary = data?.summary || [];
   const monthly = (data?.monthly || []) as { product_id: number; product_name: string; month: string; quantity: number; revenue: number }[];
@@ -113,6 +114,15 @@ const ProductSalesTab = ({ from, to }: { from: string; to: string }) => {
   const toggleSort = (field: SortField) => {
     if (sortBy === field) setSortDir(d => d === "asc" ? "desc" : "asc");
     else { setSortBy(field); setSortDir("desc"); }
+  };
+
+  const toggleExpand = (productId: number) => {
+    setExpandedProducts(prev => {
+      const next = new Set(prev);
+      if (next.has(productId)) next.delete(productId);
+      else next.add(productId);
+      return next;
+    });
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -158,6 +168,7 @@ const ProductSalesTab = ({ from, to }: { from: string; to: string }) => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
+                <th className="px-2 py-3 w-8"></th>
                 {([
                   ["product_name", "Product"],
                   ["total_quantity", "Qty Sold"],
@@ -172,26 +183,55 @@ const ProductSalesTab = ({ from, to }: { from: string; to: string }) => {
             </thead>
             <tbody>
               {isLoading ? Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b border-border"><td colSpan={4} className="px-4 py-3"><div className="h-8 bg-muted animate-pulse rounded" /></td></tr>
+                <tr key={i} className="border-b border-border"><td colSpan={5} className="px-4 py-3"><div className="h-8 bg-muted animate-pulse rounded" /></td></tr>
               )) : sorted.length === 0 ? (
-                <tr><td colSpan={4} className="px-4 py-12 text-center text-muted-foreground">No sales data for this period</td></tr>
-              ) : sorted.map(p => (
-                <tr key={p.product_id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      {p.icon_url ? (
-                        <img src={p.icon_url} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
-                      ) : (
-                        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0"><Package className="w-4 h-4 text-muted-foreground" /></div>
-                      )}
-                      <span className="font-medium truncate max-w-[200px]">{p.product_name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 tabular-nums font-semibold">{p.total_quantity}</td>
-                  <td className="px-4 py-3 tabular-nums font-semibold">{fmt(p.total_revenue)}</td>
-                  <td className="px-4 py-3 tabular-nums text-muted-foreground">{fmt(p.avg_price)}</td>
-                </tr>
-              ))}
+                <tr><td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">No sales data for this period</td></tr>
+              ) : sorted.map((p: any) => {
+                const hasVariants = p.variants && p.variants.length > 0;
+                const isExpanded = expandedProducts.has(p.product_id);
+                return (
+                  <Fragment key={p.product_id}>
+                    <tr className={cn("border-b border-border hover:bg-muted/30 transition-colors", hasVariants && "cursor-pointer")} onClick={() => hasVariants && toggleExpand(p.product_id)}>
+                      <td className="px-2 py-3 w-8 text-center">
+                        {hasVariants && (
+                          <ArrowDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform inline-block", isExpanded ? "rotate-0" : "-rotate-90")} />
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          {p.icon_url ? (
+                            <img src={p.icon_url} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0"><Package className="w-4 h-4 text-muted-foreground" /></div>
+                          )}
+                          <span className="font-medium truncate max-w-[200px]">{p.product_name}</span>
+                          {hasVariants && (
+                            <Badge variant="outline" className="text-[10px] shrink-0">{p.variants.length} variants</Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 tabular-nums font-semibold">{p.total_quantity}</td>
+                      <td className="px-4 py-3 tabular-nums font-semibold">{fmt(p.total_revenue)}</td>
+                      <td className="px-4 py-3 tabular-nums text-muted-foreground">{fmt(p.avg_price)}</td>
+                    </tr>
+                    {hasVariants && isExpanded && p.variants.map((v: any) => (
+                      <tr key={`${p.product_id}-${v.variant_id}`} className="border-b border-border bg-muted/20">
+                        <td className="px-2 py-2"></td>
+                        <td className="px-4 py-2 pl-16">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary/50 shrink-0" />
+                            <span className="text-muted-foreground text-xs">{v.variant_label}</span>
+                            {v.sku && <span className="text-[10px] text-muted-foreground/60">({v.sku})</span>}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 tabular-nums text-xs">{v.total_quantity}</td>
+                        <td className="px-4 py-2 tabular-nums text-xs">{fmt(v.total_revenue)}</td>
+                        <td className="px-4 py-2 tabular-nums text-xs text-muted-foreground">{fmt(v.avg_price)}</td>
+                      </tr>
+                    ))}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
