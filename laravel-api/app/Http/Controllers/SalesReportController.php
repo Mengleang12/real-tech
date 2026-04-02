@@ -57,11 +57,48 @@ class SalesReportController extends Controller
         $productIds = $summary->pluck('product_id')->unique();
         $products = Product::whereIn('id', $productIds)->pluck('icon_url', 'id');
 
-        $summaryData = $summary->map(function ($item) use ($products) {
+        // Variant-level breakdown per product
+        $variantBreakdown = SaleItem::join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sales.status', 'paid')
+            ->whereBetween('sales.paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->whereNotNull('sale_items.variant_id')
+            ->join('product_variants', 'sale_items.variant_id', '=', 'product_variants.id')
+            ->select(
+                'sale_items.product_id',
+                'sale_items.variant_id',
+                'product_variants.combination',
+                'product_variants.sku',
+                DB::raw('SUM(sale_items.quantity) as total_quantity'),
+                DB::raw('SUM(sale_items.total_price) as total_revenue'),
+                DB::raw('AVG(sale_items.unit_price) as avg_price')
+            )
+            ->groupBy('sale_items.product_id', 'sale_items.variant_id', 'product_variants.combination', 'product_variants.sku')
+            ->orderByDesc('total_quantity')
+            ->get()
+            ->groupBy('product_id');
+
+        $summaryData = $summary->map(function ($item) use ($products, $variantBreakdown) {
+            $variants = [];
+            if (isset($variantBreakdown[$item->product_id])) {
+                $variants = $variantBreakdown[$item->product_id]->map(function ($v) {
+                    $combo = is_string($v->combination) ? json_decode($v->combination, true) : $v->combination;
+                    $label = is_array($combo) && !empty($combo) ? implode(' / ', array_values($combo)) : ($v->sku ?: 'Default');
+                    return [
+                        'variant_id' => $v->variant_id,
+                        'variant_label' => $label,
+                        'sku' => $v->sku,
+                        'total_quantity' => (int) $v->total_quantity,
+                        'total_revenue' => round((float) $v->total_revenue, 2),
+                        'avg_price' => round((float) $v->avg_price, 2),
+                    ];
+                })->values()->toArray();
+            }
+
             return array_merge($item->toArray(), [
                 'icon_url' => $products[$item->product_id] ?? null,
                 'total_revenue' => round((float) $item->total_revenue, 2),
                 'avg_price' => round((float) $item->avg_price, 2),
+                'variants' => $variants,
             ]);
         });
 
