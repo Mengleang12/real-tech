@@ -804,10 +804,10 @@ const InvoicesTab = () => {
       <div class="page">
         <div class="header">
           <div class="brand">
-            ${branding.logo_url ? `<div class="brand-icon"><img src="${branding.logo_url}" alt="Logo" /></div>` : ""}
+            ${branding.site_logo_url ? `<div class="brand-icon"><img src="${branding.site_logo_url}" alt="Logo" /></div>` : ""}
             <div>
-              <div class="brand-name">${branding.brand_name || "Store"}</div>
-              ${branding.brand_phone ? `<div class="brand-sub">📞 ${branding.brand_phone}</div>` : ""}
+              <div class="brand-name">${branding.site_name || "Store"}</div>
+              ${branding.support_phone ? `<div class="brand-sub">📞 ${branding.support_phone}</div>` : ""}
             </div>
           </div>
           <div class="tag">
