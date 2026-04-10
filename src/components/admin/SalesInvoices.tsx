@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, ShoppingCart,
   FileText, Eye, EyeOff, Package, CheckCircle, Clock, Printer, Pencil,
-  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield, CreditCard, Tag, ScanBarcode, StickyNote
+  AlertTriangle, PackageCheck, BarChart3, Boxes, Save, Loader2, TrendingUp, Plus, Trash2, MoreHorizontal, Shield, CreditCard, Tag, ScanBarcode, StickyNote, Truck
 } from "lucide-react";
 import { AddSerialsForProductDialog } from "./SerialManagement";
 import { initPrinterService, printCustomerLabel, isPrinterServiceAvailable, type PrinterStatus } from "@/lib/printer-service";
@@ -747,6 +747,118 @@ const InvoicesTab = () => {
     setLabelOrder(null);
   };
 
+  const handlePrintDeliveryA5 = async (order: AdminOrder) => {
+    const branding = await getInvoiceBranding();
+    const customerName = order.customer?.full_name || order.user?.full_name || "Walk-in";
+    const customerPhone = order.customer?.phone || order.user?.phone || "";
+    const customerAddress = order.customer?.address || order.user?.address || "Cambodia";
+    const orderId = order.id.slice(0, 8).toUpperCase();
+    const orderDate = new Date(order.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+    // Build product list
+    const items = order.items && order.items.length > 0
+      ? order.items.map(i => {
+          let name = i.product_name || order.product_name || "";
+          if (i.variant_label) name += ` (${i.variant_label})`;
+          return `${name} ×${i.quantity}`;
+        })
+      : aggregateProductLines(order.product_name).map(p => `${p.name} ×${p.quantity}`);
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) { toast.error("Pop-up blocked. Please allow pop-ups."); return; }
+
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Delivery - ${orderId}</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        *{margin:0;padding:0;box-sizing:border-box}
+        @page{size:A5;margin:10mm 12mm}
+        body{font-family:'Inter',system-ui,sans-serif;color:#1f2937;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:14px;line-height:1.5}
+        .page{max-width:128mm;margin:0 auto;padding:6mm 0}
+        .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:12px;border-bottom:3px solid ${branding.primary_color}}
+        .brand{display:flex;align-items:center;gap:10px}
+        .brand-icon{width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0}
+        .brand-icon img{width:100%;height:100%;object-fit:contain}
+        .brand-name{font-size:16px;font-weight:700;color:#111827}
+        .brand-sub{font-size:10px;color:#6b7280;line-height:1.3}
+        .tag{text-align:right}
+        .tag-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:${branding.primary_color}}
+        .tag-id{font-size:13px;font-weight:600;color:#111827;margin-top:2px}
+        .tag-date{font-size:10px;color:#6b7280;margin-top:1px}
+        .section{margin-top:16px}
+        .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+        .section-title::after{content:'';flex:1;height:1px;background:#e5e7eb}
+        .card{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px}
+        .info-row{display:flex;gap:8px;margin-bottom:8px}
+        .info-row:last-child{margin-bottom:0}
+        .info-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;min-width:70px}
+        .info-value{font-size:14px;font-weight:500;color:#111827}
+        .info-value.phone{font-size:18px;font-weight:700;color:#111827;letter-spacing:0.5px}
+        .info-value.address{font-size:13px;color:#374151;line-height:1.5;white-space:pre-wrap}
+        .products-list{list-style:none;padding:0}
+        .products-list li{padding:6px 0;border-bottom:1px dashed #e5e7eb;font-size:13px;color:#374151}
+        .products-list li:last-child{border-bottom:none}
+        .footer{margin-top:20px;text-align:center;padding-top:10px;border-top:1px solid #e5e7eb}
+        .footer p{font-size:9px;color:#9ca3af}
+        @media print{body{padding:0}.page{max-width:100%}}
+      </style></head><body>
+      <div class="page">
+        <div class="header">
+          <div class="brand">
+            ${branding.site_logo_url ? `<div class="brand-icon"><img src="${branding.site_logo_url}" alt="Logo" /></div>` : ""}
+            <div>
+              <div class="brand-name">${branding.site_name || "Store"}</div>
+              ${branding.support_phone ? `<div class="brand-sub">📞 ${branding.support_phone}</div>` : ""}
+            </div>
+          </div>
+          <div class="tag">
+            <div class="tag-title">Delivery Slip</div>
+            <div class="tag-id">#${orderId}</div>
+            <div class="tag-date">${orderDate}</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Customer Information</div>
+          <div class="card">
+            <div class="info-row">
+              <div class="info-label">Name</div>
+              <div class="info-value">${customerName}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Phone</div>
+              <div class="info-value phone">${customerPhone || "—"}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Address</div>
+              <div class="info-value address">${customerAddress}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Items (${items.length})</div>
+          <div class="card">
+            <ul class="products-list">
+              ${items.map(item => `<li>${item}</li>`).join("")}
+            </ul>
+          </div>
+        </div>
+
+        ${order.notes ? `
+        <div class="section">
+          <div class="section-title">Notes</div>
+          <div class="card" style="font-size:12px;color:#374151">${order.notes}</div>
+        </div>` : ""}
+
+        <div class="footer">
+          <p>${branding.site_name || "Store"} — Thank you for your purchase</p>
+        </div>
+      </div>
+      </body></html>`);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.focus(); printWindow.print(); }, 400);
+  };
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin-invoices", statusFilter, currentPage, debouncedSearch],
     queryFn: () => adminUsersApi.getAllOrders({
@@ -1167,6 +1279,7 @@ const InvoicesTab = () => {
                                 <DropdownMenuItem onClick={() => { const totalAmt = typeof order.amount === "string" ? parseFloat(order.amount as string) : order.amount; const paid = (order.payments || []).reduce((s: number, p: any) => s + (typeof p.amount === "string" ? parseFloat(p.amount) : p.amount), 0); setPaymentAmount(Math.max(0, totalAmt - paid).toFixed(2)); setPaymentOrder(order); }} className="cursor-pointer"><CreditCard className="w-3.5 h-3.5 mr-2" /> Add Payment</DropdownMenuItem>
                               )}
                               <DropdownMenuItem onClick={() => printCustomerLabelDirect(order, order.customer?.address || order.user?.address || "Cambodia")} className="cursor-pointer"><Tag className="w-3.5 h-3.5 mr-2" /> Print Label</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handlePrintDeliveryA5(order)} className="cursor-pointer"><Truck className="w-3.5 h-3.5 mr-2" /> Print Delivery (A5)</DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer" onClick={() => setDeleteOrderId(order.id)}><Trash2 className="w-3.5 h-3.5 mr-2" /> Delete</DropdownMenuItem>
                             </DropdownMenuContent>
