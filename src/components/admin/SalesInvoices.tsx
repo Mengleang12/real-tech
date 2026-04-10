@@ -851,7 +851,7 @@ const InvoicesTab = () => {
         </div>` : ""}
 
         <div class="footer">
-          <p>${branding.brand_name || "Store"} — Thank you for your purchase</p>
+          <p>${branding.site_name || "Store"} — Thank you for your purchase</p>
         </div>
       </div>
       </body></html>`);
