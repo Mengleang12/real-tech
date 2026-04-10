@@ -859,6 +859,7 @@ const InvoicesTab = () => {
     setTimeout(() => { printWindow.focus(); printWindow.print(); }, 400);
   };
 
+  const { data, isLoading } = useQuery({
     queryKey: ["admin-invoices", statusFilter, currentPage, debouncedSearch],
     queryFn: () => adminUsersApi.getAllOrders({
       status: statusFilter !== "all" ? statusFilter : undefined,
